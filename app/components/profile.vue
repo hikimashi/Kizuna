@@ -14,7 +14,7 @@
                 </div>
               </div>
             </div>
-            <h2 class="text-xl font-bold">{{ userData?.name }}</h2>
+            <!-- <h2 class="text-xl font-bold">{{ userData?.name }}</h2> -->
             <p class="text-base-content/70">{{ userData?.email }}</p>
             <div class="mt-4 w-full">
               <label class="btn btn-outline w-full btn-sm gap-2 ">
@@ -53,8 +53,8 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div class="form-control w-full">
                   <label class="fieldset-legend" for="name"> Name</label>
-                  <input id="name" v-model="duplicateData.name" type="text" placeholder="Your name"
-                    class="input w-full validator" />
+                  <!-- <input id="name" v-model="duplicateData.name" type="text" placeholder="Your name"
+                    class="input w-full validator" /> -->
                   <p class="validator-hint">Required Field!</p>
                 </div>
 
@@ -140,6 +140,65 @@
               </button>
             </div>
           </div>
+
+          <input type="radio" name="tabsProfile" class="tab" aria-label="AniList" />
+          <!-- AniList Tab -->
+          <div class="tab-content p-6 rounded-b-xs border border-base-300">
+            <div>
+              <h2 class="text-xl font-bold mb-4">AniList Integration</h2>
+
+              <div class="mb-6">
+                <div class="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 class="font-semibold">Connect to AniList</h3>
+                    <p class="text-sm text-gray-500">Connect your AniList account to enhance your profile with anime and manga information.</p>
+                  </div>
+
+                  <div v-if="userData?.anilist_token">
+                    <div class="flex items-center gap-2">
+                      <div class="avatar">
+                        <div class="w-10 rounded-full">
+                          <img :src="userData?.anilist_avatar_url || '/img/anilist-icon.png'" alt="AniList Avatar" />
+                        </div>
+                      </div>
+                      <span class="font-medium">{{ userData?.anilist_username || 'Connected' }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex gap-2">
+                  <button
+                    v-if="!userData?.anilist_token"
+                    @click="connectToAnilist()"
+                    class="btn btn-primary"
+                  >
+                    Connect to AniList
+                  </button>
+                  <button
+                    v-else
+                    @click="disconnectFromAnilist()"
+                    class="btn btn-outline btn-error"
+                  >
+                    Disconnect from AniList
+                  </button>
+                </div>
+              </div>
+
+              <div v-if="userData?.anilist_token" class="mt-6">
+                <h3 class="font-semibold mb-2">AniList Information</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="bg-base-200 p-4 rounded-lg">
+                    <p class="text-sm text-gray-500">AniList Username</p>
+                    <p class="font-medium">{{ userData?.anilist_username }}</p>
+                  </div>
+                  <div class="bg-base-200 p-4 rounded-lg">
+                    <p class="text-sm text-gray-500">AniList User ID</p>
+                    <p class="font-medium">{{ userData?.anilist_user_id }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Botões de ação -->
@@ -168,6 +227,7 @@ import { useAlertStore } from '~/composables/useAlertStore';
 import { useToastStore } from '~/composables/useToastStore';
 import { useMyAuthStore } from '~/composables/useMyAuthStore';
 import { useDrawersStore } from '~/composables/useDrawersStore';
+import { useAnilistAuth } from '~/composables/useAnilistAuth';
 
 /**
  * Stores
@@ -201,6 +261,11 @@ const previewUrl = ref<string>('');
  */
 
 /**
+ * Stores
+ */
+const anilistAuth = useAnilistAuth();
+
+/**
  * Methods
  */
 const clearAllData = () => {
@@ -226,6 +291,22 @@ const handleFileChange = (event: Event) => {
 
   previewUrl.value = URL.createObjectURL(duplicateData.value.avatarFile);
 
+};
+
+const connectToAnilist = async () => {
+  await anilistAuth.initiateAnilistAuth();
+};
+
+const disconnectFromAnilist = async () => {
+  try {
+    await anilistAuth.disconnectAnilistAccount();
+  } catch (error) {
+    console.error('Error disconnecting from AniList:', error);
+    toastStore.openToast({
+      type: 'error',
+      message: 'Error disconnecting from AniList. Please try again.'
+    });
+  }
 };
 
 
@@ -336,5 +417,13 @@ onBeforeRouteLeave(async () => {
  */
 onMounted(() => {
   themeChange(false);
+
+  // Check if user needs to connect to AniList when profile page loads
+  if (myAuthStore.needsAnilistAuth()) {
+    toastStore.openToast({
+      type: 'info',
+      message: 'Connect your AniList account to enhance your profile with anime and manga information.'
+    });
+  }
 });
 </script>

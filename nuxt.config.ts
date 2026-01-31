@@ -10,7 +10,13 @@ export default defineNuxtConfig({
   modules: ['@pinia/nuxt'],
   runtimeConfig: {
     public: {
-      pocketbaseUrl: process.env.POCKETBASE_URL || 'http://anna.clementlopes.site'},
+      pocketbaseUrl: process.env.POCKETBASE_URL || 'http://anna.clementlopes.site',
+      anilistClientId: process.env.ANILIST_CLIENT_ID,
+      anilistRedirectUri: process.env.ANILIST_REDIRECT_URI,
+    },
+    private: {
+      anilistClientSecret: process.env.ANILIST_CLIENT_SECRET,
+    },
   },
   app: {
     head: {

@@ -11,4 +11,11 @@ export interface UserType {
   oldPassword?: string;
   password?: string;
   passwordConfirm?: string;
+
+  // AniList integration fields
+  anilist_user_id?: string;
+  anilist_username?: string;
+  anilist_avatar_url?: string;
+  anilist_token?: string;
+  anilist_token_expires_at?: string;
 }

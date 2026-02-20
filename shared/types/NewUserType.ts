@@ -1,7 +1,10 @@
+/**
+ * NewUserType.ts
+ * Interface pour la création d'un nouveau compte.
+ */
+
 export interface NewUserType {
-  // name: string;
   email: string;
-  // themeMode: string;
   password: string;
   passwordConfirm: string;
 }

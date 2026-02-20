@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "nuxt build",
-    "dev": "nuxt dev --host 0.0.0.0 --port 3000",
+    "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"
@@ -13,7 +13,7 @@
     "@pinia/nuxt": "^0.11.3",
     "@tailwindcss/vite": "^4.1.17",
     "graphql": "^16.12.0",
-    "nuxt": "^4.2.1",
+    "nuxt": "^4.1.3",
     "pinia": "^3.0.4",
     "pocketbase": "^0.26.5",
     "tailwindcss": "^4.1.17",

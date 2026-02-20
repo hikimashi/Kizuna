@@ -7,24 +7,11 @@
           <!-- Seção de avatar -->
           <div class="flex flex-col h-auto items-center p-6 border-b border-base-300">
             <div class="avatar online mb-4">
-              <div class="w-32 rounded-md border border-base-300/50 shadow-sm ring ring-offset-base-100 ring-offset-2 relative">
-                <img :src="previewUrl || anilistAvatarUrl" class="object-cover" />
-                <div v-if="duplicateData.avatarFile" class="absolute -top-1 -right-1 badge badge-warning badge-sm">
-
-                </div>
+              <div class="w-32 rounded-md border border-base-300/50 shadow-sm ring ring-offset-base-100 ring-offset-2">
+                <img :src="anilistAvatarUrl" class="object-cover" />
               </div>
             </div>
             <h2 class="text-xl font-bold">{{ anilistUsername }}</h2>
-            <div class="mt-4 w-full">
-              <label class="btn btn-outline w-full btn-sm gap-2 ">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                  stroke="currentColor" class="w-4 h-4">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                </svg>
-                Change photo <input type="file" class="hidden" accept="image/*" @change="handleFileChange" />
-              </label>
-            </div>
           </div>
 
           <!-- Status e estatísticas -->
@@ -191,16 +178,14 @@ const { userData } = storeToRefs(userStore);
 
 // Use the reactive authRecord from pocketbase store for AniList data
 const anilistUsername = computed(() => pocketbaseStore.authRecord?.anilist_username || 'Unknown user');
-const anilistAvatarUrl = computed(() => pocketbaseStore.authRecord?.anilist_avatar_url || '/img/user.png');
+const anilistAvatarUrl = computed(() => pocketbaseStore.authRecord?.anilist_avatar_url_large || pocketbaseStore.authRecord?.anilist_avatar_url_small || '/img/user.png');
 const anilistUserId = computed(() => pocketbaseStore.authRecord?.anilist_user_id);
 
 userData.value.password = '';
 userData.value.passwordConfirm = '';
 userData.value.oldPassword = '';
-userData.value.avatarFile = null;
 
 const duplicateData = ref(structuredClone(toRaw(userData.value)));
-const previewUrl = ref<string>('');
 
 /**
  * Computed Properties
@@ -215,25 +200,12 @@ const clearAllData = () => {
 
 const cancelChanges = () => {
   duplicateData.value = structuredClone(toRaw(userData.value));
-  duplicateData.value.avatarFile = null;
-  previewUrl.value = '';
 };
 
 const passwordMisMatch = () => {
   if (duplicateData.value.passwordConfirm.length >= 7)
     return duplicateData.value.password !== duplicateData.value.passwordConfirm;
 };
-
-const handleFileChange = (event: Event) => {
-
-  const input = event.target as HTMLInputElement
-  duplicateData.value.avatarFile = input.files?.[0]
-  if (!duplicateData.value.avatarFile) return
-
-  previewUrl.value = URL.createObjectURL(duplicateData.value.avatarFile);
-
-};
-
 
 const saveChanges = async () => {
   const formData = new FormData();
@@ -270,10 +242,6 @@ const saveChanges = async () => {
     formData.append('oldPassword', duplicateData.value.oldPassword);
     formData.append('password', duplicateData.value.password);
     formData.append('passwordConfirm', duplicateData.value.passwordConfirm);
-  }
-
-  if (duplicateData.value.avatarFile) {
-    formData.append('avatar', duplicateData.value.avatarFile);
   }
 
   try {

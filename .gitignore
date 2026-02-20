@@ -1,7 +1,11 @@
+# Ignore node_modules
 node_modules
+0.0.0.0
 
+# Generated files
 QWEN.MD
 GEMINI.MD
+
 
 # Output
 .output
@@ -25,5 +29,5 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-
+#Logs
 package-lock.json

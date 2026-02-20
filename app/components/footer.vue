@@ -35,7 +35,7 @@
         >
       </nav>
 
-      <p class="text-sm">© {{ currentYear }} @Kizuna</p>
+      <p class="text-sm">© {{ currentYear }} Kizuna</p>
     </div>
   </footer>
 </template>

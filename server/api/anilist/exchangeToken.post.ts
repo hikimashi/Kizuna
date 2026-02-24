@@ -1,5 +1,5 @@
 
-// server/api/anilist/exchange-token.post.ts
+// server/api/anilist/exchangeToken.post.ts
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
 

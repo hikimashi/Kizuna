@@ -42,7 +42,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
       
       localStorage.removeItem('anilist_oauth_state');
       
-      const response = await $fetch<{ access_token: string }>('/api/anilist/exchange-token', {
+      const response = await $fetch<{ access_token: string }>('/api/anilist/exchangeToken', {
         method: 'POST',
         body: {
           code,

@@ -18,6 +18,10 @@ node_modules/
 !.env.example
 !.env.test
 
+# Ai generated files
+QWEN.md
+GEMINI.md
+
 # Logs
 *.log
 npm-debug.log*

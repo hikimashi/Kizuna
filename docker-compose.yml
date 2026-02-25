@@ -2,16 +2,32 @@ version: '3.8'
 
 services:
   kizuna:
+    # Build configuration for the Docker image
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: .            # Use current directory as build context
+      dockerfile: Dockerfile  # Specify Dockerfile to build image
 
-    image: kizuna
-    container_name: kizuna
-    restart: unless-stopped
+    image: kizuna           # Name of the Docker image
+    container_name: kizuna  # Container name when running
+    restart: unless-stopped  # Always restart unless manually stopped
 
-    env_file:
-      - .env
+    # Explicit runtime environment variables
+    # These will be available inside the container at runtime
+    environment:
+      - ANILIST_CLIENT_ID=${ANILIST_CLIENT_ID}          # OAuth client ID
+      - ANILIST_CLIENT_SECRET=${ANILIST_CLIENT_SECRET}  # OAuth secret, private
+      - ANILIST_REDIRECT_URI=${ANILIST_REDIRECT_URI}    # OAuth redirect URI
+      - POCKETBASE_URL=${POCKETBASE_URL}               # URL of PocketBase instance
 
+    # Ports mapping from host to container
     ports:
-      - "3002:3000"
+      - "3002:3000"  # Map host port 3002 to container port 3000
+
+
+
+
+
+
+
+
+      

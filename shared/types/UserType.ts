@@ -13,6 +13,7 @@ export interface UserType {
   passwordConfirm?: string;
   anilist_user_id?: string;
   anilist_username?: string;
-  anilist_avatar_url?: string;
+  anilist_avatar_url_medium?: string;
+  anilist_avatar_url_large?: string;
   anilist_token?: string;
 }

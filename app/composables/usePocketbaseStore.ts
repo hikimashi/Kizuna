@@ -1,36 +1,36 @@
 import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import PocketBase from 'pocketbase';
-import { useAppConfig } from './useAppConfig';
 
 export const usePocketbaseStore = defineStore('usePocketBaseStore', () => {
-  const { configCache } = useAppConfig();
+  const config = useRuntimeConfig();
+  const pb = new PocketBase(config.public.pocketbaseUrl as string);
   
-  const pbInstance = computed(() => {
-    const url = configCache.value?.pocketbaseUrl || 'https://anna.clementlopes.site';
-    return new PocketBase(url);
-  });
-  
-  const authRecord = ref(pbInstance.value.authStore.model);
-  const authToken = ref(pbInstance.value.authStore.token);
-  const isAuthValid = ref(pbInstance.value.authStore.isValid);
+  // Create reactive refs for auth state
+  const authRecord = ref(pb.authStore.model);
+  const authToken = ref(pb.authStore.token);
+  const isAuthValid = ref(pb.authStore.isValid);
 
+  // Initialize the reactive refs and set up onChange listener
   const initializeAuthState = () => {
-    authRecord.value = pbInstance.value.authStore.model;
-    authToken.value = pbInstance.value.authStore.token;
-    isAuthValid.value = pbInstance.value.authStore.isValid;
+    // Set initial values
+    authRecord.value = pb.authStore.model;
+    authToken.value = pb.authStore.token;
+    isAuthValid.value = pb.authStore.isValid;
 
-    pbInstance.value.authStore.onChange((token, model) => {
+    // Listen for auth state changes
+    pb.authStore.onChange((token, model) => {
       authRecord.value = model;
       authToken.value = token;
-      isAuthValid.value = pbInstance.value.authStore.isValid;
-    }, true);
+      isAuthValid.value = pb.authStore.isValid;
+    }, true); // Pass true to trigger the callback immediately with current state
   };
 
+  // Initialize the auth state
   initializeAuthState();
 
   return {
-    pb: pbInstance,
+    pb,
     authRecord,
     authToken,
     isAuthValid,

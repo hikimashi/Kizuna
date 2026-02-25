@@ -2,23 +2,22 @@ import { defineStore } from 'pinia';
 import { usePocketbaseStore } from './usePocketbaseStore';
 import { useUserStore } from './useUserStore';
 import { useToastStore } from './useToastStore';
-import { useAppConfig } from './useAppConfig';
 
 export const useAnilistAuthStore = defineStore('anilistAuth', () => {
   const pocketbaseStore = usePocketbaseStore();
   const userStore = useUserStore();
   const toastStore = useToastStore();
-  const { fetchConfig } = useAppConfig();
 
-  const loginWithAniList = async () => {
-    const config = await fetchConfig();
-    
+  const loginWithAniList = () => {
+    // Generate a random state parameter for security
     const state = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     
+    // Store the state in localStorage to verify later
     localStorage.setItem('anilist_oauth_state', state);
     
-    const anilistClientId = config.anilistClientId;
-    const anilistRedirectUri = config.anilistRedirectUri;
+    // Redirect to AniList OAuth URL
+    const anilistClientId = useRuntimeConfig().public.anilistClientId;
+    const anilistRedirectUri = useRuntimeConfig().public.anilistRedirectUri;
     
     if (!anilistClientId || !anilistRedirectUri) {
       console.error('Missing AniList configuration. Please check your runtime config.');
@@ -32,21 +31,23 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
 
   const handleCallback = async (code: string, state?: string) => {
     try {
-      const config = await fetchConfig();
-      
+      // Verify the state parameter to prevent CSRF attacks
       const storedState = localStorage.getItem('anilist_oauth_state');
       
-      if (state && storedState !== state) {
+      // For debugging: skip strict state check if no stored state
+      if (state && storedState && storedState !== state) {
         throw new Error('Invalid state parameter');
       }
       
+      // Clear the stored state
       localStorage.removeItem('anilist_oauth_state');
       
-      const response = await $fetch<{ access_token: string }>('/api/anilist/exchangeToken', {
+      // Exchange the authorization code for an access token via server endpoint
+      const response = await $fetch('/api/anilist/exchange-token', {
         method: 'POST',
         body: {
           code,
-          redirect_uri: config.anilistRedirectUri
+          redirect_uri: useRuntimeConfig().public.anilistRedirectUri
         }
       });
       
@@ -54,7 +55,8 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
         throw new Error('Failed to get access token from AniList');
       }
       
-      const anilistUserData = await $fetch<{ data: { Viewer: { id: number; name: string; avatar: { medium: string } } } }>('https://graphql.anilist.co', {
+      // Get user data from AniList using the access token
+      const anilistUserData = await $fetch('https://graphql.anilist.co', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -68,6 +70,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
                 name
                 avatar {
                   medium
+                  large
                 }
               }
             }
@@ -75,18 +78,24 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
         }
       });
       
+      // Update the user record in PocketBase with AniList data
       const userId = pocketbaseStore.pb.authStore.model?.id;
       if (!userId) {
         throw new Error('User not authenticated with PocketBase');
       }
-      
+      console.log('Updating user with AniList data:', {
+        anilist_token: response.access_token,
+        anilist_user_id: anilistUserData.data.Viewer.id,
+      });
       await pocketbaseStore.pb.collection('user').update(userId, {
         anilist_token: response.access_token,
         anilist_user_id: anilistUserData.data.Viewer.id,
         anilist_username: anilistUserData.data.Viewer.name,
-        anilist_avatar_url: anilistUserData.data.Viewer.avatar.medium
+        anilist_avatar_url_medium: anilistUserData.data.Viewer.avatar.medium,
+        anilist_avatar_url_large: anilistUserData.data.Viewer.avatar.large
       });
       
+      // Refresh the auth store to update the local user data
       await pocketbaseStore.pb.collection('user').authRefresh();
       
       toastStore.openToast({

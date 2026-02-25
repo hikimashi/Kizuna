@@ -24,11 +24,11 @@ const success = ref(false);
 onMounted(async () => {
   if (code.value) {
     console.log('Received AniList authorization code:', code.value);
-
+    
     const result = await anilistAuthStore.handleCallback(code.value, state.value);
     processed.value = true;
     success.value = result;
-
+    
     // Redirect to home page after a short delay
     setTimeout(() => {
       router.push('/');

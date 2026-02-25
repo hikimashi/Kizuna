@@ -1,18 +1,17 @@
-
-// server/api/anilist/exchangeToken.post.ts
+// server/api/anilist/exchange-token.post.ts
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
-
+  
   const body = await readBody(event);
   const { code, redirect_uri } = body;
-
+  
   if (!code) {
     throw createError({
       statusCode: 400,
       statusMessage: 'Authorization code is required'
     });
   }
-
+  
   try {
     // Exchange authorization code for access token
     const response = await $fetch('https://anilist.co/api/v2/oauth/token', {

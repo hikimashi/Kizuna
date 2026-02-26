@@ -1,7 +1,5 @@
 <template>
-  <div class="container mx-auto p-4">
-    <h1 class="text-2xl font-bold mb-6">Welcome to Kizuna</h1>
-    
+  <div class="container mx-auto p-4 pt-20">
     <!-- Using client-only to prevent hydration mismatch -->
     <ClientOnly>
       <!-- Check if user is authenticated with PocketBase -->

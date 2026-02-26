@@ -50,15 +50,21 @@ export const useMyAuthStore = defineStore('auth', () => {
       // "themeMode": newUser.themeMode,
       "password": newUser.password,
       "passwordConfirm": newUser.passwordConfirm,
+      // Explicitly set AniList fields to null to avoid unique constraint issues
+      "anilist_user_id": null,
+      "anilist_username": null,
+      "anilist_token": null,
     };
-  
+
     try {
-      await pocketBaseStore.pb.collection('user').create(data);
+      const createResult = await pocketBaseStore.pb.collection('user').create(data);
+      
       const authData = await login(newUser.email, newUser.password);
       userStore.saveUserData(mapAuthDataToUser(authData));
       return authData;
     } catch (error: any) {
-      throw new Error(error?.message || 'Account creation failed. Please try again.');
+      const errorMsg = error.response?.data?.message || error.message || 'Account creation failed. Please try again.';
+      throw new Error(errorMsg);
     }
 
   };

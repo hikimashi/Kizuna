@@ -84,19 +84,55 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
 
       const viewer = anilistUserData.data.Viewer;
 
-      // 4. Mise à jour de PocketBase (Utilise la session utilisateur actuelle)
+      // 4. Vérification côté serveur - Récupérer l'ID utilisateur actuel
       const userId = pocketbaseStore.pb.authStore.model?.id;
       if (!userId) throw new Error('You must be logged in to link an account');
 
+      // 5. Vérification côté serveur - L'ID AniList est-il déjà utilisé par un autre utilisateur?
+      const anilistId = Number(viewer.id);
+      console.log('Checking for duplicate AniList ID:', anilistId, '(type:', typeof anilistId, ')');
+      console.log('Current user ID:', userId);
+      
+      // Try two approaches: getFullList with filter, and manual check
+      const existingUsers = await pocketbaseStore.pb.collection('user').getFullList({
+        filter: `anilist_user_id = ${anilistId} && id != '${userId}'`
+      });
+
+      console.log('Existing users with this AniList ID:', existingUsers);
+      console.log('Number of existing users:', existingUsers.length);
+      
+      // Also log all users to debug
+      const allUsers = await pocketbaseStore.pb.collection('user').getFullList();
+      const usersWithAnilist = allUsers.filter(u => u.anilist_user_id === anilistId);
+      console.log('All users with this AniList ID (including current):', usersWithAnilist);
+
+      if (existingUsers.length > 0) {
+        console.log('Duplicate found! Blocking link.');
+        throw new Error('anilist_duplicate');
+      }
+
+      // 6. Mise à jour de PocketBase (Utilise la session utilisateur actuelle)
+      console.log('About to update user', userId, 'with anilist_user_id:', anilistId);
+      
       await pocketbaseStore.pb.collection('user').update(userId, {
         anilist_token: response.access_token,
-        anilist_user_id: viewer.id,
+        anilist_user_id: anilistId,
         anilist_username: viewer.name,
         anilist_avatar_url_medium: viewer.avatar.medium,
         anilist_avatar_url_large: viewer.avatar.large
       });
 
-      // 5. Rafraîchissement des données locales
+      console.log('User updated successfully. Verifying the data was saved...');
+      
+      // Verify the update worked
+      const updatedUser = await pocketbaseStore.pb.collection('user').getOne(userId);
+      console.log('Updated user data:', {
+        email: updatedUser.email,
+        anilist_user_id: updatedUser.anilist_user_id,
+        anilist_username: updatedUser.anilist_username
+      });
+
+      // 7. Rafraîchissement des données locales
       await pocketbaseStore.pb.collection('user').authRefresh();
 
       toastStore.openToast({
@@ -113,15 +149,21 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
       // Le SDK PocketBase place les erreurs de validation dans error.response.data
       const pbErrors = error?.response?.data;
 
-      if (pbErrors?.anilist_user_id) {
+      // Vérifier si c'est une erreur de doublon (notre validation personnalisée)
+      if (error.message === 'anilist_duplicate') {
         toastStore.openToast({
           type: 'error',
-          message: 'AniList account already associated to an user'
+          message: 'Ce compte AniList est déjà utilisé par un autre utilisateur.'
+        });
+      } else if (pbErrors?.anilist_user_id) {
+        toastStore.openToast({
+          type: 'error',
+          message: 'Ce compte AniList est déjà utilisé par un autre utilisateur.'
         });
       } else {
         toastStore.openToast({
           type: 'error',
-          message: error.message || 'An unexpected error occurred'
+          message: error.message || 'Une erreur inattendue est survenue.'
         });
       }
 

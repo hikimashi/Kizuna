@@ -141,7 +141,7 @@ const doLogin = async () => {
 
   try {
     data = await authStore.login(email.value, password.value);
-    toast.openToast({ type: 'success', message: `Welcome ${data.record.name}` });
+    toast.openToast({ type: 'success', message: `Welcome!` });
   } catch (e: any) {
     if (loginForm.value) {
       loginForm.value.reset();
@@ -158,7 +158,7 @@ const doGoogleLogin = async () => {
   let data;
   try {
     data = await authStore.loginWithGoogle();
-    toast.openToast({ type: 'success', message: `Welcome ${data.record.name}` });
+    toast.openToast({ type: 'success', message: `Welcome!` });
   } catch (e: any) {
     if (loginForm.value) {
       loginForm.value.reset();
@@ -174,7 +174,7 @@ const doGithubLogin = async () => {
   let data;
   try {
     data = await authStore.loginWithGithub();
-    toast.openToast({ type: 'success', message: `Welcome ${data.record.name}` });
+    toast.openToast({ type: 'success', message: `Welcome!` });
   } catch (e: any) {
     if (loginForm.value) {
       loginForm.value.reset();

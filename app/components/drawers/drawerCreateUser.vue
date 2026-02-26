@@ -180,7 +180,7 @@ const createUser = async () => {
 
   try {
     data = await authStore.createAccount(newUser.value);
-    toast.openToast({ type: 'success', message: `Account created successfully! Welcome ${data.record.name}` });
+    toast.openToast({ type: 'success', message: `Account created successfully! Welcome!` });
   } catch (e: any) {
     toast.openToast({ type: 'error', message: e.message || 'Account creation failed!' });
     return;
@@ -192,7 +192,7 @@ const doGoogleLogin = async () => {
   let data;
   try {
     data = await authStore.loginWithGoogle();
-    toast.openToast({ type: 'success', message: `Welcome ${data.record.name}` });
+    toast.openToast({ type: 'success', message: `Welcome!` });
   } catch (e: any) {
     toast.openToast({ type: 'error', message: e.message || 'Google login failed!' });
     return;
@@ -206,7 +206,7 @@ const doGithubLogin = async () => {
   let data;
   try {
     data = await authStore.loginWithGithub();
-    toast.openToast({ type: 'success', message: `Welcome ${data.record.name}` });
+    toast.openToast({ type: 'success', message: `Welcome!` });
   } catch (e: any) {
     toast.openToast({ type: 'error', message: e.message || 'GitHub login failed!' });
     return;

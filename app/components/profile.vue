@@ -191,7 +191,7 @@ const { userData } = storeToRefs(userStore);
 
 // Use the reactive authRecord from pocketbase store for AniList data
 const anilistUsername = computed(() => pocketbaseStore.authRecord?.anilist_username || 'Unknown user');
-const anilistAvatarUrl = computed(() => pocketbaseStore.authRecord?.anilist_avatar_url || '/img/user.png');
+const anilistAvatarUrl = computed(() => pocketbaseStore.authRecord?.anilist_avatar_url_large || pocketbaseStore.authRecord?.anilist_avatar_url_medium || '/img/user.png');
 const anilistUserId = computed(() => pocketbaseStore.authRecord?.anilist_user_id);
 
 userData.value.password = '';

@@ -137,7 +137,7 @@ const { userData } = storeToRefs(userStore);
 
 // Use AniList avatar if available, otherwise fallback to regular avatar
 const avatarUrl = computed(() => {
-  return pocketbaseStore.authRecord?.anilist_avatar_url || userData?.avatar || '/img/user.png';
+  return pocketbaseStore.authRecord?.anilist_avatar_url_medium || userData?.avatar || '/img/user.png';
 });
 
 /**

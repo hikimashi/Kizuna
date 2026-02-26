@@ -47,3 +47,6 @@ coverage/
 # Docker override only
 docker-compose.override.yml
 docker-compose.override.yaml
+
+# Docs
+docs/pocketbase-setup.md

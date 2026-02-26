@@ -6,16 +6,16 @@
         <component :is="alertIconMap[alert.type] ?? alertIconMap['info']" :class="alertColor(alert.type)"
           class="size-16" />
 
-        <span class="font-semibold text-xs md:text-lg lg:text-xl px-4">{{ alert.message }}</span>
+        <span class="font-semibold text-xs md:text-lg lg:text-xl px-4 whitespace-pre-line">{{ alert.message }}</span>
       </div>
       <!-- Buttons -->
       <div class="flex items-center" >
         <div class="flex gap-2">
-          <button @click="alertStore.onDenyRef?.()" class="btn btn-outline btn-error rounded-md">
+          <button v-if="alertStore.showDenyButton" @click="alertStore.onDenyRef?.()" class="btn btn-outline btn-error rounded-md">
             Deny
           </button>
           <button @click="alertStore.onAcceptRef?.()" class="btn btn-outline btn-success rounded-md">
-            Accept
+            OK
           </button>
         </div>
       </div>

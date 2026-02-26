@@ -38,7 +38,7 @@ const pocketbaseStore = usePocketbaseStore();
 const anilistAuthStore = useAnilistAuthStore();
 
 const loginWithAniList = () => {
-  anilistAuthStore.loginWithAniList();
+  anilistAuthStore.loginWithAniListWithWarning();
 };
 
 // Watch for changes in the auth store to reactively update the UI

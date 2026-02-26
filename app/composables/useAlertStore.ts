@@ -6,10 +6,12 @@ export const useAlertStore = defineStore('useAlertStore', () => {
 
   const onAcceptRef = ref<() => void>();
   const onDenyRef = ref<() => void>();
+  const showDenyButton = ref(true);
 
-  const openAlert = ({ type, message }: { type: string; message: string }): Promise<boolean> => {
+  const openAlert = ({ type, message, showDeny = true }: { type: string; message: string; showDeny?: boolean }): Promise<boolean> => {
     return new Promise(resolve => {
       alert.value = { type, message };
+      showDenyButton.value = showDeny;
 
       onAcceptRef.value = () => {
         resolve(true);
@@ -32,5 +34,6 @@ export const useAlertStore = defineStore('useAlertStore', () => {
     clearAlert,
     onAcceptRef,
     onDenyRef,
+    showDenyButton,
   };
 });

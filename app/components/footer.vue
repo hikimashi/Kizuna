@@ -1,6 +1,6 @@
 <template>
   <footer
-    class="footer footer-center p-6 bg-base-200 text-base-content rounded-t-lg"
+    class="footer footer-center p-6 bg-base-100 text-base-content rounded-t-lg"
     role="contentinfo"
   >
     <div

@@ -1,7 +1,7 @@
 <template>
   <div class="w-full min-h-screen flex flex-col">
     <Header />
-    <main class="flex-grow">
+    <main class="flex-grow bg-base-200">
       <NuxtPage />
       <DrawersContainer />
       <Toast />

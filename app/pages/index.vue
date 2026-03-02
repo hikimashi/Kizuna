@@ -75,17 +75,14 @@
             <div
               v-for="(feature, index) in features"
               :key="index"
-              ref="featureCards"
+              :ref="(el) => setCardRef(el, index)"
               class="feature-card"
               :class="{ visible: featureVisible[index] }"
             >
-              <!-- Spinner (shown until visible) -->
               <div v-if="!featureVisible[index]" class="card-spinner">
                 <div class="spinner-ring"></div>
               </div>
-
-              <!-- Card Content (shown when visible) -->
-              <div v-if="featureVisible[index]" class="card-content">
+              <div v-else class="card-content">
                 <div class="feature-icon">
                   <span v-html="feature.iconSvg"></span>
                 </div>
@@ -155,17 +152,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 import { useAnilistAuthStore } from '~/composables/useAnilistAuthStore'
 
 const pocketbaseStore = usePocketbaseStore()
 const anilistAuthStore = useAnilistAuthStore()
-
-// Feature cards refs for IntersectionObserver
 const featuresSection = ref<HTMLElement | null>(null)
-const featureCards = ref<HTMLElement[]>([])
-const featureVisible = ref<boolean[]>([false, false, false, false, false, false])
+
+// Plain object — NOT ref([])
+// ref="..." on v-for inside v-if is broken in Vue 3
+const cardEls: Record<number, HTMLElement> = {}
+const featureVisible = reactive<Record<number, boolean>>({
+  0: false, 1: false, 2: false, 3: false, 4: false, 5: false
+})
+
+// Callback ref function — called by Vue for each card
+function setCardRef(el: unknown, index: number) {
+  if (el instanceof HTMLElement) cardEls[index] = el
+}
 
 // Features data
 const features = [
@@ -216,37 +221,32 @@ const handleCreateAccount = () => {
 let observer: IntersectionObserver | null = null
 
 onMounted(() => {
-  // Wait a tick to ensure DOM is ready
   nextTick(() => {
     observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const index = (featureCards.value as HTMLElement[]).indexOf(
-              entry.target as HTMLElement
-            )
-            if (index !== -1) {
-              setTimeout(() => {
-                featureVisible.value[index] = true
-              }, index * 80)
-              observer?.unobserve(entry.target)
-            }
+          if (!entry.isIntersecting) return
+          const idx = Object.keys(cardEls).find(
+            (k) => cardEls[Number(k)] === entry.target
+          )
+          if (idx !== undefined) {
+            setTimeout(() => {
+              featureVisible[Number(idx)] = true
+            }, Number(idx) * 120)
+            observer?.unobserve(entry.target)
           }
         })
       },
-      { threshold: 0.15, root: null }
+      { threshold: 0.1, root: null, rootMargin: '0px 0px -30px 0px' }
     )
-
-    ;(featureCards.value as HTMLElement[]).forEach((card) => {
-      if (card) observer?.observe(card)
+    Object.values(cardEls).forEach((el) => {
+      if (el) observer?.observe(el)
     })
   })
 })
 
 onUnmounted(() => {
-  if (observer) {
-    observer.disconnect()
-  }
+  observer?.disconnect()
 })
 
 // Watch for auth changes
@@ -568,8 +568,8 @@ watch(() => pocketbaseStore.authRecord, () => {
   align-items: center;
   text-align: center;
   opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 0.5s ease, transform 0.5s ease, border-color 0.3s, box-shadow 0.3s;
+  transform: translateY(28px);
+  transition: opacity 0.55s ease, transform 0.55s ease, border-color 0.2s, box-shadow 0.2s;
   position: relative;
   overflow: hidden;
 }
@@ -605,16 +605,17 @@ watch(() => pocketbaseStore.authRecord, () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 200px;
+  min-height: 160px;
+  width: 100%;
 }
 
 .spinner-ring {
   width: 28px;
   height: 28px;
-  border: 3px solid rgba(61, 180, 242, 0.2);
-  border-top-color: var(--cyan);
+  border: 2.5px solid rgba(61, 180, 242, 0.12);
+  border-top-color: #3db4f2;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.75s linear infinite;
 }
 
 @keyframes spin {

@@ -21,6 +21,7 @@ node_modules/
 # Ai generated files
 QWEN.md
 GEMINI.md
+LAZY_SCROLL_IMPLEMENTATION.md
 
 # Logs
 *.log

@@ -4,7 +4,7 @@
       <!-- Left: Logo -->
       <div class="navbar-start">
         <NuxtLink to="/" class="logo-link">
-          <div class="logo-square">K</div>
+          <img src="/img/logo.png" alt="Kizuna" class="logo-image" />
           <span class="logo-text">Kizuna</span>
         </NuxtLink>
       </div>
@@ -205,17 +205,10 @@ onMounted(() => {
   text-decoration: none;
 }
 
-.logo-square {
-  width: 32px;
-  height: 32px;
-  background: var(--cyan);
-  color: var(--navy);
-  font-size: 18px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
+.logo-image {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
 }
 
 .logo-text {

@@ -26,10 +26,13 @@
           <!-- CTA Buttons -->
           <div class="cta-buttons fade-up">
             <button @click="handleCreateAccount" class="btn-primary">
-              <svg class="anilist-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M6.361 4.14L0 19.86h4.912l1.13-3.01h5.42l1.13 3.01H17.5L11.14 4.14H6.36zm.607 9.75l1.72-4.585 1.72 4.585H6.968zm10.78-9.75v15.72H24V4.14h-6.252z"/>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2"
+                   width="20" height="20" style="flex-shrink:0">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"/>
               </svg>
-              Create an account
+              Sign in
             </button>
             <button @click="scrollToFeatures" class="btn-secondary">
               Learn more
@@ -381,14 +384,15 @@ watch(() => pocketbaseStore.authRecord, () => {
   display: flex;
   gap: 16px;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .btn-primary {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 14px 28px;
-  background: var(--cyan);
+  padding: 14px 24px;
+  background: linear-gradient(135deg, var(--cyan) 0%, #5ac4ff 100%);
   color: var(--navy);
   border: none;
   border-radius: 8px;
@@ -396,11 +400,28 @@ watch(() => pocketbaseStore.authRecord, () => {
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transition: left 0.5s;
+}
+
+.btn-primary:hover::before {
+  left: 100%;
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(61, 180, 242, 0.3);
+  box-shadow: 0 8px 24px rgba(61, 180, 242, 0.4);
 }
 
 .anilist-icon {
@@ -450,6 +471,10 @@ watch(() => pocketbaseStore.authRecord, () => {
   align-items: flex-start;
   gap: 6px;
   padding: 0 24px;
+}
+
+.stat-item:nth-child(2) {
+  align-items: center;
 }
 
 .stat-label {
@@ -814,33 +839,6 @@ watch(() => pocketbaseStore.authRecord, () => {
   font-size: 13px;
   color: var(--text-primary);
   text-align: center;
-}
-
-/* ScrollToTop Override - discreet styling */
-:deep(.scroll-to-top),
-:deep([class*="scroll-top"]),
-:deep([class*="scrollTop"]) {
-  width: 32px !important;
-  height: 32px !important;
-  background: rgba(255, 255, 255, 0.06) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 6px !important;
-  box-shadow: none !important;
-  bottom: 20px !important;
-  right: 20px !important;
-}
-
-:deep(.scroll-to-top svg),
-:deep([class*="scroll-top"] svg),
-:deep([class*="scrollTop"] svg) {
-  width: 14px !important;
-  height: 14px !important;
-  color: rgba(255, 255, 255, 0.4) !important;
-}
-
-:deep(.scroll-to-top:hover),
-:deep([class*="scroll-top"]:hover) {
-  background: rgba(255, 255, 255, 0.11) !important;
 }
 
 /* Responsive */

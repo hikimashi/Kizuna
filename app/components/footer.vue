@@ -2,7 +2,7 @@
   <footer class="kizuna-footer">
     <div class="footer-content">
       <div class="footer-left">
-        <span class="copyright">© 2025 Kizuna. Not affiliated with AniList.</span>
+        <span class="copyright">© 2026 Kizuna.</span>
       </div>
       <div class="footer-right">
         <svg class="anilist-logo" viewBox="0 0 24 24" fill="currentColor">

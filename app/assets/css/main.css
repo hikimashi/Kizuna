@@ -1,4 +1,10 @@
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Overpass:ital,wght@0,100..900;1,100..900&family=Overpass+Mono:wght@300..700&display=swap');
+
+/* Tailwind */
 @import 'tailwindcss';
+
+/* Plugins */
 @plugin "daisyui";
 @plugin "daisyui/theme" {
   name: "forest";

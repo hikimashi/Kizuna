@@ -14,8 +14,8 @@
           <div class="footer-group">
             <h3>Navigation</h3>
             <NuxtLink to="/" class="footer-link">Home</NuxtLink>
-            <NuxtLink to="/animeList" class="footer-link">Anime List</NuxtLink>
-            <NuxtLink to="/profilePage" class="footer-link">Profile</NuxtLink>
+            <NuxtLink to="/animeList" class="footer-link" @click.prevent="handleProtectedNavigation('/animeList')">Anime List</NuxtLink>
+            <NuxtLink to="/profilePage" class="footer-link" @click.prevent="handleProtectedNavigation('/profilePage')">Profile</NuxtLink>
           </div>
 
           <div class="footer-group">
@@ -38,7 +38,26 @@
 </template>
 
 <script setup lang="ts">
+import { computed, unref } from 'vue'
+import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
+import { useToastStore } from '~/composables/useToastStore'
+
 const currentYear = new Date().getFullYear()
+const pocketbaseStore = usePocketbaseStore()
+const toastStore = useToastStore()
+const authRecord = computed(() => unref(pocketbaseStore.authRecord) as { id?: string } | null)
+
+const handleProtectedNavigation = async (to: string) => {
+  if (authRecord.value?.id) {
+    await navigateTo(to)
+    return
+  }
+
+  toastStore.openToast({
+    type: 'warning',
+    message: 'Tu dois te connecter pour acceder a cette page.'
+  })
+}
 </script>
 
 <style scoped>

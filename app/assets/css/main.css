@@ -75,3 +75,20 @@
   --depth: 0;
   --noise: 0;
 }
+
+html,
+body,
+#__nuxt {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background-image:
+    linear-gradient(rgba(8, 12, 24, 0.72), rgba(8, 12, 24, 0.72)),
+    url('/img/bg.jpg');
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+  background-attachment: fixed, fixed;
+}

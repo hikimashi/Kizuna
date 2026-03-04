@@ -1,86 +1,200 @@
 <template>
   <footer class="kizuna-footer">
     <div class="footer-content">
-      <div class="footer-left">
-        <span class="copyright">© 2026 Kizuna.</span>
+      <div class="footer-top">
+        <div class="brand-block">
+          <img src="/img/logo.png" alt="Kizuna" class="brand-logo" />
+          <div class="brand-text">
+            <p class="brand-name">Kizuna</p>
+            <p class="brand-subtitle">Shared anime lists with AniList sync</p>
+          </div>
+        </div>
+
+        <div class="footer-groups">
+          <div class="footer-group">
+            <h3>Navigation</h3>
+            <NuxtLink to="/" class="footer-link">Home</NuxtLink>
+            <NuxtLink to="/anime-list" class="footer-link">Anime List</NuxtLink>
+            <NuxtLink to="/profilePage" class="footer-link">Profile</NuxtLink>
+          </div>
+
+          <div class="footer-group">
+            <h3>Contacts</h3>
+            <a href="mailto:contact@kizuna.app" class="footer-link">contact@kizuna.app</a>
+            <a href="mailto:support@kizuna.app" class="footer-link">support@kizuna.app</a>
+            <span class="footer-note">Discord: coming soon</span>
+          </div>
+        </div>
       </div>
-      <div class="footer-right">
-        <svg class="anilist-logo" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M6.361 4.14L0 19.86h4.912l1.13-3.01h5.42l1.13 3.01H17.5L11.14 4.14H6.36zm.607 9.75l1.72-4.585 1.72 4.585H6.968zm10.78-9.75v15.72H24V4.14h-6.252z"/>
-        </svg>
-        <span class="powered-by">Powered by AniList API</span>
+
+      <div class="footer-bottom">
+        <span class="copyright">Copyright 2026 Kizuna.</span>
+        <div class="api-pill">
+          <span class="al-badge" aria-label="AniList">
+            <svg viewBox="0 0 24 24" fill="currentColor" role="img" aria-hidden="true">
+              <path d="M6.361 4.14L0 19.86h4.912l1.13-3.01h5.42l1.13 3.01H17.5L11.14 4.14H6.36zm.607 9.75l1.72-4.585 1.72 4.585H6.968zm10.78-9.75v15.72H24V4.14h-6.252z"/>
+            </svg>
+          </span>
+          <span class="api-text">Powered by AniList API</span>
+        </div>
       </div>
     </div>
   </footer>
 </template>
 
-<script setup lang="ts">
-</script>
-
 <style scoped>
-/* CSS Variables */
 .kizuna-footer {
-  --navy: #0a0e1a;
+  --navy-overlay: rgba(8, 12, 24, 0.7);
+  --cyan: #3db4f2;
+  --text-primary: #e8f0ff;
+  --text-secondary: #8ba8c4;
   --text-dim: #4a6480;
   --border: rgba(255, 255, 255, 0.08);
   --font-main: 'Overpass', sans-serif;
-}
 
-/* Base */
-.kizuna-footer {
-  background: transparent;
+  background: var(--navy-overlay);
+  backdrop-filter: blur(14px);
   border-top: 1px solid var(--border);
-  padding: 24px 48px;
   font-family: var(--font-main);
+  padding: 28px 48px 22px;
 }
 
 .footer-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.footer-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+  align-items: flex-start;
+}
+
+.brand-block {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-logo {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.brand-name {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.brand-subtitle {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.footer-groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(170px, 220px));
+  gap: 24px;
+}
+
+.footer-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.footer-group h3 {
+  margin: 0 0 4px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.footer-link,
+.footer-note {
+  margin: 0;
+  text-decoration: none;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.footer-link:hover {
+  color: var(--text-primary);
+}
+
+.footer-bottom {
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-/* Footer Left */
-.footer-left {
-  display: flex;
-  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .copyright {
-  font-size: 12px;
   color: var(--text-dim);
+  font-size: 12px;
 }
 
-/* Footer Right */
-.footer-right {
-  display: flex;
+.api-pill {
+  display: inline-flex;
   align-items: center;
   gap: 10px;
-}
-
-.anilist-logo {
-  width: 18px;
-  height: 18px;
-  color: var(--text-dim);
-}
-
-.powered-by {
+  color: var(--text-secondary);
   font-size: 12px;
+}
+
+.al-badge {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(61, 180, 242, 0.5);
+  background: rgba(61, 180, 242, 0.15);
+  color: var(--cyan);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.al-badge svg {
+  width: 16px;
+  height: 16px;
+}
+
+.api-text {
   color: var(--text-dim);
 }
 
-/* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .kizuna-footer {
     padding: 24px;
   }
 
-  .footer-content {
+  .footer-top {
     flex-direction: column;
-    gap: 16px;
-    text-align: center;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 580px) {
+  .footer-groups {
+    grid-template-columns: 1fr;
   }
 }
 </style>

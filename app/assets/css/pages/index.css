@@ -21,7 +21,7 @@
 .kizuna-page {
   font-family: var(--font-main);
   color: var(--text-primary);
-  background-color: var(--navy);
+  background-color: transparent;
   min-height: 100vh;
 }
 
@@ -29,44 +29,24 @@
 .hero-section {
   position: relative;
   min-height: 100vh;
-  background-image: url('img/bg.jpg');
-  background-size: cover;
-  background-position: center 30%;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
   overflow: hidden;
-}
-
-.hero-section::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to right,
-    rgba(8, 12, 24, 0.88) 0%,
-    rgba(8, 12, 24, 0.55) 55%,
-    rgba(8, 12, 24, 0.2) 100%
-  );
-  z-index: 1;
-}
-
-.hero-section::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to top,
-    rgba(8, 12, 24, 0.7) 0%,
-    transparent 40%
-  );
-  z-index: 2;
 }
 
 .hero-content {
   position: relative;
-  z-index: 3;
+  z-index: 1;
   max-width: 640px;
+  width: min(100%, 640px);
+  margin: 0;
   padding: 100px 52px 80px;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
   gap: 24px;
 }
 
@@ -201,6 +181,7 @@
 .stats-row {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0;
   padding-top: 48px;
   margin-top: 24px;
@@ -210,7 +191,7 @@
 .stat-item {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 6px;
   padding: 0 24px;
 }
@@ -246,22 +227,10 @@
 
 /* Features Section */
 .features-section {
-  background: var(--navy);
+  background: transparent;
   padding: 100px 52px;
   position: relative;
   overflow: hidden;
-}
-
-.features-section::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: url('img/bg.jpg');
-  background-size: cover;
-  background-position: center;
-  opacity: 0.06;
-  pointer-events: none;
-  z-index: 0;
 }
 
 .features-content {

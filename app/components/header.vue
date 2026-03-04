@@ -3,7 +3,7 @@
     <div class="navbar-content">
       <!-- Left: Logo -->
       <div class="navbar-start">
-        <NuxtLink to="/" class="logo-link">
+        <NuxtLink to="/" class="logo-link" @click="handleLogoClick">
           <img src="/img/logo.png" alt="Kizuna" class="logo-image" />
           <span class="logo-text">Kizuna</span>
         </NuxtLink>
@@ -132,6 +132,7 @@ const themeStore = useThemeStore()
 const drawerStore = useDrawersStore()
 const authStore = useMyAuthStore()
 const pocketbaseStore = usePocketbaseStore()
+const route = useRoute()
 
 // Use AniList avatar if available
 const avatarUrl = computed(() => {
@@ -140,6 +141,13 @@ const avatarUrl = computed(() => {
 
 const openLoginDrawer = () => {
   drawerStore.openDrawer('drawerLogin')
+}
+
+const handleLogoClick = (event: MouseEvent) => {
+  if (route.path !== '/') return
+
+  event.preventDefault()
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 const handleSignUp = () => {

@@ -12,7 +12,7 @@
       <!-- Right: Auth-dependent content -->
       <div class="navbar-end">
         <!-- Guest state -->
-        <template v-if="!pocketbaseStore.authRecord">
+        <template v-if="!isLoggedIn">
           <button @click="openLoginDrawer" class="btn-ghost">
             Log in
           </button>
@@ -95,7 +95,7 @@
         </template>
 
         <!-- Theme toggle (always visible) -->
-        <label class="swap-rotate swap theme-toggle">
+        <label v-if="!isLoggedIn" class="swap-rotate swap theme-toggle">
           <input 
             type="checkbox" 
             :checked="themeStore.activeTheme === 'winter'" 
@@ -131,14 +131,11 @@ const drawerStore = useDrawersStore()
 const authStore = useMyAuthStore()
 const pocketbaseStore = usePocketbaseStore()
 const route = useRoute()
-const isLoggedIn = computed(() => {
-  const authRefOrRecord = pocketbaseStore.authRecord as any
-  return Boolean(authRefOrRecord?.value ?? authRefOrRecord)
-})
+const isLoggedIn = computed(() => Boolean(pocketbaseStore.pb.authStore.model))
 
 // Use AniList avatar if available
 const avatarUrl = computed(() => {
-  return pocketbaseStore.authRecord?.anilist_avatar_url_medium || '/img/user.webp'
+  return pocketbaseStore.pb.authStore.model?.anilist_avatar_url_medium || '/img/user.webp'
 })
 
 const openLoginDrawer = () => {
@@ -178,15 +175,16 @@ const handleLogout = async () => {
 
 /* Base */
 .kizuna-navbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
   height: 64px;
+  width: 100%;
   background: var(--navy-overlay);
   backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--border);
-  z-index: 1000;
+  z-index: 9999;
   font-family: var(--font-main);
 }
 
@@ -222,10 +220,9 @@ const handleLogout = async () => {
 }
 
 .logo-text {
-  font-size: 22px;
+  font-size: 23px;
   font-weight: 700;
   color: var(--text-primary);
-  transform: translateY(1px);
 }
 
 .logo-text-hidden {
@@ -249,10 +246,9 @@ const handleLogout = async () => {
   color: var(--text-primary);
   padding: 9px 18px;
   border-radius: 6px;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 500;
   line-height: 1.2;
-  transform: translateY(1px);
   cursor: pointer;
   transition: background 0.2s, border-color 0.2s;
 }
@@ -268,10 +264,9 @@ const handleLogout = async () => {
   border: none;
   padding: 9px 18px;
   border-radius: 6px;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   line-height: 1.2;
-  transform: translateY(1px);
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -296,9 +291,8 @@ const handleLogout = async () => {
 
 .nav-link {
   padding: 9px 13px;
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.2;
-  transform: translateY(1px);
   color: var(--text-secondary);
   text-decoration: none;
   transition: color 0.2s;
@@ -323,21 +317,20 @@ const handleLogout = async () => {
 .icon-btn {
   width: 40px;
   height: 40px;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 7px;
+  background: none;
+  border: none;
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   color: var(--text-secondary);
-  transition: background 0.2s, border-color 0.2s, color 0.2s;
+  transition: color 0.2s, transform 0.2s;
 }
 
 .icon-btn:hover {
-  background: var(--hover-fill);
-  border-color: var(--hover-border);
   color: var(--text-primary);
+  transform: translateY(-1px);
 }
 
 .icon-btn svg {

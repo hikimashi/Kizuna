@@ -124,6 +124,7 @@
 .btn-primary {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   padding: 14px 24px;
   background: linear-gradient(135deg, var(--cyan) 0%, #5ac4ff 100%);
@@ -132,6 +133,7 @@
   border-radius: 8px;
   font-size: 15px;
   font-weight: 600;
+  line-height: 1;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
   position: relative;
@@ -161,6 +163,7 @@
 .btn-secondary {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   padding: 14px 28px;
   background: var(--soft-bg);
@@ -170,6 +173,7 @@
   border-radius: 8px;
   font-size: 15px;
   font-weight: 500;
+  line-height: 1;
   cursor: pointer;
   transition: background 0.2s, border-color 0.2s;
 }

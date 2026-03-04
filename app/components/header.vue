@@ -239,14 +239,18 @@ const handleLogout = async () => {
 
 /* Guest Buttons */
 .btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   border: 1px solid var(--border);
   color: var(--text-primary);
-  padding: 9px 18px;
+  height: 40px;
+  padding: 0 18px;
   border-radius: 6px;
   font-size: 16px;
   font-weight: 500;
-  line-height: 1.2;
+  line-height: 1;
   cursor: pointer;
   transition: background 0.2s, border-color 0.2s;
 }
@@ -257,14 +261,18 @@ const handleLogout = async () => {
 }
 
 .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: var(--cyan);
   color: var(--navy);
   border: none;
-  padding: 9px 18px;
+  height: 40px;
+  padding: 0 18px;
   border-radius: 6px;
   font-size: 16px;
   font-weight: 600;
-  line-height: 1.2;
+  line-height: 1;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -415,7 +423,8 @@ const handleLogout = async () => {
 @media (max-width: 768px) {
   .btn-ghost,
   .btn-primary {
-    padding: 8px 13px;
+    height: 36px;
+    padding: 0 13px;
     font-size: 14px;
   }
 
@@ -443,9 +452,10 @@ const handleLogout = async () => {
 
   .btn-ghost,
   .btn-primary {
-    padding: 7px 9px;
+    height: 32px;
+    padding: 0 9px;
     font-size: 12px;
-    line-height: 1.2;
+    line-height: 1;
   }
 
   .icon-btn,

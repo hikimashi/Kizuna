@@ -24,6 +24,6 @@ import Alert from './components/alerts/alert.vue';
 
 <style scoped>
 .app-main {
-  padding-top: 64px;
+  padding-top: 0;
 }
 </style>

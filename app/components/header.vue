@@ -120,7 +120,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, unref } from 'vue'
 import { useThemeStore } from '~/composables/useThemeStore'
 import { useDrawersStore } from '~/composables/useDrawersStore'
 import { useMyAuthStore } from '~/composables/useMyAuthStore'
@@ -131,11 +131,12 @@ const drawerStore = useDrawersStore()
 const authStore = useMyAuthStore()
 const pocketbaseStore = usePocketbaseStore()
 const route = useRoute()
-const isLoggedIn = computed(() => Boolean(pocketbaseStore.pb.authStore.model))
+const authRecord = computed(() => unref(pocketbaseStore.authRecord) as any)
+const isLoggedIn = computed(() => Boolean(authRecord.value?.id))
 
 // Use AniList avatar if available
 const avatarUrl = computed(() => {
-  return pocketbaseStore.pb.authStore.model?.anilist_avatar_url_medium || '/img/user.webp'
+  return authRecord.value?.anilist_avatar_url_medium || '/img/user.webp'
 })
 
 const openLoginDrawer = () => {
@@ -175,16 +176,13 @@ const handleLogout = async () => {
 
 /* Base */
 .kizuna-navbar {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
+  position: relative;
   height: 64px;
   width: 100%;
-  background: var(--navy-overlay);
-  backdrop-filter: blur(14px);
+  background-color: var(--navy-overlay);
   border-bottom: 1px solid var(--border);
-  z-index: 9999;
+  z-index: 10;
+  isolation: isolate;
   font-family: var(--font-main);
 }
 

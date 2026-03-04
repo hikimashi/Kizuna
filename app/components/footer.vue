@@ -27,7 +27,7 @@
       </div>
 
       <div class="footer-bottom">
-        <span class="copyright">Copyright 2026 Kizuna.</span>
+        <span class="copyright">© {{ currentYear }} Kizuna.</span>
         <div class="api-pill">
           <img src="/img/anilist.svg" alt="AniList" class="anilist-logo" />
           <span class="api-text">Powered by AniList API</span>
@@ -36,6 +36,10 @@
     </div>
   </footer>
 </template>
+
+<script setup lang="ts">
+const currentYear = new Date().getFullYear()
+</script>
 
 <style scoped>
 .kizuna-footer {
@@ -76,8 +80,8 @@
 }
 
 .brand-logo {
-  width: 42px;
-  height: 42px;
+  width: 62px;
+  height: 62px;
   object-fit: contain;
 }
 

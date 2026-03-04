@@ -1,5 +1,5 @@
 <template>
-  <header class="kizuna-navbar" :class="{ 'is-logged-in': isLoggedIn }">
+  <header class="kizuna-navbar" :class="{ 'is-logged-in': showFullNav }">
     <div class="navbar-content">
       <!-- Left: Logo -->
       <div class="navbar-start">
@@ -21,7 +21,44 @@
           </button>
         </template>
 
-        <!-- Authenticated state -->
+        <!-- Logged in but AniList not linked -->
+        <template v-else-if="showPendingLinkState">
+          <div class="nav-actions">
+            <div class="dropdown dropdown-bottom dropdown-end">
+              <div tabindex="0" role="button" class="avatar-btn">
+                <img
+                  :src="avatarUrl"
+                  alt="Avatar"
+                  class="avatar-image"
+                />
+              </div>
+              <ul class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
+                <li>
+                  <NuxtLink class="justify-between" to="/profilePage">
+                    Profile
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                      stroke="currentColor" class="size-5">
+                      <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.214 1.281c.062.374.312.686.644.87.074.04.148.083.221.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.004.827c-.293.24-.438.613-.43.991a8.66 8.66 0 0 1 0 .256c-.008.378.137.75.43.99l1.004.828c.424.35.534.955.26 1.43l-1.296 2.247a1.125 1.125 0 0 1-1.37.49l-1.217-.456c-.355-.133-.75-.072-1.075.124a9.21 9.21 0 0 1-.221.128c-.332.183-.582.495-.644.869l-.214 1.281c-.09.543-.56.94-1.11.94h-2.593c-.55 0-1.02-.397-1.11-.94l-.214-1.281a1.125 1.125 0 0 0-.644-.869 9.21 9.21 0 0 1-.221-.128c-.325-.196-.72-.257-1.075-.124l-1.217.456a1.125 1.125 0 0 1-1.37-.49L2.758 15.81a1.125 1.125 0 0 1 .26-1.43l1.004-.827c.293-.24.438-.612.43-.99a8.66 8.66 0 0 1 0-.256c.008-.378-.137-.75-.43-.99l-1.004-.828a1.125 1.125 0 0 1-.26-1.43l1.296-2.247a1.125 1.125 0 0 1 1.37-.49l1.217.456c.355.133.75.072 1.075-.124.073-.044.147-.086.221-.127.332-.184.582-.496.644-.87l.214-1.281Z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 15.75a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Z" />
+                    </svg>
+                  </NuxtLink>
+                </li>
+                <li @click="handleLogout()">
+                  <a class="justify-between" href="/">Logout
+                    <svg class="size-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                      stroke-width="1.5" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15M12 9l3 3m0 0-3 3m3-3H2.25" />
+                    </svg>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </template>
+
+        <!-- Authenticated + AniList linked -->
         <template v-else>
           <nav class="nav-links">
             <NuxtLink to="/" class="nav-link" :class="{ active: $route.path === '/' }">
@@ -95,7 +132,11 @@
         </template>
 
         <!-- Theme toggle (always visible) -->
-        <label v-if="!isLoggedIn" class="swap-rotate swap theme-toggle">
+        <label
+          v-if="!showFullNav"
+          class="swap-rotate swap theme-toggle"
+          :class="{ 'theme-toggle-before-avatar': showPendingLinkState }"
+        >
           <input 
             type="checkbox" 
             :checked="themeStore.activeTheme === 'winter'" 
@@ -133,6 +174,9 @@ const pocketbaseStore = usePocketbaseStore()
 const route = useRoute()
 const authRecord = computed(() => unref(pocketbaseStore.authRecord) as any)
 const isLoggedIn = computed(() => Boolean(authRecord.value?.id))
+const isAniListLinked = computed(() => Boolean(authRecord.value?.anilist_user_id && authRecord.value?.anilist_token))
+const showPendingLinkState = computed(() => isLoggedIn.value && !isAniListLinked.value)
+const showFullNav = computed(() => isLoggedIn.value && isAniListLinked.value)
 
 // Use AniList avatar if available
 const avatarUrl = computed(() => {
@@ -386,6 +430,12 @@ const handleLogout = async () => {
   margin-left: 9px;
 }
 
+.theme-toggle-before-avatar {
+  order: -1;
+  margin-left: 0;
+  margin-right: 9px;
+}
+
 .theme-toggle svg {
   width: 22px;
   height: 22px;
@@ -438,6 +488,11 @@ const handleLogout = async () => {
 
   .theme-toggle {
     margin-left: 2px;
+  }
+
+  .theme-toggle-before-avatar {
+    margin-left: 0;
+    margin-right: 2px;
   }
 }
 

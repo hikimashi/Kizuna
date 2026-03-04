@@ -28,7 +28,7 @@
 /* Hero Section */
 .hero-section {
   position: relative;
-  min-height: 100vh;
+  min-height: 94vh;
   background: transparent;
   display: flex;
   align-items: center;
@@ -42,7 +42,7 @@
   max-width: 640px;
   width: min(100%, 640px);
   margin: 0;
-  padding: 100px 52px 80px;
+  padding: 96px 52px 56px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -185,8 +185,8 @@
   align-items: center;
   justify-content: center;
   gap: 0;
-  padding-top: 48px;
-  margin-top: 24px;
+  padding-top: 36px;
+  margin-top: 16px;
   border-top: 1px solid var(--border);
 }
 
@@ -230,7 +230,7 @@
 /* Features Section */
 .features-section {
   background: transparent;
-  padding: 100px 52px;
+  padding: 72px 52px 64px;
   position: relative;
   overflow: hidden;
 }
@@ -564,11 +564,11 @@
 
 @media (max-width: 768px) {
   .hero-content {
-    padding: 80px 24px 60px;
+    padding: 76px 24px 44px;
   }
 
   .features-section {
-    padding: 60px 24px;
+    padding: 40px 24px 44px;
   }
 
   .features-grid {

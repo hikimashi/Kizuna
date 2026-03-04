@@ -20,8 +20,7 @@
 
           <div class="footer-group">
             <h3>Contacts</h3>
-            <a href="mailto:contact@kizuna.app" class="footer-link">contact@kizuna.app</a>
-            <a href="mailto:support@kizuna.app" class="footer-link">support@kizuna.app</a>
+            <a href="mailto:support.kizuna@gmail.com" class="footer-link">support.kizuna@gmail.com</a>
             <span class="footer-note">Discord: coming soon</span>
           </div>
         </div>
@@ -30,11 +29,7 @@
       <div class="footer-bottom">
         <span class="copyright">Copyright 2026 Kizuna.</span>
         <div class="api-pill">
-          <span class="al-badge" aria-label="AniList">
-            <svg viewBox="0 0 24 24" fill="currentColor" role="img" aria-hidden="true">
-              <path d="M6.361 4.14L0 19.86h4.912l1.13-3.01h5.42l1.13 3.01H17.5L11.14 4.14H6.36zm.607 9.75l1.72-4.585 1.72 4.585H6.968zm10.78-9.75v15.72H24V4.14h-6.252z"/>
-            </svg>
-          </span>
+          <img src="/img/anilist.svg" alt="AniList" class="anilist-logo" />
           <span class="api-text">Powered by AniList API</span>
         </div>
       </div>
@@ -160,21 +155,10 @@
   font-size: 12px;
 }
 
-.al-badge {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  border: 1px solid rgba(61, 180, 242, 0.5);
-  background: rgba(61, 180, 242, 0.15);
-  color: var(--cyan);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.al-badge svg {
-  width: 16px;
-  height: 16px;
+.anilist-logo {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
 }
 
 .api-text {

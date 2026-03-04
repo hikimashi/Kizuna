@@ -43,12 +43,12 @@ const currentYear = new Date().getFullYear()
 
 <style scoped>
 .kizuna-footer {
-  --navy-overlay: rgba(8, 12, 24, 0.7);
-  --cyan: #3db4f2;
-  --text-primary: #e8f0ff;
-  --text-secondary: #8ba8c4;
-  --text-dim: #4a6480;
-  --border: rgba(255, 255, 255, 0.08);
+  --navy-overlay: var(--kz-surface-overlay);
+  --cyan: var(--kz-accent);
+  --text-primary: var(--kz-text-primary);
+  --text-secondary: var(--kz-text-secondary);
+  --text-dim: var(--kz-text-dim);
+  --border: var(--kz-border);
   --font-main: 'Overpass', sans-serif;
 
   background: var(--navy-overlay);

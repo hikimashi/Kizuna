@@ -3,16 +3,27 @@
 
 /* CSS Variables */
 .kizuna-page {
-  --navy: #0a0e1a;
-  --navy-overlay: rgba(10, 14, 26, 0.72);
-  --cyan: #3db4f2;
-  --teal: #1dd3b0;
-  --text-primary: #e8f0ff;
-  --text-secondary: #8ba8c4;
-  --text-dim: #4a6480;
-  --border: rgba(255, 255, 255, 0.08);
-  --card-bg: #131a26;
-  --card-input: #1e2736;
+  --navy: var(--kz-page-navy);
+  --navy-overlay: var(--kz-surface-overlay);
+  --cyan: var(--kz-accent);
+  --teal: var(--kz-accent-alt);
+  --text-primary: var(--kz-text-primary);
+  --text-secondary: var(--kz-text-secondary);
+  --text-dim: var(--kz-text-dim);
+  --border: var(--kz-border);
+  --card-bg: var(--kz-card-bg);
+  --card-input: var(--kz-card-input);
+  --subtitle: var(--kz-subtitle);
+  --soft-bg: var(--kz-soft-bg);
+  --soft-bg-hover: var(--kz-soft-bg-hover);
+  --soft-accent-bg: var(--kz-soft-accent-bg);
+  --soft-accent-bg-hover: var(--kz-soft-accent-bg-hover);
+  --hover-border: var(--kz-hover-border);
+  --hover-fill: var(--kz-hover-fill);
+  --shadow-strong: var(--kz-shadow-strong);
+  --avatar-border: var(--kz-avatar-border);
+  --spinner-track: var(--kz-spinner-track);
+  --glint: var(--kz-glint);
   --font-main: 'Overpass', sans-serif;
   --font-mono: 'Overpass Mono', monospace;
 }
@@ -56,7 +67,7 @@
   align-items: center;
   gap: 8px;
   padding: 6px 14px;
-  background: rgba(61, 180, 242, 0.12);
+  background: var(--soft-accent-bg);
   border: 1px solid var(--cyan);
   border-radius: 999px;
   font-size: 12px;
@@ -97,7 +108,7 @@
   font-size: 15px;
   font-weight: 300;
   line-height: 1.75;
-  color: rgba(200, 220, 255, 0.8);
+  color: var(--subtitle);
   margin: 0;
 }
 
@@ -134,7 +145,7 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  background: linear-gradient(90deg, transparent, var(--glint), transparent);
   transition: left 0.5s;
 }
 
@@ -152,7 +163,7 @@
   align-items: center;
   gap: 8px;
   padding: 14px 28px;
-  background: rgba(10, 14, 26, 0.5);
+  background: var(--soft-bg);
   backdrop-filter: blur(10px);
   color: var(--text-primary);
   border: 1px solid var(--border);
@@ -164,8 +175,8 @@
 }
 
 .btn-secondary:hover {
-  background: rgba(10, 14, 26, 0.7);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: var(--soft-bg-hover);
+  border-color: var(--hover-border);
 }
 
 .hero-icon {
@@ -300,8 +311,8 @@
 }
 
 .feature-card:hover {
-  border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border-color: var(--hover-border);
+  box-shadow: var(--shadow-strong);
 }
 
 .feature-card:hover::before {
@@ -325,8 +336,8 @@
 .spinner-ring {
   width: 28px;
   height: 28px;
-  border: 2.5px solid rgba(61, 180, 242, 0.12);
-  border-top-color: #3db4f2;
+  border: 2.5px solid var(--spinner-track);
+  border-top-color: var(--cyan);
   border-radius: 50%;
   animation: spin 0.75s linear infinite;
 }
@@ -347,7 +358,7 @@
 .feature-icon {
   width: 38px;
   height: 38px;
-  background: rgba(61, 180, 242, 0.12);
+  background: var(--soft-accent-bg);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -433,7 +444,7 @@
 .add-friend-btn {
   width: 32px;
   height: 32px;
-  background: rgba(61, 180, 242, 0.12);
+  background: var(--soft-accent-bg);
   border: 1px solid var(--cyan);
   border-radius: 6px;
   display: flex;
@@ -445,7 +456,7 @@
 }
 
 .add-friend-btn:hover {
-  background: rgba(61, 180, 242, 0.2);
+  background: var(--soft-accent-bg-hover);
 }
 
 .add-friend-btn svg {
@@ -510,7 +521,7 @@
 }
 
 .list-item:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--hover-fill);
 }
 
 .list-item span {
@@ -536,7 +547,7 @@
   width: 56px;
   height: 56px;
   background: var(--card-input);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--avatar-border);
   border-radius: 8px;
   display: flex;
   align-items: center;

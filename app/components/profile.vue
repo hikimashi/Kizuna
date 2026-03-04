@@ -72,7 +72,7 @@
             <h2 class="text-xl font-bold mb-4">Theme preference</h2>
             <label class="swap-rotate swap btn btn-ghost">
               <!-- Theme change -->
-              <input type="checkbox" :checked="themeStore.activeTheme === 'winter'" data-toggle-theme="forest,winter"
+              <input type="checkbox" :checked="themeStore.activeTheme === 'winter'"
                 @change="themeStore.changeTheme()" />
 
               <!-- sun icon -->
@@ -156,11 +156,10 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, toRaw } from 'vue';
+import { ref, toRaw } from 'vue';
 import { navigateTo } from '#app';
 import { onBeforeRouteLeave } from '#vue-router';
 import { storeToRefs } from 'pinia';
-import { themeChange } from 'theme-change';
 import { useUserStore } from '~/composables/useUserStore';
 import { useThemeStore } from '~/composables/useThemeStore';
 import { useAlertStore } from '~/composables/useAlertStore';
@@ -340,11 +339,5 @@ onBeforeRouteLeave(async () => {
       return false;
     }
   }
-});
-/**
- * Mounted/Unmounted
- */
-onMounted(() => {
-  themeChange(false);
 });
 </script>

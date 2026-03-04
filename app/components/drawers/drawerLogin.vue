@@ -98,7 +98,6 @@ import { useMyAuthStore } from '~/composables/useMyAuthStore';
 import { useToastStore } from '~/composables/useToastStore';
 import { useUserStore } from '~/composables/useUserStore';
 import { useThemeStore } from '~/composables/useThemeStore';
-import { themeChange } from 'theme-change';
 
 const drawerStore = useDrawersStore();
 const authStore = useMyAuthStore();
@@ -150,7 +149,6 @@ const doLogin = async () => {
     return;
   }
   themeStore.setTheme();
-  themeChange(false);
   close();
 };
 

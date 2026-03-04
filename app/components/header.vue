@@ -99,7 +99,6 @@
           <input 
             type="checkbox" 
             :checked="themeStore.activeTheme === 'winter'" 
-            data-toggle-theme="forest,winter"
             @change="themeStore.changeTheme()" 
           />
 
@@ -126,7 +125,6 @@ import { useThemeStore } from '~/composables/useThemeStore'
 import { useDrawersStore } from '~/composables/useDrawersStore'
 import { useMyAuthStore } from '~/composables/useMyAuthStore'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
-import { themeChange } from 'theme-change'
 
 const themeStore = useThemeStore()
 const drawerStore = useDrawersStore()
@@ -157,22 +155,20 @@ const handleSignUp = () => {
 const handleLogout = async () => {
   await authStore.logout()
 }
-
-// Initialize theme
-onMounted(() => {
-  themeChange(false)
-})
 </script>
 
 <style scoped>
 /* CSS Variables */
 .kizuna-navbar {
-  --navy: #0a0e1a;
-  --navy-overlay: rgba(8, 12, 24, 0.7);
-  --cyan: #3db4f2;
-  --text-primary: #e8f0ff;
-  --text-secondary: #8ba8c4;
-  --border: rgba(255, 255, 255, 0.08);
+  --navy: var(--kz-page-navy);
+  --navy-overlay: var(--kz-surface-overlay);
+  --cyan: var(--kz-accent);
+  --text-primary: var(--kz-text-primary);
+  --text-secondary: var(--kz-text-secondary);
+  --border: var(--kz-border);
+  --hover-fill: var(--kz-hover-fill);
+  --hover-border: var(--kz-hover-border);
+  --card-bg: var(--kz-card-bg);
   --font-main: 'Overpass', sans-serif;
 }
 
@@ -246,8 +242,8 @@ onMounted(() => {
 }
 
 .btn-ghost:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: var(--hover-fill);
+  border-color: var(--hover-border);
 }
 
 .btn-primary {
@@ -313,8 +309,8 @@ onMounted(() => {
 }
 
 .icon-btn:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: var(--hover-fill);
+  border-color: var(--hover-border);
   color: var(--text-primary);
 }
 
@@ -351,7 +347,7 @@ onMounted(() => {
 }
 
 .avatar-btn:hover {
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: var(--hover-border);
 }
 
 .avatar-image {
@@ -372,7 +368,7 @@ onMounted(() => {
 
 /* Dropdown */
 .dropdown-content {
-  background: #131a26 !important;
+  background: var(--card-bg) !important;
   border: 1px solid var(--border);
 }
 
@@ -381,7 +377,7 @@ onMounted(() => {
 }
 
 .dropdown-content a:hover {
-  background: rgba(255, 255, 255, 0.05) !important;
+  background: var(--hover-fill) !important;
 }
 
 /* Responsive */

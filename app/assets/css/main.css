@@ -46,10 +46,10 @@
   default: false;
   prefersdark: false;
   color-scheme: "light";
-  --color-base-100: #fafafa; 
-  --color-base-200: #edf1f5;
-  --color-base-300: #edf1f5;
-  --color-base-content: #5c728a;
+  --color-base-100: #eef3f8; 
+  --color-base-200: #e3ebf3;
+  --color-base-300: #d7e1ec;
+  --color-base-content: #36516b;
   --color-primary: #1fb3ff;
   --color-primary-content: #cdd5f2;
   --color-secondary: #58bff4;
@@ -76,6 +76,59 @@
   --noise: 0;
 }
 
+:root,
+[data-theme="forest"] {
+  --kz-bg-image: url('/img/bgDark.jpg');
+  --kz-app-overlay: rgba(8, 12, 24, 0.72);
+  --kz-surface-overlay: rgba(10, 14, 26, 0.72);
+  --kz-page-navy: #0a0e1a;
+  --kz-accent: #3db4f2;
+  --kz-accent-alt: #1dd3b0;
+  --kz-text-primary: #e8f0ff;
+  --kz-text-secondary: #8ba8c4;
+  --kz-text-dim: #4a6480;
+  --kz-border: rgba(255, 255, 255, 0.08);
+  --kz-card-bg: #131a26;
+  --kz-card-input: #1e2736;
+  --kz-subtitle: rgba(200, 220, 255, 0.8);
+  --kz-soft-bg: rgba(10, 14, 26, 0.5);
+  --kz-soft-bg-hover: rgba(10, 14, 26, 0.7);
+  --kz-soft-accent-bg: rgba(61, 180, 242, 0.12);
+  --kz-soft-accent-bg-hover: rgba(61, 180, 242, 0.2);
+  --kz-hover-border: rgba(255, 255, 255, 0.15);
+  --kz-hover-fill: rgba(255, 255, 255, 0.05);
+  --kz-shadow-strong: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --kz-avatar-border: rgba(255, 255, 255, 0.15);
+  --kz-spinner-track: rgba(61, 180, 242, 0.12);
+  --kz-glint: rgba(255, 255, 255, 0.3);
+}
+
+[data-theme="winter"] {
+  --kz-bg-image: url('/img/bgLight.jpg');
+  --kz-app-overlay: rgba(220, 232, 245, 0.66);
+  --kz-surface-overlay: rgba(239, 246, 253, 0.72);
+  --kz-page-navy: #132c44;
+  --kz-accent: #3db4f2;
+  --kz-accent-alt: #16b79a;
+  --kz-text-primary: #17344e;
+  --kz-text-secondary: #3e5d78;
+  --kz-text-dim: #5a7693;
+  --kz-border: rgba(23, 52, 78, 0.2);
+  --kz-card-bg: rgba(244, 249, 254, 0.62);
+  --kz-card-input: rgba(232, 241, 250, 0.9);
+  --kz-subtitle: rgba(28, 54, 78, 0.8);
+  --kz-soft-bg: rgba(244, 249, 254, 0.42);
+  --kz-soft-bg-hover: rgba(244, 249, 254, 0.56);
+  --kz-soft-accent-bg: rgba(61, 180, 242, 0.12);
+  --kz-soft-accent-bg-hover: rgba(61, 180, 242, 0.24);
+  --kz-hover-border: rgba(23, 52, 78, 0.26);
+  --kz-hover-fill: rgba(23, 52, 78, 0.08);
+  --kz-shadow-strong: 0 8px 22px rgba(25, 53, 79, 0.16);
+  --kz-avatar-border: rgba(23, 52, 78, 0.22);
+  --kz-spinner-track: rgba(61, 180, 242, 0.2);
+  --kz-glint: rgba(255, 255, 255, 0.4);
+}
+
 html,
 body,
 #__nuxt {
@@ -85,8 +138,8 @@ body,
 body {
   margin: 0;
   background-image:
-    linear-gradient(rgba(8, 12, 24, 0.72), rgba(8, 12, 24, 0.72)),
-    url('/img/bg.jpg');
+    linear-gradient(var(--kz-app-overlay), var(--kz-app-overlay)),
+    var(--kz-bg-image);
   background-size: cover, cover;
   background-position: center, center;
   background-repeat: no-repeat, no-repeat;

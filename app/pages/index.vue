@@ -20,7 +20,7 @@
           <!-- Subtitle -->
           <p class="hero-subtitle fade-up">
             Kizuna connects your AniList profile with your friends. Build joint watchlists,
-            track progress together, and discover what to watch next — as a group.
+            track progress together, and discover what to watch next, as a group.
           </p>
 
           <!-- CTA Buttons -->

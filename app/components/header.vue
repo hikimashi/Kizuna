@@ -229,6 +229,7 @@ const handleLogout = async () => {
   gap: 16px;
   margin-left: auto;
   min-width: 0;
+  flex-shrink: 0;
 }
 
 /* Guest Buttons */
@@ -399,11 +400,6 @@ const handleLogout = async () => {
 }
 
 @media (max-width: 768px) {
-  .btn-ghost span,
-  .btn-primary span {
-    display: none;
-  }
-
   .btn-ghost,
   .btn-primary {
     padding: 8px 12px;
@@ -419,6 +415,34 @@ const handleLogout = async () => {
 
   .theme-toggle {
     margin-left: 2px;
+  }
+}
+
+@media (max-width: 420px) {
+  .navbar-content {
+    padding: 0 8px;
+  }
+
+  .navbar-end {
+    gap: 6px;
+  }
+
+  .btn-ghost,
+  .btn-primary {
+    padding: 6px 8px;
+    font-size: 12px;
+    line-height: 1.2;
+  }
+
+  .icon-btn,
+  .avatar-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .theme-toggle svg {
+    width: 18px;
+    height: 18px;
   }
 }
 </style>

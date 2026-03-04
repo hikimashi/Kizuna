@@ -566,6 +566,69 @@
   text-align: center;
 }
 
+/* AniList Link Required */
+.anilist-link-cta {
+  min-height: calc(100vh - 58px);
+  padding: 32px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.anilist-link-card {
+  width: min(100%, 760px);
+  background: linear-gradient(160deg, var(--card-bg), var(--navy-overlay));
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px 24px;
+  text-align: center;
+  box-shadow: var(--shadow-strong);
+}
+
+.anilist-link-label {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--teal);
+}
+
+.anilist-link-card h2 {
+  margin: 0;
+  font-size: clamp(26px, 5vw, 42px);
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+.anilist-link-card p {
+  margin: 14px auto 0;
+  max-width: 58ch;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
+.anilist-link-button {
+  margin-top: 22px;
+  min-height: 58px;
+  width: min(100%, 420px);
+  border: 0;
+  border-radius: 10px;
+  padding: 12px 22px;
+  font-size: clamp(17px, 2.5vw, 20px);
+  font-weight: 700;
+  color: var(--navy);
+  background: linear-gradient(135deg, var(--cyan), #5ac4ff);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.anilist-link-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(61, 180, 242, 0.35);
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .features-grid {
@@ -601,5 +664,18 @@
 
   .stat-divider {
     display: none;
+  }
+
+  .anilist-link-card {
+    padding: 24px 16px;
+  }
+
+  .anilist-link-card p {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .anilist-link-button {
+    width: 100%;
   }
 }

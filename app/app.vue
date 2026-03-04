@@ -1,7 +1,7 @@
 <template>
   <div class="w-full min-h-screen flex flex-col">
     <Header />
-    <main class="flex-grow">
+    <main class="flex-grow app-main">
       <NuxtPage />
       <DrawersContainer />
       <Toast />
@@ -21,3 +21,9 @@ import Toast from './components/toast/toast.vue';
 import Alert from './components/alerts/alert.vue';
 
 </script>
+
+<style scoped>
+.app-main {
+  padding-top: 58px;
+}
+</style>

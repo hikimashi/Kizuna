@@ -95,56 +95,72 @@
       </section>
     </template>
 
-    <!-- Authenticated Home Dashboard -->
+    <!-- Authenticated Home -->
     <template v-else>
-      <div class="dashboard-container">
-        <div class="dashboard-grid">
-          <!-- Left Panel: Shared Lists -->
-          <div class="dashboard-panel">
-            <h2 class="panel-title">Shared lists</h2>
-            <div class="search-bar">
-              <svg class="hamburger-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/>
-              </svg>
-              <input type="text" placeholder="Search a list" />
-              <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"/>
-                <path d="M21 21l-4.35-4.35"/>
-              </svg>
-            </div>
-            <div class="lists-container">
-              <div v-for="i in 5" :key="i" class="list-item">
+      <template v-if="isAniListLinked">
+        <div class="dashboard-container">
+          <div class="dashboard-grid">
+            <!-- Left Panel: Shared Lists -->
+            <div class="dashboard-panel">
+              <h2 class="panel-title">Shared lists</h2>
+              <div class="search-bar">
                 <svg class="hamburger-icon" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/>
                 </svg>
-                <span>Watch List {{ i }}</span>
+                <input type="text" placeholder="Search a list" />
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/>
+                  <path d="M21 21l-4.35-4.35"/>
+                </svg>
+              </div>
+              <div class="lists-container">
+                <div v-for="i in 5" :key="i" class="list-item">
+                  <svg class="hamburger-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/>
+                  </svg>
+                  <span>Watch List {{ i }}</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Right Panel: Friends -->
-          <div class="dashboard-panel">
-            <div class="panel-header">
-              <h2 class="panel-title">Friends</h2>
-              <button class="add-friend-btn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M12 5v14M5 12h14"/>
-                </svg>
-              </button>
-            </div>
-            <div class="friends-grid">
-              <div v-for="i in 6" :key="i" class="friend-card">
-                <div class="friend-avatar">
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            <!-- Right Panel: Friends -->
+            <div class="dashboard-panel">
+              <div class="panel-header">
+                <h2 class="panel-title">Friends</h2>
+                <button class="add-friend-btn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 5v14M5 12h14"/>
                   </svg>
+                </button>
+              </div>
+              <div class="friends-grid">
+                <div v-for="i in 6" :key="i" class="friend-card">
+                  <div class="friend-avatar">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                  </div>
+                  <span class="friend-name">Friend {{ i }}</span>
                 </div>
-                <span class="friend-name">Friend {{ i }}</span>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </template>
+      <template v-else>
+        <section class="anilist-link-cta">
+          <div class="anilist-link-card">
+            <p class="anilist-link-label">AniList connection required</p>
+            <h2>Link your AniList account to continue</h2>
+            <p>
+              Connect once to sync your profile, banner, and anime data before using the dashboard.
+            </p>
+            <button class="anilist-link-button" @click="connectAniList">
+              Link AniList account
+            </button>
+          </div>
+        </section>
+      </template>
     </template>
 
     <ScrollToTop />
@@ -152,13 +168,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { computed, ref, reactive, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 import { useDrawersStore } from '~/composables/useDrawersStore'
+import { useAnilistAuthStore } from '~/composables/useAnilistAuthStore'
 
 const pocketbaseStore = usePocketbaseStore()
 const drawerStore = useDrawersStore()
+const anilistAuthStore = useAnilistAuthStore()
 const featuresSection = ref<HTMLElement | null>(null)
+const isAniListLinked = computed(() => {
+  const authRefOrRecord = pocketbaseStore.authRecord as any
+  const authRecord = authRefOrRecord?.value ?? authRefOrRecord
+  return Boolean(authRecord?.anilist_user_id && authRecord?.anilist_token)
+})
 
 // Plain object — NOT ref([])
 // ref="..." on v-for inside v-if is broken in Vue 3
@@ -212,6 +235,10 @@ const openLoginDrawer = () => {
 
 const scrollToFeatures = () => {
   featuresSection.value?.scrollIntoView({ behavior: 'smooth' })
+}
+
+const connectAniList = async () => {
+  await anilistAuthStore.loginWithAniListWithWarning()
 }
 
 // IntersectionObserver for feature cards

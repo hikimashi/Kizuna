@@ -78,7 +78,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
           'Authorization': `Bearer ${response.access_token}`
         },
         body: {
-          query: `query { Viewer { id name avatar { medium large } } }`
+          query: `query { Viewer { id name bannerImage avatar { medium large } } }`
         }
       });
 
@@ -119,7 +119,8 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
         anilist_user_id: anilistId,
         anilist_username: viewer.name,
         anilist_avatar_url_medium: viewer.avatar.medium,
-        anilist_avatar_url_large: viewer.avatar.large
+        anilist_avatar_url_large: viewer.avatar.large,
+        anilist_banner: viewer.bannerImage || null
       });
 
       console.log('User updated successfully. Verifying the data was saved...');
@@ -129,7 +130,8 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
       console.log('Updated user data:', {
         email: updatedUser.email,
         anilist_user_id: updatedUser.anilist_user_id,
-        anilist_username: updatedUser.anilist_username
+        anilist_username: updatedUser.anilist_username,
+        anilist_banner: updatedUser.anilist_banner
       });
 
       // 7. Rafraîchissement des données locales

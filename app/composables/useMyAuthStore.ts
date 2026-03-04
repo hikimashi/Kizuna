@@ -54,6 +54,7 @@ export const useMyAuthStore = defineStore('auth', () => {
       "anilist_user_id": null,
       "anilist_username": null,
       "anilist_token": null,
+      "anilist_banner": null,
     };
 
     try {

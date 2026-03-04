@@ -33,7 +33,7 @@
             <NuxtLink to="/social" class="nav-link">
               Social
             </NuxtLink>
-            <NuxtLink to="/anime-list" class="nav-link">
+            <NuxtLink to="/animeList" class="nav-link">
               Anime List
             </NuxtLink>
             <NuxtLink to="/browse" class="nav-link">

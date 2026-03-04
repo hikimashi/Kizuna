@@ -14,7 +14,7 @@
           <div class="footer-group">
             <h3>Navigation</h3>
             <NuxtLink to="/" class="footer-link">Home</NuxtLink>
-            <NuxtLink to="/anime-list" class="footer-link">Anime List</NuxtLink>
+            <NuxtLink to="/animeList" class="footer-link">Anime List</NuxtLink>
             <NuxtLink to="/profilePage" class="footer-link">Profile</NuxtLink>
           </div>
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="anime-list-page">
+  <div class="animeList-page">
     <!-- Header -->
     <div class="page-header">
       <div class="header-content">

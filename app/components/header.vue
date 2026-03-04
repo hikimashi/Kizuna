@@ -190,16 +190,17 @@ const handleLogout = async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
   height: 100%;
-  padding: 0 24px;
-  max-width: 1400px;
-  margin: 0 auto;
+  padding: 0 clamp(12px, 2.5vw, 28px);
+  margin: 0;
 }
 
 /* Logo */
 .navbar-start {
   display: flex;
   align-items: center;
+  min-width: 0;
 }
 
 .logo-link {
@@ -226,6 +227,8 @@ const handleLogout = async () => {
   display: flex;
   align-items: center;
   gap: 16px;
+  margin-left: auto;
+  min-width: 0;
 }
 
 /* Guest Buttons */
@@ -387,7 +390,11 @@ const handleLogout = async () => {
   }
 
   .navbar-content {
-    padding: 0 16px;
+    padding: 0 12px;
+  }
+
+  .navbar-end {
+    gap: 10px;
   }
 }
 
@@ -400,6 +407,18 @@ const handleLogout = async () => {
   .btn-ghost,
   .btn-primary {
     padding: 8px 12px;
+  }
+
+  .logo-text {
+    display: none;
+  }
+
+  .navbar-end {
+    gap: 8px;
+  }
+
+  .theme-toggle {
+    margin-left: 2px;
   }
 }
 </style>

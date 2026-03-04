@@ -23,18 +23,17 @@ const success = ref(false);
 
 onMounted(async () => {
   if (code.value) {
-    console.log('Received AniList authorization code:', code.value);
-    
+    // Traite le retour OAuth AniList puis met à jour l'état UI.
     const result = await anilistAuthStore.handleCallback(code.value, state.value);
     processed.value = true;
     success.value = result;
     
-    // Redirect to home page after a short delay
+    // Redirige vers l'accueil après un court délai pour laisser le message visible.
     setTimeout(() => {
       router.push('/');
     }, 2000);
   } else {
-    console.log('No authorization code received');
+    // Aucun code => callback invalide ou annulé.
     processed.value = true;
     success.value = false;
   }

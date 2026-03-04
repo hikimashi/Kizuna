@@ -66,17 +66,17 @@
 import { ref, computed, watch } from 'vue'
 import { useInfiniteScroll } from '~/composables/useInfiniteScroll'
 
-// Props for filtering
+// Props de filtrage recues depuis la page.
 const props = defineProps<{
   sortBy?: string
   format?: string
 }>()
 
-// Current sort and format (with defaults)
+// Tri et format actifs avec valeurs par defaut.
 const currentSort = computed(() => props.sortBy || 'POPULARITY_DESC')
 const currentFormat = computed(() => props.format || 'ALL')
 
-// AniList GraphQL query function
+// Requete AniList GraphQL.
 const fetchAnimeList = async (page: number, perPage: number) => {
   const sort = currentSort.value
   const formatFilter = currentFormat.value
@@ -126,7 +126,7 @@ const fetchAnimeList = async (page: number, perPage: number) => {
   return data.data.Page.media
 }
 
-// Use the infinite scroll composable
+// Gestion du chargement progressif (infinite scroll).
 const {
   items,
   loading,
@@ -141,7 +141,7 @@ const {
   immediate: true
 })
 
-// Watch for filter changes and reset the list
+// Reinitialise la liste quand les filtres changent.
 watch([currentSort, currentFormat], () => {
   reset()
 })

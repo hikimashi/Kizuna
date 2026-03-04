@@ -26,9 +26,6 @@
 </template>
 
 <script setup lang="ts">
-/**
- * Stores
- */
 import { storeToRefs } from 'pinia';
 import { useAlertStore } from '~/composables/useAlertStore';
 import SuccessIcon from '~/components/icons/successIcon.vue';
@@ -38,21 +35,6 @@ import WarningIcon from '~/components/icons/warningIcon.vue';
 
 const alertStore = useAlertStore();
 const { alert } = storeToRefs(alertStore);
-/**
- * Props/Emits
- */
-
-/**
- * References
- */
-
-/**
- * Computed Properties
- */
-
-/**
- * Methods
- */
 
 const alertClassMap = {
   success: 'alert-success',
@@ -75,14 +57,5 @@ const alertColorMap = {
   warning: 'text-warning',
 };
 
-const alertClass = (type: string) => alertClassMap[type] ?? 'alert-info';
 const alertColor = (type: string) => alertColorMap[type] ?? 'text-info';
-
-/**
- * Watchers
- */
-
-/**
- * Mounted/Unmounted
- */
 </script>

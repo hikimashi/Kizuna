@@ -12,36 +12,11 @@ import { useDrawersStore } from '~/composables/useDrawersStore';
 import drawerLogin from '@/components/drawers/drawerLogin.vue';
 import drawerCreateUser from '@/components/drawers/drawerCreateUser.vue';
 
-/**
- * Stores
- */
-
-/**
- * Props/Emits
- */
-
-/**
- * References
- */
 const drawerStore = useDrawersStore();
 
-/**
- * Computed Properties
- */
+// Registre des drawers disponibles.
 const drawers = {
   drawerLogin,
   drawerCreateUser,
 };
-
-/**
- * Methods
- */
-
-/**
- * Watchers
- */
-
-/**
- * Mounted/Unmounted
- */
 </script>

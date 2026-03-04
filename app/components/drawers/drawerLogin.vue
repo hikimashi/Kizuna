@@ -19,7 +19,7 @@
       <h2 class="text-xl sm:text-2xl font-bold text-center text-primary mb-4 sm:mb-6">Login to your Account</h2>
 
       <div class="items-center my-4 sm:my-6">
-        <span class="flex flex-wrap justify-center text-sm sm:text-base text-center">Don´t have an account? &nbsp; <a @click="createAccount()" class="text-blue-500 hover:underline cursor-pointer">Create an Account</a></span>
+        <span class="flex flex-wrap justify-center text-sm sm:text-base text-center">Don't have an account? &nbsp; <a @click="createAccount()" class="text-blue-500 hover:underline cursor-pointer">Create an Account</a></span>
         </div>
 
       <form ref="loginForm" @submit.prevent="doLogin()">
@@ -89,25 +89,15 @@
 </template>
 
 <script setup lang="ts">
-/**
- * Stores
- */
-
 import { useDrawersStore } from '~/composables/useDrawersStore';
 import { useMyAuthStore } from '~/composables/useMyAuthStore';
 import { useToastStore } from '~/composables/useToastStore';
-import { useUserStore } from '~/composables/useUserStore';
 import { useThemeStore } from '~/composables/useThemeStore';
 
 const drawerStore = useDrawersStore();
 const authStore = useMyAuthStore();
 const toast = useToastStore();
-const userStore = useUserStore();
 const themeStore = useThemeStore();
-
-/**
- * Props/Emits
- */
 
 defineProps({
   open: { type: Boolean, default: false },
@@ -115,31 +105,19 @@ defineProps({
 const emits = defineEmits(['close']);
 const handleClose = () => emits('close');
 
-/**
- * References
- */
 const email = ref<string>('');
 const password = ref<string>('');
 const loginForm = ref<HTMLFormElement | null>(null);
-
-/**
- * Computed Properties
- */
-
-/**
- * Methods
- */
 
 const close = () => {
   emits('close');
   drawerStore.closeDrawer();
 };
 
+// Connexion email/mot de passe classique.
 const doLogin = async () => {
-  let data;
-
   try {
-    data = await authStore.login(email.value, password.value);
+    await authStore.login(email.value, password.value);
     toast.openToast({ type: 'success', message: `Welcome` });
   } catch (e: any) {
     if (loginForm.value) {
@@ -152,10 +130,10 @@ const doLogin = async () => {
   close();
 };
 
+// Connexion OAuth Google.
 const doGoogleLogin = async () => {
-  let data;
   try {
-    data = await authStore.loginWithGoogle();
+    await authStore.loginWithGoogle();
     toast.openToast({ type: 'success', message: `Welcome` });
   } catch (e: any) {
     if (loginForm.value) {
@@ -168,10 +146,10 @@ const doGoogleLogin = async () => {
   await navigateTo('/');
 };
 
+// Connexion OAuth GitHub.
 const doGithubLogin = async () => {
-  let data;
   try {
-    data = await authStore.loginWithGithub();
+    await authStore.loginWithGithub();
     toast.openToast({ type: 'success', message: `Welcome` });
   } catch (e: any) {
     if (loginForm.value) {
@@ -188,14 +166,7 @@ const createAccount = () => {
   close();
   drawerStore.openDrawer('drawerCreateUser');
 };
-
-/**
- * Watchers
- */
-
-/**
- * Mounted/Unmounted
- */
 </script>
+
 
 

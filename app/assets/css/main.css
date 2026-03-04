@@ -104,7 +104,7 @@
 }
 
 [data-theme="winter"] {
-  --kz-bg-image: url('/img/bgLight.jpg');
+  --kz-bg-image: url('/img/bgLight.webp');
   --kz-app-overlay: rgba(220, 232, 245, 0.66);
   --kz-surface-overlay: rgba(239, 246, 253, 0.72);
   --kz-page-navy: #132c44;

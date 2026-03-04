@@ -23,17 +23,6 @@
              </div>
 
              <form @submit.prevent="createUser()">
-                 <!-- <div>
-                     <div class="fieldset-legend mt-2" for="name">Full Name</div>
-                 </div>
-                 <label class="input input-primary validator w-full">
-                     <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                         <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
-                             <path d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM12 14a7 7 0 0 0-7 7h14a7 7 0 0 0-7-7Z" />
-                         </g>
-                     </svg>
-                     <input v-model="newUser.name" type="text" placeholder="Your name" required />
-                 </label> -->
                  <div>
                      <div class="fieldset-legend mt-2" for="email">Email</div>
                  </div>
@@ -117,23 +106,13 @@
 
 
 <script setup lang="ts">
-/**
- * Stores
- */
-
 import { useDrawersStore } from '~/composables/useDrawersStore';
 import { useMyAuthStore } from '~/composables/useMyAuthStore';
 import { useToastStore } from '~/composables/useToastStore';
-import { useThemeStore } from '~/composables/useThemeStore';
 
 const drawerStore = useDrawersStore();
 const authStore = useMyAuthStore();
 const toast = useToastStore();
-const themeStore = useThemeStore();
-
-/**
- * Props/Emits
- */
 
 defineProps({
     open: { type: Boolean, default: false },
@@ -141,24 +120,11 @@ defineProps({
 const emits = defineEmits(['close']);
 const handleClose = () => emits('close');
 
-/**
- * References
- */
 const newUser = ref<NewUserType>({
-    // name: '',
     email: '',
     password: '',
     passwordConfirm: '',
-    // themeMode: themeStore.activeTheme,
 });
-
-/**
- * Computed Properties
- */
-
-/**
- * Methods
- */
 
 const close = () => {
   emits('close');
@@ -167,19 +133,16 @@ const close = () => {
 
 const clearForm = () => {
   newUser.value = {
-    // name: '',
     email: '',
     password: '',
     passwordConfirm: '',
-    // themeMode: themeStore.activeTheme,
   };
 };
 
+// Cree un compte local via email/mot de passe.
 const createUser = async () => {
-  let data;
-
   try {
-    data = await authStore.createAccount(newUser.value);
+    await authStore.createAccount(newUser.value);
     toast.openToast({ type: 'success', message: `Account created successfully! Welcome` });
   } catch (e: any) {
     toast.openToast({ type: 'error', message: e.message || 'Account creation failed!' });
@@ -188,10 +151,10 @@ const createUser = async () => {
   close();
 };
 
+// Inscription via Google.
 const doGoogleLogin = async () => {
-  let data;
   try {
-    data = await authStore.loginWithGoogle();
+    await authStore.loginWithGoogle();
     toast.openToast({ type: 'success', message: `Welcome` });
   } catch (e: any) {
     toast.openToast({ type: 'error', message: e.message || 'Google login failed!' });
@@ -202,10 +165,10 @@ const doGoogleLogin = async () => {
   await navigateTo('/');
 };
 
+// Inscription via GitHub.
 const doGithubLogin = async () => {
-  let data;
   try {
-    data = await authStore.loginWithGithub();
+    await authStore.loginWithGithub();
     toast.openToast({ type: 'success', message: `Welcome` });
   } catch (e: any) {
     toast.openToast({ type: 'error', message: e.message || 'GitHub login failed!' });
@@ -225,13 +188,5 @@ const passwordMisMatch = () => {
   if (newUser.value.passwordConfirm.length >= 7)
     return newUser.value.password !== newUser.value.passwordConfirm;
 };
-
-/**
- * Watchers
- */
-
-/**
- * Mounted/Unmounted
- */
 </script>
 

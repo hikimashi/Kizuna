@@ -16,10 +16,6 @@
 </template>
 
 <script setup lang="ts">
-/**
- * Stores
- */
-
 import { useToastStore } from '~/composables/useToastStore';
 import { storeToRefs } from 'pinia';
 import SuccessIcon from '~/components/icons/successIcon.vue';
@@ -29,22 +25,6 @@ import WarningIcon from '~/components/icons/warningIcon.vue';
 
 const toastStore = useToastStore();
 const { toasts } = storeToRefs(toastStore);
-
-/**
- * Props/Emits
- */
-
-/**
- * References
- */
-
-/**
- * Computed Properties
- */
-
-/**
- * Methods
- */
 const toastClassMap = {
   success: 'alert-success',
   error: 'alert-error',
@@ -68,12 +48,4 @@ const toastColorMap = {
 
 const toastClass = (type: string) => toastClassMap[type] ?? 'alert-info';
 const toastColor = (type: string) => toastColorMap[type] ?? 'text-info';
-
-/**
- * Watchers
- */
-
-/**
- * Mounted/Unmounted
- */
 </script>

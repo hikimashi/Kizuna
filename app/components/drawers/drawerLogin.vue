@@ -14,7 +14,7 @@
       </button>
 
       <div class="flex justify-center mb-4 sm:mb-6 ">
-        <img src="/img/user.png" alt="Logo" class="h-24 sm:h-32 md:h-36 border border-primary rounded-full" />
+        <img src="/img/user.webp" alt="Logo" class="h-24 sm:h-32 md:h-36 border border-primary rounded-full" />
       </div>
       <h2 class="text-xl sm:text-2xl font-bold text-center text-primary mb-4 sm:mb-6">Login to your Account</h2>
 
@@ -197,4 +197,5 @@ const createAccount = () => {
  * Mounted/Unmounted
  */
 </script>
+
 

@@ -1,11 +1,11 @@
 <template>
-  <header class="kizuna-navbar">
+  <header class="kizuna-navbar" :class="{ 'is-logged-in': isLoggedIn }">
     <div class="navbar-content">
       <!-- Left: Logo -->
       <div class="navbar-start">
         <NuxtLink to="/" class="logo-link" @click="handleLogoClick">
-          <img src="/img/logo.png" alt="Kizuna" class="logo-image" />
-          <span class="logo-text">Kizuna</span>
+          <img src="/img/logo.webp" alt="Kizuna" class="logo-image" />
+          <span class="logo-text" :class="{ 'logo-text-hidden': isLoggedIn }">Kizuna</span>
         </NuxtLink>
       </div>
 
@@ -131,10 +131,14 @@ const drawerStore = useDrawersStore()
 const authStore = useMyAuthStore()
 const pocketbaseStore = usePocketbaseStore()
 const route = useRoute()
+const isLoggedIn = computed(() => {
+  const authRefOrRecord = pocketbaseStore.authRecord as any
+  return Boolean(authRefOrRecord?.value ?? authRefOrRecord)
+})
 
 // Use AniList avatar if available
 const avatarUrl = computed(() => {
-  return pocketbaseStore.authRecord?.anilist_avatar_url_medium || '/img/user.png'
+  return pocketbaseStore.authRecord?.anilist_avatar_url_medium || '/img/user.webp'
 })
 
 const openLoginDrawer = () => {
@@ -178,7 +182,7 @@ const handleLogout = async () => {
   top: 0;
   left: 0;
   right: 0;
-  height: 58px;
+  height: 64px;
   background: var(--navy-overlay);
   backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--border);
@@ -187,6 +191,7 @@ const handleLogout = async () => {
 }
 
 .navbar-content {
+  position: relative;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -211,15 +216,20 @@ const handleLogout = async () => {
 }
 
 .logo-image {
-  width: 50px;
-  height: 50px;
+  width: 56px;
+  height: 56px;
   object-fit: contain;
 }
 
 .logo-text {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
   color: var(--text-primary);
+  transform: translateY(1px);
+}
+
+.logo-text-hidden {
+  display: none;
 }
 
 /* Navbar End */
@@ -237,10 +247,12 @@ const handleLogout = async () => {
   background: transparent;
   border: 1px solid var(--border);
   color: var(--text-primary);
-  padding: 8px 16px;
+  padding: 9px 18px;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
+  line-height: 1.2;
+  transform: translateY(1px);
   cursor: pointer;
   transition: background 0.2s, border-color 0.2s;
 }
@@ -254,10 +266,12 @@ const handleLogout = async () => {
   background: var(--cyan);
   color: var(--navy);
   border: none;
-  padding: 8px 16px;
+  padding: 9px 18px;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
+  line-height: 1.2;
+  transform: translateY(1px);
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -274,9 +288,17 @@ const handleLogout = async () => {
   gap: 4px;
 }
 
+.kizuna-navbar.is-logged-in .nav-links {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
 .nav-link {
-  padding: 8px 12px;
-  font-size: 14px;
+  padding: 9px 13px;
+  font-size: 15px;
+  line-height: 1.2;
+  transform: translateY(1px);
   color: var(--text-secondary);
   text-decoration: none;
   transition: color 0.2s;
@@ -299,11 +321,11 @@ const handleLogout = async () => {
 }
 
 .icon-btn {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   background: transparent;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 7px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -319,8 +341,8 @@ const handleLogout = async () => {
 }
 
 .icon-btn svg {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
 }
 
 /* Notification Bell */
@@ -330,10 +352,10 @@ const handleLogout = async () => {
 
 .notification-badge {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 8px;
-  height: 8px;
+  top: 7px;
+  right: 7px;
+  width: 9px;
+  height: 9px;
   background: #ef4444;
   border-radius: 50%;
   border: 2px solid var(--navy);
@@ -341,17 +363,17 @@ const handleLogout = async () => {
 
 /* Avatar Button */
 .avatar-btn {
-  width: 36px;
-  height: 36px;
-  border: 1px solid var(--border);
+  width: 40px;
+  height: 40px;
+  border: none;
   border-radius: 6px;
   overflow: hidden;
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: transform 0.2s;
 }
 
 .avatar-btn:hover {
-  border-color: var(--hover-border);
+  transform: translateY(-1px);
 }
 
 .avatar-image {
@@ -362,12 +384,12 @@ const handleLogout = async () => {
 
 /* Theme Toggle */
 .theme-toggle {
-  margin-left: 8px;
+  margin-left: 9px;
 }
 
 .theme-toggle svg {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
 }
 
 /* Dropdown */
@@ -402,7 +424,8 @@ const handleLogout = async () => {
 @media (max-width: 768px) {
   .btn-ghost,
   .btn-primary {
-    padding: 8px 12px;
+    padding: 8px 13px;
+    font-size: 14px;
   }
 
   .logo-text {
@@ -429,15 +452,15 @@ const handleLogout = async () => {
 
   .btn-ghost,
   .btn-primary {
-    padding: 6px 8px;
+    padding: 7px 9px;
     font-size: 12px;
     line-height: 1.2;
   }
 
   .icon-btn,
   .avatar-btn {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
   }
 
   .theme-toggle svg {

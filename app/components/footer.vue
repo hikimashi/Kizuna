@@ -3,7 +3,7 @@
     <div class="footer-content">
       <div class="footer-top">
         <div class="brand-block">
-          <img src="/img/logo.png" alt="Kizuna" class="brand-logo" />
+          <img src="/img/logo.webp" alt="Kizuna" class="brand-logo" />
           <div class="brand-text">
             <p class="brand-name">Kizuna</p>
             <p class="brand-subtitle">Shared anime lists with AniList sync</p>

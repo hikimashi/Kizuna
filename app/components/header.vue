@@ -143,7 +143,7 @@ const openLoginDrawer = () => {
 }
 
 const handleSignUp = () => {
-  drawerStore.openDrawer('drawerRegister')
+  drawerStore.openDrawer('drawerCreateUser')
 }
 
 const handleLogout = async () => {

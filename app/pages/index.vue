@@ -25,10 +25,10 @@
 
           <!-- CTA Buttons -->
           <div class="cta-buttons fade-up">
-            <button @click="handleCreateAccount" class="btn-primary">
+            <button @click="openLoginDrawer" class="btn-primary">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
                    fill="none" stroke="currentColor" stroke-width="2"
-                   width="20" height="20" style="flex-shrink:0">
+                   class="hero-icon">
                 <path stroke-linecap="round" stroke-linejoin="round"
                       d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"/>
               </svg>
@@ -154,10 +154,10 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
-import { useAnilistAuthStore } from '~/composables/useAnilistAuthStore'
+import { useDrawersStore } from '~/composables/useDrawersStore'
 
 const pocketbaseStore = usePocketbaseStore()
-const anilistAuthStore = useAnilistAuthStore()
+const drawerStore = useDrawersStore()
 const featuresSection = ref<HTMLElement | null>(null)
 
 // Plain object — NOT ref([])
@@ -206,15 +206,12 @@ const features = [
   }
 ]
 
-// Scroll to features
-const scrollToFeatures = () => {
-  featuresSection.value?.scrollIntoView({ behavior: 'smooth' })
+const openLoginDrawer = () => {
+  drawerStore.openDrawer('drawerLogin')
 }
 
-// Handle create account
-const handleCreateAccount = () => {
-  // Navigate to signup or trigger auth flow
-  anilistAuthStore.loginWithAniListWithWarning()
+const scrollToFeatures = () => {
+  featuresSection.value?.scrollIntoView({ behavior: 'smooth' })
 }
 
 // IntersectionObserver for feature cards

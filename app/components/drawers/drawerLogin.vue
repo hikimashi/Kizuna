@@ -4,22 +4,22 @@
 
   <!-- DrawerLogin panel -->
   <div
-    class="fixed top-0 right-0 h-screen w-full md:w-1/4 bg-base-100 shadow-2xl z-50 transform transition-transform duration-500 ease-in-out"
+    class="fixed top-0 right-0 h-[100dvh] w-full sm:max-w-[420px] bg-base-100 shadow-2xl z-50 transform transition-transform duration-500 ease-in-out"
     :class="open ? 'translate-x-0' : 'translate-x-full'">
-    <div class="bg-base-200 p-4 pt-20 w-full h-full">
-      <button class="absolute top-4 right-4 btn btn-outline btn-error md:hidden" @click="handleClose">
+    <div class="bg-base-200 px-3 sm:px-4 pt-16 sm:pt-20 pb-6 w-full h-full overflow-y-auto overscroll-contain">
+      <button class="absolute top-3 right-3 sm:top-4 sm:right-4 btn btn-outline btn-error btn-sm" @click="handleClose">
         <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
 
-      <div class="flex justify-center mb-6 ">
-        <img src="/img/user.png" alt="Logo" class="h-36 border border-primary rounded-full" />
+      <div class="flex justify-center mb-4 sm:mb-6 ">
+        <img src="/img/user.png" alt="Logo" class="h-24 sm:h-32 md:h-36 border border-primary rounded-full" />
       </div>
-      <h2 class="text-2xl font-bold text-center text-primary mb-6">Login to your Account</h2>
+      <h2 class="text-xl sm:text-2xl font-bold text-center text-primary mb-4 sm:mb-6">Login to your Account</h2>
 
-      <div class="items-center my-6">
-        <span class="flex justify-center text-md">Don´t have an account? &nbsp; <a @click="createAccount()" class="text-blue-500 hover:underline cursor-pointer">Create an Account</a></span>
+      <div class="items-center my-4 sm:my-6">
+        <span class="flex flex-wrap justify-center text-sm sm:text-base text-center">Don´t have an account? &nbsp; <a @click="createAccount()" class="text-blue-500 hover:underline cursor-pointer">Create an Account</a></span>
         </div>
 
       <form ref="loginForm" @submit.prevent="doLogin()">
@@ -58,15 +58,15 @@
           letter
         </p>
 
-        <div class="flex items-center justify-between p-2 mb-6">
-          <a href="#" class="text-md text-blue-500 hover:underline">Forgot Password?</a>
+        <div class="flex items-center justify-between p-2 mb-4 sm:mb-6">
+          <a href="#" class="text-sm sm:text-base text-blue-500 hover:underline">Forgot Password?</a>
         </div>
 
         <button type="submit" class="w-full btn btn-primary">
           <span>Login</span>
         </button>
       </form>
-      <div class="divider my-8">OR</div>
+      <div class="divider my-5 sm:my-8">OR</div>
       <div class="flex flex-col space-y-4">
 
         <button
@@ -197,3 +197,4 @@ const createAccount = () => {
  * Mounted/Unmounted
  */
 </script>
+

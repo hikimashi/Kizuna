@@ -4,36 +4,25 @@
 
      <!-- DrawerCreateUser panel -->
      <div
-         class="fixed top-0 right-0 h-screen w-full md:w-1/4 bg-base-100 shadow-2xl z-50 transform transition-transform duration-500 ease-in-out"
+         class="fixed top-0 right-0 h-[100dvh] w-full sm:max-w-[420px] bg-base-100 shadow-2xl z-50 transform transition-transform duration-500 ease-in-out"
          :class="open ? 'translate-x-0' : 'translate-x-full'">
-         <div class="bg-base-200 p-4 pt-20 w-full h-full">
-             <button class="absolute top-4 right-4 btn btn-outline btn-error md:hidden" @click="handleClose">
+         <div class="bg-base-200 px-3 sm:px-4 pt-16 sm:pt-20 pb-6 w-full h-full overflow-y-auto overscroll-contain">
+             <button class="absolute top-3 right-3 sm:top-4 sm:right-4 btn btn-outline btn-error btn-sm" @click="handleClose">
                  <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                  </svg>
              </button>
 
-             <div class="flex justify-center mb-6">
-                 <img src="/img/user.png" alt="Logo" class="h-36 border border-primary rounded-full" />
+             <div class="flex justify-center mb-4 sm:mb-6">
+                 <img src="/img/user.webp" alt="Logo" class="h-24 sm:h-32 md:h-36 border border-primary rounded-full" />
              </div>
-             <h2 class="text-2xl font-bold text-center text-primary mb-6">Create New Account</h2>
+             <h2 class="text-xl sm:text-2xl font-bold text-center text-primary mb-4 sm:mb-6">Create New Account</h2>
 
-             <div class="items-center my-6">
-                 <span class="flex justify-center text-md">Already have an account? &nbsp; <a @click="login()" class="text-blue-500 hover:underline cursor-pointer">Login</a></span>
+             <div class="items-center my-4 sm:my-6">
+                 <span class="flex flex-wrap justify-center text-sm sm:text-base text-center">Already have an account? &nbsp; <a @click="login()" class="text-blue-500 hover:underline cursor-pointer">Login</a></span>
              </div>
 
              <form @submit.prevent="createUser()">
-                 <!-- <div>
-                     <div class="fieldset-legend mt-2" for="name">Full Name</div>
-                 </div>
-                 <label class="input input-primary validator w-full">
-                     <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                         <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
-                             <path d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM12 14a7 7 0 0 0-7 7h14a7 7 0 0 0-7-7Z" />
-                         </g>
-                     </svg>
-                     <input v-model="newUser.name" type="text" placeholder="Your name" required />
-                 </label> -->
                  <div>
                      <div class="fieldset-legend mt-2" for="email">Email</div>
                  </div>
@@ -96,7 +85,7 @@
                  </button>
              </form>
 
-             <div class="divider my-8">OR</div>
+             <div class="divider my-5 sm:my-8">OR</div>
              <div class="flex flex-col space-y-4">
                  <button
                      class="w-full btn btn-primary focus:outline-none focus:shadow-outline transition duration-300"
@@ -117,23 +106,13 @@
 
 
 <script setup lang="ts">
-/**
- * Stores
- */
-
 import { useDrawersStore } from '~/composables/useDrawersStore';
 import { useMyAuthStore } from '~/composables/useMyAuthStore';
 import { useToastStore } from '~/composables/useToastStore';
-import { useThemeStore } from '~/composables/useThemeStore';
 
 const drawerStore = useDrawersStore();
 const authStore = useMyAuthStore();
 const toast = useToastStore();
-const themeStore = useThemeStore();
-
-/**
- * Props/Emits
- */
 
 defineProps({
     open: { type: Boolean, default: false },
@@ -141,24 +120,11 @@ defineProps({
 const emits = defineEmits(['close']);
 const handleClose = () => emits('close');
 
-/**
- * References
- */
 const newUser = ref<NewUserType>({
-    // name: '',
     email: '',
     password: '',
     passwordConfirm: '',
-    // themeMode: themeStore.activeTheme,
 });
-
-/**
- * Computed Properties
- */
-
-/**
- * Methods
- */
 
 const close = () => {
   emits('close');
@@ -167,19 +133,16 @@ const close = () => {
 
 const clearForm = () => {
   newUser.value = {
-    // name: '',
     email: '',
     password: '',
     passwordConfirm: '',
-    // themeMode: themeStore.activeTheme,
   };
 };
 
+// Cree un compte local via email/mot de passe.
 const createUser = async () => {
-  let data;
-
   try {
-    data = await authStore.createAccount(newUser.value);
+    await authStore.createAccount(newUser.value);
     toast.openToast({ type: 'success', message: `Account created successfully! Welcome` });
   } catch (e: any) {
     toast.openToast({ type: 'error', message: e.message || 'Account creation failed!' });
@@ -188,10 +151,10 @@ const createUser = async () => {
   close();
 };
 
+// Inscription via Google.
 const doGoogleLogin = async () => {
-  let data;
   try {
-    data = await authStore.loginWithGoogle();
+    await authStore.loginWithGoogle();
     toast.openToast({ type: 'success', message: `Welcome` });
   } catch (e: any) {
     toast.openToast({ type: 'error', message: e.message || 'Google login failed!' });
@@ -202,10 +165,10 @@ const doGoogleLogin = async () => {
   await navigateTo('/');
 };
 
+// Inscription via GitHub.
 const doGithubLogin = async () => {
-  let data;
   try {
-    data = await authStore.loginWithGithub();
+    await authStore.loginWithGithub();
     toast.openToast({ type: 'success', message: `Welcome` });
   } catch (e: any) {
     toast.openToast({ type: 'error', message: e.message || 'GitHub login failed!' });
@@ -225,12 +188,5 @@ const passwordMisMatch = () => {
   if (newUser.value.passwordConfirm.length >= 7)
     return newUser.value.password !== newUser.value.passwordConfirm;
 };
-
-/**
- * Watchers
- */
-
-/**
- * Mounted/Unmounted
- */
 </script>
+

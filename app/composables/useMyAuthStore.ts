@@ -1,64 +1,53 @@
 import { defineStore } from 'pinia';
 import { usePocketbaseStore } from './usePocketbaseStore';
 import { useUserStore } from './useUserStore';
-import { useThemeStore } from '~/composables/useThemeStore';
 
 export const useMyAuthStore = defineStore('auth', () => {
-  const pocketBaseStore = usePocketbaseStore();
+  const pocketbaseStore = usePocketbaseStore();
   const userStore = useUserStore();
-  const themeStore = useThemeStore();
 
+  // Convertit les donnees PocketBase vers le format UserType utilise par l'app.
   const mapAuthDataToUser = (authData: { token: string; record: any }): UserType => {
-    const record = authData.record;
+    const { record } = authData;
 
-    const avatar = record.avatar
-      ? pocketBaseStore.pb.files.getURL(record, record.avatar, { thumb: '100x250' })
+    const avatarURL = record.avatar
+      ? pocketbaseStore.pb.files.getURL(record, record.avatar, { thumb: '100x250' })
       : '';
 
-    const d = new Date(record.created);
+    const createdDate = new Date(record.created);
     const created =
-      `${String(d.getDate()).padStart(2, '0')}-` +
-      `${String(d.getMonth() + 1).padStart(2, '0')}-` +
-      `${d.getFullYear()}`;
-
-    // if (record.themeMode === '') {
-    //   record.themeMode = themeStore.activeTheme;
-    // }
+      `${String(createdDate.getDate()).padStart(2, '0')}-` +
+      `${String(createdDate.getMonth() + 1).padStart(2, '0')}-` +
+      `${createdDate.getFullYear()}`;
 
     return {
       id: record.id,
       token: authData.token,
-      // name: record.name,
       email: record.email,
-      // avatar,
       created,
-      // themeMode: record.themeMode,
       password: '',
       passwordConfirm: '',
       oldPassword: '',
-      // avatarFile: null,
-      avatarURL: avatar,
+      avatarURL
     };
   };
 
+  // Cree un compte local puis connecte automatiquement l'utilisateur.
   const createAccount = async (newUser: NewUserType) => {
-
     const data = {
-      "email": newUser.email,
-      "emailVisibility": false,
-      // "name": newUser.name,
-      // "themeMode": newUser.themeMode,
-      "password": newUser.password,
-      "passwordConfirm": newUser.passwordConfirm,
-      // Explicitly set AniList fields to null to avoid unique constraint issues
-      "anilist_user_id": null,
-      "anilist_username": null,
-      "anilist_token": null,
+      email: newUser.email,
+      emailVisibility: false,
+      password: newUser.password,
+      passwordConfirm: newUser.passwordConfirm,
+      // Initialise explicitement les champs AniList.
+      anilist_user_id: null,
+      anilist_username: null,
+      anilist_token: null,
+      anilist_banner: null
     };
 
     try {
-      const createResult = await pocketBaseStore.pb.collection('user').create(data);
-      
+      await pocketbaseStore.pb.collection('user').create(data);
       const authData = await login(newUser.email, newUser.password);
       userStore.saveUserData(mapAuthDataToUser(authData));
       return authData;
@@ -66,14 +55,12 @@ export const useMyAuthStore = defineStore('auth', () => {
       const errorMsg = error.response?.data?.message || error.message || 'Account creation failed. Please try again.';
       throw new Error(errorMsg);
     }
-
   };
 
-
+  // Connexion email/mot de passe.
   const login = async (email: string, password: string) => {
     try {
-      const authData = await pocketBaseStore.pb.collection('user').authWithPassword(email, password);
-
+      const authData = await pocketbaseStore.pb.collection('user').authWithPassword(email, password);
       userStore.saveUserData(mapAuthDataToUser(authData));
       return authData;
     } catch (error: any) {
@@ -81,12 +68,10 @@ export const useMyAuthStore = defineStore('auth', () => {
     }
   };
 
+  // Connexion OAuth Google.
   const loginWithGoogle = async () => {
     try {
-      const authData = await pocketBaseStore.pb
-        .collection('user')
-        .authWithOAuth2({ provider: 'google' });
-
+      const authData = await pocketbaseStore.pb.collection('user').authWithOAuth2({ provider: 'google' });
       userStore.saveUserData(mapAuthDataToUser(authData));
       return authData;
     } catch (error: any) {
@@ -94,11 +79,10 @@ export const useMyAuthStore = defineStore('auth', () => {
     }
   };
 
-const loginWithGithub = async () => {
+  // Connexion OAuth GitHub.
+  const loginWithGithub = async () => {
     try {
-      const authData = await pocketBaseStore.pb
-        .collection('user')
-        .authWithOAuth2({ provider: 'github' });
+      const authData = await pocketbaseStore.pb.collection('user').authWithOAuth2({ provider: 'github' });
       userStore.saveUserData(mapAuthDataToUser(authData));
       return authData;
     } catch (error: any) {
@@ -107,41 +91,41 @@ const loginWithGithub = async () => {
   };
 
   const logout = () => {
-    pocketBaseStore.pb.authStore.clear();
+    pocketbaseStore.pb.authStore.clear();
     localStorage.removeItem('pocketbase_auth');
     userStore.clearUser();
   };
 
+  // Rafraichit la session au demarrage et nettoie si invalide.
   const authRefresh = async () => {
     try {
-      if (!pocketBaseStore.pb.authStore.isValid) {
-        pocketBaseStore.pb.authStore.clear();
+      if (!pocketbaseStore.pb.authStore.isValid) {
+        pocketbaseStore.pb.authStore.clear();
         localStorage.removeItem('pocketbase_auth');
         userStore.clearUser();
         return;
       }
 
-      const authData = await pocketBaseStore.pb.collection('user').authRefresh();
-
+      const authData = await pocketbaseStore.pb.collection('user').authRefresh();
       userStore.saveUserData(mapAuthDataToUser(authData));
-    } catch (error: any) {
-      pocketBaseStore.pb.authStore.clear();
+    } catch {
+      pocketbaseStore.pb.authStore.clear();
       localStorage.removeItem('pocketbase_auth');
       userStore.clearUser();
     }
   };
+
   const emailChange = async (newEmail: string) => {
-    console.log(newEmail)
     try {
-      await pocketBaseStore.pb.collection('user').requestEmailChange(newEmail);
+      await pocketbaseStore.pb.collection('user').requestEmailChange(newEmail);
     } catch (error: any) {
       throw new Error(error?.message || 'Email change failed. Please try again.');
     }
   };
+
   const deleteAccount = async () => {
     try {
-      await pocketBaseStore.pb.collection('user').delete(userStore.userData.id);
-      
+      await pocketbaseStore.pb.collection('user').delete(userStore.userData.id);
     } catch (error: any) {
       throw new Error(error?.message || 'Account deletion failed. Please try again.');
     }
@@ -155,6 +139,6 @@ const loginWithGithub = async () => {
     authRefresh,
     emailChange,
     createAccount,
-    deleteAccount,
+    deleteAccount
   };
 });

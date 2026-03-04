@@ -173,7 +173,7 @@
     },
     {
         "id": "_pb_users_auth_",
-        "listRule": "id = @request.auth.id",
+        "listRule": "@request.auth.id != ''",
         "viewRule": "id = @request.auth.id",
         "createRule": "",
         "updateRule": "id = @request.auth.id",
@@ -307,6 +307,17 @@
                 "hidden": false,
                 "id": "url2190673250",
                 "name": "anilist_avatar_url_large",
+                "onlyDomains": null,
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "url"
+            },
+            {
+                "exceptDomains": null,
+                "hidden": false,
+                "id": "url474832074",
+                "name": "anilist_banner",
                 "onlyDomains": null,
                 "presentable": false,
                 "required": false,

@@ -15,5 +15,6 @@ export interface UserType {
   anilist_username?: string;
   anilist_avatar_url_medium?: string;
   anilist_avatar_url_large?: string;
+  anilist_banner?: string | null;
   anilist_token?: string;
 }

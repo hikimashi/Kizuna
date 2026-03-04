@@ -3,7 +3,7 @@
     <div class="footer-content">
       <div class="footer-top">
         <div class="brand-block">
-          <img src="/img/logo.png" alt="Kizuna" class="brand-logo" />
+          <img src="/img/logo.webp" alt="Kizuna" class="brand-logo" />
           <div class="brand-text">
             <p class="brand-name">Kizuna</p>
             <p class="brand-subtitle">Shared anime lists with AniList sync</p>
@@ -55,12 +55,12 @@ const currentYear = new Date().getFullYear()
   backdrop-filter: blur(14px);
   border-top: 1px solid var(--border);
   font-family: var(--font-main);
-  padding: 28px 48px 22px;
+  padding: 28px clamp(12px, 2.5vw, 28px) 22px;
 }
 
 .footer-content {
-  max-width: 1400px;
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
   display: flex;
   flex-direction: column;
   gap: 22px;
@@ -171,18 +171,32 @@ const currentYear = new Date().getFullYear()
 
 @media (max-width: 900px) {
   .kizuna-footer {
-    padding: 24px;
+    padding: 24px 12px 18px;
   }
 
   .footer-top {
     flex-direction: column;
     gap: 20px;
   }
+
+  .footer-groups {
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+    gap: 16px;
+  }
 }
 
 @media (max-width: 580px) {
   .footer-groups {
     grid-template-columns: 1fr;
+  }
+
+  .brand-subtitle {
+    font-size: 12px;
+  }
+
+  .footer-bottom {
+    gap: 10px;
   }
 }
 </style>

@@ -1,18 +1,18 @@
 <template>
-  <header class="kizuna-navbar">
+  <header class="kizuna-navbar" :class="{ 'is-logged-in': isLoggedIn }">
     <div class="navbar-content">
       <!-- Left: Logo -->
       <div class="navbar-start">
         <NuxtLink to="/" class="logo-link" @click="handleLogoClick">
-          <img src="/img/logo.png" alt="Kizuna" class="logo-image" />
-          <span class="logo-text">Kizuna</span>
+          <img src="/img/logo.webp" alt="Kizuna" class="logo-image" />
+          <span class="logo-text" :class="{ 'logo-text-hidden': isLoggedIn }">Kizuna</span>
         </NuxtLink>
       </div>
 
       <!-- Right: Auth-dependent content -->
       <div class="navbar-end">
         <!-- Guest state -->
-        <template v-if="!pocketbaseStore.authRecord">
+        <template v-if="!isLoggedIn">
           <button @click="openLoginDrawer" class="btn-ghost">
             Log in
           </button>
@@ -73,10 +73,10 @@
                   <NuxtLink class="justify-between" to="/profilePage">
                     Profile
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                      stroke="currentColor" class="size-6">
+                      stroke="currentColor" class="size-5">
                       <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                        d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.214 1.281c.062.374.312.686.644.87.074.04.148.083.221.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.004.827c-.293.24-.438.613-.43.991a8.66 8.66 0 0 1 0 .256c-.008.378.137.75.43.99l1.004.828c.424.35.534.955.26 1.43l-1.296 2.247a1.125 1.125 0 0 1-1.37.49l-1.217-.456c-.355-.133-.75-.072-1.075.124a9.21 9.21 0 0 1-.221.128c-.332.183-.582.495-.644.869l-.214 1.281c-.09.543-.56.94-1.11.94h-2.593c-.55 0-1.02-.397-1.11-.94l-.214-1.281a1.125 1.125 0 0 0-.644-.869 9.21 9.21 0 0 1-.221-.128c-.325-.196-.72-.257-1.075-.124l-1.217.456a1.125 1.125 0 0 1-1.37-.49L2.758 15.81a1.125 1.125 0 0 1 .26-1.43l1.004-.827c.293-.24.438-.612.43-.99a8.66 8.66 0 0 1 0-.256c.008-.378-.137-.75-.43-.99l-1.004-.828a1.125 1.125 0 0 1-.26-1.43l1.296-2.247a1.125 1.125 0 0 1 1.37-.49l1.217.456c.355.133.75.072 1.075-.124.073-.044.147-.086.221-.127.332-.184.582-.496.644-.87l.214-1.281Z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 15.75a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Z" />
                     </svg>
                   </NuxtLink>
                 </li>
@@ -95,7 +95,7 @@
         </template>
 
         <!-- Theme toggle (always visible) -->
-        <label class="swap-rotate swap theme-toggle">
+        <label v-if="!isLoggedIn" class="swap-rotate swap theme-toggle">
           <input 
             type="checkbox" 
             :checked="themeStore.activeTheme === 'winter'" 
@@ -120,7 +120,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, unref } from 'vue'
 import { useThemeStore } from '~/composables/useThemeStore'
 import { useDrawersStore } from '~/composables/useDrawersStore'
 import { useMyAuthStore } from '~/composables/useMyAuthStore'
@@ -131,10 +131,12 @@ const drawerStore = useDrawersStore()
 const authStore = useMyAuthStore()
 const pocketbaseStore = usePocketbaseStore()
 const route = useRoute()
+const authRecord = computed(() => unref(pocketbaseStore.authRecord) as any)
+const isLoggedIn = computed(() => Boolean(authRecord.value?.id))
 
 // Use AniList avatar if available
 const avatarUrl = computed(() => {
-  return pocketbaseStore.authRecord?.anilist_avatar_url_medium || '/img/user.png'
+  return authRecord.value?.anilist_avatar_url_medium || '/img/user.webp'
 })
 
 const openLoginDrawer = () => {
@@ -174,32 +176,32 @@ const handleLogout = async () => {
 
 /* Base */
 .kizuna-navbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 58px;
-  background: var(--navy-overlay);
-  backdrop-filter: blur(14px);
+  position: relative;
+  height: 64px;
+  width: 100%;
+  background-color: var(--navy-overlay);
   border-bottom: 1px solid var(--border);
-  z-index: 1000;
+  z-index: 10;
+  isolation: isolate;
   font-family: var(--font-main);
 }
 
 .navbar-content {
+  position: relative;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
   height: 100%;
-  padding: 0 24px;
-  max-width: 1400px;
-  margin: 0 auto;
+  padding: 0 clamp(12px, 2.5vw, 28px);
+  margin: 0;
 }
 
 /* Logo */
 .navbar-start {
   display: flex;
   align-items: center;
+  min-width: 0;
 }
 
 .logo-link {
@@ -210,15 +212,19 @@ const handleLogout = async () => {
 }
 
 .logo-image {
-  width: 50px;
-  height: 50px;
+  width: 56px;
+  height: 56px;
   object-fit: contain;
 }
 
 .logo-text {
-  font-size: 20px;
+  font-size: 23px;
   font-weight: 700;
   color: var(--text-primary);
+}
+
+.logo-text-hidden {
+  display: none;
 }
 
 /* Navbar End */
@@ -226,6 +232,9 @@ const handleLogout = async () => {
   display: flex;
   align-items: center;
   gap: 16px;
+  margin-left: auto;
+  min-width: 0;
+  flex-shrink: 0;
 }
 
 /* Guest Buttons */
@@ -233,10 +242,11 @@ const handleLogout = async () => {
   background: transparent;
   border: 1px solid var(--border);
   color: var(--text-primary);
-  padding: 8px 16px;
+  padding: 9px 18px;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
+  line-height: 1.2;
   cursor: pointer;
   transition: background 0.2s, border-color 0.2s;
 }
@@ -250,10 +260,11 @@ const handleLogout = async () => {
   background: var(--cyan);
   color: var(--navy);
   border: none;
-  padding: 8px 16px;
+  padding: 9px 18px;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
+  line-height: 1.2;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -270,9 +281,16 @@ const handleLogout = async () => {
   gap: 4px;
 }
 
+.kizuna-navbar.is-logged-in .nav-links {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
 .nav-link {
-  padding: 8px 12px;
-  font-size: 14px;
+  padding: 9px 13px;
+  font-size: 16px;
+  line-height: 1.2;
   color: var(--text-secondary);
   text-decoration: none;
   transition: color 0.2s;
@@ -295,28 +313,27 @@ const handleLogout = async () => {
 }
 
 .icon-btn {
-  width: 36px;
-  height: 36px;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 6px;
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: none;
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   color: var(--text-secondary);
-  transition: background 0.2s, border-color 0.2s, color 0.2s;
+  transition: color 0.2s, transform 0.2s;
 }
 
 .icon-btn:hover {
-  background: var(--hover-fill);
-  border-color: var(--hover-border);
   color: var(--text-primary);
+  transform: translateY(-1px);
 }
 
 .icon-btn svg {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
 }
 
 /* Notification Bell */
@@ -326,10 +343,10 @@ const handleLogout = async () => {
 
 .notification-badge {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 8px;
-  height: 8px;
+  top: 7px;
+  right: 7px;
+  width: 9px;
+  height: 9px;
   background: #ef4444;
   border-radius: 50%;
   border: 2px solid var(--navy);
@@ -337,17 +354,17 @@ const handleLogout = async () => {
 
 /* Avatar Button */
 .avatar-btn {
-  width: 36px;
-  height: 36px;
-  border: 1px solid var(--border);
+  width: 40px;
+  height: 40px;
+  border: none;
   border-radius: 6px;
   overflow: hidden;
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: transform 0.2s;
 }
 
 .avatar-btn:hover {
-  border-color: var(--hover-border);
+  transform: translateY(-1px);
 }
 
 .avatar-image {
@@ -358,12 +375,12 @@ const handleLogout = async () => {
 
 /* Theme Toggle */
 .theme-toggle {
-  margin-left: 8px;
+  margin-left: 9px;
 }
 
 .theme-toggle svg {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
 }
 
 /* Dropdown */
@@ -387,19 +404,59 @@ const handleLogout = async () => {
   }
 
   .navbar-content {
-    padding: 0 16px;
+    padding: 0 12px;
+  }
+
+  .navbar-end {
+    gap: 10px;
   }
 }
 
 @media (max-width: 768px) {
-  .btn-ghost span,
-  .btn-primary span {
+  .btn-ghost,
+  .btn-primary {
+    padding: 8px 13px;
+    font-size: 14px;
+  }
+
+  .logo-text {
     display: none;
+  }
+
+  .navbar-end {
+    gap: 8px;
+  }
+
+  .theme-toggle {
+    margin-left: 2px;
+  }
+}
+
+@media (max-width: 420px) {
+  .navbar-content {
+    padding: 0 8px;
+  }
+
+  .navbar-end {
+    gap: 6px;
   }
 
   .btn-ghost,
   .btn-primary {
-    padding: 8px 12px;
+    padding: 7px 9px;
+    font-size: 12px;
+    line-height: 1.2;
+  }
+
+  .icon-btn,
+  .avatar-btn {
+    width: 34px;
+    height: 34px;
+  }
+
+  .theme-toggle svg {
+    width: 18px;
+    height: 18px;
   }
 }
 </style>

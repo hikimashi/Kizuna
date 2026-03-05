@@ -11,15 +11,20 @@
         </div>
 
         <div class="footer-groups">
-          <div class="footer-group">
+          <div class="footer-group footer-group-nav">
             <h3>Navigation</h3>
-            <NuxtLink to="/" class="footer-link">Home</NuxtLink>
-            <NuxtLink to="/animeList" class="footer-link" @click.prevent="handleProtectedNavigation('/animeList')">Anime List</NuxtLink>
-            <NuxtLink to="/profilePage" class="footer-link" @click.prevent="handleProtectedNavigation('/profilePage')">Profile</NuxtLink>
+            <div class="footer-nav-grid">
+              <NuxtLink to="/" class="footer-link">Home</NuxtLink>
+              <NuxtLink to="/profilePage" class="footer-link" @click.prevent="handleProtectedNavigation('/profilePage')">Profile</NuxtLink>
+              <NuxtLink to="/social" class="footer-link" @click.prevent="handleProtectedNavigation('/social')">Social</NuxtLink>
+              <NuxtLink to="/browse" class="footer-link" @click.prevent="handleProtectedNavigation('/browse')">Anime List</NuxtLink>
+              <NuxtLink to="/browse" class="footer-link" @click.prevent="handleProtectedNavigation('/browse')">Browse</NuxtLink>
+              <NuxtLink to="/settings" class="footer-link" @click.prevent="handleProtectedNavigation('/settings')">Settings</NuxtLink>
+            </div>
           </div>
 
           <div class="footer-group">
-            <h3>Contacts</h3>
+            <h3>Contact</h3>
             <a href="mailto:support.kizuna@gmail.com" class="footer-link">support.kizuna@gmail.com</a>
             <span class="footer-note">Discord: coming soon</span>
           </div>
@@ -87,8 +92,8 @@ const handleProtectedNavigation = async (to: string) => {
 
 .footer-top {
   display: flex;
-  justify-content: space-between;
-  gap: 40px;
+  justify-content: flex-start;
+  gap: 28px;
   align-items: flex-start;
 }
 
@@ -124,9 +129,10 @@ const handleProtectedNavigation = async (to: string) => {
 }
 
 .footer-groups {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(170px, 220px));
-  gap: 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-left: auto;
 }
 
 .footer-group {
@@ -135,8 +141,21 @@ const handleProtectedNavigation = async (to: string) => {
   gap: 8px;
 }
 
+.footer-group-nav {
+  min-width: 260px;
+}
+
+.footer-nav-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(3, auto);
+  column-gap: 56px;
+  row-gap: 8px;
+  justify-content: start;
+}
+
 .footer-group h3 {
-  margin: 0 0 4px;
+  margin: 0;
   color: var(--text-primary);
   font-size: 13px;
   font-weight: 700;
@@ -206,8 +225,22 @@ const handleProtectedNavigation = async (to: string) => {
 
   .footer-groups {
     width: 100%;
-    grid-template-columns: repeat(2, minmax(140px, 1fr));
+    justify-content: flex-start;
+    margin-left: 0;
+    flex-wrap: wrap;
     gap: 16px;
+  }
+
+  .footer-group-nav {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .footer-nav-grid {
+    grid-auto-flow: row;
+    grid-template-rows: none;
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+    column-gap: 16px;
   }
 }
 

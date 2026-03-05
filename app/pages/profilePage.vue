@@ -10,7 +10,7 @@
             <path stroke-linecap="round" d="M4 20.5c0-4 3.6-7 8-7s8 3 8 7" />
           </svg>
         </div>
-        <div>
+        <div class="banner-meta">
           <div class="banner-username">{{ username }}</div>
           <div class="banner-joined">Joined {{ joinedDisplay }}</div>
         </div>
@@ -29,13 +29,13 @@
 
           <div class="panel">
             <span class="panel-title">Genre Overview</span>
-            <div class="genre-tags">
+            <div ref="genreTagsContainerRef" class="genre-tags">
               <template v-if="isLoading">
                 <span v-for="n in 5" :key="`genre-skeleton-${n}`" class="tag skeleton-pulse" />
               </template>
               <template v-else>
                 <span
-                  v-for="genre in topGenres"
+                  v-for="genre in visibleTopGenres"
                   :key="genre.genre"
                   class="tag"
                   :style="{ background: getGenreColor(genre.genre) }"
@@ -45,12 +45,25 @@
                 </span>
               </template>
             </div>
+            <div class="genre-tags-measure" aria-hidden="true">
+              <span
+                v-for="genre in topGenres"
+                :key="`measure-${genre.genre}`"
+                :ref="setGenreMeasureRef(genre.genre)"
+                class="tag"
+              >
+                {{ genre.genre }}
+                <span class="tag-count">{{ genre.count }}</span>
+              </span>
+            </div>
             <div class="genre-bar" :class="{ 'skeleton-pulse': isLoading }">
               <template v-if="!isLoading">
                 <span
                   v-for="genre in barGenres"
                   :key="`bar-${genre.genre}`"
                   class="gb"
+                  :data-tooltip="`${genre.genre} (${genre.count})`"
+                  :title="`${genre.genre} (${genre.count})`"
                   :style="{
                     width: `${(genre.count / barGenreTotal) * 100}%`,
                     background: getGenreColor(genre.genre)
@@ -66,8 +79,15 @@
               <div v-if="isLoading" v-for="n in 5" :key="`fav-anime-skeleton-${n}`" class="fav-card">
                 <div class="fav-placeholder skeleton-pulse">-</div>
               </div>
-              <div v-else v-for="anime in favoriteAnime" :key="`fav-anime-${anime.id}`" class="fav-card">
-                <img :src="anime.coverImage?.large || anime.coverImage?.medium" :alt="anime.title?.english || anime.title?.romaji || 'Anime cover'" />
+              <div
+                v-else
+                v-for="anime in favoriteAnime"
+                :key="`fav-anime-${anime.id}`"
+                class="fav-card"
+                :data-tooltip="getFavoriteAnimeTitle(anime)"
+                :title="getFavoriteAnimeTitle(anime)"
+              >
+                <img :src="anime.coverImage?.large || anime.coverImage?.medium" :alt="getFavoriteAnimeTitle(anime)" />
               </div>
             </div>
           </div>
@@ -78,8 +98,15 @@
               <div v-if="isLoading" v-for="n in 3" :key="`fav-char-skeleton-${n}`" class="fav-card">
                 <div class="fav-placeholder skeleton-pulse">-</div>
               </div>
-              <div v-else v-for="character in favoriteCharacters" :key="`fav-char-${character.id}`" class="fav-card">
-                <img :src="character.image?.large || character.image?.medium" :alt="character.name?.full || character.name?.userPreferred || 'Character'" />
+              <div
+                v-else
+                v-for="character in favoriteCharacters"
+                :key="`fav-char-${character.id}`"
+                class="fav-card"
+                :data-tooltip="getFavoriteCharacterName(character)"
+                :title="getFavoriteCharacterName(character)"
+              >
+                <img :src="character.image?.large || character.image?.medium" :alt="getFavoriteCharacterName(character)" />
               </div>
             </div>
           </div>
@@ -108,15 +135,16 @@
               </div>
             </div>
             <div class="progress-markers">
-              <div class="marker"><span class="marker-num">50</span><div class="marker-tick" /></div>
-              <div class="marker"><span class="marker-num">100</span><div class="marker-tick" /></div>
-              <div class="marker"><span class="marker-num">150</span><div class="marker-tick" /></div>
+              <div v-for="marker in progressMarkers" :key="marker" class="marker">
+                <span class="marker-num">{{ marker }}</span>
+                <div class="marker-tick" />
+              </div>
             </div>
             <div class="progress-track">
               <div
                 class="progress-fill"
                 :class="{ 'skeleton-pulse': isLoading }"
-                :style="{ width: isLoading ? '31%' : `${Math.min((totalAnimes / 150) * 100, 100)}%` }"
+                :style="{ width: isLoading ? '31%' : `${progressFillPercent}%` }"
               />
             </div>
           </div>
@@ -176,7 +204,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, unref } from 'vue'
+import { computed, nextTick, onMounted, onBeforeUnmount, ref, unref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 import { useAnilistProfileStore } from '~/composables/useAnilistProfileStore'
@@ -266,6 +294,14 @@ function getActivityPrefix(activity: any): string {
   return `${normalized} `
 }
 
+function getFavoriteAnimeTitle(anime: any): string {
+  return anime?.title?.english ?? anime?.title?.romaji ?? 'Unknown Anime'
+}
+
+function getFavoriteCharacterName(character: any): string {
+  return character?.name?.full ?? character?.name?.userPreferred ?? 'Unknown Character'
+}
+
 const authRecord = computed<Record<string, any>>(() => unref(pocketbaseStore.authRecord) ?? {})
 const username = computed(() => authRecord.value.anilist_username ?? 'Username')
 const anilistIdDisplay = computed(() => authRecord.value.anilist_user_id ?? '-')
@@ -280,7 +316,15 @@ const joinedDisplay = computed(() => {
 })
 
 const topGenres = computed(() => genres.value.slice(0, 5))
-const barGenres = computed(() => genres.value.slice(0, 5))
+const barGenres = computed(() => {
+  if (!genres.value.length) return []
+  const visibleCount = visibleTopGenres.value.length || topGenres.value.length
+  const limit = Math.min(visibleCount + 1, genres.value.length)
+  return genres.value.slice(0, limit)
+})
+const visibleTopGenres = ref<{ genre: string; count: number }[]>([])
+const genreTagsContainerRef = ref<HTMLElement | null>(null)
+const genreMeasureRefs = ref<Record<string, HTMLElement | null>>({})
 const hasFavoriteAnime = computed(() => favoriteAnime.value.length > 0)
 const hasFavoriteCharacters = computed(() => favoriteCharacters.value.length > 0)
 const barGenreTotal = computed(() => {
@@ -288,9 +332,74 @@ const barGenreTotal = computed(() => {
   return sum || 1
 })
 
+const progressStep = computed(() => {
+  const perSegment = Math.max(10, Math.ceil((totalAnimes.value || 0) / 3))
+  if (perSegment <= 25) return 25
+  if (perSegment <= 50) return 50
+  if (perSegment <= 100) return 100
+  if (perSegment <= 250) return 250
+  if (perSegment <= 500) return 500
+  return Math.ceil(perSegment / 100) * 100
+})
+
+const progressMarkers = computed(() => [
+  progressStep.value,
+  progressStep.value * 2,
+  progressStep.value * 3
+])
+
+const progressMax = computed(() => progressMarkers.value[2] || 1)
+const progressFillPercent = computed(() => Math.min((totalAnimes.value / progressMax.value) * 100, 100).toFixed(2))
+
+function setGenreMeasureRef(genreName: string) {
+  return (el: Element | null) => {
+    genreMeasureRefs.value[genreName] = el as HTMLElement | null
+  }
+}
+
+async function computeVisibleGenres() {
+  if (isLoading.value) return
+  await nextTick()
+  const container = genreTagsContainerRef.value
+  if (!container) {
+    visibleTopGenres.value = topGenres.value
+    return
+  }
+  const availableWidth = container.clientWidth
+  const nextVisible: { genre: string; count: number }[] = []
+  let used = 0
+  for (const genre of topGenres.value) {
+    const el = genreMeasureRefs.value[genre.genre]
+    if (!el) continue
+    const width = Math.ceil(el.offsetWidth)
+    const gap = nextVisible.length > 0 ? 6 : 0
+    if (used + gap + width <= availableWidth) {
+      used += gap + width
+      nextVisible.push(genre)
+    } else {
+      break
+    }
+  }
+  visibleTopGenres.value = nextVisible
+}
+
+const handleGenreResize = () => {
+  computeVisibleGenres()
+}
+
+watch(topGenres, () => {
+  computeVisibleGenres()
+}, { deep: true })
+
 onMounted(async () => {
   await profileStore.loadProfile()
   await resetActivityScroll()
+  await computeVisibleGenres()
+  window.addEventListener('resize', handleGenreResize, { passive: true })
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleGenreResize)
 })
 </script>
 
@@ -305,7 +414,7 @@ onMounted(async () => {
 
 .banner-wrap {
   width: 100%;
-  height: clamp(220px, 30vw, 340px);
+  height: clamp(230px, 28vw, 340px);
   position: relative;
   overflow: hidden;
   background: linear-gradient(135deg, rgba(20, 30, 50, 0.95) 0%, rgba(10, 18, 35, 0.98) 100%);
@@ -318,6 +427,8 @@ onMounted(async () => {
   height: 100%;
   object-fit: cover;
   object-position: center;
+  image-rendering: auto;
+  image-rendering: -webkit-optimize-contrast;
   z-index: 0;
 }
 
@@ -340,9 +451,9 @@ onMounted(async () => {
 .banner-wrap.has-image::before {
   background: linear-gradient(
     180deg,
-    rgba(5, 10, 20, 0.22) 0%,
-    rgba(8, 12, 22, 0.5) 75%,
-    rgba(8, 12, 22, 0.66) 100%
+    rgba(5, 10, 20, 0.12) 0%,
+    rgba(8, 12, 22, 0.34) 75%,
+    rgba(8, 12, 22, 0.5) 100%
   );
 }
 
@@ -352,17 +463,21 @@ onMounted(async () => {
 
 .banner-content {
   position: absolute;
-  bottom: 26px;
+  bottom: 0;
   left: clamp(16px, 2.4vw, 40px);
   z-index: 2;
   display: flex;
   align-items: flex-end;
-  gap: 16px;
+  gap: 18px;
+}
+
+.banner-meta {
+  transform: translateY(-16px);
 }
 
 .banner-avatar {
-  width: 110px;
-  height: 110px;
+  width: 132px;
+  height: 132px;
   border-radius: 8px;
   background: transparent;
   border: 0;
@@ -390,17 +505,18 @@ onMounted(async () => {
 
 .banner-username {
   font-family: 'Overpass', sans-serif;
-  font-size: clamp(24px, 2.8vw, 36px);
+  font-size: clamp(30px, 3.6vw, 46px);
   font-weight: 700;
   color: #fff;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
-  margin-bottom: 4px;
+  margin-bottom: 0;
 }
 
 .banner-joined {
-  font-size: 13px;
+  font-size: 16px;
   color: rgba(255, 255, 255, 0.45);
   letter-spacing: 0.3px;
+  transform: translateY(-12px);
 }
 
 .page {
@@ -482,19 +598,33 @@ onMounted(async () => {
 
 .genre-tags {
   display: flex;
+  justify-content: center;
+  align-items: center;
   gap: 6px;
   margin-bottom: 10px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+.genre-tags-measure {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+  left: -9999px;
+  top: -9999px;
+  display: flex;
+  gap: 6px;
+  white-space: nowrap;
 }
 
 .tag {
-  height: 24px;
-  padding: 0 12px;
+  flex: 0 0 auto;
+  height: 28px;
+  padding: 0 14px;
   border-radius: 2.5px;
   display: flex;
   align-items: center;
-  font-size: 12px;
-  font-weight: 400;
+  font-size: 13px;
+  font-weight: 500;
   color: #fafafa;
   letter-spacing: 0.3px;
   white-space: nowrap;
@@ -505,17 +635,54 @@ onMounted(async () => {
   font-size: 10px;
   color: rgba(255, 255, 255, 0.6);
   margin-left: 4px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
 }
 
 .genre-bar {
-  height: 10px;
+  height: 7px;
   display: flex;
-  margin: 0 -14px;
+  margin: 0 -16px;
   overflow: hidden;
+  position: relative;
+}
+
+.genre-bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.07), transparent 12%, transparent 88%, rgba(255, 255, 255, 0.05));
 }
 
 .gb {
   height: 100%;
+  position: relative;
+  transition: width 220ms ease, background-color 260ms ease;
+}
+
+.gb::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+  background: rgba(11, 22, 34, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #fafafa;
+  font-size: 10px;
+  line-height: 1.2;
+  padding: 4px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.gb:hover::after {
+  opacity: 1;
 }
 
 .fav-grid {
@@ -529,6 +696,7 @@ onMounted(async () => {
   border-radius: 5px;
   background: #0d1a27;
   overflow: hidden;
+  position: relative;
 }
 
 .fav-card img {
@@ -536,6 +704,31 @@ onMounted(async () => {
   height: 100%;
   object-fit: cover;
   display: block;
+}
+.fav-card::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
+  max-width: calc(100% - 10px);
+  background: rgba(11, 22, 34, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #fafafa;
+  font-size: 10px;
+  line-height: 1.2;
+  padding: 4px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  transition: opacity 0.16s ease;
+  pointer-events: none;
+  z-index: 2;
+}
+.fav-card:hover::after {
+  opacity: 1;
 }
 
 .fav-placeholder {
@@ -769,9 +962,22 @@ onMounted(async () => {
     height: 220px;
   }
 
+  .banner-content {
+    gap: 14px;
+  }
+
   .banner-avatar {
-    width: 88px;
-    height: 88px;
+    width: 102px;
+    height: 102px;
+  }
+
+  .banner-username {
+    font-size: clamp(24px, 6vw, 32px);
+    margin-bottom: 4px;
+  }
+
+  .banner-joined {
+    font-size: 13px;
   }
 
   .stats-row {
@@ -862,6 +1068,18 @@ onMounted(async () => {
   text-shadow: none;
 }
 
+[data-theme="winter"] .profile-page .stat + .stat {
+  border-left-color: rgba(32, 62, 92, 0.26);
+}
+
+[data-theme="winter"] .profile-page .stats-row {
+  border-bottom-color: rgba(32, 62, 92, 0.24);
+}
+
+[data-theme="winter"] .profile-page .marker-tick {
+  background: rgba(32, 62, 92, 0.6);
+}
+
 [data-theme="winter"] .profile-page .banner-username {
   color: #ffffff;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.42);
@@ -870,4 +1088,5 @@ onMounted(async () => {
 [data-theme="winter"] .profile-page .a-text a {
   color: #1d8ed8;
 }
+
 </style>

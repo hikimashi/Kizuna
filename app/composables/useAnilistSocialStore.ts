@@ -119,28 +119,14 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
     variables: Record<string, any>,
     includeToken: boolean
   ) => {
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-    if (includeToken && token.value) headers.Authorization = `Bearer ${token.value}`
-
-    const response = await fetch('https://graphql.anilist.co', {
+    const payload = await $fetch<any>('/api/anilist/graphql', {
       method: 'POST',
-      headers,
-      body: JSON.stringify({ query, variables })
+      body: {
+        query,
+        variables,
+        token: includeToken ? token.value : ''
+      }
     })
-
-    let payload: any = null
-    try {
-      payload = await response.json()
-    } catch {
-      payload = null
-    }
-
-    const errors = payload?.errors as Array<{ message?: string }> | undefined
-    const errorMessage = errors?.map(error => error?.message).filter(Boolean).join(' | ')
-
-    if (!response.ok) {
-      throw new Error(errorMessage || `AniList HTTP ${response.status}`)
-    }
 
     return payload
   }

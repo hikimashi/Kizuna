@@ -608,6 +608,9 @@ onBeforeUnmount(() => {
   font-size: 10px;
   color: rgba(255, 255, 255, 0.6);
   margin-left: 4px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
 }
 
 .genre-bar {

@@ -28,10 +28,10 @@
 
       <div class="footer-bottom">
         <span class="copyright">© {{ currentYear }} Kizuna.</span>
-        <div class="api-pill">
+        <a href="https://docs.anilist.co/" target="_blank" rel="noopener noreferrer" class="api-pill">
           <img src="/img/anilist.svg" alt="AniList" class="anilist-logo" />
           <span class="api-text">Powered by AniList API</span>
-        </div>
+        </a>
       </div>
     </div>
   </footer>
@@ -176,6 +176,12 @@ const handleProtectedNavigation = async (to: string) => {
   gap: 10px;
   color: var(--text-secondary);
   font-size: 12px;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.api-pill:hover {
+  opacity: 0.8;
 }
 
 .anilist-logo {

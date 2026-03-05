@@ -126,7 +126,7 @@
               <span class="activity-title">Activity</span>
             </div>
 
-            <template v-if="isLoading">
+            <template v-if="isLoading || (activityLoading && activityItems.length === 0)">
               <div v-for="n in 6" :key="`activity-skeleton-${n}`" class="a-item skeleton-pulse">
                 <div class="a-thumb" />
                 <div class="a-body">
@@ -135,7 +135,7 @@
               </div>
             </template>
             <template v-else>
-              <article v-for="activity in activities" :key="activity.id" class="a-item">
+              <article v-for="activity in activityItems" :key="activity.id" class="a-item">
                 <div class="a-thumb">
                   <img v-if="activity.media?.coverImage?.medium" :src="activity.media.coverImage.medium" alt="Cover" />
                   <div v-else class="thumb-ph">
@@ -160,6 +160,13 @@
                 </div>
                 <span class="a-date">{{ timeAgo(activity.createdAt) }}</span>
               </article>
+              <div v-if="activityLoading && activityItems.length > 0" class="activity-loading-more">
+                Loading more...
+              </div>
+              <div v-else-if="!activityHasMore && activityItems.length === 0" class="activity-empty">
+                No recent activity.
+              </div>
+              <div ref="activitySentinelRef" class="activity-sentinel" />
             </template>
           </div>
         </section>
@@ -169,15 +176,41 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, unref } from 'vue'
+import { computed, onMounted, unref } from 'vue'
+import { storeToRefs } from 'pinia'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
-import { useAnilistAuthStore } from '~/composables/useAnilistAuthStore'
+import { useAnilistProfileStore } from '~/composables/useAnilistProfileStore'
+import { useInfiniteScroll } from '~/composables/useInfiniteScroll'
 
 definePageMeta({ middleware: ['auth'] })
 
 const pocketbaseStore = usePocketbaseStore()
-const anilistAuthStore = useAnilistAuthStore()
-void anilistAuthStore
+const profileStore = useAnilistProfileStore()
+const {
+  isLoading,
+  totalAnimes,
+  daysWatched,
+  meanScore,
+  genres,
+  favoriteAnime,
+  favoriteCharacters
+} = storeToRefs(profileStore)
+
+const {
+  items: activityItems,
+  loading: activityLoading,
+  hasMore: activityHasMore,
+  sentinelRef: activitySentinelRef,
+  reset: resetActivityScroll
+} = useInfiniteScroll<any>(
+  async (page, perPage) => profileStore.fetchActivityPage(page, perPage),
+  {
+    threshold: 260,
+    initialPage: 1,
+    perPage: 15,
+    immediate: false
+  }
+)
 
 const GENRE_COLORS: Record<string, string> = {
   Action: '#F77F00',
@@ -217,18 +250,23 @@ function timeAgo(timestamp: number): string {
   return `${Math.floor(months / 12)} year${Math.floor(months / 12) > 1 ? 's' : ''} ago`
 }
 
-const isLoading = ref(true)
-const totalAnimes = ref(0)
-const daysWatched = ref('0.0')
-const meanScore = ref('0.0')
-const genres = ref<{ genre: string; count: number }[]>([])
-const activities = ref<any[]>([])
-const favoriteAnime = ref<any[]>([])
-const favoriteCharacters = ref<any[]>([])
+function getActivityTitle(activity: any): string {
+  return activity?.media?.title?.english ?? activity?.media?.title?.romaji ?? 'Unknown Title'
+}
+
+function getActivityPrefix(activity: any): string {
+  const status = String(activity?.status ?? '').toLowerCase()
+  const progress = activity?.progress
+
+  if (status === 'watched') return `Watched episode ${progress ?? '?'} of `
+  if (status === 'completed') return 'Completed '
+  if (status === 'rewatched') return 'Rewatched '
+  const raw = String(activity?.status ?? 'updated').replace(/_/g, ' ').toLowerCase()
+  const normalized = raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : 'Updated'
+  return `${normalized} `
+}
 
 const authRecord = computed<Record<string, any>>(() => unref(pocketbaseStore.authRecord) ?? {})
-const token = computed(() => authRecord.value.anilist_token ?? '')
-const userId = computed(() => Number(authRecord.value.anilist_user_id ?? 0))
 const username = computed(() => authRecord.value.anilist_username ?? 'Username')
 const anilistIdDisplay = computed(() => authRecord.value.anilist_user_id ?? '-')
 const avatarSrc = computed(() => authRecord.value.anilist_avatar_url_large || authRecord.value.anilist_avatar_url_medium || '')
@@ -250,192 +288,9 @@ const barGenreTotal = computed(() => {
   return sum || 1
 })
 
-const statsQuery = `
-query ($userId: Int) {
-  User(id: $userId) {
-    statistics {
-      anime {
-        count
-        minutesWatched
-        meanScore
-        genres { genre count }
-      }
-    }
-  }
-}
-`
-
-const activityQuery = `
-query ($userId: Int) {
-  Page(page: 1, perPage: 15) {
-    activities(userId: $userId, sort: ID_DESC, type: ANIME_LIST) {
-      ... on ListActivity {
-        id
-        status
-        progress
-        createdAt
-        media {
-          title { romaji english }
-          coverImage { medium }
-          siteUrl
-        }
-      }
-    }
-  }
-}
-`
-
-const favoriteAnimePageQuery = `
-query ($userId: Int, $page: Int, $perPage: Int) {
-  User(id: $userId) {
-    favourites {
-      anime(page: $page, perPage: $perPage) {
-        pageInfo { currentPage hasNextPage }
-        nodes {
-          id
-          title { romaji english }
-          coverImage { medium large }
-          siteUrl
-        }
-      }
-    }
-  }
-}
-`
-
-const favoriteCharacterPageQuery = `
-query ($userId: Int, $page: Int, $perPage: Int) {
-  User(id: $userId) {
-    favourites {
-      characters(page: $page, perPage: $perPage) {
-        pageInfo { currentPage hasNextPage }
-        nodes {
-          id
-          name { full userPreferred }
-          image { medium large }
-          siteUrl
-        }
-      }
-    }
-  }
-}
-`
-
-function getActivityTitle(activity: any): string {
-  return activity?.media?.title?.english ?? activity?.media?.title?.romaji ?? 'Unknown Title'
-}
-
-function getActivityPrefix(activity: any): string {
-  const status = String(activity?.status ?? '').toLowerCase()
-  const progress = activity?.progress
-
-  if (status === 'watched') return `Watched episode ${progress ?? '?'} of `
-  if (status === 'completed') return 'Completed '
-  if (status === 'rewatched') return 'Rewatched '
-  return `${activity?.status ?? 'Updated'} `
-}
-
-async function fetchAllFavoriteAnime(headers: Record<string, string>, anilistUserId: number) {
-  const all: any[] = []
-  let page = 1
-  const perPage = 50
-  let hasNextPage = true
-
-  while (hasNextPage) {
-    const response = await $fetch<any>('https://graphql.anilist.co', {
-      method: 'POST',
-      headers,
-      body: {
-        query: favoriteAnimePageQuery,
-        variables: { userId: anilistUserId, page, perPage }
-      }
-    })
-
-    const chunk = response?.data?.User?.favourites?.anime?.nodes ?? []
-    const pageInfo = response?.data?.User?.favourites?.anime?.pageInfo
-    all.push(...chunk)
-
-    hasNextPage = Boolean(pageInfo?.hasNextPage)
-    page += 1
-
-    if (page > 20) break
-  }
-
-  return all
-}
-
-async function fetchAllFavoriteCharacters(headers: Record<string, string>, anilistUserId: number) {
-  const all: any[] = []
-  let page = 1
-  const perPage = 50
-  let hasNextPage = true
-
-  while (hasNextPage) {
-    const response = await $fetch<any>('https://graphql.anilist.co', {
-      method: 'POST',
-      headers,
-      body: {
-        query: favoriteCharacterPageQuery,
-        variables: { userId: anilistUserId, page, perPage }
-      }
-    })
-
-    const chunk = response?.data?.User?.favourites?.characters?.nodes ?? []
-    const pageInfo = response?.data?.User?.favourites?.characters?.pageInfo
-    all.push(...chunk)
-
-    hasNextPage = Boolean(pageInfo?.hasNextPage)
-    page += 1
-
-    if (page > 20) break
-  }
-
-  return all
-}
-
 onMounted(async () => {
-  try {
-    if (!token.value || !userId.value) {
-      isLoading.value = false
-      return
-    }
-
-    const headers = {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token.value}`
-    }
-
-    const [statsRes, activityRes, allFavoriteAnime, allFavoriteCharacters] = await Promise.all([
-      $fetch<any>('https://graphql.anilist.co', {
-        method: 'POST',
-        headers,
-        body: { query: statsQuery, variables: { userId: userId.value } }
-      }),
-      $fetch<any>('https://graphql.anilist.co', {
-        method: 'POST',
-        headers,
-        body: { query: activityQuery, variables: { userId: userId.value } }
-      }),
-      fetchAllFavoriteAnime(headers, userId.value),
-      fetchAllFavoriteCharacters(headers, userId.value)
-    ])
-
-    const animeStats = statsRes?.data?.User?.statistics?.anime
-    if (animeStats) {
-      totalAnimes.value = animeStats.count ?? 0
-      daysWatched.value = ((animeStats.minutesWatched ?? 0) / 1440).toFixed(1)
-      meanScore.value = Number(animeStats.meanScore ?? 0).toFixed(1)
-      genres.value = [...(animeStats.genres ?? [])].sort((a, b) => b.count - a.count)
-    }
-
-    activities.value = activityRes?.data?.Page?.activities ?? []
-    favoriteAnime.value = allFavoriteAnime
-    favoriteCharacters.value = allFavoriteCharacters
-  } catch (error) {
-    console.error('Failed to load profile data:', error)
-  } finally {
-    isLoading.value = false
-  }
+  await profileStore.loadProfile()
+  await resetActivityScroll()
 })
 </script>
 
@@ -854,6 +709,18 @@ onMounted(async () => {
   font-weight: 500;
   color: color-mix(in srgb, var(--kz-text-secondary) 70%, transparent);
   white-space: nowrap;
+}
+
+.activity-loading-more,
+.activity-empty {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--kz-text-secondary);
+  text-align: center;
+}
+
+.activity-sentinel {
+  height: 1px;
 }
 
 .skeleton-pulse {

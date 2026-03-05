@@ -1,0 +1,180 @@
+.settings-page { min-height: calc(100vh - 64px); padding: 36px 28px 96px; font-family: 'Overpass', sans-serif; }
+.page { max-width: 1280px; margin: 0 auto; position: relative; }
+.sidebar { position: fixed; top: 82px; left: max(28px, calc((100vw - 1280px) / 2)); width: 240px; display: flex; flex-direction: column; gap: 3px; }
+.sidebar-section { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.8px; color: #3d5570; padding: 10px 12px 6px; margin-top: 8px; }
+.sidebar-section:first-child { margin-top: 0; }
+.sidebar-link { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 5px; font-size: 13px; font-weight: 500; color: #7a9ab8; cursor: pointer; border: none; background: none; width: 100%; text-align: left; }
+.sidebar-link:hover { background: rgba(255,255,255,0.04); color: #e8f0ff; }
+.sidebar-link.active { background: rgba(61,180,242,0.1); color: #3db4f2; }
+.main { margin-left: 276px; display: flex; flex-direction: column; gap: 22px; }
+.section-title { font-size: 24px; font-weight: 700; color: #e8f0ff; margin-bottom: 6px; }
+.section-subtitle { font-size: 13px; color: #4a6480; }
+.card,.danger-card { background: #131d2a; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; overflow: hidden; }
+.card-header { padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.card-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.4px; color: #4a6480; }
+.card-body { padding: 20px; }
+.fields-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: #3d5570; }
+.field-value { background: #0d1620; border: 1px solid rgba(255,255,255,0.06); border-radius: 5px; padding: 10px 13px; font-size: 14px; font-weight: 500; color: #e8f0ff; font-family: 'Overpass Mono', monospace; }
+.extra-fields { margin-top: 14px; }
+.fields-grid-extra { margin-top: 10px; margin-bottom: 0; }
+.readonly-note { font-size: 11px; color: #4a6480; padding: 10px 12px; background: rgba(255,255,255,0.02); border-radius: 5px; border: 1px solid rgba(255,255,255,0.04); margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.anilist-settings-link { display: inline-flex; align-items: center; gap: 6px; color: #3db4f2; text-decoration: none; font-weight: 600; white-space: nowrap; }
+.anilist-settings-link:hover { text-decoration: underline; }
+.profile-hero { display: flex; gap: 16px; }
+.profile-avatar-col { flex-shrink: 0; width: 100px; }
+.profile-avatar-label,.profile-banner-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: #3d5570; margin-bottom: 8px; }
+.profile-avatar-img { width: 100px; height: 100px; border-radius: 6px; background: #1e2d40; border: 1px solid rgba(255,255,255,0.08); overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.profile-avatar-img img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+.profile-banner-col { flex: 1; }
+.profile-banner-img { width: 100%; height: 100px; border-radius: 6px; background: #1e2d40; border: 1px solid rgba(255,255,255,0.08); overflow: hidden; }
+.profile-banner-img img { width: 100%; height: 100%; object-fit: cover; }
+.profile-banner-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #3d5570; font-size: 11px; }
+.btn-row { display: flex; gap: 12px; align-items: center; }
+.btn-refresh,.btn-danger,.btn-edit { border-radius: 5px; font-size: 13px; font-weight: 600; padding: 9px 18px; cursor: pointer; border: 1px solid; }
+.btn-refresh { background: rgba(61,180,242,0.1); border-color: rgba(61,180,242,0.25); color: #3db4f2; }
+.btn-danger { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.2); color: #ef4444; }
+.btn-edit { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); color: #7a9ab8; padding: 7px 14px; font-size: 12px; }
+.btn-refresh:disabled,.btn-danger:disabled,.btn-edit:disabled { opacity: .6; cursor: not-allowed; }
+.account-field { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.account-field:last-child { border-bottom: none; padding-bottom: 0; }
+.account-field-name { font-size: 13px; font-weight: 600; color: #e8f0ff; margin-bottom: 2px; }
+.account-field-desc { font-size: 11px; color: #4a6480; }
+.security-form { display: flex; flex-direction: column; gap: 12px; padding-top: 14px; }
+.security-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.security-field { display: flex; flex-direction: column; gap: 6px; }
+.security-input {
+  height: 38px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: #0d1620;
+  color: #e8f0ff;
+  padding: 0 12px;
+  font-size: 13px;
+  font-family: 'Overpass', sans-serif;
+}
+.security-input:focus {
+  outline: none;
+  border-color: rgba(61,180,242,0.55);
+  box-shadow: 0 0 0 2px rgba(61,180,242,0.14);
+}
+.security-error { font-size: 12px; color: #ef6565; }
+.theme-controls { display: flex; align-items: center; gap: 8px; }
+.theme-chip { height: 34px; border: 1px solid rgba(255,255,255,0.08); border-radius: 5px; background: rgba(255,255,255,0.03); color: #7a9ab8; padding: 0 14px; font-size: 12px; font-weight: 700; cursor: pointer; }
+.theme-chip.active { border-color: rgba(61,180,242,0.45); color: #3db4f2; background: rgba(61,180,242,0.12); }
+.danger-card { border-color: rgba(239,68,68,0.15); }
+.danger-row { border: none; padding: 0; }
+@media (max-width: 980px) {
+  .settings-page { padding: 24px 14px 72px; }
+  .page { max-width: 100%; }
+  .sidebar { position: static; width: 100%; }
+  .main { margin-left: 0; margin-top: 16px; }
+  .security-grid { grid-template-columns: 1fr; }
+}
+
+[data-theme="winter"] .settings-page .section-title,
+[data-theme="winter"] .settings-page .account-field-name {
+  color: #173a5f;
+}
+
+[data-theme="winter"] .settings-page .section-subtitle,
+[data-theme="winter"] .settings-page .sidebar-section,
+[data-theme="winter"] .settings-page .field-label,
+[data-theme="winter"] .settings-page .account-field-desc,
+[data-theme="winter"] .settings-page .readonly-note,
+[data-theme="winter"] .settings-page .profile-avatar-label,
+[data-theme="winter"] .settings-page .profile-banner-label,
+[data-theme="winter"] .settings-page .card-title {
+  color: #4c6b87;
+}
+
+[data-theme="winter"] .settings-page .card {
+  background: rgba(245, 250, 255, 0.94);
+  border-color: rgba(25, 62, 98, 0.2);
+}
+
+[data-theme="winter"] .settings-page .danger-card {
+  background: rgba(255, 244, 244, 0.96);
+  border-color: rgba(217, 57, 57, 0.28);
+}
+
+[data-theme="winter"] .settings-page .card-header {
+  border-bottom-color: rgba(25, 62, 98, 0.12);
+}
+
+[data-theme="winter"] .settings-page .field-value {
+  background: rgba(231, 241, 250, 0.9);
+  border-color: rgba(25, 62, 98, 0.17);
+  color: #163e65;
+}
+
+[data-theme="winter"] .settings-page .profile-avatar-img,
+[data-theme="winter"] .settings-page .profile-banner-img {
+  background: rgba(227, 239, 250, 0.95);
+  border-color: rgba(25, 62, 98, 0.2);
+}
+
+[data-theme="winter"] .settings-page .profile-banner-placeholder {
+  color: #5d7a94;
+}
+
+[data-theme="winter"] .settings-page .readonly-note {
+  background: rgba(226, 238, 250, 0.9);
+  border-color: rgba(25, 62, 98, 0.12);
+}
+
+[data-theme="winter"] .settings-page .sidebar-link {
+  color: #4e6b86;
+}
+
+[data-theme="winter"] .settings-page .sidebar-link:hover {
+  background: rgba(20, 84, 140, 0.08);
+  color: #163f65;
+}
+
+[data-theme="winter"] .settings-page .sidebar-link.active {
+  background: rgba(37, 165, 242, 0.16);
+  color: #1f87ca;
+}
+
+[data-theme="winter"] .settings-page .btn-edit {
+  background: rgba(220, 234, 247, 0.9);
+  border-color: rgba(25, 62, 98, 0.18);
+  color: #34556f;
+}
+
+[data-theme="winter"] .settings-page .btn-edit:hover {
+  background: rgba(205, 224, 241, 0.95);
+  color: #1d4368;
+}
+
+[data-theme="winter"] .settings-page .btn-refresh {
+  background: rgba(37, 165, 242, 0.14);
+  border-color: rgba(37, 165, 242, 0.4);
+  color: #1f8bcf;
+}
+
+[data-theme="winter"] .settings-page .btn-danger {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(220, 49, 49, 0.32);
+  color: #d53636;
+}
+
+[data-theme="winter"] .settings-page .theme-chip {
+  background: rgba(223, 236, 248, 0.92);
+  border-color: rgba(25, 62, 98, 0.18);
+  color: #4a6a85;
+}
+
+[data-theme="winter"] .settings-page .theme-chip.active {
+  background: rgba(37, 165, 242, 0.18);
+  border-color: rgba(37, 165, 242, 0.46);
+  color: #1f88cb;
+}
+
+[data-theme="winter"] .settings-page .security-input {
+  background: rgba(232, 242, 251, 0.96);
+  border-color: rgba(25, 62, 98, 0.2);
+  color: #173d63;
+}

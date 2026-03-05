@@ -52,7 +52,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
       }
       localStorage.removeItem('anilist_oauth_state');
 
-      const response = await $fetch<{ access_token: string }>('/api/anilist/exchangeToken', {
+      const response = await $fetch<{ access_token: string; expires_in?: number }>('/api/anilist/exchangeToken', {
         method: 'POST',
         body: { code, redirect_uri: useRuntimeConfig().public.anilistRedirectUri }
       });
@@ -87,8 +87,14 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
         throw new Error('anilist_duplicate');
       }
 
+      const tokenExpiresAt =
+        typeof response.expires_in === 'number' && response.expires_in > 0
+          ? new Date(Date.now() + response.expires_in * 1000).toISOString()
+          : null;
+
       await pocketbaseStore.pb.collection('user').update(userId, {
         anilist_token: response.access_token,
+        anilist_token_expires_at: tokenExpiresAt,
         anilist_user_id: anilistId,
         anilist_username: viewer.name,
         anilist_avatar_url_medium: viewer.avatar.medium,
@@ -123,9 +129,61 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
     }
   };
 
+  // Re-sync linked AniList profile fields (username/avatar/banner) into PocketBase.
+  const refreshLinkedAniListProfile = async () => {
+    try {
+      const token = pocketbaseStore.authRecord?.anilist_token;
+      const userId = pocketbaseStore.pb.authStore.model?.id;
+
+      if (!token || !userId) {
+        throw new Error('AniList account is not linked.');
+      }
+
+      const anilistUserData = await $fetch<any>('https://graphql.anilist.co', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: {
+          query: `query { Viewer { id name bannerImage avatar { medium large } } }`
+        }
+      });
+
+      const viewer = anilistUserData?.data?.Viewer;
+      if (!viewer?.id) {
+        throw new Error('Failed to fetch AniList viewer.');
+      }
+
+      await pocketbaseStore.pb.collection('user').update(userId, {
+        anilist_user_id: Number(viewer.id),
+        anilist_username: viewer.name,
+        anilist_avatar_url_medium: viewer.avatar?.medium || null,
+        anilist_avatar_url_large: viewer.avatar?.large || null,
+        anilist_banner: viewer.bannerImage || null
+      });
+
+      await pocketbaseStore.pb.collection('user').authRefresh();
+
+      toastStore.openToast({
+        type: 'success',
+        message: 'AniList data refreshed.'
+      });
+
+      return true;
+    } catch (error: any) {
+      toastStore.openToast({
+        type: 'error',
+        message: error?.message || 'Unable to refresh AniList data.'
+      });
+      return false;
+    }
+  };
+
   return {
     loginWithAniList,
     loginWithAniListWithWarning,
-    handleCallback
+    handleCallback,
+    refreshLinkedAniListProfile
   };
 });

@@ -25,6 +25,7 @@ export const useMyAuthStore = defineStore('auth', () => {
       token: authData.token,
       email: record.email,
       created,
+      theme: record.theme,
       password: '',
       passwordConfirm: '',
       oldPassword: '',
@@ -43,6 +44,7 @@ export const useMyAuthStore = defineStore('auth', () => {
       anilist_user_id: null,
       anilist_username: null,
       anilist_token: null,
+      anilist_token_expires_at: null,
       anilist_banner: null
     };
 
@@ -108,7 +110,25 @@ export const useMyAuthStore = defineStore('auth', () => {
 
       const authData = await pocketbaseStore.pb.collection('user').authRefresh();
       userStore.saveUserData(mapAuthDataToUser(authData));
-    } catch {
+    } catch (error: any) {
+      const hasLocalSession = Boolean(pocketbaseStore.pb.authStore.model?.id) && Boolean(pocketbaseStore.pb.authStore.token);
+      const message = String(error?.message || '');
+      const isTransientNetworkError =
+        message.includes('Failed to fetch') ||
+        message.includes('NetworkError') ||
+        message.includes('fetch');
+
+      // Keep current local session if refresh failed due temporary network issue.
+      if (hasLocalSession && isTransientNetworkError) {
+        userStore.saveUserData(
+          mapAuthDataToUser({
+            token: pocketbaseStore.pb.authStore.token,
+            record: pocketbaseStore.pb.authStore.model
+          })
+        );
+        return;
+      }
+
       pocketbaseStore.pb.authStore.clear();
       localStorage.removeItem('pocketbase_auth');
       userStore.clearUser();

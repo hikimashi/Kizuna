@@ -292,6 +292,17 @@
                 "type": "text"
             },
             {
+                "hidden": false,
+                "id": "date3786765937",
+                "max": "",
+                "min": "",
+                "name": "anilist_token_expires_at",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "date"
+            },
+            {
                 "exceptDomains": null,
                 "hidden": false,
                 "id": "url3884709290",

@@ -22,7 +22,8 @@ export const useThemeStore = defineStore('useThemeStore', () => {
   };
 
   const setTheme = () => {
-    const userTheme = (userStore.userData as { themeMode?: string } | null)?.themeMode;
+    const userTheme = (userStore.userData as { theme?: string; themeMode?: string } | null)?.theme
+      || (userStore.userData as { theme?: string; themeMode?: string } | null)?.themeMode;
     const localTheme = import.meta.client ? localStorage.getItem('theme') : null;
 
     if (isValidTheme(userTheme)) {
@@ -43,9 +44,14 @@ export const useThemeStore = defineStore('useThemeStore', () => {
     applyTheme(nextTheme);
   };
 
+  const setThemeByName = (theme: ThemeName) => {
+    applyTheme(theme);
+  };
+
   return {
     activeTheme,
     setTheme,
     changeTheme,
+    setThemeByName,
   };
 });

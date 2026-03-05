@@ -1,0 +1,387 @@
+<template>
+  <div class="settings-page">
+    <div class="page">
+      <aside class="sidebar">
+        <div class="sidebar-section">Profile</div>
+        <button class="sidebar-link" :class="{ active: currentSection === 'anilist' }" type="button" @click="currentSection = 'anilist'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+          </svg>
+          AniList
+        </button>
+
+        <div class="sidebar-section">Account</div>
+        <button class="sidebar-link" :class="{ active: currentSection === 'profile' }" type="button" @click="currentSection = 'profile'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" />
+          </svg>
+          Profile
+        </button>
+        <button class="sidebar-link" :class="{ active: currentSection === 'security' }" type="button" @click="currentSection = 'security'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+          </svg>
+          Security
+        </button>
+
+        <div class="sidebar-section">App</div>
+        <button class="sidebar-link" :class="{ active: currentSection === 'appearance' }" type="button" @click="currentSection = 'appearance'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636" />
+          </svg>
+          Appearance
+        </button>
+      </aside>
+
+      <main class="main">
+        <template v-if="currentSection === 'anilist'">
+          <div class="section-header">
+            <div class="section-title">AniList</div>
+            <div class="section-subtitle">Linked AniList profile settings</div>
+          </div>
+          <section class="card">
+            <div class="card-header"><span class="card-title">Profile Info</span></div>
+            <div class="card-body">
+              <div class="fields-grid">
+                <div class="field">
+                  <span class="field-label">Username</span>
+                  <div class="field-value">{{ username || '-' }}</div>
+                </div>
+                <div class="field">
+                  <span class="field-label">AniList ID</span>
+                  <div class="field-value">{{ anilistId || '-' }}</div>
+                </div>
+              </div>
+              <div class="readonly-note">
+                <span>Avatar and banner are read-only. Change them on AniList, then refresh.</span>
+                <a
+                  class="anilist-settings-link"
+                  href="https://anilist.co/settings"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <svg viewBox="0 0 100 100" width="14" height="14" aria-hidden="true">
+                    <circle cx="50" cy="50" r="50" fill="currentColor" />
+                    <rect x="20" y="47" width="16" height="33" fill="#0B1622" />
+                    <rect x="45" y="20" width="16" height="60" fill="#0B1622" />
+                    <rect x="64" y="35" width="16" height="45" fill="#0B1622" />
+                  </svg>
+                  AniList settings
+                </a>
+              </div>
+              <div class="profile-hero">
+                <div class="profile-avatar-col">
+                  <div class="profile-avatar-label">Avatar</div>
+                  <div class="profile-avatar-img">
+                    <img v-if="avatarSrc" :src="avatarSrc" alt="AniList avatar" />
+                    <div v-else class="profile-banner-placeholder">No avatar</div>
+                  </div>
+                </div>
+                <div class="profile-banner-col">
+                  <div class="profile-banner-label">Banner</div>
+                  <div class="profile-banner-img">
+                    <img v-if="bannerSrc" :src="bannerSrc" alt="AniList banner" />
+                    <div v-else class="profile-banner-placeholder">No banner set on AniList</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+          <div class="btn-row">
+            <button class="btn-refresh" :disabled="isRefreshing" @click="refreshAnilistData">
+              {{ isRefreshing ? 'Refreshing...' : 'Refresh from AniList' }}
+            </button>
+            <button class="btn-danger" :disabled="isUnlinking" @click="unlinkAniList">
+              {{ isUnlinking ? 'Unlinking...' : 'Unlink AniList' }}
+            </button>
+          </div>
+        </template>
+
+        <template v-if="currentSection === 'profile'">
+          <div class="section-header">
+            <div class="section-title">Profile</div>
+            <div class="section-subtitle">Your account profile information</div>
+          </div>
+          <section class="card">
+            <div class="card-header"><span class="card-title">Profile Details</span></div>
+            <div class="card-body">
+              <div class="fields-grid">
+                <div class="field"><span class="field-label">Email</span><div class="field-value">{{ emailDisplay }}</div></div>
+                <div class="field"><span class="field-label">Joined</span><div class="field-value">{{ joinedDisplay }}</div></div>
+                <div class="field"><span class="field-label">AniList Username</span><div class="field-value">{{ username || '-' }}</div></div>
+                <div class="field"><span class="field-label">AniList ID</span><div class="field-value">{{ anilistId || '-' }}</div></div>
+                <div class="field"><span class="field-label">AniList Token Expires</span><div class="field-value">{{ anilistTokenExpiryDisplay }}</div></div>
+              </div>
+            </div>
+          </section>
+        </template>
+
+        <template v-if="currentSection === 'security'">
+          <div class="section-header">
+            <div class="section-title">Security</div>
+            <div class="section-subtitle">Password and account safety</div>
+          </div>
+          <section class="card">
+            <div class="card-header"><span class="card-title">Security</span></div>
+            <div class="card-body">
+              <div class="account-field">
+                <div class="account-field-info">
+                  <div class="account-field-name">Email</div>
+                  <div class="account-field-desc">{{ emailDisplay }}</div>
+                </div>
+              </div>
+              <div class="security-form">
+                <div class="account-field-info">
+                  <div class="account-field-name">Change Password</div>
+                  <div class="account-field-desc">Enter your current password and choose a new one.</div>
+                </div>
+                <div class="security-grid">
+                  <label class="security-field">
+                    <span class="field-label">Current password</span>
+                    <input v-model="currentPassword" type="password" class="security-input" />
+                  </label>
+                  <label class="security-field">
+                    <span class="field-label">New password</span>
+                    <input v-model="newPassword" type="password" class="security-input" />
+                  </label>
+                  <label class="security-field">
+                    <span class="field-label">Confirm password</span>
+                    <input v-model="confirmPassword" type="password" class="security-input" />
+                  </label>
+                </div>
+                <p v-if="passwordFormError" class="security-error">{{ passwordFormError }}</p>
+                <button class="btn-edit" :disabled="isChangingPassword" @click="changePassword">
+                  {{ isChangingPassword ? 'Updating...' : 'Update Password' }}
+                </button>
+              </div>
+            </div>
+          </section>
+          <section class="danger-card">
+            <div class="card-header"><span class="card-title">Danger Zone</span></div>
+            <div class="card-body">
+              <div class="account-field danger-row">
+                <div class="account-field-info">
+                  <div class="account-field-name">Delete account</div>
+                  <div class="account-field-desc">Permanently delete your account. This cannot be undone.</div>
+                </div>
+                <button class="btn-danger" :disabled="isDeleting" @click="deleteAccount">
+                  {{ isDeleting ? 'Deleting...' : 'Delete' }}
+                </button>
+              </div>
+            </div>
+          </section>
+        </template>
+
+        <template v-if="currentSection === 'appearance'">
+          <div class="section-header">
+            <div class="section-title">Appearance</div>
+            <div class="section-subtitle">Theme and visual preferences</div>
+          </div>
+          <section class="card">
+            <div class="card-header"><span class="card-title">Theme Color</span></div>
+            <div class="card-body">
+              <div class="theme-controls">
+                <button class="theme-chip" :class="{ active: selectedTheme === 'forest' }" @click="previewTheme('forest')">Forest</button>
+                <button class="theme-chip" :class="{ active: selectedTheme === 'winter' }" @click="previewTheme('winter')">Winter</button>
+                <button class="btn-edit" :disabled="isSavingTheme" @click="saveTheme">
+                  {{ isSavingTheme ? 'Saving...' : 'Save' }}
+                </button>
+              </div>
+              <p class="account-field-desc" style="margin-top: 10px;">Theme is previewed instantly; click Save to persist.</p>
+            </div>
+          </section>
+        </template>
+      </main>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed, ref, unref } from 'vue'
+import { navigateTo } from '#app'
+import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
+import { useAnilistAuthStore } from '~/composables/useAnilistAuthStore'
+import { useThemeStore } from '~/composables/useThemeStore'
+import { useMyAuthStore } from '~/composables/useMyAuthStore'
+import { useToastStore } from '~/composables/useToastStore'
+import { useAlertStore } from '~/composables/useAlertStore'
+
+definePageMeta({ middleware: ['auth'] })
+
+const pocketbaseStore = usePocketbaseStore()
+const anilistAuthStore = useAnilistAuthStore()
+const themeStore = useThemeStore()
+const myAuthStore = useMyAuthStore()
+const toastStore = useToastStore()
+const alertStore = useAlertStore()
+
+const currentSection = ref<'anilist' | 'profile' | 'security' | 'appearance'>('anilist')
+const isRefreshing = ref(false)
+const isUnlinking = ref(false)
+const isSavingTheme = ref(false)
+const isDeleting = ref(false)
+const isChangingPassword = ref(false)
+const selectedTheme = ref<'forest' | 'winter'>(themeStore.activeTheme)
+const currentPassword = ref('')
+const newPassword = ref('')
+const confirmPassword = ref('')
+
+const authRecord = computed<Record<string, any>>(() => unref(pocketbaseStore.authRecord) ?? {})
+const username = computed(() => authRecord.value.anilist_username ?? '')
+const anilistId = computed(() => authRecord.value.anilist_user_id ?? '')
+const emailDisplay = computed(() => authRecord.value.email ?? '-')
+const avatarSrc = computed(() => authRecord.value.anilist_avatar_url_large || authRecord.value.anilist_avatar_url_medium || '')
+const bannerSrc = computed(() => authRecord.value.anilist_banner || '')
+const joinedDisplay = computed(() => formatDate(authRecord.value.created))
+const anilistTokenExpiryDisplay = computed(() => {
+  if (!authRecord.value.anilist_token) return '-'
+  if (authRecord.value.anilist_token_expires_at) {
+    return formatDateTime(authRecord.value.anilist_token_expires_at)
+  }
+  return 'Unavailable (not stored)'
+})
+
+function formatDateTime(value: unknown): string {
+  if (!value) return '-'
+  const date = new Date(String(value))
+  if (Number.isNaN(date.getTime())) return '-'
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date)
+}
+
+function formatDate(value: unknown): string {
+  if (!value) return '-'
+  const date = new Date(String(value))
+  if (Number.isNaN(date.getTime())) return '-'
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  }).format(date)
+}
+
+const passwordFormError = computed(() => {
+  if (!currentPassword.value && !newPassword.value && !confirmPassword.value) return ''
+  if (!currentPassword.value || !newPassword.value || !confirmPassword.value) return 'All password fields are required.'
+  if (newPassword.value.length < 8) return 'New password must be at least 8 characters.'
+  if (newPassword.value !== confirmPassword.value) return 'Passwords do not match.'
+  return ''
+})
+
+const previewTheme = (theme: 'forest' | 'winter') => {
+  selectedTheme.value = theme
+  themeStore.setThemeByName(theme)
+}
+
+const refreshAnilistData = async () => {
+  if (isRefreshing.value) return
+  isRefreshing.value = true
+  try {
+    await anilistAuthStore.refreshLinkedAniListProfile()
+  } finally {
+    isRefreshing.value = false
+  }
+}
+
+const unlinkAniList = async () => {
+  if (isUnlinking.value) return
+  const ok = await alertStore.openAlert({ type: 'warning', message: 'Unlink AniList account from Kizuna?' })
+  if (!ok) return
+  isUnlinking.value = true
+  try {
+    const userId = pocketbaseStore.pb.authStore.model?.id
+    if (!userId) throw new Error('Not authenticated')
+    await pocketbaseStore.pb.collection('user').update(userId, {
+      anilist_user_id: null,
+      anilist_username: null,
+      anilist_token: null,
+      anilist_token_expires_at: null,
+      anilist_avatar_url_medium: null,
+      anilist_avatar_url_large: null,
+      anilist_banner: null
+    })
+    await myAuthStore.authRefresh()
+    toastStore.openToast({ type: 'success', message: 'AniList unlinked.' })
+    await navigateTo('/')
+  } catch (error: any) {
+    toastStore.openToast({ type: 'error', message: error?.message || 'Unable to unlink AniList.' })
+  } finally {
+    isUnlinking.value = false
+  }
+}
+
+const saveTheme = async () => {
+  if (isSavingTheme.value) return
+  isSavingTheme.value = true
+  try {
+    const userId = pocketbaseStore.pb.authStore.model?.id
+    if (!userId) throw new Error('Not authenticated')
+    await pocketbaseStore.pb.collection('user').update(userId, { theme: selectedTheme.value })
+    await myAuthStore.authRefresh()
+    themeStore.setThemeByName(selectedTheme.value)
+    toastStore.openToast({ type: 'success', message: 'Theme saved.' })
+  } catch (error: any) {
+    toastStore.openToast({ type: 'error', message: error?.message || 'Unable to save theme.' })
+  } finally {
+    isSavingTheme.value = false
+  }
+}
+
+const changePassword = async () => {
+  if (isChangingPassword.value) return
+  if (passwordFormError.value) {
+    toastStore.openToast({ type: 'error', message: passwordFormError.value })
+    return
+  }
+
+  isChangingPassword.value = true
+  try {
+    const userId = pocketbaseStore.pb.authStore.model?.id
+    if (!userId) throw new Error('Not authenticated')
+
+    await pocketbaseStore.pb.collection('user').update(userId, {
+      oldPassword: currentPassword.value,
+      password: newPassword.value,
+      passwordConfirm: confirmPassword.value
+    })
+
+    toastStore.openToast({ type: 'success', message: 'Password updated. Please login again.' })
+    currentPassword.value = ''
+    newPassword.value = ''
+    confirmPassword.value = ''
+    await myAuthStore.logout()
+    await navigateTo('/')
+  } catch (error: any) {
+    toastStore.openToast({ type: 'error', message: error?.message || 'Unable to update password.' })
+  } finally {
+    isChangingPassword.value = false
+  }
+}
+
+const deleteAccount = async () => {
+  if (isDeleting.value) return
+  const ok = await alertStore.openAlert({
+    type: 'error',
+    message: 'Delete your account permanently? This action is irreversible.'
+  })
+  if (!ok) return
+  isDeleting.value = true
+  try {
+    await myAuthStore.deleteAccount()
+    await myAuthStore.logout()
+    toastStore.openToast({ type: 'success', message: 'Account deleted.' })
+    await navigateTo('/')
+  } catch (error: any) {
+    toastStore.openToast({ type: 'error', message: error?.message || 'Unable to delete account.' })
+  } finally {
+    isDeleting.value = false
+  }
+}
+</script>
+
+<style scoped src="~/assets/css/pages/settings.css"></style>

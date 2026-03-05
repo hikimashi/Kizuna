@@ -7,6 +7,7 @@ export interface UserType {
   // avatarFile?: File|null;
   avatarURL?: string|null;
   created: string;
+  theme?: 'forest' | 'winter';
   // themeMode: string;
   oldPassword?: string;
   password?: string;
@@ -17,4 +18,5 @@ export interface UserType {
   anilist_avatar_url_large?: string;
   anilist_banner?: string | null;
   anilist_token?: string;
+  anilist_token_expires_at?: string | null;
 }

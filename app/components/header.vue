@@ -34,8 +34,8 @@
               </div>
               <ul class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
                 <li>
-                  <NuxtLink class="justify-between" to="/profilePage">
-                    Profile
+                  <NuxtLink class="justify-between" to="/settings">
+                    Settings
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                       stroke="currentColor" class="size-5">
                       <path stroke-linecap="round" stroke-linejoin="round"
@@ -107,8 +107,8 @@
               </div>
               <ul class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
                 <li>
-                  <NuxtLink class="justify-between" to="/profilePage">
-                    Profile
+                  <NuxtLink class="justify-between" to="/settings">
+                    Settings
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                       stroke="currentColor" class="size-5">
                       <path stroke-linecap="round" stroke-linejoin="round"
@@ -335,11 +335,16 @@ const handleLogout = async () => {
 
 .kizuna-navbar.is-logged-in .nav-links {
   position: absolute;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
 }
 
 .nav-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
   padding: 9px 13px;
   font-size: 16px;
   line-height: 1.2;

@@ -1,6 +1,5 @@
 <template>
   <div class="animeList-page">
-    <!-- Header -->
     <div class="page-header">
       <div class="header-content">
         <h1 class="page-title">
@@ -12,7 +11,6 @@
         <p class="page-subtitle">Discover popular anime from AniList</p>
       </div>
 
-      <!-- Filter Controls -->
       <div class="filter-controls">
         <div class="sort-dropdown">
           <label class="dropdown-label">Sort by</label>
@@ -61,7 +59,6 @@
       </div>
     </div>
 
-    <!-- Anime List with Infinite Scroll -->
     <AnimeList
       :sort-by="sortBy"
       :format="format"
@@ -73,7 +70,6 @@
 import { ref } from 'vue'
 import AnimeList from '~/components/animeList.vue'
 
-// Etat reactif des filtres de la page
 const sortBy = ref('POPULARITY_DESC')
 const format = ref('ALL')
 </script>

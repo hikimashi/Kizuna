@@ -9,6 +9,24 @@
         </NuxtLink>
       </div>
 
+      <nav v-if="showFullNav" class="nav-links">
+        <NuxtLink to="/" class="nav-link" :class="{ active: $route.path === '/' }">
+          Home
+        </NuxtLink>
+        <NuxtLink to="/profilePage" class="nav-link" :class="{ active: $route.path === '/profilePage' }">
+          Profile
+        </NuxtLink>
+        <NuxtLink to="/social" class="nav-link">
+          Social
+        </NuxtLink>
+        <NuxtLink to="/animeList" class="nav-link">
+          Anime List
+        </NuxtLink>
+        <NuxtLink to="/browse" class="nav-link">
+          Browse
+        </NuxtLink>
+      </nav>
+
       <!-- Right: Auth-dependent content -->
       <div class="navbar-end">
         <!-- Guest state -->
@@ -60,24 +78,6 @@
 
         <!-- Authenticated + AniList linked -->
         <template v-else>
-          <nav class="nav-links">
-            <NuxtLink to="/" class="nav-link" :class="{ active: $route.path === '/' }">
-              Home
-            </NuxtLink>
-            <NuxtLink to="/profilePage" class="nav-link" :class="{ active: $route.path === '/profilePage' }">
-              Profile
-            </NuxtLink>
-            <NuxtLink to="/social" class="nav-link">
-              Social
-            </NuxtLink>
-            <NuxtLink to="/animeList" class="nav-link">
-              Anime List
-            </NuxtLink>
-            <NuxtLink to="/browse" class="nav-link">
-              Browse
-            </NuxtLink>
-          </nav>
-
           <div class="nav-actions">
             <!-- Search icon -->
             <button class="icon-btn">
@@ -232,8 +232,8 @@ const handleLogout = async () => {
 
 .navbar-content {
   position: relative;
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   width: 100%;
   height: 100%;
@@ -245,6 +245,7 @@ const handleLogout = async () => {
 .navbar-start {
   display: flex;
   align-items: center;
+  justify-self: start;
   min-width: 0;
 }
 
@@ -275,8 +276,9 @@ const handleLogout = async () => {
 .navbar-end {
   display: flex;
   align-items: center;
+  justify-self: end;
   gap: 16px;
-  margin-left: auto;
+  margin-left: 0;
   min-width: 0;
   flex-shrink: 0;
 }
@@ -331,13 +333,8 @@ const handleLogout = async () => {
   display: flex;
   align-items: center;
   gap: 4px;
-}
-
-.kizuna-navbar.is-logged-in .nav-links {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  grid-column: 2;
+  justify-self: center;
 }
 
 .nav-link {

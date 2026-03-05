@@ -598,13 +598,13 @@ onBeforeUnmount(() => {
 
 .tag {
   flex: 0 0 auto;
-  height: 24px;
-  padding: 0 12px;
+  height: 28px;
+  padding: 0 14px;
   border-radius: 2.5px;
   display: flex;
   align-items: center;
-  font-size: 12px;
-  font-weight: 400;
+  font-size: 13px;
+  font-weight: 500;
   color: #fafafa;
   letter-spacing: 0.3px;
   white-space: nowrap;
@@ -621,15 +621,25 @@ onBeforeUnmount(() => {
 }
 
 .genre-bar {
-  height: 10px;
+  height: 7px;
   display: flex;
-  margin: 0 -14px;
+  margin: 0 -16px;
   overflow: hidden;
+  position: relative;
+}
+
+.genre-bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.07), transparent 12%, transparent 88%, rgba(255, 255, 255, 0.05));
 }
 
 .gb {
   height: 100%;
   position: relative;
+  transition: width 220ms ease, background-color 260ms ease;
 }
 
 .gb::after {
@@ -1046,4 +1056,5 @@ onBeforeUnmount(() => {
 [data-theme="winter"] .profile-page .a-text a {
   color: #1d8ed8;
 }
+
 </style>

@@ -29,13 +29,13 @@
 
           <div class="panel">
             <span class="panel-title">Genre Overview</span>
-            <div class="genre-tags">
+            <div ref="genreTagsContainerRef" class="genre-tags">
               <template v-if="isLoading">
                 <span v-for="n in 5" :key="`genre-skeleton-${n}`" class="tag skeleton-pulse" />
               </template>
               <template v-else>
                 <span
-                  v-for="genre in topGenres"
+                  v-for="genre in visibleTopGenres"
                   :key="genre.genre"
                   class="tag"
                   :style="{ background: getGenreColor(genre.genre) }"
@@ -45,12 +45,25 @@
                 </span>
               </template>
             </div>
+            <div class="genre-tags-measure" aria-hidden="true">
+              <span
+                v-for="genre in topGenres"
+                :key="`measure-${genre.genre}`"
+                :ref="setGenreMeasureRef(genre.genre)"
+                class="tag"
+              >
+                {{ genre.genre }}
+                <span class="tag-count">{{ genre.count }}</span>
+              </span>
+            </div>
             <div class="genre-bar" :class="{ 'skeleton-pulse': isLoading }">
               <template v-if="!isLoading">
                 <span
                   v-for="genre in barGenres"
                   :key="`bar-${genre.genre}`"
                   class="gb"
+                  :data-tooltip="`${genre.genre} (${genre.count})`"
+                  :title="`${genre.genre} (${genre.count})`"
                   :style="{
                     width: `${(genre.count / barGenreTotal) * 100}%`,
                     background: getGenreColor(genre.genre)
@@ -66,8 +79,15 @@
               <div v-if="isLoading" v-for="n in 5" :key="`fav-anime-skeleton-${n}`" class="fav-card">
                 <div class="fav-placeholder skeleton-pulse">-</div>
               </div>
-              <div v-else v-for="anime in favoriteAnime" :key="`fav-anime-${anime.id}`" class="fav-card">
-                <img :src="anime.coverImage?.large || anime.coverImage?.medium" :alt="anime.title?.english || anime.title?.romaji || 'Anime cover'" />
+              <div
+                v-else
+                v-for="anime in favoriteAnime"
+                :key="`fav-anime-${anime.id}`"
+                class="fav-card"
+                :data-tooltip="getFavoriteAnimeTitle(anime)"
+                :title="getFavoriteAnimeTitle(anime)"
+              >
+                <img :src="anime.coverImage?.large || anime.coverImage?.medium" :alt="getFavoriteAnimeTitle(anime)" />
               </div>
             </div>
           </div>
@@ -78,8 +98,15 @@
               <div v-if="isLoading" v-for="n in 3" :key="`fav-char-skeleton-${n}`" class="fav-card">
                 <div class="fav-placeholder skeleton-pulse">-</div>
               </div>
-              <div v-else v-for="character in favoriteCharacters" :key="`fav-char-${character.id}`" class="fav-card">
-                <img :src="character.image?.large || character.image?.medium" :alt="character.name?.full || character.name?.userPreferred || 'Character'" />
+              <div
+                v-else
+                v-for="character in favoriteCharacters"
+                :key="`fav-char-${character.id}`"
+                class="fav-card"
+                :data-tooltip="getFavoriteCharacterName(character)"
+                :title="getFavoriteCharacterName(character)"
+              >
+                <img :src="character.image?.large || character.image?.medium" :alt="getFavoriteCharacterName(character)" />
               </div>
             </div>
           </div>
@@ -176,7 +203,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, unref } from 'vue'
+import { computed, nextTick, onMounted, onBeforeUnmount, ref, unref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 import { useAnilistProfileStore } from '~/composables/useAnilistProfileStore'
@@ -266,6 +293,14 @@ function getActivityPrefix(activity: any): string {
   return `${normalized} `
 }
 
+function getFavoriteAnimeTitle(anime: any): string {
+  return anime?.title?.english ?? anime?.title?.romaji ?? 'Unknown Anime'
+}
+
+function getFavoriteCharacterName(character: any): string {
+  return character?.name?.full ?? character?.name?.userPreferred ?? 'Unknown Character'
+}
+
 const authRecord = computed<Record<string, any>>(() => unref(pocketbaseStore.authRecord) ?? {})
 const username = computed(() => authRecord.value.anilist_username ?? 'Username')
 const anilistIdDisplay = computed(() => authRecord.value.anilist_user_id ?? '-')
@@ -280,7 +315,15 @@ const joinedDisplay = computed(() => {
 })
 
 const topGenres = computed(() => genres.value.slice(0, 5))
-const barGenres = computed(() => genres.value.slice(0, 5))
+const barGenres = computed(() => {
+  if (!genres.value.length) return []
+  const visibleCount = visibleTopGenres.value.length || topGenres.value.length
+  const limit = Math.min(visibleCount + 1, genres.value.length)
+  return genres.value.slice(0, limit)
+})
+const visibleTopGenres = ref<{ genre: string; count: number }[]>([])
+const genreTagsContainerRef = ref<HTMLElement | null>(null)
+const genreMeasureRefs = ref<Record<string, HTMLElement | null>>({})
 const hasFavoriteAnime = computed(() => favoriteAnime.value.length > 0)
 const hasFavoriteCharacters = computed(() => favoriteCharacters.value.length > 0)
 const barGenreTotal = computed(() => {
@@ -288,9 +331,55 @@ const barGenreTotal = computed(() => {
   return sum || 1
 })
 
+function setGenreMeasureRef(genreName: string) {
+  return (el: Element | null) => {
+    genreMeasureRefs.value[genreName] = el as HTMLElement | null
+  }
+}
+
+async function computeVisibleGenres() {
+  if (isLoading.value) return
+  await nextTick()
+  const container = genreTagsContainerRef.value
+  if (!container) {
+    visibleTopGenres.value = topGenres.value
+    return
+  }
+  const availableWidth = container.clientWidth
+  const nextVisible: { genre: string; count: number }[] = []
+  let used = 0
+  for (const genre of topGenres.value) {
+    const el = genreMeasureRefs.value[genre.genre]
+    if (!el) continue
+    const width = Math.ceil(el.offsetWidth)
+    const gap = nextVisible.length > 0 ? 6 : 0
+    if (used + gap + width <= availableWidth) {
+      used += gap + width
+      nextVisible.push(genre)
+    } else {
+      break
+    }
+  }
+  visibleTopGenres.value = nextVisible
+}
+
+const handleGenreResize = () => {
+  computeVisibleGenres()
+}
+
+watch(topGenres, () => {
+  computeVisibleGenres()
+}, { deep: true })
+
 onMounted(async () => {
   await profileStore.loadProfile()
   await resetActivityScroll()
+  await computeVisibleGenres()
+  window.addEventListener('resize', handleGenreResize, { passive: true })
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleGenreResize)
 })
 </script>
 
@@ -482,12 +571,26 @@ onMounted(async () => {
 
 .genre-tags {
   display: flex;
+  justify-content: center;
+  align-items: center;
   gap: 6px;
   margin-bottom: 10px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+.genre-tags-measure {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+  left: -9999px;
+  top: -9999px;
+  display: flex;
+  gap: 6px;
+  white-space: nowrap;
 }
 
 .tag {
+  flex: 0 0 auto;
   height: 24px;
   padding: 0 12px;
   border-radius: 2.5px;
@@ -516,6 +619,30 @@ onMounted(async () => {
 
 .gb {
   height: 100%;
+  position: relative;
+}
+
+.gb::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+  background: rgba(11, 22, 34, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #fafafa;
+  font-size: 10px;
+  line-height: 1.2;
+  padding: 4px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.gb:hover::after {
+  opacity: 1;
 }
 
 .fav-grid {
@@ -529,6 +656,7 @@ onMounted(async () => {
   border-radius: 5px;
   background: #0d1a27;
   overflow: hidden;
+  position: relative;
 }
 
 .fav-card img {
@@ -536,6 +664,31 @@ onMounted(async () => {
   height: 100%;
   object-fit: cover;
   display: block;
+}
+.fav-card::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
+  max-width: calc(100% - 10px);
+  background: rgba(11, 22, 34, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #fafafa;
+  font-size: 10px;
+  line-height: 1.2;
+  padding: 4px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  transition: opacity 0.16s ease;
+  pointer-events: none;
+  z-index: 2;
+}
+.fav-card:hover::after {
+  opacity: 1;
 }
 
 .fav-placeholder {

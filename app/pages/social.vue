@@ -35,7 +35,7 @@
               <img v-if="user.banner" :src="user.banner" alt="" class="card-banner-img" />
             </div>
             <div class="card-avatar-wrap">
-              <div class="card-avatar" :style="{ background: user.avatarColor }">
+              <div class="card-avatar">
                 <img v-if="user.avatar" :src="user.avatar" :alt="user.username" />
                 <svg v-else viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.2" width="22" height="22"><circle cx="12" cy="8.5" r="4"/><path stroke-linecap="round" d="M4 20.5c0-4 3.6-7 8-7s8 3 8 7"/></svg>
               </div>

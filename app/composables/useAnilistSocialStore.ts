@@ -8,6 +8,7 @@ type AniListUserNode = {
   createdAt?: number
   avatar?: { medium?: string | null; large?: string | null } | null
   bannerImage?: string | null
+  statistics?: { anime?: { count?: number | null; meanScore?: number | null } | null } | null
 }
 
 export type SocialUser = {
@@ -34,6 +35,12 @@ query ($userId: Int!, $page: Int, $perPage: Int) {
       createdAt
       avatar { medium large }
       bannerImage
+      statistics {
+        anime {
+          count
+          meanScore
+        }
+      }
     }
   }
 }
@@ -49,6 +56,12 @@ query ($userId: Int!, $page: Int, $perPage: Int) {
       createdAt
       avatar { medium large }
       bannerImage
+      statistics {
+        anime {
+          count
+          meanScore
+        }
+      }
     }
   }
 }
@@ -68,8 +81,8 @@ const mapUser = (user: AniListUserNode): SocialUser => ({
   id: Number(user.id),
   username: user.name || 'Unknown',
   joined: formatJoined(user.createdAt),
-  animeCount: 0,
-  score: 0,
+  animeCount: Number(user.statistics?.anime?.count ?? 0),
+  score: Number(user.statistics?.anime?.meanScore ?? 0),
   following: false,
   isFollower: false,
   isFriend: false,

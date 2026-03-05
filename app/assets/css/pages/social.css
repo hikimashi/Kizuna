@@ -163,7 +163,7 @@
 }
 
 .card-banner {
-  height: 54px;
+  height: 86px;
   background: linear-gradient(135deg, rgba(61, 180, 242, 0.24), rgba(146, 86, 243, 0.2));
   overflow: hidden;
 }
@@ -177,19 +177,19 @@
 
 .card-avatar-wrap {
   position: relative;
-  margin: -22px 0 0 14px;
-  width: 44px;
-  height: 44px;
+  margin: -28px 0 0 14px;
+  width: 50px;
+  height: 50px;
   z-index: 1;
   flex-shrink: 0;
 }
 
 .card-avatar {
-  width: 44px;
-  height: 44px;
+  width: 50px;
+  height: 50px;
   border-radius: 5px;
-  border: 2px solid #131d2a;
-  background: #4f378a;
+  border: none;
+  background: transparent;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -445,7 +445,7 @@
 }
 
 [data-theme="winter"] .social-page .card-avatar {
-  border-color: rgba(245, 250, 255, 0.94);
+  border: none;
 }
 
 [data-theme="winter"] .social-page .btn-follow.following {

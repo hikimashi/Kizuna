@@ -46,12 +46,12 @@ onUnmounted(() => {
 <style scoped>
 .scroll-to-top-btn {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
+  bottom: 62px;
+  right: 10px;
   z-index: 50;
   width: 36px;
   height: 36px;
-  background: rgba(61, 180, 242, 0.15);
+  background: rgba(61, 180, 242, 0.10);
   border: 1px solid rgba(61, 180, 242, 0.3);
   border-radius: 6px;
   display: flex;

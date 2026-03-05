@@ -14,8 +14,8 @@
           <div class="footer-group">
             <h3>Navigation</h3>
             <NuxtLink to="/" class="footer-link">Home</NuxtLink>
-            <NuxtLink to="/animeList" class="footer-link">Anime List</NuxtLink>
-            <NuxtLink to="/profilePage" class="footer-link">Profile</NuxtLink>
+            <NuxtLink to="/animeList" class="footer-link" @click.prevent="handleProtectedNavigation('/animeList')">Anime List</NuxtLink>
+            <NuxtLink to="/profilePage" class="footer-link" @click.prevent="handleProtectedNavigation('/profilePage')">Profile</NuxtLink>
           </div>
 
           <div class="footer-group">
@@ -28,17 +28,36 @@
 
       <div class="footer-bottom">
         <span class="copyright">© {{ currentYear }} Kizuna.</span>
-        <div class="api-pill">
+        <a href="https://docs.anilist.co/" target="_blank" rel="noopener noreferrer" class="api-pill">
           <img src="/img/anilist.svg" alt="AniList" class="anilist-logo" />
           <span class="api-text">Powered by AniList API</span>
-        </div>
+        </a>
       </div>
     </div>
   </footer>
 </template>
 
 <script setup lang="ts">
+import { computed, unref } from 'vue'
+import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
+import { useToastStore } from '~/composables/useToastStore'
+
 const currentYear = new Date().getFullYear()
+const pocketbaseStore = usePocketbaseStore()
+const toastStore = useToastStore()
+const authRecord = computed(() => unref(pocketbaseStore.authRecord) as { id?: string } | null)
+
+const handleProtectedNavigation = async (to: string) => {
+  if (authRecord.value?.id) {
+    await navigateTo(to)
+    return
+  }
+
+  toastStore.openToast({
+    type: 'warning',
+    message: 'Tu dois te connecter pour acceder a cette page.'
+  })
+}
 </script>
 
 <style scoped>
@@ -157,6 +176,12 @@ const currentYear = new Date().getFullYear()
   gap: 10px;
   color: var(--text-secondary);
   font-size: 12px;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.api-pill:hover {
+  opacity: 0.8;
 }
 
 .anilist-logo {

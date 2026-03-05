@@ -10,7 +10,7 @@
             <path stroke-linecap="round" d="M4 20.5c0-4 3.6-7 8-7s8 3 8 7" />
           </svg>
         </div>
-        <div>
+        <div class="banner-meta">
           <div class="banner-username">{{ username }}</div>
           <div class="banner-joined">Joined {{ joinedDisplay }}</div>
         </div>
@@ -394,7 +394,7 @@ onBeforeUnmount(() => {
 
 .banner-wrap {
   width: 100%;
-  height: clamp(220px, 30vw, 340px);
+  height: clamp(230px, 28vw, 340px);
   position: relative;
   overflow: hidden;
   background: linear-gradient(135deg, rgba(20, 30, 50, 0.95) 0%, rgba(10, 18, 35, 0.98) 100%);
@@ -407,6 +407,8 @@ onBeforeUnmount(() => {
   height: 100%;
   object-fit: cover;
   object-position: center;
+  image-rendering: auto;
+  image-rendering: -webkit-optimize-contrast;
   z-index: 0;
 }
 
@@ -429,9 +431,9 @@ onBeforeUnmount(() => {
 .banner-wrap.has-image::before {
   background: linear-gradient(
     180deg,
-    rgba(5, 10, 20, 0.22) 0%,
-    rgba(8, 12, 22, 0.5) 75%,
-    rgba(8, 12, 22, 0.66) 100%
+    rgba(5, 10, 20, 0.12) 0%,
+    rgba(8, 12, 22, 0.34) 75%,
+    rgba(8, 12, 22, 0.5) 100%
   );
 }
 
@@ -441,17 +443,21 @@ onBeforeUnmount(() => {
 
 .banner-content {
   position: absolute;
-  bottom: 26px;
+  bottom: 0;
   left: clamp(16px, 2.4vw, 40px);
   z-index: 2;
   display: flex;
   align-items: flex-end;
-  gap: 16px;
+  gap: 18px;
+}
+
+.banner-meta {
+  transform: translateY(-16px);
 }
 
 .banner-avatar {
-  width: 110px;
-  height: 110px;
+  width: 132px;
+  height: 132px;
   border-radius: 8px;
   background: transparent;
   border: 0;
@@ -479,17 +485,18 @@ onBeforeUnmount(() => {
 
 .banner-username {
   font-family: 'Overpass', sans-serif;
-  font-size: clamp(24px, 2.8vw, 36px);
+  font-size: clamp(30px, 3.6vw, 46px);
   font-weight: 700;
   color: #fff;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
-  margin-bottom: 4px;
+  margin-bottom: 0;
 }
 
 .banner-joined {
-  font-size: 13px;
+  font-size: 16px;
   color: rgba(255, 255, 255, 0.45);
   letter-spacing: 0.3px;
+  transform: translateY(-12px);
 }
 
 .page {
@@ -925,9 +932,22 @@ onBeforeUnmount(() => {
     height: 220px;
   }
 
+  .banner-content {
+    gap: 14px;
+  }
+
   .banner-avatar {
-    width: 88px;
-    height: 88px;
+    width: 102px;
+    height: 102px;
+  }
+
+  .banner-username {
+    font-size: clamp(24px, 6vw, 32px);
+    margin-bottom: 4px;
+  }
+
+  .banner-joined {
+    font-size: 13px;
   }
 
   .stats-row {

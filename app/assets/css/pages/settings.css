@@ -26,12 +26,12 @@
 .anilist-settings-link { display: inline-flex; align-items: center; gap: 6px; color: #3db4f2; text-decoration: none; font-weight: 600; white-space: nowrap; }
 .anilist-settings-link:hover { text-decoration: underline; }
 .profile-hero { display: flex; gap: 16px; }
-.profile-avatar-col { flex-shrink: 0; width: 132px; }
+.profile-avatar-col { flex-shrink: 0; width: 152px; }
 .profile-avatar-label,.profile-banner-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: #3d5570; margin-bottom: 8px; }
-.profile-avatar-img { width: 132px; height: 132px; border-radius: 6px; background: #1e2d40; border: 1px solid rgba(255,255,255,0.08); overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.profile-avatar-img { width: 152px; height: 152px; border-radius: 6px; background: #1e2d40; border: 1px solid rgba(255,255,255,0.08); overflow: hidden; display: flex; align-items: center; justify-content: center; }
 .profile-avatar-img img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
 .profile-banner-col { flex: 1; }
-.profile-banner-img { width: 100%; height: 132px; border-radius: 6px; background: #1e2d40; border: 1px solid rgba(255,255,255,0.08); overflow: hidden; }
+.profile-banner-img { width: 100%; height: 152px; border-radius: 6px; background: #1e2d40; border: 1px solid rgba(255,255,255,0.08); overflow: hidden; }
 .profile-banner-img img { width: 100%; height: 100%; object-fit: cover; }
 .profile-banner-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #3d5570; font-size: 11px; }
 .btn-row { display: flex; gap: 12px; align-items: center; }

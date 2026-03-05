@@ -180,7 +180,7 @@ const showFullNav = computed(() => isLoggedIn.value && isAniListLinked.value)
 
 // Use AniList avatar if available
 const avatarUrl = computed(() => {
-  return authRecord.value?.anilist_avatar_url_medium || '/img/user.webp'
+  return authRecord.value?.anilist_avatar_url_large || authRecord.value?.anilist_avatar_url_medium || '/img/user.webp'
 })
 
 const openLoginDrawer = () => {
@@ -423,6 +423,7 @@ const handleLogout = async () => {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: top center;
 }
 
 /* Theme Toggle */

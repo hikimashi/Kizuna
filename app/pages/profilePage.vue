@@ -135,15 +135,16 @@
               </div>
             </div>
             <div class="progress-markers">
-              <div class="marker"><span class="marker-num">50</span><div class="marker-tick" /></div>
-              <div class="marker"><span class="marker-num">100</span><div class="marker-tick" /></div>
-              <div class="marker"><span class="marker-num">150</span><div class="marker-tick" /></div>
+              <div v-for="marker in progressMarkers" :key="marker" class="marker">
+                <span class="marker-num">{{ marker }}</span>
+                <div class="marker-tick" />
+              </div>
             </div>
             <div class="progress-track">
               <div
                 class="progress-fill"
                 :class="{ 'skeleton-pulse': isLoading }"
-                :style="{ width: isLoading ? '31%' : `${Math.min((totalAnimes / 150) * 100, 100)}%` }"
+                :style="{ width: isLoading ? '31%' : `${progressFillPercent}%` }"
               />
             </div>
           </div>
@@ -330,6 +331,25 @@ const barGenreTotal = computed(() => {
   const sum = barGenres.value.reduce((acc, item) => acc + item.count, 0)
   return sum || 1
 })
+
+const progressStep = computed(() => {
+  const perSegment = Math.max(10, Math.ceil((totalAnimes.value || 0) / 3))
+  if (perSegment <= 25) return 25
+  if (perSegment <= 50) return 50
+  if (perSegment <= 100) return 100
+  if (perSegment <= 250) return 250
+  if (perSegment <= 500) return 500
+  return Math.ceil(perSegment / 100) * 100
+})
+
+const progressMarkers = computed(() => [
+  progressStep.value,
+  progressStep.value * 2,
+  progressStep.value * 3
+])
+
+const progressMax = computed(() => progressMarkers.value[2] || 1)
+const progressFillPercent = computed(() => Math.min((totalAnimes.value / progressMax.value) * 100, 100).toFixed(2))
 
 function setGenreMeasureRef(genreName: string) {
   return (el: Element | null) => {
@@ -1046,6 +1066,18 @@ onBeforeUnmount(() => {
 [data-theme="winter"] .profile-page .stat-num {
   color: #1f3f5f;
   text-shadow: none;
+}
+
+[data-theme="winter"] .profile-page .stat + .stat {
+  border-left-color: rgba(32, 62, 92, 0.26);
+}
+
+[data-theme="winter"] .profile-page .stats-row {
+  border-bottom-color: rgba(32, 62, 92, 0.24);
+}
+
+[data-theme="winter"] .profile-page .marker-tick {
+  background: rgba(32, 62, 92, 0.6);
 }
 
 [data-theme="winter"] .profile-page .banner-username {

@@ -1,5 +1,8 @@
 <template>
-  <header class="kizuna-navbar" :class="{ 'is-logged-in': showFullNav }">
+  <header
+    class="kizuna-navbar"
+    :class="{ 'is-logged-in': showFullNav, 'is-compact-nav': !showFullNav }"
+  >
     <div class="navbar-content">
       <!-- Left: Logo -->
       <div class="navbar-start">
@@ -239,6 +242,10 @@ const handleLogout = async () => {
   height: 100%;
   padding: 0 clamp(12px, 2.5vw, 28px);
   margin: 0;
+}
+
+.kizuna-navbar.is-compact-nav .navbar-content {
+  grid-template-columns: auto 1fr auto;
 }
 
 /* Logo */

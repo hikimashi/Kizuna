@@ -1,0 +1,249 @@
+.compare-page {
+  min-height: calc(100vh - 58px);
+}
+
+.compare-sub-tabs {
+  background: #0e1826;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  justify-content: center;
+}
+
+.sub-tabs {
+  display: flex;
+}
+
+.sub-tab {
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #7a9ab8;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+}
+
+.sub-tab.active {
+  color: #3db4f2;
+  border-bottom-color: #3db4f2;
+  font-weight: 600;
+}
+
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.compare-hero {
+  background: #131d2a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.hero-user {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.hero-center {
+  width: 160px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.vs-divider {
+  width: 1px;
+  height: 72px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.user-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  background: linear-gradient(160deg, #1a2a3a, #0d1a27);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.user-avatar.friend {
+  background: linear-gradient(160deg, #262045, #151f30);
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #e8f0ff;
+}
+
+.user-stat {
+  font-size: 11px;
+  color: #4a6480;
+}
+
+.compat-label {
+  font-size: 10px;
+  color: #3d5570;
+  text-transform: uppercase;
+  letter-spacing: 1.3px;
+}
+
+.compat-score {
+  font-size: 36px;
+  font-weight: 700;
+  color: #3db4f2;
+  line-height: 1;
+}
+
+.compat-score span {
+  font-size: 18px;
+  color: #4a6480;
+}
+
+.compat-bar {
+  width: 120px;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.compat-fill {
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(90deg, #3db4f2, #1dd3b0);
+}
+
+.compat-desc {
+  font-size: 10px;
+  color: #4a6480;
+}
+
+.quick-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.qs-card {
+  background: #131d2a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.qs-label {
+  font-size: 10px;
+  color: #3d5570;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin-bottom: 4px;
+}
+
+.qs-value {
+  font-size: 22px;
+  color: #3db4f2;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.qs-sub {
+  font-size: 10px;
+  color: #4a6480;
+}
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 14px;
+}
+
+.tab {
+  border: none;
+  background: transparent;
+  color: #7a9ab8;
+  padding: 10px 16px;
+  font-size: 13px;
+  border-bottom: 2px solid transparent;
+}
+
+.tab.active {
+  color: #3db4f2;
+  border-bottom-color: #3db4f2;
+}
+
+.section-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: #3d5570;
+  margin-bottom: 8px;
+}
+
+.placeholder-panel {
+  background: #131d2a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 16px;
+  color: #9bb3cd;
+  font-size: 13px;
+}
+
+@media (max-width: 980px) {
+  .quick-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 680px) {
+  .page {
+    padding: 16px;
+  }
+
+  .compare-hero {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .vs-divider {
+    width: 100%;
+    height: 1px;
+  }
+
+  .quick-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .tabs {
+    overflow-x: auto;
+  }
+}
+
+[data-theme="winter"] .compare-sub-tabs,
+[data-theme="winter"] .compare-hero,
+[data-theme="winter"] .qs-card,
+[data-theme="winter"] .placeholder-panel {
+  border-color: rgba(91, 139, 176, 0.28);
+}

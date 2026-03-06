@@ -72,10 +72,9 @@
       <section class="main">
         <div class="view-bar">
           <div class="compare-box">
-            <button class="compare-btn" type="button" :disabled="isComparing" @click="compareLists">
-              {{ isComparing ? 'Comparing...' : 'Compare list' }}
+            <button class="compare-btn" type="button" @click="goToCompare">
+              Compare list
             </button>
-            <span v-if="compareSummary" class="compare-summary">{{ compareSummary }}</span>
           </div>
           <button class="view-btn" :class="{ active: viewMode === 'grid' }" type="button" title="Grid" @click="viewMode = 'grid'">
             <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 0h7v7h-7z" /></svg>
@@ -187,8 +186,6 @@ const viewMode = ref<ViewMode>('grid')
 const activeFilter = ref<FilterKey>('ALL')
 const sortBy = ref<SortKey>('title')
 const searchTerm = ref('')
-const isComparing = ref(false)
-const compareSummary = ref('')
 
 const friendName = ref('')
 const avatarUrl = ref('')
@@ -204,8 +201,6 @@ const rawSections = ref<Record<ListStatusKey, MediaListEntry[]>>({
 
 const authRecord = computed(() => (unref(pocketbaseStore.authRecord) ?? {}) as Record<string, any>)
 const token = computed(() => String(authRecord.value.anilist_token ?? ''))
-const selfUserId = computed(() => Number(authRecord.value.anilist_user_id ?? 0))
-const selfUsername = computed(() => String(authRecord.value.anilist_username ?? ''))
 const friendUserId = computed(() => Number(route.params.id ?? 0))
 
 const displayTitle = (entry: MediaListEntry) =>
@@ -362,64 +357,9 @@ const fetchFriendProfileAndList = async () => {
   }
 }
 
-const getMediaIdSetFromSections = (sections: Record<ListStatusKey, MediaListEntry[]>) => {
-  const ids = new Set<number>()
-  for (const key of STATUS_ORDER) {
-    for (const entry of sections[key]) {
-      if (entry?.media?.id) ids.add(entry.media.id)
-    }
-  }
-  return ids
-}
-
-const compareLists = async () => {
-  if (isComparing.value) return
-  if (!selfUserId.value && !selfUsername.value) {
-    compareSummary.value = 'Unable to compare: your AniList account is not linked.'
-    return
-  }
-
-  const ownListQuery = `
-    query ($userId: Int, $userName: String) {
-      MediaListCollection(userId: $userId, userName: $userName, type: ANIME, sort: UPDATED_TIME_DESC) {
-        lists {
-          status
-          entries {
-            id
-            media { id }
-          }
-        }
-      }
-    }
-  `
-
-  try {
-    isComparing.value = true
-    compareSummary.value = ''
-
-    const response = await anilistGraphql.request<any>(
-      ownListQuery,
-      { userId: selfUserId.value || null, userName: selfUsername.value || null },
-      { token: token.value, skipCache: true }
-    )
-
-    if (response?.errors?.length) throw new Error(response.errors[0]?.message || 'Compare failed')
-
-    const ownSections = mapListsToSections(response?.data?.MediaListCollection?.lists ?? [])
-    const ownIds = getMediaIdSetFromSections(ownSections)
-    const friendIds = getMediaIdSetFromSections(rawSections.value)
-
-    let common = 0
-    for (const id of ownIds) {
-      if (friendIds.has(id)) common += 1
-    }
-
-    compareSummary.value = `${common} anime in common`
-  } catch (error: any) {
-    compareSummary.value = error?.message || 'Unable to compare lists.'
-  } finally {
-    isComparing.value = false
-  }
+const goToCompare = () => {
+  if (!friendUserId.value) return
+  navigateTo(`/social/compare/${friendUserId.value}`)
 }
 
 onMounted(fetchFriendProfileAndList)
@@ -457,19 +397,9 @@ onMounted(fetchFriendProfileAndList)
   cursor: not-allowed;
 }
 
-.compare-summary {
-  font-size: 11px;
-  color: #7a9ab8;
-  font-family: 'Overpass Mono', monospace;
-}
-
 [data-theme="winter"] .compare-btn {
   background: rgba(61, 180, 242, 0.2);
   border-color: rgba(61, 180, 242, 0.42);
   color: #1f88cb;
-}
-
-[data-theme="winter"] .compare-summary {
-  color: #4f6f8b;
 }
 </style>

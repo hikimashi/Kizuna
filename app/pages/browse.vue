@@ -74,4 +74,4 @@ const sortBy = ref('POPULARITY_DESC')
 const format = ref('ALL')
 </script>
 
-<style scoped src="~/assets/css/pages/animeList.css"></style>
+<style scoped src="~/assets/css/pages/browse.css"></style>

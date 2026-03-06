@@ -5,12 +5,13 @@ import { useMyAuthStore } from '~/composables/useMyAuthStore'
 import { useToastStore } from '~/composables/useToastStore'
 
 const PUBLIC_PATHS = new Set(['/', '/auth/callback'])
+const PUBLIC_PATH_PATTERNS = [/^\/social\/user\/[^/]+$/]
 
 export default defineNuxtRouteMiddleware(async (to) => {
   // PocketBase auth is client-side (localStorage), skip SSR guard to avoid false redirects on refresh.
   if (process.server) return
 
-  if (PUBLIC_PATHS.has(to.path)) return
+  if (PUBLIC_PATHS.has(to.path) || PUBLIC_PATH_PATTERNS.some((pattern) => pattern.test(to.path))) return
 
   const pocketbaseStore = usePocketbaseStore()
   const authStore = useMyAuthStore()

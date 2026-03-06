@@ -47,9 +47,14 @@
                 <div class="card-stat"><span class="card-stat-num">{{ user.animeCount }}</span><span class="card-stat-lbl">Anime</span></div>
                 <div class="card-stat"><span class="card-stat-num">{{ user.score.toFixed(1) }}</span><span class="card-stat-lbl">Score</span></div>
               </div>
-              <button class="btn-follow" :class="{ following: user.following }" @click="toggleFollow(user.id)">
-                {{ user.following ? 'Following' : 'Follow' }}
-              </button>
+              <div class="card-actions">
+                <button class="btn-view-profile" type="button" @click="openFriendProfile(user.id)">
+                  View profile
+                </button>
+                <button class="btn-follow" :class="{ following: user.following }" @click="toggleFollow(user.id)">
+                  {{ user.following ? 'Following' : 'Follow' }}
+                </button>
+              </div>
             </div>
           </article>
         </div>
@@ -137,6 +142,12 @@ const noResultText = computed(() => {
   if (loadError.value) return loadError.value
   return 'Try another search or switch social category.'
 })
+
+const openFriendProfile = (friendId: number) => {
+  const id = Number(friendId)
+  if (!Number.isFinite(id) || id <= 0) return
+  navigateTo(`/social/user/${id}`)
+}
 
 onMounted(async () => {
   await socialStore.loadSocial()

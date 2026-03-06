@@ -166,7 +166,9 @@
         <div v-if="scoreDiffRows.length === 0" class="placeholder-panel">No scored overlap yet.</div>
         <div v-else class="diff-list">
           <div v-for="item in scoreDiffRows" :key="item.mediaId" class="diff-item">
-            <div class="diff-thumb"></div>
+            <div class="diff-thumb">
+              <img v-if="item.cover" :src="item.cover" :alt="item.title">
+            </div>
             <div class="diff-title" :title="item.title">{{ item.title }}</div>
             <div class="diff-scores">
               <span class="diff-score score-blue">{{ formatScore(item.selfScore) }}</span>

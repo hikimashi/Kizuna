@@ -18,7 +18,7 @@
             </svg>
           </div>
           <div class="user-name">{{ selfName }}</div>
-          <div class="user-stat">-- anime - -- avg</div>
+          <div class="user-stat">{{ selfCount }} anime - {{ selfMeanScore }} avg</div>
         </div>
 
         <div class="vs-divider"></div>
@@ -108,8 +108,57 @@ const selfAvatar = computed(() =>
 
 const friendName = ref('Friend')
 const friendAvatar = ref('')
+const selfCount = ref('--')
+const selfMeanScore = ref('--')
 const friendCount = ref('--')
 const friendMeanScore = ref('--')
+
+const fetchSelfProfile = async () => {
+  const selfUserId = Number(authRecord.value.anilist_user_id ?? 0)
+  const selfUserName = String(authRecord.value.anilist_username ?? '')
+  const viewerQuery = `
+    query {
+      Viewer {
+        statistics { anime { count meanScore } }
+      }
+    }
+  `
+  const userQuery = `
+    query ($userId: Int, $userName: String) {
+      User(id: $userId, name: $userName) {
+        statistics { anime { count meanScore } }
+      }
+    }
+  `
+
+  try {
+    // Prefer Viewer when token exists; fallback to explicit User query.
+    let response: any = null
+    if (token.value) {
+      response = await anilistGraphql.request<any>(
+        viewerQuery,
+        {},
+        { token: token.value, skipCache: true }
+      )
+    } else if (selfUserId || selfUserName) {
+      response = await anilistGraphql.request<any>(
+        userQuery,
+        { userId: selfUserId || null, userName: selfUserId ? null : selfUserName },
+        { token: token.value, skipCache: true }
+      )
+    } else {
+      return
+    }
+
+    const stats = response?.data?.Viewer?.statistics?.anime || response?.data?.User?.statistics?.anime
+    if (!stats) return
+    selfCount.value = String(stats.count ?? '--')
+    const rawMeanScore = Number(stats.meanScore ?? NaN)
+    selfMeanScore.value = Number.isFinite(rawMeanScore) ? rawMeanScore.toFixed(1) : '--'
+  } catch {
+    // Keep static placeholders if profile fetch fails.
+  }
+}
 
 const fetchFriendProfile = async () => {
   if (!friendUserId.value) return
@@ -142,7 +191,9 @@ const fetchFriendProfile = async () => {
   }
 }
 
-onMounted(fetchFriendProfile)
+onMounted(async () => {
+  await Promise.all([fetchSelfProfile(), fetchFriendProfile()])
+})
 </script>
 
 <style scoped src="~/assets/css/pages/compareList.css"></style>

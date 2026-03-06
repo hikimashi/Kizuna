@@ -18,7 +18,7 @@
             </svg>
           </div>
           <div class="user-name">{{ selfName }}</div>
-          <div class="user-stat">-- anime · -- avg</div>
+          <div class="user-stat">-- anime - -- avg</div>
         </div>
 
         <div class="vs-divider"></div>
@@ -41,7 +41,7 @@
             </svg>
           </div>
           <div class="user-name">{{ friendName }}</div>
-          <div class="user-stat">-- anime · -- avg</div>
+          <div class="user-stat">{{ friendCount }} anime - {{ friendMeanScore }} avg</div>
         </div>
       </div>
 
@@ -108,6 +108,8 @@ const selfAvatar = computed(() =>
 
 const friendName = ref('Friend')
 const friendAvatar = ref('')
+const friendCount = ref('--')
+const friendMeanScore = ref('--')
 
 const fetchFriendProfile = async () => {
   if (!friendUserId.value) return
@@ -117,6 +119,7 @@ const fetchFriendProfile = async () => {
       User(id: $userId) {
         name
         avatar { medium large }
+        statistics { anime { count meanScore } }
       }
     }
   `
@@ -131,6 +134,9 @@ const fetchFriendProfile = async () => {
     if (!user) return
     friendName.value = String(user.name || 'Friend')
     friendAvatar.value = String(user.avatar?.large || user.avatar?.medium || '')
+    friendCount.value = String(user.statistics?.anime?.count ?? '--')
+    const rawMeanScore = Number(user.statistics?.anime?.meanScore ?? NaN)
+    friendMeanScore.value = Number.isFinite(rawMeanScore) ? rawMeanScore.toFixed(1) : '--'
   } catch {
     // Keep static placeholders if profile fetch fails.
   }

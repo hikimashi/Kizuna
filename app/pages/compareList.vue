@@ -48,8 +48,8 @@
       <div class="quick-stats">
         <div class="qs-card">
           <div class="qs-label">Anime in Common</div>
-          <div class="qs-value">--</div>
-          <div class="qs-sub">out of -- / --</div>
+          <div class="qs-value">{{ commonCount }}</div>
+          <div class="qs-sub">out of {{ selfCount }} / {{ friendCount }}</div>
         </div>
         <div class="qs-card">
           <div class="qs-label">Avg Score Diff</div>
@@ -58,14 +58,17 @@
         </div>
         <div class="qs-card">
           <div class="qs-label">Only You Watched</div>
-          <div class="qs-value">--</div>
+          <div class="qs-value">{{ onlySelfCount }}</div>
           <div class="qs-sub">anime to recommend</div>
         </div>
         <div class="qs-card">
           <div class="qs-label">Only They Watched</div>
-          <div class="qs-value">--</div>
+          <div class="qs-value">{{ onlyFriendCount }}</div>
           <div class="qs-sub">anime to discover</div>
         </div>
+      </div>
+      <div v-if="compareError" class="placeholder-panel" style="margin-bottom:14px;">
+        {{ compareError }}
       </div>
 
       <div class="tabs">
@@ -90,7 +93,8 @@ import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 
 definePageMeta({
-  path: '/social/compare/:id'
+  path: '/social/compare/:id',
+  ssr: false
 })
 
 const route = useRoute()
@@ -112,6 +116,10 @@ const selfCount = ref('--')
 const selfMeanScore = ref('--')
 const friendCount = ref('--')
 const friendMeanScore = ref('--')
+const commonCount = ref('--')
+const onlySelfCount = ref('--')
+const onlyFriendCount = ref('--')
+const compareError = ref('')
 
 const fetchSelfProfile = async () => {
   const selfUserId = Number(authRecord.value.anilist_user_id ?? 0)
@@ -119,14 +127,24 @@ const fetchSelfProfile = async () => {
   const viewerQuery = `
     query {
       Viewer {
-        statistics { anime { count meanScore } }
+        statistics {
+          anime {
+            count
+            meanScore
+          }
+        }
       }
     }
   `
   const userQuery = `
     query ($userId: Int, $userName: String) {
       User(id: $userId, name: $userName) {
-        statistics { anime { count meanScore } }
+        statistics {
+          anime {
+            count
+            meanScore
+          }
+        }
       }
     }
   `
@@ -168,7 +186,12 @@ const fetchFriendProfile = async () => {
       User(id: $userId) {
         name
         avatar { medium large }
-        statistics { anime { count meanScore } }
+        statistics {
+          anime {
+            count
+            meanScore
+          }
+        }
       }
     }
   `
@@ -183,17 +206,70 @@ const fetchFriendProfile = async () => {
     if (!user) return
     friendName.value = String(user.name || 'Friend')
     friendAvatar.value = String(user.avatar?.large || user.avatar?.medium || '')
-    friendCount.value = String(user.statistics?.anime?.count ?? '--')
-    const rawMeanScore = Number(user.statistics?.anime?.meanScore ?? NaN)
+    const animeStats = user.statistics?.anime
+    friendCount.value = String(animeStats?.count ?? '--')
+    const rawMeanScore = Number(animeStats?.meanScore ?? NaN)
     friendMeanScore.value = Number.isFinite(rawMeanScore) ? rawMeanScore.toFixed(1) : '--'
   } catch {
     // Keep static placeholders if profile fetch fails.
   }
 }
 
+const fetchMediaMatch = async () => {
+  const selfUserId = Number(authRecord.value.anilist_user_id ?? 0)
+  const selfUserName = String(authRecord.value.anilist_username ?? '')
+
+  if ((!selfUserId && !selfUserName) || !friendUserId.value) return
+
+  try {
+    compareError.value = ''
+    const qs = new URLSearchParams()
+    if (selfUserId) qs.set('selfUserId', String(selfUserId))
+    if (selfUserName) qs.set('selfUserName', selfUserName)
+    if (friendName.value && friendName.value !== 'Friend') qs.set('friendUserName', friendName.value)
+
+    const base = typeof window !== 'undefined' ? window.location.origin : ''
+    const url = `${base}/api/social/compare/${friendUserId.value}${qs.toString() ? `?${qs.toString()}` : ''}`
+    const response = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' } })
+
+    if (!response.ok) {
+      const errorBody = await response.text()
+      throw new Error(`compare api ${response.status}: ${errorBody}`)
+    }
+
+    const data = await response.json() as {
+      commonCount: number
+      onlySelfCount: number
+      onlyFriendCount: number
+      selfCount: number
+      friendCount: number
+    }
+
+    const selfTotal = Math.max(Number(data.selfCount) || 0, 0)
+    const friendTotal = Math.max(Number(data.friendCount) || 0, 0)
+    const common = Math.max(Math.min(Number(data.commonCount) || 0, selfTotal, friendTotal), 0)
+    const onlySelf = Math.max(selfTotal - common, 0)
+    const onlyFriend = Math.max(friendTotal - common, 0)
+
+    commonCount.value = String(common)
+    onlySelfCount.value = String(onlySelf)
+    onlyFriendCount.value = String(onlyFriend)
+    selfCount.value = String(selfTotal)
+    friendCount.value = String(friendTotal)
+  } catch (error) {
+    console.error('[compareList] media match failed', error)
+    compareError.value = error instanceof Error ? error.message : 'Comparison failed'
+    commonCount.value = '--'
+    onlySelfCount.value = '--'
+    onlyFriendCount.value = '--'
+  }
+}
+
 onMounted(async () => {
   await Promise.all([fetchSelfProfile(), fetchFriendProfile()])
+  await fetchMediaMatch()
 })
 </script>
 
 <style scoped src="~/assets/css/pages/compareList.css"></style>
+  

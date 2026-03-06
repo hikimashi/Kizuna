@@ -191,10 +191,18 @@
               <div v-if="activityLoading && activityItems.length > 0" class="activity-loading-more">
                 Loading more...
               </div>
+              <button
+                v-else-if="activityHasMore && activityItems.length > 0"
+                class="activity-load-more"
+                :disabled="activityLoading"
+                type="button"
+                @click="loadMoreActivity"
+              >
+                Load more
+              </button>
               <div v-else-if="!activityHasMore && activityItems.length === 0" class="activity-empty">
                 No recent activity.
               </div>
-              <div ref="activitySentinelRef" class="activity-sentinel" />
             </template>
           </div>
         </section>
@@ -208,7 +216,6 @@ import { computed, nextTick, onMounted, onBeforeUnmount, ref, unref, watch } fro
 import { storeToRefs } from 'pinia'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 import { useAnilistProfileStore } from '~/composables/useAnilistProfileStore'
-import { useInfiniteScroll } from '~/composables/useInfiniteScroll'
 
 definePageMeta({ middleware: ['auth'] })
 
@@ -224,21 +231,40 @@ const {
   favoriteCharacters
 } = storeToRefs(profileStore)
 
-const {
-  items: activityItems,
-  loading: activityLoading,
-  hasMore: activityHasMore,
-  sentinelRef: activitySentinelRef,
-  reset: resetActivityScroll
-} = useInfiniteScroll<any>(
-  async (page, perPage) => profileStore.fetchActivityPage(page, perPage),
-  {
-    threshold: 260,
-    initialPage: 1,
-    perPage: 15,
-    immediate: false
+const activityItems = ref<any[]>([])
+const activityLoading = ref(false)
+const activityHasMore = ref(true)
+const activityPage = ref(1)
+const activityPerPage = 15
+
+const loadMoreActivity = async () => {
+  if (activityLoading.value || !activityHasMore.value) return
+
+  activityLoading.value = true
+  try {
+    const chunk = await profileStore.fetchActivityPage(activityPage.value, activityPerPage)
+    activityItems.value.push(...chunk)
+
+    if (chunk.length < activityPerPage) {
+      activityHasMore.value = false
+      return
+    }
+
+    activityPage.value += 1
+  } catch (error) {
+    console.error('Failed to load activity page:', error)
+    activityHasMore.value = false
+  } finally {
+    activityLoading.value = false
   }
-)
+}
+
+const resetActivityList = async () => {
+  activityItems.value = []
+  activityHasMore.value = true
+  activityPage.value = 1
+  await loadMoreActivity()
+}
 
 const GENRE_COLORS: Record<string, string> = {
   Action: '#F77F00',
@@ -393,7 +419,7 @@ watch(topGenres, () => {
 
 onMounted(async () => {
   await profileStore.loadProfile()
-  await resetActivityScroll()
+  await resetActivityList()
   await computeVisibleGenres()
   window.addEventListener('resize', handleGenreResize, { passive: true })
 })
@@ -912,8 +938,28 @@ onBeforeUnmount(() => {
   text-align: center;
 }
 
-.activity-sentinel {
-  height: 1px;
+.activity-load-more {
+  margin-top: 10px;
+  width: 100%;
+  height: 36px;
+  border-radius: 2.5px;
+  border: 1px solid var(--kz-border);
+  background: color-mix(in srgb, var(--kz-card-bg) 90%, #1c3348 10%);
+  color: var(--kz-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+}
+
+.activity-load-more:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--kz-card-bg) 84%, #1f4f70 16%);
+  color: #d9ebfa;
+}
+
+.activity-load-more:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .skeleton-pulse {

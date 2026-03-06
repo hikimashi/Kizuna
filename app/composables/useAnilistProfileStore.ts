@@ -74,9 +74,10 @@ query ($userId: Int, $userName: String, $page: Int, $perPage: Int) {
 `
 
 async function fetchAllFavoriteAnime(
-  headers: Record<string, string>,
+  graphqlRequest: <T = any>(query: string, variables?: Record<string, any>, options?: { token?: string; cacheTtlMs?: number; skipCache?: boolean }) => Promise<T>,
   anilistUserId: number,
-  anilistUsername: string
+  anilistUsername: string,
+  token?: string
 ) {
   const all: any[] = []
   let page = 1
@@ -84,14 +85,11 @@ async function fetchAllFavoriteAnime(
   let hasNextPage = true
 
   while (hasNextPage && page <= 100) {
-    const response = await $fetch<any>('https://graphql.anilist.co', {
-      method: 'POST',
-      headers,
-      body: {
-        query: favoriteAnimePageQuery,
-        variables: { userId: anilistUserId || null, userName: anilistUsername || null, page, perPage }
-      }
-    })
+    const response = await graphqlRequest<any>(
+      favoriteAnimePageQuery,
+      { userId: anilistUserId || null, userName: anilistUsername || null, page, perPage },
+      { token, cacheTtlMs: 120_000 }
+    )
 
     const chunk = response?.data?.User?.favourites?.anime?.nodes ?? []
     const pageInfo = response?.data?.User?.favourites?.anime?.pageInfo
@@ -104,9 +102,10 @@ async function fetchAllFavoriteAnime(
 }
 
 async function fetchAllFavoriteCharacters(
-  headers: Record<string, string>,
+  graphqlRequest: <T = any>(query: string, variables?: Record<string, any>, options?: { token?: string; cacheTtlMs?: number; skipCache?: boolean }) => Promise<T>,
   anilistUserId: number,
-  anilistUsername: string
+  anilistUsername: string,
+  token?: string
 ) {
   const all: any[] = []
   let page = 1
@@ -114,14 +113,11 @@ async function fetchAllFavoriteCharacters(
   let hasNextPage = true
 
   while (hasNextPage && page <= 100) {
-    const response = await $fetch<any>('https://graphql.anilist.co', {
-      method: 'POST',
-      headers,
-      body: {
-        query: favoriteCharacterPageQuery,
-        variables: { userId: anilistUserId || null, userName: anilistUsername || null, page, perPage }
-      }
-    })
+    const response = await graphqlRequest<any>(
+      favoriteCharacterPageQuery,
+      { userId: anilistUserId || null, userName: anilistUsername || null, page, perPage },
+      { token, cacheTtlMs: 120_000 }
+    )
 
     const chunk = response?.data?.User?.favourites?.characters?.nodes ?? []
     const pageInfo = response?.data?.User?.favourites?.characters?.pageInfo
@@ -135,6 +131,7 @@ async function fetchAllFavoriteCharacters(
 
 export const useAnilistProfileStore = defineStore('anilistProfile', () => {
   const pocketbaseStore = usePocketbaseStore()
+  const anilistGraphql = useAnilistGraphql()
 
   const authRecord = computed<Record<string, any>>(() => unref(pocketbaseStore.authRecord) ?? {})
   const token = computed(() => authRecord.value.anilist_token ?? '')
@@ -174,21 +171,16 @@ export const useAnilistProfileStore = defineStore('anilistProfile', () => {
 
     isLoading.value = true
     try {
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json'
-      }
-      if (token.value) headers.Authorization = `Bearer ${token.value}`
-
-      const statsPromise = $fetch<any>('https://graphql.anilist.co', {
-        method: 'POST',
-        headers,
-        body: { query: statsQuery, variables: { userId: userId.value || null, userName: username.value || null } }
-      })
+      const statsPromise = anilistGraphql.request<any>(
+        statsQuery,
+        { userId: userId.value || null, userName: username.value || null },
+        { token: token.value, cacheTtlMs: 120_000 }
+      )
 
       const [statsResult, favoriteAnimeResult, favoriteCharactersResult] = await Promise.allSettled([
         statsPromise,
-        fetchAllFavoriteAnime(headers, userId.value, username.value),
-        fetchAllFavoriteCharacters(headers, userId.value, username.value)
+        fetchAllFavoriteAnime(anilistGraphql.request, userId.value, username.value, token.value),
+        fetchAllFavoriteCharacters(anilistGraphql.request, userId.value, username.value, token.value)
       ])
 
       const statsRes = statsResult.status === 'fulfilled' ? statsResult.value : null
@@ -222,19 +214,11 @@ export const useAnilistProfileStore = defineStore('anilistProfile', () => {
   const fetchActivityPage = async (page: number, perPage: number) => {
     if (!userId.value) return []
 
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json'
-    }
-    if (token.value) headers.Authorization = `Bearer ${token.value}`
-
-    const response = await $fetch<any>('https://graphql.anilist.co', {
-      method: 'POST',
-      headers,
-      body: {
-        query: activityQuery,
-        variables: { userId: userId.value, page, perPage }
-      }
-    })
+    const response = await anilistGraphql.request<any>(
+      activityQuery,
+      { userId: userId.value, page, perPage },
+      { token: token.value, cacheTtlMs: 15_000 }
+    )
 
     return response?.data?.Page?.activities ?? []
   }

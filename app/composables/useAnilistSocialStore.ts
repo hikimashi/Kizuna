@@ -93,6 +93,7 @@ const mapUser = (user: AniListUserNode): SocialUser => ({
 
 export const useAnilistSocialStore = defineStore('anilistSocial', () => {
   const pocketbaseStore = usePocketbaseStore()
+  const anilistGraphql = useAnilistGraphql()
 
   const authRecord = computed<Record<string, any>>(() => unref(pocketbaseStore.authRecord) ?? {})
   const token = computed(() => String(authRecord.value.anilist_token ?? ''))
@@ -119,14 +120,14 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
     variables: Record<string, any>,
     includeToken: boolean
   ) => {
-    const payload = await $fetch<any>('/api/anilist/graphql', {
-      method: 'POST',
-      body: {
-        query,
-        variables,
-        token: includeToken ? token.value : ''
+    const payload = await anilistGraphql.request<any>(
+      query,
+      variables,
+      {
+        token: includeToken ? token.value : '',
+        cacheTtlMs: 60_000
       }
-    })
+    )
 
     return payload
   }

@@ -15,6 +15,7 @@ export default defineNuxtConfig({
       anilistRedirectUri: process.env.ANILIST_REDIRECT_URI,
     },
     anilistClientSecret: process.env.ANILIST_CLIENT_SECRET,
+    redisUrl: process.env.REDIS_URL,
   },
   app: {
     head: {

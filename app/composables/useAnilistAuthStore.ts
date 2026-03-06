@@ -7,6 +7,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
   const pocketbaseStore = usePocketbaseStore();
   const toastStore = useToastStore();
   const alertStore = useAlertStore();
+  const anilistGraphql = useAnilistGraphql();
 
   // Lance l'OAuth AniList et stocke un state anti-CSRF.
   const loginWithAniList = () => {
@@ -61,16 +62,11 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
         throw new Error('Failed to get access token');
       }
 
-      const anilistUserData = await $fetch<any>('https://graphql.anilist.co', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${response.access_token}`
-        },
-        body: {
-          query: `query { Viewer { id name bannerImage avatar { medium large } } }`
-        }
-      });
+      const anilistUserData = await anilistGraphql.request<any>(
+        `query { Viewer { id name bannerImage avatar { medium large } } }`,
+        {},
+        { token: response.access_token, cacheTtlMs: 0, skipCache: true }
+      );
 
       const viewer = anilistUserData.data.Viewer;
       const userId = pocketbaseStore.pb.authStore.model?.id;
@@ -139,16 +135,11 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
         throw new Error('AniList account is not linked.');
       }
 
-      const anilistUserData = await $fetch<any>('https://graphql.anilist.co', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: {
-          query: `query { Viewer { id name bannerImage avatar { medium large } } }`
-        }
-      });
+      const anilistUserData = await anilistGraphql.request<any>(
+        `query { Viewer { id name bannerImage avatar { medium large } } }`,
+        {},
+        { token, cacheTtlMs: 0, skipCache: true }
+      );
 
       const viewer = anilistUserData?.data?.Viewer;
       if (!viewer?.id) {

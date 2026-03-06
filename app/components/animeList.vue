@@ -65,6 +65,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useInfiniteScroll } from '~/composables/useInfiniteScroll'
+import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
 
 // Props de filtrage recues depuis la page.
 const props = defineProps<{
@@ -75,6 +76,7 @@ const props = defineProps<{
 // Tri et format actifs avec valeurs par defaut.
 const currentSort = computed(() => props.sortBy || 'POPULARITY_DESC')
 const currentFormat = computed(() => props.format || 'ALL')
+const anilistGraphql = useAnilistGraphql()
 
 // Requete AniList GraphQL.
 const fetchAnimeList = async (page: number, perPage: number) => {
@@ -109,20 +111,16 @@ const fetchAnimeList = async (page: number, perPage: number) => {
     variables.format = formatFilter
   }
 
-  const response = await fetch('https://graphql.anilist.co', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json'
-    },
-    body: JSON.stringify({ query, variables })
-  })
+  const data = await anilistGraphql.request<any>(
+    query,
+    variables,
+    { cacheTtlMs: 60_000 }
+  )
 
-  if (!response.ok) {
-    throw new Error('Failed to fetch anime list')
+  if (data?.errors?.length) {
+    throw new Error(data.errors[0]?.message || 'Failed to fetch anime list')
   }
 
-  const data = await response.json()
   return data.data.Page.media
 }
 

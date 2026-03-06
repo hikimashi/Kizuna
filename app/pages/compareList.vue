@@ -25,9 +25,9 @@
 
         <div class="hero-center">
           <div class="compat-label">Compatibility</div>
-          <div class="compat-score">--<span>%</span></div>
-          <div class="compat-bar"><div class="compat-fill"></div></div>
-          <div class="compat-desc">Static preview</div>
+          <div class="compat-score">{{ compatibilityPercent }}<span>%</span></div>
+          <div class="compat-bar"><div class="compat-fill" :style="{ width: compatBarWidth }"></div></div>
+          <div class="compat-desc">{{ compatibilityLabel }}</div>
         </div>
 
         <div class="vs-divider"></div>
@@ -53,8 +53,8 @@
         </div>
         <div class="qs-card">
           <div class="qs-label">Avg Score Diff</div>
-          <div class="qs-value">--</div>
-          <div class="qs-sub">--</div>
+          <div class="qs-value" :style="avgScoreDiffColor">{{ avgScoreDiffLabel }}</div>
+          <div class="qs-sub">{{ avgScoreDiffSub }}</div>
         </div>
         <div class="qs-card">
           <div class="qs-label">Only You Watched</div>
@@ -72,16 +72,112 @@
       </div>
 
       <div class="tabs">
-        <button class="tab active" type="button">Shared</button>
-        <button class="tab" type="button">Genres</button>
-        <button class="tab" type="button">Only Yours</button>
-        <button class="tab" type="button">Discover</button>
-        <button class="tab" type="button">Score Diff</button>
+        <button class="tab" :class="{ active: activeTab === 'shared' }" type="button" @click="activeTab = 'shared'">Shared ({{ sharedEntries.length }})</button>
+        <button class="tab" :class="{ active: activeTab === 'genres' }" type="button" @click="activeTab = 'genres'">Genres</button>
+        <button class="tab" :class="{ active: activeTab === 'only' }" type="button" @click="activeTab = 'only'">Only Yours ({{ onlySelfEntries.length }})</button>
+        <button class="tab" :class="{ active: activeTab === 'discover' }" type="button" @click="activeTab = 'discover'">Discover ({{ onlyFriendEntries.length }})</button>
+        <button class="tab" :class="{ active: activeTab === 'diff' }" type="button" @click="activeTab = 'diff'">Score Diff</button>
       </div>
 
-      <div class="section-title">Comparison preview</div>
-      <div class="placeholder-panel">
-        Compare page recreated without functions. Data and interactions will be added next.
+      <div v-if="isEntriesLoading" class="placeholder-panel">Loading compare data...</div>
+
+      <div v-else-if="activeTab === 'shared'">
+        <div class="section-title">Anime you both watched</div>
+        <div class="genre-legend">
+          <div class="legend-item"><div class="legend-dot legend-me"></div>Your score</div>
+          <div class="legend-item"><div class="legend-dot legend-them"></div>Their score</div>
+        </div>
+        <div v-if="sharedEntries.length === 0" class="placeholder-panel">No shared anime in Watching/Completed.</div>
+        <div v-else class="shared-grid">
+          <div v-for="item in sharedEntries" :key="item.mediaId" class="shared-card">
+            <img
+              v-if="item.cover"
+              :src="item.cover"
+              :alt="item.title"
+            >
+            <div v-else class="shared-card-placeholder"></div>
+            <div class="shared-card-overlay">
+              <div class="shared-card-title" :title="item.title">{{ item.title }}</div>
+              <div class="score-row">
+                <span class="score-me">{{ formatScore(item.selfScore) }}</span>
+                <span class="score-them">{{ formatScore(item.friendScore) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-else-if="activeTab === 'genres'">
+        <div class="section-title">Genre overlap</div>
+        <div class="genre-compare">
+          <div class="genre-legend">
+            <div class="legend-item"><div class="legend-dot legend-me"></div>You</div>
+            <div class="legend-item"><div class="legend-dot legend-them"></div>{{ friendName }}</div>
+          </div>
+          <div v-if="genreRows.length === 0" class="placeholder-panel">No genre data.</div>
+          <div v-else v-for="row in genreRows" :key="row.genre" class="genre-row">
+            <div class="genre-name">{{ row.genre }}</div>
+            <div class="genre-bars">
+              <div class="gbar-wrap">
+                <div class="gbar-track"><div class="gbar-fill gbar-me" :style="{ width: row.selfWidth }"></div></div>
+                <span class="gbar-label label-me">{{ row.selfCount }}</span>
+              </div>
+              <div class="gbar-wrap">
+                <div class="gbar-track"><div class="gbar-fill gbar-them" :style="{ width: row.friendWidth }"></div></div>
+                <span class="gbar-label label-them">{{ row.friendCount }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-else-if="activeTab === 'only'">
+        <div class="section-title">Anime only you've watched - recommend to them</div>
+        <div v-if="onlySelfEntries.length === 0" class="placeholder-panel">No exclusive anime.</div>
+        <div v-else class="only-list">
+          <div v-for="item in onlySelfEntries" :key="item.mediaId" class="only-item">
+            <div class="only-thumb">
+              <img v-if="item.cover" :src="item.cover" :alt="item.title">
+            </div>
+            <div class="only-title" :title="item.title">{{ item.title }}</div>
+            <div class="only-status">{{ item.statusLabel }}</div>
+            <div class="only-score score-blue">{{ formatScore(item.score) }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div v-else-if="activeTab === 'discover'">
+        <div class="section-title">Anime only they've watched - discover new ones</div>
+        <div v-if="onlyFriendEntries.length === 0" class="placeholder-panel">No exclusive anime.</div>
+        <div v-else class="only-list">
+          <div v-for="item in onlyFriendEntries" :key="item.mediaId" class="only-item">
+            <div class="only-thumb">
+              <img v-if="item.cover" :src="item.cover" :alt="item.title">
+            </div>
+            <div class="only-title" :title="item.title">{{ item.title }}</div>
+            <div class="only-status">{{ item.statusLabel }}</div>
+            <div class="only-score score-purple">{{ formatScore(item.score) }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div v-else>
+        <div class="section-title">Biggest score disagreements</div>
+        <div v-if="scoreDiffRows.length === 0" class="placeholder-panel">No scored overlap yet.</div>
+        <div v-else class="diff-list">
+          <div v-for="item in scoreDiffRows" :key="item.mediaId" class="diff-item">
+            <div class="diff-thumb"></div>
+            <div class="diff-title" :title="item.title">{{ item.title }}</div>
+            <div class="diff-scores">
+              <span class="diff-score score-blue">{{ formatScore(item.selfScore) }}</span>
+              <span class="diff-arrow">vs</span>
+              <span class="diff-score score-purple">{{ formatScore(item.friendScore) }}</span>
+            </div>
+            <span class="diff-badge" :class="item.diff >= 0 ? 'diff-pos' : 'diff-neg'">
+              {{ item.diff > 0 ? '+' : '' }}{{ item.diff.toFixed(1) }}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -120,6 +216,168 @@ const commonCount = ref('--')
 const onlySelfCount = ref('--')
 const onlyFriendCount = ref('--')
 const compareError = ref('')
+const isEntriesLoading = ref(false)
+const activeTab = ref<'shared' | 'genres' | 'only' | 'discover' | 'diff'>('shared')
+
+type CompareEntry = {
+  mediaId: number
+  title: string
+  cover: string
+  score: number
+  progress: number
+  status: 'CURRENT' | 'COMPLETED'
+  updatedAt: number
+  genres: string[]
+}
+
+const selfEntries = ref<CompareEntry[]>([])
+const friendEntries = ref<CompareEntry[]>([])
+
+const formatScore = (score: number) => {
+  if (!score) return '-'
+  return score % 1 === 0 ? String(score) : score.toFixed(1)
+}
+
+const statusLabel = (status: 'CURRENT' | 'COMPLETED') => (status === 'CURRENT' ? 'Watching' : 'Completed')
+
+const selfMap = computed(() => {
+  const map = new Map<number, CompareEntry>()
+  for (const entry of selfEntries.value) map.set(entry.mediaId, entry)
+  return map
+})
+
+const friendMap = computed(() => {
+  const map = new Map<number, CompareEntry>()
+  for (const entry of friendEntries.value) map.set(entry.mediaId, entry)
+  return map
+})
+
+const sharedEntries = computed(() => {
+  const rows: Array<{
+    mediaId: number
+    title: string
+    cover: string
+    selfScore: number
+    friendScore: number
+    selfGenres: string[]
+    friendGenres: string[]
+    updatedAt: number
+  }> = []
+  for (const entry of selfEntries.value) {
+    const friendEntry = friendMap.value.get(entry.mediaId)
+    if (!friendEntry) continue
+    rows.push({
+      mediaId: entry.mediaId,
+      title: entry.title,
+      cover: entry.cover,
+      selfScore: entry.score,
+      friendScore: friendEntry.score,
+      selfGenres: entry.genres,
+      friendGenres: friendEntry.genres,
+      updatedAt: Math.max(entry.updatedAt, friendEntry.updatedAt)
+    })
+  }
+  return rows.sort((a, b) => b.updatedAt - a.updatedAt)
+})
+
+const onlySelfEntries = computed(() =>
+  selfEntries.value
+    .filter((entry) => !friendMap.value.has(entry.mediaId))
+    .map((entry) => ({ ...entry, statusLabel: statusLabel(entry.status) }))
+    .sort((a, b) => b.updatedAt - a.updatedAt)
+)
+
+const onlyFriendEntries = computed(() =>
+  friendEntries.value
+    .filter((entry) => !selfMap.value.has(entry.mediaId))
+    .map((entry) => ({ ...entry, statusLabel: statusLabel(entry.status) }))
+    .sort((a, b) => b.updatedAt - a.updatedAt)
+)
+
+const scoreDiffRows = computed(() =>
+  sharedEntries.value
+    .filter((row) => row.selfScore > 0 && row.friendScore > 0)
+    .map((row) => ({ ...row, diff: Number((row.selfScore - row.friendScore).toFixed(1)) }))
+    .sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff))
+)
+
+const genreRows = computed(() => {
+  const selfGenreCounts = new Map<string, number>()
+  const friendGenreCounts = new Map<string, number>()
+  for (const row of sharedEntries.value) {
+    for (const genre of row.selfGenres) selfGenreCounts.set(genre, (selfGenreCounts.get(genre) || 0) + 1)
+    for (const genre of row.friendGenres) friendGenreCounts.set(genre, (friendGenreCounts.get(genre) || 0) + 1)
+  }
+
+  const allGenres = new Set<string>([...selfGenreCounts.keys(), ...friendGenreCounts.keys()])
+  const rows = Array.from(allGenres)
+    .map((genre) => ({
+      genre,
+      selfCount: selfGenreCounts.get(genre) || 0,
+      friendCount: friendGenreCounts.get(genre) || 0
+    }))
+    .sort((a, b) => Math.max(b.selfCount, b.friendCount) - Math.max(a.selfCount, a.friendCount))
+    .slice(0, 10)
+
+  const maxSelf = Math.max(1, ...rows.map((r) => r.selfCount))
+  const maxFriend = Math.max(1, ...rows.map((r) => r.friendCount))
+
+  return rows.map((r) => ({
+    ...r,
+    selfWidth: `${Math.round((r.selfCount / maxSelf) * 100)}%`,
+    friendWidth: `${Math.round((r.friendCount / maxFriend) * 100)}%`
+  }))
+})
+
+const avgScoreDiffValue = computed(() => {
+  const rows = scoreDiffRows.value
+  if (!rows.length) return null
+  const total = rows.reduce((sum, row) => sum + row.diff, 0)
+  return Number((total / rows.length).toFixed(1))
+})
+
+const avgScoreDiffLabel = computed(() => {
+  if (avgScoreDiffValue.value == null) return '--'
+  return `${avgScoreDiffValue.value > 0 ? '+' : ''}${avgScoreDiffValue.value}`
+})
+
+const avgScoreDiffSub = computed(() => {
+  if (avgScoreDiffValue.value == null) return '--'
+  if (avgScoreDiffValue.value > 0) return 'you rate higher'
+  if (avgScoreDiffValue.value < 0) return 'they rate higher'
+  return 'same average'
+})
+
+const avgScoreDiffColor = computed(() => {
+  if (avgScoreDiffValue.value == null) return ''
+  if (avgScoreDiffValue.value > 0) return 'color:#4ade80;'
+  if (avgScoreDiffValue.value < 0) return 'color:#ef4444;'
+  return 'color:#3db4f2;'
+})
+
+const compatibilityPercent = computed(() => {
+  const selfTotal = Number(selfCount.value) || 0
+  const friendTotal = Number(friendCount.value) || 0
+  const common = Number(commonCount.value) || 0
+  const union = selfTotal + friendTotal - common
+  if (union <= 0) return '--'
+  return String(Math.round((common / union) * 100))
+})
+
+const compatBarWidth = computed(() => {
+  const value = Number(compatibilityPercent.value)
+  if (!Number.isFinite(value)) return '0%'
+  return `${Math.max(0, Math.min(100, value))}%`
+})
+
+const compatibilityLabel = computed(() => {
+  const value = Number(compatibilityPercent.value)
+  if (!Number.isFinite(value)) return 'Loading...'
+  if (value >= 75) return 'Great match'
+  if (value >= 50) return 'Good match'
+  if (value >= 25) return 'Some overlap'
+  return 'Low overlap'
+})
 
 const fetchSelfProfile = async () => {
   const selfUserId = Number(authRecord.value.anilist_user_id ?? 0)
@@ -265,8 +523,78 @@ const fetchMediaMatch = async () => {
   }
 }
 
+const fetchCompareEntries = async () => {
+  const selfUserId = Number(authRecord.value.anilist_user_id ?? 0)
+  if (!selfUserId || !friendUserId.value) return
+
+  const query = `
+    query ($userId: Int) {
+      MediaListCollection(userId: $userId, type: ANIME, status_in: [CURRENT, COMPLETED], sort: UPDATED_TIME_DESC) {
+        lists {
+          status
+          entries {
+            score
+            progress
+            updatedAt
+            media {
+              id
+              genres
+              title { romaji english native }
+              coverImage { medium large }
+            }
+          }
+        }
+      }
+    }
+  `
+
+  const mapEntries = (response: any): CompareEntry[] => {
+    const lists = Array.isArray(response?.data?.MediaListCollection?.lists) ? response.data.MediaListCollection.lists : []
+    const result = new Map<number, CompareEntry>()
+    for (const list of lists) {
+      const status = String(list?.status || '')
+      if (status !== 'CURRENT' && status !== 'COMPLETED') continue
+      const entries = Array.isArray(list?.entries) ? list.entries : []
+      for (const entry of entries) {
+        const mediaId = Number(entry?.media?.id || 0)
+        if (!mediaId) continue
+        const title = String(entry?.media?.title?.romaji || entry?.media?.title?.english || entry?.media?.title?.native || 'Unknown title')
+        const cover = String(entry?.media?.coverImage?.large || entry?.media?.coverImage?.medium || '')
+        const normalized: CompareEntry = {
+          mediaId,
+          title,
+          cover,
+          score: Number(entry?.score || 0),
+          progress: Number(entry?.progress || 0),
+          status: status as 'CURRENT' | 'COMPLETED',
+          updatedAt: Number(entry?.updatedAt || 0),
+          genres: Array.isArray(entry?.media?.genres) ? entry.media.genres.filter(Boolean) : []
+        }
+
+        const existing = result.get(mediaId)
+        if (!existing || normalized.updatedAt > existing.updatedAt) result.set(mediaId, normalized)
+      }
+    }
+    return Array.from(result.values())
+  }
+
+  try {
+    isEntriesLoading.value = true
+    const [selfRes, friendRes] = await Promise.all([
+      anilistGraphql.request<any>(query, { userId: selfUserId }, { token: token.value, skipCache: true }),
+      anilistGraphql.request<any>(query, { userId: friendUserId.value }, { token: token.value, skipCache: true })
+    ])
+    selfEntries.value = mapEntries(selfRes)
+    friendEntries.value = mapEntries(friendRes)
+  } catch (error) {
+    console.error('[compareList] entries failed', error)
+  } finally {
+    isEntriesLoading.value = false
+  }
+}
+
 onMounted(async () => {
-  await Promise.all([fetchSelfProfile(), fetchFriendProfile()])
+  await Promise.all([fetchSelfProfile(), fetchFriendProfile(), fetchCompareEntries()])
   await fetchMediaMatch()
 })
 </script>

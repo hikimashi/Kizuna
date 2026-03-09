@@ -1,11 +1,9 @@
 <template>
   <div class="infinite-scroll-container">
-    <!-- Loading State (Initial) -->
     <div v-if="loading && items.length === 0" class="initial-loading">
       <SkeletonLoader :count="12" />
     </div>
 
-    <!-- Items Grid -->
     <div v-else class="anime-grid">
       <div
         v-for="anime in items"
@@ -13,7 +11,7 @@
         class="anime-card"
       >
         <div class="anime-cover">
-          <img :src="anime.coverImage.large" :alt="anime.title.romaji" />
+          <img :src="anime.coverImage.large" :alt="anime.title.romaji || anime.title.english || 'Anime cover'">
           <div class="anime-score">
             {{ anime.averageScore || 'N/A' }}
           </div>
@@ -34,25 +32,38 @@
               {{ genre }}
             </span>
           </div>
+          <div class="anime-actions">
+            <button
+              class="anime-action-btn"
+              :class="{ added: Boolean(anime.mediaListEntry?.id) }"
+              :disabled="addingMediaId === anime.id || Boolean(anime.mediaListEntry?.id)"
+              type="button"
+              @click.stop="addToPlanning(anime)"
+            >
+              {{
+                addingMediaId === anime.id
+                  ? 'Adding...'
+                  : anime.mediaListEntry?.id
+                    ? `In ${statusLabel(anime.mediaListEntry?.status)}`
+                    : 'Add to Planning'
+              }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Loading More Indicator -->
     <div v-if="loading && items.length > 0" class="loading-more">
       <div class="spinner-ring"></div>
       <p>Loading more...</p>
     </div>
 
-    <!-- End of List Message -->
     <div v-if="!hasMore && items.length > 0" class="end-of-list">
-      <p>🎉 You've reached the end!</p>
+      <p>Reached the end.</p>
     </div>
 
-    <!-- Sentinel Element for IntersectionObserver -->
     <div ref="sentinelRef" class="sentinel-element"></div>
 
-    <!-- Manual Load More Button (optional fallback) -->
     <div v-if="!hasMore && items.length > 0" class="load-more-container">
       <button @click="loadMore" :disabled="loading" class="btn-load-more">
         <span v-if="!loading">Load More</span>
@@ -63,23 +74,59 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import { useInfiniteScroll } from '~/composables/useInfiniteScroll'
+import { computed, ref, unref, watch } from 'vue'
 import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
+import { useAnilistListEditor } from '~/composables/useAnilistListEditor'
+import { useInfiniteScroll } from '~/composables/useInfiniteScroll'
+import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
+import { useToastStore } from '~/composables/useToastStore'
 
-// Props de filtrage recues depuis la page.
 const props = defineProps<{
   sortBy?: string
   format?: string
 }>()
 
-// Tri et format actifs avec valeurs par defaut.
+type BrowseAnime = {
+  id: number
+  title: {
+    romaji?: string | null
+    english?: string | null
+  }
+  coverImage: {
+    large?: string | null
+  }
+  averageScore?: number | null
+  format?: string | null
+  episodes?: number | null
+  seasonYear?: number | null
+  genres: string[]
+  description?: string | null
+  mediaListEntry?: {
+    id?: number | null
+    status?: string | null
+  } | null
+}
+
 const currentSort = computed(() => props.sortBy || 'POPULARITY_DESC')
 const currentFormat = computed(() => props.format || 'ALL')
+const pocketbaseStore = usePocketbaseStore()
 const anilistGraphql = useAnilistGraphql()
+const anilistListEditor = useAnilistListEditor()
+const toastStore = useToastStore()
+const addingMediaId = ref<number | null>(null)
 
-// Requete AniList GraphQL.
-const fetchAnimeList = async (page: number, perPage: number) => {
+const authRecord = computed(() => (unref(pocketbaseStore.authRecord) ?? {}) as Record<string, any>)
+const token = computed(() => String(authRecord.value.anilist_token ?? ''))
+
+const statusLabel = (status?: string | null) => {
+  if (status === 'CURRENT') return 'Watching'
+  if (status === 'COMPLETED') return 'Completed'
+  if (status === 'PAUSED') return 'Paused'
+  if (status === 'DROPPED') return 'Dropped'
+  return 'Planning'
+}
+
+const fetchAnimeList = async (page: number, perPage: number): Promise<BrowseAnime[]> => {
   const sort = currentSort.value
   const formatFilter = currentFormat.value
 
@@ -101,6 +148,10 @@ const fetchAnimeList = async (page: number, perPage: number) => {
           seasonYear
           genres
           description
+          mediaListEntry {
+            id
+            status
+          }
         }
       }
     }
@@ -114,7 +165,7 @@ const fetchAnimeList = async (page: number, perPage: number) => {
   const data = await anilistGraphql.request<any>(
     query,
     variables,
-    { cacheTtlMs: 60_000 }
+    { token: token.value, cacheTtlMs: token.value ? 15_000 : 60_000 }
   )
 
   if (data?.errors?.length) {
@@ -124,22 +175,51 @@ const fetchAnimeList = async (page: number, perPage: number) => {
   return data.data.Page.media
 }
 
-// Gestion du chargement progressif (infinite scroll).
 const {
   items,
   loading,
   hasMore,
   sentinelRef,
   loadMore,
-  reset
-} = useInfiniteScroll(fetchAnimeList, {
+  reset,
+  setItems
+} = useInfiniteScroll<BrowseAnime>(fetchAnimeList, {
   threshold: 300,
   initialPage: 1,
   perPage: 20,
   immediate: true
 })
 
-// Reinitialise la liste quand les filtres changent.
+const addToPlanning = async (anime: BrowseAnime) => {
+  if (!anime?.id || addingMediaId.value === anime.id || anime.mediaListEntry?.id) return
+
+  try {
+    addingMediaId.value = anime.id
+    const savedEntry = await anilistListEditor.saveEntry({
+      mediaId: anime.id,
+      status: 'PLANNING'
+    })
+
+    setItems(items.value.map((item) =>
+      item.id === anime.id
+        ? {
+          ...item,
+          mediaListEntry: {
+            id: Number(savedEntry.id),
+            status: String(savedEntry.status || 'PLANNING')
+          }
+        }
+        : item
+    ))
+
+    toastStore.openToast({ type: 'success', message: 'Anime added to Planning.' })
+  } catch (error: any) {
+    toastStore.openToast({ type: 'error', message: error?.message || 'Unable to add anime to AniList.' })
+  } finally {
+    addingMediaId.value = null
+  }
+}
+
 watch([currentSort, currentFormat], () => {
   reset()
 })
@@ -152,7 +232,6 @@ watch([currentSort, currentFormat], () => {
   padding: 24px;
 }
 
-/* Initial Loading */
 .initial-loading {
   display: flex;
   justify-content: center;
@@ -188,14 +267,12 @@ watch([currentSort, currentFormat], () => {
   }
 }
 
-/* Anime Grid */
 .anime-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 20px;
 }
 
-/* Anime Card */
 .anime-card {
   background: #131a26;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -211,7 +288,6 @@ watch([currentSort, currentFormat], () => {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
-/* Anime Cover */
 .anime-cover {
   position: relative;
   aspect-ratio: 2/3;
@@ -241,7 +317,6 @@ watch([currentSort, currentFormat], () => {
   font-weight: 700;
 }
 
-/* Anime Info */
 .anime-info {
   padding: 14px;
 }
@@ -268,11 +343,44 @@ watch([currentSort, currentFormat], () => {
   flex-wrap: wrap;
 }
 
-/* Genre Tags */
 .anime-genres {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
+}
+
+.anime-actions {
+  margin-top: 12px;
+}
+
+.anime-action-btn {
+  width: 100%;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid rgba(61, 180, 242, 0.28);
+  background: rgba(61, 180, 242, 0.12);
+  color: rgba(61, 180, 242, 0.95);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.anime-action-btn:hover:not(:disabled) {
+  background: rgba(61, 180, 242, 0.2);
+  border-color: rgba(61, 180, 242, 0.45);
+  transform: translateY(-1px);
+}
+
+.anime-action-btn:disabled {
+  opacity: 0.78;
+  cursor: not-allowed;
+}
+
+.anime-action-btn.added {
+  background: rgba(74, 222, 128, 0.12);
+  border-color: rgba(74, 222, 128, 0.24);
+  color: #86efac;
 }
 
 .genre-tag {
@@ -284,7 +392,6 @@ watch([currentSort, currentFormat], () => {
   font-weight: 500;
 }
 
-/* End of List */
 .end-of-list {
   text-align: center;
   padding: 40px 20px;
@@ -292,7 +399,6 @@ watch([currentSort, currentFormat], () => {
   font-size: 15px;
 }
 
-/* Load More Button */
 .load-more-container {
   display: flex;
   justify-content: center;
@@ -321,13 +427,11 @@ watch([currentSort, currentFormat], () => {
   cursor: not-allowed;
 }
 
-/* Sentinel Element */
 .sentinel-element {
   height: 1px;
   width: 100%;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .anime-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));

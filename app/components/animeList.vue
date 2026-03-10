@@ -670,13 +670,13 @@ watch(filterSignature, async () => {
 .card-score {
   color: var(--results-accent);
   font-family: 'Overpass Mono', monospace;
-  font-size: 11px;
+  font-size: 9px;
   font-weight: 700;
 }
 
 .card-eps {
   color: var(--results-text-dim);
-  font-size: 11px;
+  font-size: 9px;
   font-weight: 600;
 }
 
@@ -687,10 +687,10 @@ watch(filterSignature, async () => {
 
 .view-grid .card-title {
   color: #e8f0ff;
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.3;
-  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  margin-bottom: 3px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -740,9 +740,9 @@ watch(filterSignature, async () => {
 
 .view-list .card-title {
   color: #e8f0ff;
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1.35;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

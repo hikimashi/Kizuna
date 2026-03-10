@@ -1,25 +1,26 @@
 <template>
-  <div class="anime-list-page">
-    <div class="profile-banner">
+  <div class="anime-list-page friend-profile-page">
+    <section class="banner-wrap" :class="{ 'has-image': Boolean(bannerUrl) }">
       <img v-if="bannerUrl" :src="bannerUrl" alt="" class="banner-image">
-      <div class="banner-bg"></div>
-      <div class="banner-texture"></div>
-      <div class="banner-avatar">
-        <img v-if="avatarUrl" :src="avatarUrl" :alt="friendName || 'avatar'">
-        <svg
-          v-else
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="rgba(255,255,255,0.25)"
-          stroke-width="1.2"
-          width="38"
-          height="38"
-        >
-          <circle cx="12" cy="8.5" r="4" />
-          <path stroke-linecap="round" d="M4 20.5c0-4 3.6-7 8-7s8 3 8 7" />
-        </svg>
+      <div class="banner-content">
+        <div class="banner-avatar">
+          <img v-if="avatarUrl" :src="avatarUrl" :alt="friendName || 'AniList avatar'">
+          <svg
+            v-else
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="8.5" r="4" />
+            <path stroke-linecap="round" d="M4 20.5c0-4 3.6-7 8-7s8 3 8 7" />
+          </svg>
+        </div>
+        <div class="banner-meta">
+          <div class="banner-username">{{ friendName || 'Friend' }}</div>
+          <div class="banner-joined">Joined {{ joinedDisplay }}</div>
+        </div>
       </div>
-    </div>
+    </section>
 
     <div class="sub-tabs-bar">
       <div class="sub-tabs">
@@ -190,6 +191,7 @@ const searchTerm = ref('')
 const friendName = ref('')
 const avatarUrl = ref('')
 const bannerUrl = ref('')
+const friendJoinedAt = ref<number | null>(null)
 
 const rawSections = ref<Record<ListStatusKey, MediaListEntry[]>>({
   CURRENT: [],
@@ -217,6 +219,15 @@ const formatScore = (score: number) => {
   if (!score) return '-'
   return score % 1 === 0 ? String(score) : score.toFixed(1)
 }
+
+const formatJoined = (timestamp?: number | null) => {
+  if (!timestamp) return '-'
+  const date = new Date(timestamp * 1000)
+  if (Number.isNaN(date.getTime())) return '-'
+  return new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(date)
+}
+
+const joinedDisplay = computed(() => formatJoined(friendJoinedAt.value))
 
 const statusDotClass = (status: ListStatusKey) => {
   if (status === 'CURRENT') return 'dot-watching'
@@ -302,6 +313,7 @@ const fetchFriendProfileAndList = async () => {
       User(id: $userId) {
         id
         name
+        createdAt
         avatar { medium large }
         bannerImage
       }
@@ -347,6 +359,7 @@ const fetchFriendProfileAndList = async () => {
     friendName.value = user?.name || 'Friend'
     avatarUrl.value = user?.avatar?.large || user?.avatar?.medium || ''
     bannerUrl.value = user?.bannerImage || ''
+    friendJoinedAt.value = Number(user?.createdAt || 0) || null
 
     const lists = listRes?.data?.MediaListCollection?.lists ?? []
     rawSections.value = mapListsToSections(lists)
@@ -368,6 +381,117 @@ onMounted(fetchFriendProfileAndList)
 <style scoped src="~/assets/css/pages/animeList.css"></style>
 
 <style scoped>
+.friend-profile-page .banner-wrap {
+  width: 100%;
+  height: clamp(230px, 28vw, 340px);
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(20, 30, 50, 0.95) 0%, rgba(10, 18, 35, 0.98) 100%);
+}
+
+.friend-profile-page .banner-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  image-rendering: auto;
+  image-rendering: -webkit-optimize-contrast;
+  z-index: 0;
+}
+
+.friend-profile-page .banner-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 80% at 70% 50%, rgba(61, 180, 242, 0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 60% at 30% 60%, rgba(146, 86, 243, 0.15) 0%, transparent 60%);
+}
+
+.friend-profile-page .banner-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(255, 255, 255, 0.012) 20px, rgba(255, 255, 255, 0.012) 21px);
+}
+
+.friend-profile-page .banner-wrap.has-image::before {
+  background: linear-gradient(
+    180deg,
+    rgba(5, 10, 20, 0.12) 0%,
+    rgba(8, 12, 22, 0.34) 75%,
+    rgba(8, 12, 22, 0.5) 100%
+  );
+}
+
+.friend-profile-page .banner-wrap.has-image::after {
+  display: none;
+}
+
+.friend-profile-page .banner-content {
+  position: absolute;
+  bottom: 0;
+  left: clamp(16px, 2.4vw, 40px);
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+}
+
+.friend-profile-page .banner-meta {
+  transform: translateY(-16px);
+}
+
+.friend-profile-page .banner-avatar {
+  position: relative;
+  left: auto;
+  bottom: auto;
+  width: 132px;
+  height: 132px;
+  border-radius: 8px;
+  background: transparent;
+  border: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  z-index: 2;
+}
+
+.friend-profile-page .banner-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+}
+
+.friend-profile-page .banner-avatar svg {
+  width: 46px;
+  height: 46px;
+  stroke: rgba(255, 255, 255, 0.3);
+  stroke-width: 1.2;
+}
+
+.friend-profile-page .banner-username {
+  font-family: 'Overpass', sans-serif;
+  font-size: clamp(30px, 3.6vw, 46px);
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
+  margin-bottom: 0;
+}
+
+.friend-profile-page .banner-joined {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.3px;
+  transform: translateY(-12px);
+}
+
 .compare-box {
   margin-right: auto;
   display: inline-flex;
@@ -401,5 +525,45 @@ onMounted(fetchFriendProfileAndList)
   background: rgba(61, 180, 242, 0.2);
   border-color: rgba(61, 180, 242, 0.42);
   color: #1f88cb;
+}
+
+@media (max-width: 700px) {
+  .friend-profile-page .banner-wrap {
+    height: 220px;
+  }
+
+  .friend-profile-page .banner-content {
+    gap: 14px;
+  }
+
+  .friend-profile-page .banner-avatar {
+    left: auto;
+    bottom: auto;
+    width: 102px;
+    height: 102px;
+  }
+
+  .friend-profile-page .banner-username {
+    font-size: clamp(24px, 6vw, 32px);
+    margin-bottom: 4px;
+  }
+
+  .friend-profile-page .banner-joined {
+    font-size: 13px;
+  }
+}
+
+[data-theme="winter"] .friend-profile-page .banner-wrap.has-image::before {
+  background: linear-gradient(
+    180deg,
+    rgba(8, 12, 22, 0.2) 0%,
+    rgba(8, 12, 22, 0.45) 75%,
+    rgba(8, 12, 22, 0.58) 100%
+  );
+}
+
+[data-theme="winter"] .friend-profile-page .banner-username {
+  color: #ffffff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.42);
 }
 </style>

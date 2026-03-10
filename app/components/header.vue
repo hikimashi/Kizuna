@@ -25,7 +25,7 @@
         <NuxtLink to="/animeList" class="nav-link">
           Anime List
         </NuxtLink>
-        <NuxtLink to="/browse" class="nav-link">
+        <NuxtLink to="/browse" class="nav-link" :class="{ active: $route.path === '/browse' }">
           Browse
         </NuxtLink>
       </nav>

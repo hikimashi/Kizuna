@@ -26,7 +26,7 @@
         <button class="sub-tab active" type="button">Anime List</button>
         <button class="sub-tab" type="button" disabled>Favorites</button>
         <button class="sub-tab" type="button" disabled>Friends</button>
-        <button class="sub-tab" type="button" disabled>Shared Lists</button>
+        <NuxtLink class="sub-tab" to="/sharedLists">Shared Lists</NuxtLink>
       </div>
     </div>
 
@@ -507,4 +507,3 @@ onMounted(fetchAnimeList)
 </script>
 
 <style scoped src="~/assets/css/pages/animeList.css"></style>
-

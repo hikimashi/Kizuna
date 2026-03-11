@@ -69,6 +69,10 @@
 }
 
 .sub-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
   padding: 10px 20px;
   font-size: 13px;
   font-weight: 500;
@@ -903,7 +907,6 @@
   background: rgba(239, 246, 253, 0.78);
   border-bottom-color: rgba(23, 52, 78, 0.18);
 }
-
 [data-theme="winter"] .anime-list-page .sub-tab {
   color: #4a6883;
 }

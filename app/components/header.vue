@@ -19,10 +19,10 @@
         <NuxtLink to="/profilePage" class="nav-link" :class="{ active: $route.path === '/profilePage' }">
           Profile
         </NuxtLink>
-        <NuxtLink to="/social" class="nav-link">
+        <NuxtLink to="/social" class="nav-link" :class="{ active: $route.path === '/social' }">
           Social
         </NuxtLink>
-        <NuxtLink to="/animeList" class="nav-link">
+        <NuxtLink to="/animeList" class="nav-link" :class="{ active: $route.path === '/animeList' }">
           Anime List
         </NuxtLink>
         <NuxtLink to="/browse" class="nav-link" :class="{ active: $route.path === '/browse' }">

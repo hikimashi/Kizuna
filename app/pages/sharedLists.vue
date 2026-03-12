@@ -750,8 +750,8 @@ const inviteQuery = ref('')
 const suggestionMode = ref(true)
 const profileTabs = [
   { key: 'anime-list', label: 'Anime List', to: '/animeList' },
-  { key: 'favorites', label: 'Favorites', disabled: true },
-  { key: 'friends', label: 'Friends', disabled: true },
+  { key: 'favorites', label: 'Favorites', to: '/favorites' },
+  { key: 'friends', label: 'Friends', to: '/friends' },
   { key: 'shared-lists', label: 'Shared Lists', to: '/sharedLists', active: true }
 ]
 

@@ -25,6 +25,7 @@
     <div class="sub-tabs-bar">
       <div class="sub-tabs">
         <button class="sub-tab active" type="button">{{ friendName || 'Friend' }} Anime List</button>
+        <NuxtLink class="sub-tab" :to="`/social/compare/${$route.params.id}`">Compare List</NuxtLink>
         <button class="sub-tab" type="button" disabled>Favorites</button>
         <button class="sub-tab" type="button" disabled>Friends</button>
         <button class="sub-tab" type="button" disabled>Shared Lists</button>

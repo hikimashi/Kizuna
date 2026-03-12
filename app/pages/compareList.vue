@@ -1,9 +1,33 @@
 <template>
-  <div class="compare-page">
-    <div class="compare-sub-tabs">
+  <div class="anime-list-page compare-page">
+    <div class="profile-banner">
+      <img v-if="bannerUrl" :src="bannerUrl" alt="" class="banner-image">
+      <div class="banner-bg"></div>
+      <div class="banner-texture"></div>
+      <div class="banner-avatar">
+        <img v-if="friendAvatar" :src="friendAvatar" :alt="friendName || 'avatar'">
+        <svg
+          v-else
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="rgba(255,255,255,0.25)"
+          stroke-width="1.2"
+          width="38"
+          height="38"
+        >
+          <circle cx="12" cy="8.5" r="4" />
+          <path stroke-linecap="round" d="M4 20.5c0-4 3.6-7 8-7s8 3 8 7" />
+        </svg>
+      </div>
+    </div>
+
+    <div class="sub-tabs-bar">
       <div class="sub-tabs">
         <NuxtLink class="sub-tab" :to="`/social/user/${$route.params.id}`">Anime List</NuxtLink>
-        <NuxtLink class="sub-tab active" :to="`/social/compare/${$route.params.id}`">Compare list</NuxtLink>
+        <NuxtLink class="sub-tab active" :to="`/social/compare/${$route.params.id}`">Compare List</NuxtLink>
+        <button class="sub-tab" type="button" disabled>Favorites</button>
+        <button class="sub-tab" type="button" disabled>Friends</button>
+        <button class="sub-tab" type="button" disabled>Shared Lists</button>
       </div>
     </div>
 
@@ -210,6 +234,7 @@ const selfAvatar = computed(() =>
 
 const friendName = ref('Friend')
 const friendAvatar = ref('')
+const bannerUrl = ref('')
 const selfCount = ref('--')
 const selfMeanScore = ref('--')
 const friendCount = ref('--')
@@ -446,6 +471,7 @@ const fetchFriendProfile = async () => {
       User(id: $userId) {
         name
         avatar { medium large }
+        bannerImage
         statistics {
           anime {
             count
@@ -466,6 +492,7 @@ const fetchFriendProfile = async () => {
     if (!user) return
     friendName.value = String(user.name || 'Friend')
     friendAvatar.value = String(user.avatar?.large || user.avatar?.medium || '')
+    bannerUrl.value = String(user.bannerImage || '')
     const animeStats = user.statistics?.anime
     friendCount.value = String(animeStats?.count ?? '--')
     const rawMeanScore = Number(animeStats?.meanScore ?? NaN)

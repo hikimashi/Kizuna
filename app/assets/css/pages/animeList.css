@@ -32,9 +32,9 @@
 }
 
 .banner-avatar {
-  position: absolute;
-  bottom: 0;
-  left: 40px;
+  position: relative;
+  left: auto;
+  bottom: auto;
   width: 132px;
   height: 132px;
   border-radius: 8px;
@@ -53,6 +53,36 @@
   object-fit: contain;
   object-position: center;
   display: block;
+}
+
+.banner-content {
+  position: absolute;
+  bottom: 0;
+  left: 40px;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+}
+
+.banner-meta {
+  transform: translateY(-16px);
+}
+
+.banner-username {
+  font-family: 'Overpass', sans-serif;
+  font-size: clamp(30px, 3.6vw, 46px);
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
+  margin-bottom: 0;
+}
+
+.banner-joined {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.3px;
+  transform: translateY(-12px);
 }
 
 .sub-tabs-bar {
@@ -75,7 +105,7 @@
   text-decoration: none;
   padding: 10px 20px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   color: #7a9ab8;
   border: none;
   background: none;
@@ -87,7 +117,6 @@
 .sub-tab.active {
   color: #3db4f2;
   border-bottom-color: #3db4f2;
-  font-weight: 600;
 }
 
 .sub-tab:disabled {
@@ -167,7 +196,7 @@
   padding: 7px 10px;
   border-radius: 5px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   color: #7a9ab8;
   border: none;
   background: none;
@@ -440,7 +469,7 @@
 
 .section-count {
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   color: #3d5570;
   font-family: 'Overpass Mono', monospace;
 }
@@ -663,7 +692,7 @@
 
 .view-compact .anime-card-title {
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   flex: 1;
   white-space: nowrap;
   overflow: hidden;
@@ -795,6 +824,10 @@
     left: 20px;
   }
 
+  .banner-content {
+    left: 20px;
+  }
+
   .sub-tab {
     padding: 9px 14px;
     font-size: 12px;
@@ -842,6 +875,24 @@
     bottom: 0;
     width: 102px;
     height: 102px;
+  }
+
+  .banner-content {
+    left: 18px;
+    gap: 14px;
+  }
+
+  .banner-meta {
+    transform: translateY(-10px);
+  }
+
+  .banner-username {
+    font-size: clamp(24px, 6vw, 32px);
+    margin-bottom: 4px;
+  }
+
+  .banner-joined {
+    font-size: 13px;
   }
 
   .sub-tabs-bar {

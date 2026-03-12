@@ -1,5 +1,7 @@
 <template>
   <div class="shared-list-page">
+    <userHeaderTabs :tabs="profileTabs" />
+
     <div class="shared-list-shell">
       <nav class="shared-breadcrumb" aria-label="Breadcrumb">
         <NuxtLink to="/profilePage">Profile</NuxtLink>
@@ -746,6 +748,12 @@ const membersPanelOpen = ref(true)
 const searchTerm = ref('')
 const inviteQuery = ref('')
 const suggestionMode = ref(true)
+const profileTabs = [
+  { key: 'anime-list', label: 'Anime List', to: '/animeList' },
+  { key: 'favorites', label: 'Favorites', disabled: true },
+  { key: 'friends', label: 'Friends', disabled: true },
+  { key: 'shared-lists', label: 'Shared Lists', to: '/sharedLists', active: true }
+]
 
 const activePrivacyMeta = computed<(typeof privacyOptions)[number]>(() => {
   return privacyOptions.find((option) => option.value === privacy.value) ?? privacyOptions[0]!
@@ -885,6 +893,7 @@ const progressSegmentStyle = (item: { memberId: string; count: number }) => ({
   width: `${(item.count / groupProgressTarget) * 100}%`,
   background: memberTone(item.memberId)
 })
+
 
 const setPrivacy = (value: Privacy) => {
   privacy.value = value

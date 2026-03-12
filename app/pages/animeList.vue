@@ -1,34 +1,6 @@
 <template>
   <div class="anime-list-page">
-    <div class="profile-banner">
-      <img v-if="bannerUrl" :src="bannerUrl" alt="" class="banner-image">
-      <div class="banner-bg"></div>
-      <div class="banner-texture"></div>
-      <div class="banner-avatar">
-        <img v-if="avatarUrl" :src="avatarUrl" alt="avatar">
-        <svg
-          v-else
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="rgba(255,255,255,0.25)"
-          stroke-width="1.2"
-          width="38"
-          height="38"
-        >
-          <circle cx="12" cy="8.5" r="4" />
-          <path stroke-linecap="round" d="M4 20.5c0-4 3.6-7 8-7s8 3 8 7" />
-        </svg>
-      </div>
-    </div>
-
-    <div class="sub-tabs-bar">
-      <div class="sub-tabs">
-        <button class="sub-tab active" type="button">Anime List</button>
-        <button class="sub-tab" type="button" disabled>Favorites</button>
-        <button class="sub-tab" type="button" disabled>Friends</button>
-        <NuxtLink class="sub-tab" to="/sharedLists">Shared Lists</NuxtLink>
-      </div>
-    </div>
+    <userHeaderTabs :tabs="profileTabs" />
 
     <div class="page">
       <aside class="sidebar">
@@ -285,8 +257,12 @@ const rawSections = ref<Record<ListStatusKey, MediaListEntry[]>>({
 const authRecord = computed(() => (unref(pocketbaseStore.authRecord) ?? {}) as Record<string, any>)
 const token = computed(() => String(authRecord.value.anilist_token ?? ''))
 const username = computed(() => String(authRecord.value.anilist_username ?? ''))
-const avatarUrl = computed(() => String(authRecord.value.anilist_avatar_url_large || authRecord.value.anilist_avatar_url_medium || ''))
-const bannerUrl = computed(() => String(authRecord.value.anilist_banner || ''))
+const profileTabs = [
+  { key: 'anime-list', label: 'Anime List', to: '/animeList', active: true },
+  { key: 'favorites', label: 'Favorites', disabled: true },
+  { key: 'friends', label: 'Friends', disabled: true },
+  { key: 'shared-lists', label: 'Shared Lists', to: '/sharedLists' }
+]
 
 const displayTitle = (entry: MediaListEntry) =>
   entry.media.title.romaji || entry.media.title.english || entry.media.title.native || 'Unknown title'

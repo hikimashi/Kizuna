@@ -29,6 +29,88 @@
   font-family: var(--font-main);
 }
 
+.profile-banner {
+  width: 100%;
+  height: clamp(230px, 28vw, 340px);
+  position: relative;
+  overflow: hidden;
+  background: #0d1826;
+}
+
+.banner-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.banner-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(61, 180, 242, 0.26) 0%, rgba(146, 86, 243, 0.2) 50%, rgba(247, 121, 164, 0.16) 100%);
+}
+
+.banner-texture {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(255, 255, 255, 0.012) 20px, rgba(255, 255, 255, 0.012) 21px);
+}
+
+.banner-avatar {
+  position: relative;
+  left: auto;
+  bottom: auto;
+  width: 132px;
+  height: 132px;
+  border-radius: 8px;
+  background: transparent;
+  border: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.banner-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+}
+
+.banner-content {
+  position: absolute;
+  bottom: 0;
+  left: 40px;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+}
+
+.banner-meta {
+  transform: translateY(-16px);
+}
+
+.banner-username {
+  font-family: 'Overpass', sans-serif;
+  font-size: clamp(30px, 3.6vw, 46px);
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
+  margin-bottom: 0;
+}
+
+.banner-joined {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.3px;
+  transform: translateY(-12px);
+}
+
 .shared-list-shell {
   width: min(100%, 1180px);
   margin: 0 auto;
@@ -1322,6 +1404,18 @@
   color: #5a7693;
 }
 
+[data-theme='winter'] .shared-list-page .profile-banner {
+  background: linear-gradient(135deg, #dfeaf5 0%, #cfe0f0 100%);
+}
+
+[data-theme='winter'] .shared-list-page .banner-bg {
+  background: linear-gradient(135deg, rgba(61, 180, 242, 0.18) 0%, rgba(80, 140, 210, 0.12) 60%, rgba(255, 255, 255, 0.1) 100%);
+}
+
+[data-theme='winter'] .shared-list-page .banner-texture {
+  background: repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(23, 52, 78, 0.03) 20px, rgba(23, 52, 78, 0.03) 21px);
+}
+
 @media (max-width: 1024px) {
   .shared-list-shell {
     padding-top: 22px;
@@ -1339,6 +1433,15 @@
 
   .hero-actions .sl-btn {
     flex: 1 1 180px;
+  }
+
+  .banner-avatar {
+    width: 110px;
+    height: 110px;
+  }
+
+  .banner-content {
+    left: 20px;
   }
 }
 
@@ -1424,5 +1527,105 @@
 
   .tab {
     flex-shrink: 0;
+  }
+
+  .profile-banner {
+    height: clamp(200px, 44vw, 250px);
+  }
+
+  .banner-content {
+    left: 18px;
+    gap: 14px;
+  }
+
+  .banner-avatar {
+    width: 102px;
+    height: 102px;
+  }
+
+  .banner-username {
+    font-size: clamp(24px, 6vw, 32px);
+    margin-bottom: 4px;
+  }
+
+  .banner-joined {
+    font-size: 13px;
+  }
+}
+
+.sub-tabs-bar {
+  background: #0e1826;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.sub-tabs {
+  display: flex;
+  align-items: center;
+}
+
+.sub-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #7a9ab8;
+  border: none;
+  background: none;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+  margin-bottom: -1px;
+}
+
+.sub-tab.active {
+  color: #3db4f2;
+  border-bottom-color: #3db4f2;
+}
+
+.sub-tab:disabled {
+  cursor: default;
+}
+
+[data-theme='winter'] .shared-list-page .sub-tabs-bar {
+  background: rgba(239, 246, 253, 0.78);
+  border-bottom-color: rgba(23, 52, 78, 0.18);
+}
+
+[data-theme='winter'] .shared-list-page .sub-tab {
+  color: #4a6883;
+}
+
+[data-theme='winter'] .shared-list-page .sub-tab.active {
+  color: #1f88cb;
+  border-bottom-color: #1f88cb;
+}
+
+@media (max-width: 1024px) {
+  .sub-tab {
+    padding: 9px 14px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .profile-nav-banner {
+    height: clamp(200px, 44vw, 250px);
+  }
+}
+
+@media (max-width: 640px) {
+  .sub-tabs-bar {
+    justify-content: flex-start;
+    overflow-x: auto;
+  }
+
+  .sub-tabs {
+    min-width: max-content;
+    padding: 0 8px;
   }
 }

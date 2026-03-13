@@ -1,6 +1,8 @@
 <template>
   <div class="w-full min-h-screen flex flex-col">
-    <Header />
+    <ClientOnly>
+      <Header />
+    </ClientOnly>
     <main class="flex-grow">
       <NuxtPage />
       <DrawersContainer />

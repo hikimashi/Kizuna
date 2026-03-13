@@ -1,9 +1,7 @@
 <template>
   <div class="profile-nav">
-    <div class="profile-banner">
+    <section class="banner-wrap" :class="{ 'has-image': Boolean(resolvedBannerUrl) }">
       <img v-if="resolvedBannerUrl" :src="resolvedBannerUrl" alt="" class="banner-image">
-      <div class="banner-bg"></div>
-      <div class="banner-texture"></div>
       <div class="banner-content">
         <div class="banner-avatar">
           <img v-if="resolvedAvatarUrl" :src="resolvedAvatarUrl" :alt="resolvedUsername || 'AniList avatar'">
@@ -25,7 +23,7 @@
           <div class="banner-joined">Joined {{ resolvedJoinedDisplay }}</div>
         </div>
       </div>
-    </div>
+    </section>
 
     <div class="sub-tabs-bar">
       <div class="sub-tabs">
@@ -132,12 +130,12 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.profile-banner {
+.banner-wrap {
   width: 100%;
   height: clamp(230px, 28vw, 340px);
   position: relative;
   overflow: hidden;
-  background: #0d1826;
+  background: linear-gradient(135deg, rgba(20, 30, 50, 0.95) 0%, rgba(10, 18, 35, 0.98) 100%);
 }
 
 .banner-image {
@@ -146,18 +144,39 @@ onMounted(async () => {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
+  image-rendering: auto;
+  image-rendering: -webkit-optimize-contrast;
+  z-index: 0;
 }
 
-.banner-bg {
+.banner-wrap::before {
+  content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(61, 180, 242, 0.26) 0%, rgba(146, 86, 243, 0.2) 50%, rgba(247, 121, 164, 0.16) 100%);
+  background:
+    radial-gradient(ellipse 60% 80% at 70% 50%, rgba(61, 180, 242, 0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 60% at 30% 60%, rgba(146, 86, 243, 0.15) 0%, transparent 60%);
 }
 
-.banner-texture {
+.banner-wrap::after {
+  content: '';
   position: absolute;
   inset: 0;
   background: repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(255, 255, 255, 0.012) 20px, rgba(255, 255, 255, 0.012) 21px);
+}
+
+.banner-wrap.has-image::before {
+  background: linear-gradient(
+    180deg,
+    rgba(5, 10, 20, 0.12) 0%,
+    rgba(8, 12, 22, 0.34) 75%,
+    rgba(8, 12, 22, 0.5) 100%
+  );
+}
+
+.banner-wrap.has-image::after {
+  display: none;
 }
 
 .banner-avatar {
@@ -182,10 +201,17 @@ onMounted(async () => {
   display: block;
 }
 
+.banner-avatar svg {
+  width: 46px;
+  height: 46px;
+  stroke: rgba(255, 255, 255, 0.3);
+  stroke-width: 1.2;
+}
+
 .banner-content {
   position: absolute;
   bottom: 0;
-  left: 40px;
+  left: clamp(16px, 2.4vw, 40px);
   z-index: 2;
   display: flex;
   align-items: flex-end;
@@ -220,13 +246,11 @@ onMounted(async () => {
   padding-top: 0;
   display: flex;
   justify-content: center;
-  min-height: 48px;
 }
 
 .sub-tabs {
   display: flex;
   align-items: center;
-  min-height: 48px;
 }
 
 .sub-tab {
@@ -234,11 +258,10 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  min-height: 48px;
-  padding: 12px 22px 10px;
-  font-size: 14px;
+  padding: 10px 20px;
+  font-size: 13px;
   font-family: 'Overpass', sans-serif;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.2;
   color: #7a9ab8;
   border: none;
@@ -246,15 +269,18 @@ onMounted(async () => {
   border-bottom: 2px solid transparent;
   transition: color 0.15s, border-color 0.15s;
   margin: 0;
+  margin-bottom: -1px;
   box-sizing: border-box;
   appearance: none;
   -webkit-appearance: none;
   vertical-align: middle;
+  transform: translateY(3px);
 }
 
 .sub-tab.active {
   color: #3db4f2;
   border-bottom-color: #3db4f2;
+  font-weight: 600;
 }
 
 .sub-tab:hover:not(.disabled):not(.active) {
@@ -294,14 +320,13 @@ onMounted(async () => {
   }
 
   .sub-tab {
-    min-height: 42px;
-    padding: 10px 16px 9px;
-    font-size: 13px;
+    padding: 9px 14px;
+    font-size: 12px;
   }
 }
 
 @media (max-width: 768px) {
-  .profile-banner {
+  .banner-wrap {
     height: clamp(200px, 44vw, 250px);
   }
 }
@@ -341,15 +366,12 @@ onMounted(async () => {
   }
 }
 
-[data-theme="winter"] .profile-banner {
-  background: linear-gradient(135deg, #dfeaf5 0%, #cfe0f0 100%);
-}
-
-[data-theme="winter"] .banner-bg {
-  background: linear-gradient(135deg, rgba(61, 180, 242, 0.18) 0%, rgba(80, 140, 210, 0.12) 60%, rgba(255, 255, 255, 0.1) 100%);
-}
-
-[data-theme="winter"] .banner-texture {
-  background: repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(23, 52, 78, 0.03) 20px, rgba(23, 52, 78, 0.03) 21px);
+[data-theme="winter"] .banner-wrap.has-image::before {
+  background: linear-gradient(
+    180deg,
+    rgba(8, 12, 22, 0.2) 0%,
+    rgba(8, 12, 22, 0.45) 75%,
+    rgba(8, 12, 22, 0.58) 100%
+  );
 }
 </style>

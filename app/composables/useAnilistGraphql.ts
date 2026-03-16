@@ -10,7 +10,7 @@ export const useAnilistGraphql = () => {
     variables: Record<string, any> = {},
     options: AniListGraphqlOptions = {}
   ): Promise<T> => {
-    return await $fetch<T>('/api/anilist/graphql', {
+    const response = await $fetch('/api/anilist/graphql', {
       method: 'POST',
       body: {
         query,
@@ -20,6 +20,8 @@ export const useAnilistGraphql = () => {
         skipCache: options.skipCache
       }
     })
+
+    return response as T
   }
 
   return { request }

@@ -145,7 +145,12 @@ export const useMyAuthStore = defineStore('auth', () => {
 
   const deleteAccount = async () => {
     try {
-      await pocketbaseStore.pb.collection('user').delete(userStore.userData.id);
+      const userId = userStore.userData?.id;
+      if (!userId) {
+        throw new Error('No authenticated user found.');
+      }
+
+      await pocketbaseStore.pb.collection('user').delete(userId);
     } catch (error: any) {
       throw new Error(error?.message || 'Account deletion failed. Please try again.');
     }

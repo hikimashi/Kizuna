@@ -75,7 +75,7 @@ const formatJoined = (timestamp?: number) => {
   return new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' }).format(date)
 }
 
-const hashColor = (id: number) => palette[Math.abs(id) % palette.length]
+const hashColor = (id: number) => palette[Math.abs(id) % palette.length] ?? palette[0] ?? '#4F378A'
 
 const mapUser = (user: AniListUserNode): SocialUser => ({
   id: Number(user.id),

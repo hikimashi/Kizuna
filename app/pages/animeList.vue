@@ -152,7 +152,7 @@
                 @keydown.enter.prevent="openEntryEditor(entry, section.key)"
                 @keydown.space.prevent="openEntryEditor(entry, section.key)"
               >
-                <img v-if="entry.media.coverImage?.large || entry.media.coverImage?.medium" :src="entry.media.coverImage?.large || entry.media.coverImage?.medium" :alt="displayTitle(entry)">
+                <img v-if="coverImageSrc(entry)" :src="coverImageSrc(entry)" :alt="displayTitle(entry)">
                 <div v-else class="anime-card-placeholder">
                   <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><rect x="3" y="3" width="18" height="18" rx="2" /></svg>
                 </div>
@@ -266,6 +266,9 @@ const profileTabs = [
 
 const displayTitle = (entry: MediaListEntry) =>
   entry.media.title.romaji || entry.media.title.english || entry.media.title.native || 'Unknown title'
+
+const coverImageSrc = (entry: MediaListEntry) =>
+  entry.media.coverImage?.large || entry.media.coverImage?.medium || undefined
 
 const normalizeDate = (entry: MediaListEntry): number => {
   const y = entry.startedAt?.year ?? 0

@@ -18,11 +18,11 @@ export default defineEventHandler(async (event) => {
     resetAt: number
   }
 
-  type RedisClientLike = {
-    isOpen?: boolean
+  type ValkeyClientLike = {
+    status?: 'wait' | 'reconnecting' | 'connecting' | 'connect' | 'ready' | 'close' | 'end'
     connect: () => Promise<void>
     get: (key: string) => Promise<string | null>
-    setEx: (key: string, ttlSeconds: number, value: string) => Promise<unknown>
+    set: (key: string, value: string, mode: 'EX', ttlSeconds: number) => Promise<unknown>
   }
 
   const body = await readBody<GraphqlBody>(event)
@@ -44,8 +44,8 @@ export default defineEventHandler(async (event) => {
     __anilistCache?: Map<string, CacheEntry>
     __anilistInFlight?: Map<string, Promise<{ statusCode: number; payload: any }>>
     __anilistRateLimit?: Map<string, RateLimitEntry>
-    __anilistRedisClientPromise?: Promise<RedisClientLike | null>
-    __anilistRedisDisabled?: boolean
+    __anilistValkeyClientPromise?: Promise<ValkeyClientLike | null>
+    __anilistValkeyDisabled?: boolean
   }
 
   const cache = globalState.__anilistCache ?? new Map<string, CacheEntry>()
@@ -78,7 +78,7 @@ export default defineEventHandler(async (event) => {
   } else if (rateEntry.count >= maxRequestsPerWindow) {
     const retryAfterSeconds = Math.max(1, Math.ceil((rateEntry.resetAt - now) / 1000))
     setResponseStatus(event, 429)
-    setHeader(event, 'Retry-After', String(retryAfterSeconds))
+    setHeader(event, 'Retry-After', retryAfterSeconds)
     return {
       errors: [{ message: `Server AniList rate limit reached. Retry in ${retryAfterSeconds}s.` }]
     }
@@ -94,7 +94,7 @@ export default defineEventHandler(async (event) => {
   })()
 
   const cacheKey = JSON.stringify({ query, variables, tokenHash })
-  const redisCacheKey = `kizuna:anilist:gql:${cacheKey}`
+  const valkeyCacheKey = `kizuna:anilist:gql:${cacheKey}`
 
   const defaultTtlMs = token ? 15_000 : 120_000
   const requestedTtl = Number(body.cacheTtlMs)
@@ -104,50 +104,50 @@ export default defineEventHandler(async (event) => {
   const ttlSeconds = Math.max(1, Math.ceil(ttlMs / 1000))
 
   const config = useRuntimeConfig(event)
-  const redisUrl = String((config as any).redisUrl ?? '').trim()
+  const valkeyUrl = String((config as any).valkeyUrl ?? '').trim()
 
-  const getRedisClient = async (): Promise<RedisClientLike | null> => {
-    if (!redisUrl || globalState.__anilistRedisDisabled) return null
+  const getValkeyClient = async (): Promise<ValkeyClientLike | null> => {
+    if (!valkeyUrl || globalState.__anilistValkeyDisabled) return null
 
-    if (!globalState.__anilistRedisClientPromise) {
-      globalState.__anilistRedisClientPromise = (async () => {
+    if (!globalState.__anilistValkeyClientPromise) {
+      globalState.__anilistValkeyClientPromise = (async () => {
         try {
           const importer = new Function('moduleName', 'return import(moduleName)') as (moduleName: string) => Promise<any>
-          const redisModule = await importer('redis')
-          const createClient = redisModule?.createClient
-          if (typeof createClient !== 'function') return null
+          const valkeyModule = await importer('iovalkey')
+          const Valkey = valkeyModule?.default ?? valkeyModule?.Redis
+          if (typeof Valkey !== 'function') return null
 
-          const client = createClient({ url: redisUrl }) as RedisClientLike
-          if (!client.isOpen) {
+          const client = new Valkey(valkeyUrl, { lazyConnect: true }) as ValkeyClientLike
+          if (client.status === 'wait') {
             await client.connect()
           }
           return client
         } catch (error) {
-          console.error('Redis cache unavailable, fallback to memory cache:', error)
-          globalState.__anilistRedisDisabled = true
+          console.error('Valkey cache unavailable, fallback to memory cache:', error)
+          globalState.__anilistValkeyDisabled = true
           return null
         }
       })()
     }
 
-    return await globalState.__anilistRedisClientPromise
+    return await globalState.__anilistValkeyClientPromise
   }
 
   if (!skipCache && ttlMs > 0) {
-    const redisClient = await getRedisClient()
-    if (redisClient) {
+    const valkeyClient = await getValkeyClient()
+    if (valkeyClient) {
       try {
-        const redisRaw = await redisClient.get(redisCacheKey)
-        if (redisRaw) {
-          const redisParsed = JSON.parse(redisRaw) as { statusCode: number; payload: any }
-          if (redisParsed && typeof redisParsed.statusCode === 'number') {
-            setHeader(event, 'X-Cache', 'HIT-REDIS')
-            setResponseStatus(event, redisParsed.statusCode)
-            return redisParsed.payload
+        const valkeyRaw = await valkeyClient.get(valkeyCacheKey)
+        if (valkeyRaw) {
+          const valkeyParsed = JSON.parse(valkeyRaw) as { statusCode: number; payload: any }
+          if (valkeyParsed && typeof valkeyParsed.statusCode === 'number') {
+            setHeader(event, 'X-Cache', 'HIT-VALKEY')
+            setResponseStatus(event, valkeyParsed.statusCode)
+            return valkeyParsed.payload
           }
         }
       } catch (error) {
-        console.error('Redis read failed, fallback to memory cache:', error)
+        console.error('Valkey read failed, fallback to memory cache:', error)
       }
     }
 
@@ -193,10 +193,10 @@ export default defineEventHandler(async (event) => {
 
         const remaining = response.headers.get('x-ratelimit-remaining')
         const reset = response.headers.get('x-ratelimit-reset')
-        const retryAfter = response.headers.get('retry-after')
+        const retryAfter = Number(response.headers.get('retry-after') || '0')
         if (remaining) setHeader(event, 'X-AniList-RateLimit-Remaining', remaining)
         if (reset) setHeader(event, 'X-AniList-RateLimit-Reset', reset)
-        if (retryAfter) setHeader(event, 'Retry-After', retryAfter)
+        if (retryAfter > 0) setHeader(event, 'Retry-After', retryAfter)
 
         let payload: any = null
         try {
@@ -221,7 +221,7 @@ export default defineEventHandler(async (event) => {
           return { statusCode: response.status, payload }
         }
 
-        const retryAfterSeconds = Number(response.headers.get('retry-after') || '0')
+        const retryAfterSeconds = retryAfter
         const baseDelay = retryAfterSeconds > 0
           ? retryAfterSeconds * 1000
           : Math.min(1000 * (2 ** attempt), 8000)
@@ -249,16 +249,16 @@ export default defineEventHandler(async (event) => {
     const result = await requestPromise
 
     if (!skipCache && ttlMs > 0 && result.statusCode >= 200 && result.statusCode < 300) {
-      const redisClient = await getRedisClient()
-      if (redisClient) {
+      const valkeyClient = await getValkeyClient()
+      if (valkeyClient) {
         try {
-          await redisClient.setEx(redisCacheKey, ttlSeconds, JSON.stringify({
+          await valkeyClient.set(valkeyCacheKey, JSON.stringify({
             statusCode: result.statusCode,
             payload: result.payload
-          }))
-          setHeader(event, 'X-Cache', 'MISS-REDIS')
+          }), 'EX', ttlSeconds)
+          setHeader(event, 'X-Cache', 'MISS-VALKEY')
         } catch (error) {
-          console.error('Redis write failed, fallback to memory cache:', error)
+          console.error('Valkey write failed, fallback to memory cache:', error)
           cache.set(cacheKey, {
             expiresAt: Date.now() + ttlMs,
             payload: result.payload,

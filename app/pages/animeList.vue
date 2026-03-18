@@ -175,7 +175,7 @@
 import { computed, onMounted, ref, unref } from 'vue'
 import { useAlertStore } from '~/composables/useAlertStore'
 import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
-import { useAnilistListEditor } from '~/composables/useAnilistListEditor'
+import { useAnilistSync } from '~/composables/useAnilistSync'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 import { useToastStore } from '~/composables/useToastStore'
 
@@ -226,7 +226,7 @@ const STATUS_ORDER: ListStatusKey[] = ['CURRENT', 'COMPLETED', 'PAUSED', 'DROPPE
 
 const pocketbaseStore = usePocketbaseStore()
 const anilistGraphql = useAnilistGraphql()
-const anilistListEditor = useAnilistListEditor()
+const anilistSync = useAnilistSync()
 const toastStore = useToastStore()
 const alertStore = useAlertStore()
 
@@ -360,7 +360,7 @@ const saveSelectedEntry = async () => {
 
   try {
     isSavingEntry.value = true
-    await anilistListEditor.saveEntry({
+    await anilistSync.saveEntry({
       entryId: selectedEntryId.value,
       status: editStatus.value,
       progress: editProgress.value === '' ? 0 : Number(editProgress.value),
@@ -387,7 +387,7 @@ const deleteSelectedEntry = async () => {
 
   try {
     isDeletingEntry.value = true
-    await anilistListEditor.deleteEntry(selectedEntryId.value)
+    await anilistSync.deleteEntry(selectedEntryId.value)
     await fetchAnimeList()
     toastStore.openToast({ type: 'success', message: 'AniList entry deleted.' })
     closeEntryEditor()

@@ -1,5 +1,6 @@
 <template>
   <header
+    ref="headerRef"
     class="kizuna-navbar"
     :class="{ 'is-logged-in': showFullNav, 'is-compact-nav': !showFullNav }"
   >
@@ -12,21 +13,15 @@
         </NuxtLink>
       </div>
 
-      <nav v-if="showFullNav" class="nav-links">
-        <NuxtLink to="/" class="nav-link" :class="{ active: $route.path === '/' }">
-          Home
-        </NuxtLink>
-        <NuxtLink to="/profilePage" class="nav-link" :class="{ active: $route.path === '/profilePage' }">
-          Profile
-        </NuxtLink>
-        <NuxtLink to="/social" class="nav-link" :class="{ active: $route.path === '/social' }">
-          Social
-        </NuxtLink>
-        <NuxtLink to="/animeList" class="nav-link" :class="{ active: $route.path === '/animeList' }">
-          Anime List
-        </NuxtLink>
-        <NuxtLink to="/browse" class="nav-link" :class="{ active: $route.path === '/browse' }">
-          Browse
+      <nav v-if="showFullNav" class="nav-links" aria-label="Primary navigation">
+        <NuxtLink
+          v-for="item in navItems"
+          :key="item.to"
+          :to="item.to"
+          class="nav-link"
+          :class="{ active: route.path === item.to }"
+        >
+          {{ item.label }}
         </NuxtLink>
       </nav>
 
@@ -158,13 +153,49 @@
               d="M21.64,13a1,1,0,0,0-1.05-.14,8.05,8.05,0,0,1-3.37.73A8.15,8.15,0,0,1,9.08,5.49a8.59,8.59,0,0,1,.25-2A1,1,0,0,0,8,2.36,10.14,10.14,0,1,0,22,14.05,1,1,0,0,0,21.64,13Zm-9.5,6.69A8.14,8.14,0,0,1,7.08,5.22v.27A10.15,10.15,0,0,0,17.22,15.63a9.79,9.79,0,0,0,2.1-.22A8.11,8.11,0,0,1,12.14,19.73Z" />
           </svg>
         </label>
+
+        <button
+          v-if="showFullNav"
+          class="mobile-menu-btn"
+          type="button"
+          :aria-expanded="isMobileMenuOpen"
+          :aria-label="isMobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'"
+          aria-controls="mobile-nav-panel"
+          @click="toggleMobileMenu"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 12h16" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 17h16" />
+          </svg>
+        </button>
       </div>
     </div>
+
+    <transition name="mobile-nav">
+      <nav
+        v-if="showFullNav && isMobileMenuOpen"
+        id="mobile-nav-panel"
+        class="mobile-nav-panel"
+        aria-label="Mobile navigation"
+      >
+        <NuxtLink
+          v-for="item in navItems"
+          :key="`mobile-${item.to}`"
+          :to="item.to"
+          class="mobile-nav-link"
+          :class="{ active: route.path === item.to }"
+          @click="closeMobileMenu"
+        >
+          {{ item.label }}
+        </NuxtLink>
+      </nav>
+    </transition>
   </header>
 </template>
 
 <script setup lang="ts">
-import { computed, unref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, unref, watch } from 'vue'
 import { useThemeStore } from '~/composables/useThemeStore'
 import { useDrawersStore } from '~/composables/useDrawersStore'
 import { useMyAuthStore } from '~/composables/useMyAuthStore'
@@ -180,6 +211,15 @@ const isLoggedIn = computed(() => Boolean(authRecord.value?.id))
 const isAniListLinked = computed(() => Boolean(authRecord.value?.anilist_user_id && authRecord.value?.anilist_token))
 const showPendingLinkState = computed(() => isLoggedIn.value && !isAniListLinked.value)
 const showFullNav = computed(() => isLoggedIn.value && isAniListLinked.value)
+const headerRef = ref<HTMLElement | null>(null)
+const isMobileMenuOpen = ref(false)
+const navItems = [
+  { label: 'Home', to: '/' },
+  { label: 'Profile', to: '/profilePage' },
+  { label: 'Social', to: '/social' },
+  { label: 'Anime List', to: '/animeList' },
+  { label: 'Browse', to: '/browse' }
+] as const
 
 // Use AniList avatar if available
 const avatarUrl = computed(() => {
@@ -190,7 +230,13 @@ const openLoginDrawer = () => {
   drawerStore.openDrawer('drawerLogin')
 }
 
+const closeMobileMenu = () => {
+  isMobileMenuOpen.value = false
+}
+
 const handleLogoClick = (event: MouseEvent) => {
+  closeMobileMenu()
+
   if (route.path !== '/') return
 
   event.preventDefault()
@@ -204,6 +250,43 @@ const handleSignUp = () => {
 const handleLogout = async () => {
   await authStore.logout()
 }
+
+const toggleMobileMenu = () => {
+  isMobileMenuOpen.value = !isMobileMenuOpen.value
+}
+
+const handleOutsideClick = (event: MouseEvent) => {
+  if (!isMobileMenuOpen.value) return
+
+  const target = event.target as Node | null
+
+  if (!target || headerRef.value?.contains(target)) return
+
+  closeMobileMenu()
+}
+
+const handleEscapeKey = (event: KeyboardEvent) => {
+  if (event.key === 'Escape') {
+    closeMobileMenu()
+  }
+}
+
+watch(() => route.fullPath, closeMobileMenu)
+watch(showFullNav, (value) => {
+  if (!value) {
+    closeMobileMenu()
+  }
+})
+
+onMounted(() => {
+  document.addEventListener('click', handleOutsideClick)
+  document.addEventListener('keydown', handleEscapeKey)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleOutsideClick)
+  document.removeEventListener('keydown', handleEscapeKey)
+})
 </script>
 
 <style scoped>
@@ -465,6 +548,82 @@ const handleLogout = async () => {
   background: var(--hover-fill) !important;
 }
 
+.mobile-menu-btn {
+  display: none;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.mobile-menu-btn:hover {
+  background: var(--hover-fill);
+  border-color: var(--hover-border);
+  transform: translateY(-1px);
+}
+
+.mobile-menu-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.mobile-nav-panel {
+  display: none;
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 12px;
+  right: 12px;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.18);
+  z-index: 20;
+}
+
+.mobile-nav-link {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 600;
+  transition: background 0.2s, color 0.2s;
+}
+
+.mobile-nav-link:hover {
+  background: var(--hover-fill);
+  color: var(--text-primary);
+}
+
+.mobile-nav-link.active {
+  background: rgba(61, 180, 242, 0.12);
+  color: var(--cyan);
+}
+
+.mobile-nav-enter-active,
+.mobile-nav-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.mobile-nav-enter-from,
+.mobile-nav-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .nav-links {
@@ -472,11 +631,30 @@ const handleLogout = async () => {
   }
 
   .navbar-content {
+    grid-template-columns: auto 1fr auto;
+    column-gap: 12px;
     padding: 0 12px;
   }
 
   .navbar-end {
     gap: 10px;
+  }
+
+  .nav-actions {
+    gap: 0;
+  }
+
+  .nav-actions .icon-btn {
+    display: none;
+  }
+
+  .mobile-menu-btn {
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+
+  .mobile-nav-panel {
+    display: flex;
   }
 }
 
@@ -504,6 +682,17 @@ const handleLogout = async () => {
     margin-left: 0;
     margin-right: 2px;
   }
+
+  .mobile-menu-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+  }
+
+  .mobile-nav-panel {
+    left: 8px;
+    right: 8px;
+  }
 }
 
 @media (max-width: 420px) {
@@ -525,6 +714,11 @@ const handleLogout = async () => {
 
   .icon-btn,
   .avatar-btn {
+    width: 34px;
+    height: 34px;
+  }
+
+  .mobile-menu-btn {
     width: 34px;
     height: 34px;
   }

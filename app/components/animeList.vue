@@ -36,7 +36,13 @@
         <article
           v-for="anime in items"
           :key="anime.id"
-          class="anime-card"
+          class="anime-card anime-card-clickable"
+          role="link"
+          tabindex="0"
+          :aria-label="`Open ${animeTitle(anime)} details`"
+          @click="openAnimeDetails(anime.id)"
+          @keydown.enter.prevent="openAnimeDetails(anime.id)"
+          @keydown.space.prevent="openAnimeDetails(anime.id)"
         >
           <div class="card-media">
             <img
@@ -255,6 +261,11 @@ const cardActionLabel = (anime: BrowseAnime) => {
   if (addingMediaId.value === anime.id) return 'Adding anime'
   if (isAdded(anime)) return `Already in ${statusLabel(anime.mediaListEntry?.status)}`
   return 'Add to Planning'
+}
+
+const openAnimeDetails = (animeId: number) => {
+  if (!animeId) return
+  void navigateTo(`/anime/${animeId}`)
 }
 
 const cardSubmeta = (anime: BrowseAnime) => {
@@ -550,6 +561,15 @@ watch(filterSignature, async () => {
 
 .view-grid .results-grid {
   grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+}
+
+.anime-card-clickable {
+  cursor: pointer;
+}
+
+.anime-card-clickable:focus-visible {
+  outline: 2px solid var(--results-accent);
+  outline-offset: 3px;
 }
 
 .anime-card {

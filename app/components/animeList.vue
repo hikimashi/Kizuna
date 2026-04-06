@@ -37,6 +37,11 @@
           v-for="anime in items"
           :key="anime.id"
           class="anime-card"
+          role="link"
+          tabindex="0"
+          @click="openAnimeDetails(anime.id)"
+          @keydown.enter.prevent="openAnimeDetails(anime.id)"
+          @keydown.space.prevent="openAnimeDetails(anime.id)"
         >
           <div class="card-media">
             <img
@@ -142,6 +147,7 @@
 
 <script setup lang="ts">
 import { computed, ref, unref, watch } from 'vue'
+import { navigateTo } from '#app'
 import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
 import { useAnilistSync } from '~/composables/useAnilistSync'
 import { useInfiniteScroll } from '~/composables/useInfiniteScroll'
@@ -240,6 +246,11 @@ const episodesLabel = (episodes?: number | null) => {
 
 const coverSrc = (anime: BrowseAnime) =>
   anime.coverImage?.large || anime.coverImage?.medium || ''
+
+const openAnimeDetails = (animeId?: number | null) => {
+  if (!animeId) return
+  navigateTo(`/anime/${animeId}`)
+}
 
 const statusLabel = (status?: string | null) => {
   if (status === 'CURRENT') return 'Watching'

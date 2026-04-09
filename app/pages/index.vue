@@ -114,12 +114,12 @@
                 </svg>
               </div>
               <div class="lists-container">
-                <div v-for="i in 5" :key="i" class="list-item">
+                <NuxtLink v-for="list in dashboardLists" :key="list.name" class="list-item" :to="list.to">
                   <svg class="hamburger-icon" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/>
                   </svg>
-                  <span>Watch List {{ i }}</span>
-                </div>
+                  <span>{{ list.name }}</span>
+                </NuxtLink>
               </div>
             </div>
 
@@ -229,6 +229,14 @@ const features = [
   }
 ]
 
+const dashboardLists = [
+  { name: 'À regarder ensemble', to: '/sharedLists' },
+  { name: 'Weekend picks', to: '/sharedLists' },
+  { name: 'Films à rattraper', to: '/sharedLists' },
+  { name: 'Late night chaos', to: '/sharedLists' },
+  { name: 'Spring season', to: '/sharedLists' }
+]
+
 const openLoginDrawer = () => {
   drawerStore.openDrawer('drawerLogin')
 }
@@ -280,4 +288,3 @@ watch(() => pocketbaseStore.authRecord, () => {
 </script>
 
 <style scoped src="~/assets/css/pages/index.css"></style>
-

@@ -386,9 +386,14 @@ const compatibilityPercent = computed(() => {
   const selfTotal = Number(selfCount.value) || 0
   const friendTotal = Number(friendCount.value) || 0
   const common = Number(commonCount.value) || 0
-  const union = selfTotal + friendTotal - common
-  if (union <= 0) return '--'
-  return String(Math.round((common / union) * 100))
+
+  // We measure compatibility as the overlap relative to the smaller list.
+  // Example: 180 shared anime out of a smallest list of 400 => 45%.
+  // This is intentionally less punitive than Jaccard (shared / union),
+  // which made large or uneven libraries look artificially incompatible.
+  const smallerList = Math.min(selfTotal, friendTotal)
+  if (smallerList <= 0) return '--'
+  return String(Math.round((common / smallerList) * 100))
 })
 
 const compatBarWidth = computed(() => {
@@ -400,9 +405,9 @@ const compatBarWidth = computed(() => {
 const compatibilityLabel = computed(() => {
   const value = Number(compatibilityPercent.value)
   if (!Number.isFinite(value)) return 'Loading...'
-  if (value >= 75) return 'Great match'
-  if (value >= 50) return 'Good match'
-  if (value >= 25) return 'Some overlap'
+  if (value >= 85) return 'Great match'
+  if (value >= 60) return 'Good match'
+  if (value >= 30) return 'Some overlap'
   return 'Low overlap'
 })
 

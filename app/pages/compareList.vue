@@ -520,16 +520,31 @@ const fetchMediaMatch = async () => {
     const response = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' } })
 
     if (!response.ok) {
-      const errorBody = await response.text()
-      throw new Error(`compare api ${response.status}: ${errorBody}`)
+      const rawBody = await response.text()
+      let errorMessage = rawBody
+
+      try {
+        const parsed = JSON.parse(rawBody) as { message?: string }
+        if (parsed?.message) errorMessage = parsed.message
+      } catch {
+        // Keep raw body when upstream sent HTML or plain text.
+      }
+
+      throw new Error(`compare api ${response.status}: ${errorMessage}`)
     }
 
     const data = await response.json() as {
+      error?: boolean
+      message?: string
       commonCount: number
       onlySelfCount: number
       onlyFriendCount: number
       selfCount: number
       friendCount: number
+    }
+
+    if (data?.error) {
+      throw new Error(data.message || 'Comparison failed')
     }
 
     const selfTotal = Math.max(Number(data.selfCount) || 0, 0)

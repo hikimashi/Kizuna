@@ -212,7 +212,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onBeforeUnmount, ref, unref, watch } from 'vue'
+import { computed, nextTick, onMounted, onBeforeUnmount, ref, unref, watch, type ComponentPublicInstance, type VNodeRef } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 import { useAnilistProfileStore } from '~/composables/useAnilistProfileStore'
@@ -377,12 +377,21 @@ const progressMarkers = computed(() => [
 const progressMax = computed(() => progressMarkers.value[2] || 1)
 const progressFillPercent = computed(() => Math.min((totalAnimes.value / progressMax.value) * 100, 100).toFixed(2))
 
-function setGenreMeasureRef(genreName: string) {
-  return (el: Element | null) => {
-    genreMeasureRefs.value[genreName] = el as HTMLElement | null
+function setGenreMeasureRef(genreName: string): VNodeRef {
+  return (el: Element | ComponentPublicInstance | null) => {
+    if (el instanceof HTMLElement) {
+      genreMeasureRefs.value[genreName] = el
+      return
+    }
+
+    if (el && '$el' in el && el.$el instanceof HTMLElement) {
+      genreMeasureRefs.value[genreName] = el.$el
+      return
+    }
+
+    genreMeasureRefs.value[genreName] = null
   }
 }
-
 async function computeVisibleGenres() {
   if (isLoading.value) return
   await nextTick()

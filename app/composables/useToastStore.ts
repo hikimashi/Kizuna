@@ -1,12 +1,13 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
+import type { ToastType, ToastTypeValue } from '#shared/types/ToastType';
 
 export const useToastStore = defineStore('useToastStore', () => {
-  const toasts = ref<{ id: number; type: string; message: string }[]>([]);
+  const toasts = ref<ToastType[]>([]);
   const lastToastKey = ref('');
   const lastToastAt = ref(0);
 
-  const openToast = ({ type, message }: { type: string; message: string }) => {
+  const openToast = ({ type, message }: { type: ToastTypeValue; message: string }) => {
     const key = `${type}:${message}`;
     const now = Date.now();
 

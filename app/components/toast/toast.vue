@@ -6,7 +6,7 @@
       class="alert bg-base-100 border-2 text-base-content font-semibold align-middle"
     >
       <component
-        :is="toastIconMap[toast.type] ?? toastIconMap['info']"
+        :is="toastIconMap[toast.type]"
         :class="toastColor(toast.type)"
         class="w-6 h-6"
       />
@@ -17,6 +17,7 @@
 
 <script setup lang="ts">
 import { useToastStore } from '~/composables/useToastStore';
+import type { ToastTypeValue } from '#shared/types/ToastType';
 import { storeToRefs } from 'pinia';
 import SuccessIcon from '~/components/icons/successIcon.vue';
 import ErrorIcon from '~/components/icons/errorIcon.vue';
@@ -25,7 +26,7 @@ import WarningIcon from '~/components/icons/warningIcon.vue';
 
 const toastStore = useToastStore();
 const { toasts } = storeToRefs(toastStore);
-const toastClassMap = {
+const toastClassMap: Record<ToastTypeValue, string> = {
   success: 'alert-success',
   error: 'alert-error',
   info: 'alert-info',
@@ -39,13 +40,13 @@ const toastIconMap = {
   info: InfoIcon,
 };
 
-const toastColorMap = {
+const toastColorMap: Record<ToastTypeValue, string> = {
   success: 'text-success',
   error: 'text-error',
   info: 'text-info',
   warning: 'text-warning',
 };
 
-const toastClass = (type: string) => toastClassMap[type] ?? 'alert-info';
-const toastColor = (type: string) => toastColorMap[type] ?? 'text-info';
+const toastClass = (type: ToastTypeValue) => toastClassMap[type];
+const toastColor = (type: ToastTypeValue) => toastColorMap[type];
 </script>

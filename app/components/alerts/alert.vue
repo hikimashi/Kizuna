@@ -3,7 +3,7 @@
     <div :class="alertClassMap[alert.type]" class="flex flex-col lg:flex-row justify-between alert alert-outline bg-base-100 mt-20 z-50"
       role="alert">
       <div class="flex items-center gap-2">
-        <component :is="alertIconMap[alert.type] ?? alertIconMap['info']" :class="alertColor(alert.type)"
+        <component :is="alertIconMap[alert.type]" :class="alertColor(alert.type)"
           class="size-16" />
 
         <span class="font-semibold text-xs md:text-lg lg:text-xl px-4 whitespace-pre-line">{{ alert.message }}</span>
@@ -19,8 +19,6 @@
           </button>
         </div>
       </div>
-
-
     </div>
   </div>
 </template>
@@ -28,6 +26,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
 import { useAlertStore } from '~/composables/useAlertStore';
+import type { AlertTypeValue } from '#shared/types/AlertType';
 import SuccessIcon from '~/components/icons/successIcon.vue';
 import ErrorIcon from '~/components/icons/errorIcon.vue';
 import InfoIcon from '~/components/icons/infoIcon.vue';
@@ -36,7 +35,7 @@ import WarningIcon from '~/components/icons/warningIcon.vue';
 const alertStore = useAlertStore();
 const { alert } = storeToRefs(alertStore);
 
-const alertClassMap = {
+const alertClassMap: Record<AlertTypeValue, string> = {
   success: 'alert-success',
   error: 'alert-error',
   info: 'alert-info',
@@ -50,12 +49,12 @@ const alertIconMap = {
   info: InfoIcon,
 };
 
-const alertColorMap = {
+const alertColorMap: Record<AlertTypeValue, string> = {
   success: 'text-success',
   error: 'text-error',
   info: 'text-info',
   warning: 'text-warning',
 };
 
-const alertColor = (type: string) => alertColorMap[type] ?? 'text-info';
+const alertColor = (type: AlertTypeValue) => alertColorMap[type];
 </script>

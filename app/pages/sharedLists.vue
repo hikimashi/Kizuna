@@ -1,753 +1,248 @@
 <template>
-  <div class="shared-list-page">
+  <div class="shared-lists-hub">
     <userHeaderTabs :tabs="profileTabs" />
 
-    <div class="shared-list-shell">
-      <nav class="shared-breadcrumb" aria-label="Breadcrumb">
-        <NuxtLink to="/profilePage">Profile</NuxtLink>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6" />
-        </svg>
-        <NuxtLink to="/">Shared Lists</NuxtLink>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6" />
-        </svg>
-        <span>{{ listTitle }}</span>
-      </nav>
-
-      <section class="shared-hero">
-        <div class="shared-hero-banner">
-          <div ref="privacyRootRef" class="privacy-slot">
-            <button class="privacy-badge" type="button" @click.stop="togglePrivacyMenu">
-              <span class="privacy-dot" :class="activePrivacyMeta.dotClass"></span>
-              {{ activePrivacyMeta.label }}
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-            <div v-if="privacyMenuOpen" class="privacy-menu" @click.stop>
-              <button
-                v-for="option in privacyOptions"
-                :key="option.value"
-                class="privacy-opt"
-                :class="{ selected: privacy === option.value }"
-                type="button"
-                @click="setPrivacy(option.value)"
-              >
-                <span class="privacy-opt-dot" :class="option.dotClass"></span>
-                <span>
-                  {{ option.label }}
-                  <small>{{ option.hint }}</small>
-                </span>
-              </button>
-            </div>
-          </div>
+    <main class="page-shell">
+      <section class="top-bar">
+        <div>
+          <h1 class="page-title">Shared Lists</h1>
+          <p class="page-subtitle">Create, manage, and join collaborative anime lists.</p>
         </div>
 
-        <div class="shared-hero-body">
-          <div class="members-row">
-            <div v-for="member in members" :key="member.id" class="member-av-wrap">
-              <button class="member-av" :style="avatarToneStyle(member.id)" type="button" :title="memberTitle(member)">
-                <img v-if="memberAvatar(member.id)" :src="memberAvatar(member.id)" :alt="memberDisplayName(member.id, 'panel')" />
-                <span v-else>{{ memberInitials(member.id) }}</span>
-              </button>
-              <span class="perm-dot" :class="roleDotClass(member.role)" :title="roleLabel(member.role)">
-                {{ roleSymbol(member.role) }}
-              </span>
-            </div>
-
-            <button class="add-member-btn" type="button" title="Inviter quelqu'un">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" aria-hidden="true">
-                <path stroke-linecap="round" d="M12 5v14M5 12h14" />
-              </svg>
-            </button>
-          </div>
-
-          <div class="hero-main">
-            <div class="hero-copy">
-              <div class="list-title-row">
-                <span class="list-emoji">🎬</span>
-                <h1 class="list-title">{{ listTitle }}</h1>
-                <button class="edit-title-btn" type="button" aria-label="Modifier le titre">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 1 1 2.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                </button>
-              </div>
-
-              <p class="list-desc">
-                Anime qu'on veut regarder ensemble. Chacun peut ajouter ou suggérer des titres.
-                Les suggestions doivent être approuvées par un modérateur.
-              </p>
-
-              <div class="hero-meta">
-                <div class="meta-chip">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" aria-hidden="true">
-                    <rect x="3" y="4" width="18" height="18" rx="2" />
-                    <path d="M16 2v4M8 2v4M3 10h18" />
-                  </svg>
-                  Créée le {{ createdLabel }}
-                </div>
-                <div class="meta-chip">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" aria-hidden="true">
-                    <path stroke-linecap="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0zM4.501 20.118a7.5 7.5 0 0 1 14.998 0" />
-                  </svg>
-                  {{ members.length }} membres
-                </div>
-                <div class="meta-chip">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 5.25h16.5M3.75 12h16.5M3.75 18.75h16.5" />
-                  </svg>
-                  {{ mainEntries.length }} anime · {{ suggestions.length }} suggestion<span v-if="suggestions.length > 1">s</span> en attente
-                </div>
-              </div>
-
-              <div class="progress-section">
-                <div class="prog-top">
-                  <span>Progression du groupe</span>
-                  <span>{{ totalWatchedMarks }} / {{ groupProgressTarget }} vues cumulées</span>
-                </div>
-
-                <div class="prog-bar">
-                  <span
-                    v-for="item in progressStats"
-                    :key="item.memberId"
-                    class="pb-seg"
-                    :style="progressSegmentStyle(item)"
-                  />
-                  <span class="pb-rest" />
-                </div>
-
-                <div class="progress-legend">
-                  <div v-for="item in progressStats" :key="`${item.memberId}-legend`" class="meta-chip">
-                    <span class="legend-dot" :style="avatarToneStyle(item.memberId)"></span>
-                    {{ memberDisplayName(item.memberId, 'short') }} — {{ item.count }} vu<span v-if="item.count > 1">s</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="hero-actions">
-              <button class="sl-btn sl-btn-primary" type="button">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" aria-hidden="true">
-                  <path stroke-linecap="round" d="M12 5v14M5 12h14" />
-                </svg>
-                Ajouter un anime
-              </button>
-              <button class="sl-btn sl-btn-ghost" type="button">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 1 1 0-2.684m0 2.684 6.632 3.316m-6.632-6 6.632-3.316m0 0a3 3 0 1 0 5.367-2.684 3 3 0 0 0-5.367 2.684zm0 9.316a3 3 0 1 0 5.368 2.684 3 3 0 0 0-5.368-2.684z" />
-                </svg>
-                Partager le lien
-              </button>
-              <button class="sl-btn sl-btn-ghost" type="button">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931z" />
-                </svg>
-                Modifier
-              </button>
-              <button class="sl-btn sl-btn-danger" type="button">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-3a2.25 2.25 0 0 0-2.25 2.25V9m-3 0h12M5.25 9 6 20.25A2.25 2.25 0 0 0 8.25 22.5h7.5A2.25 2.25 0 0 0 18 20.25L18.75 9" />
-                </svg>
-                Quitter
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="member-panel">
-        <button class="panel-header" type="button" @click="membersPanelOpen = !membersPanelOpen">
-          <span class="panel-header-left">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0z" />
+        <div class="top-actions">
+          <label class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" aria-hidden="true">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
             </svg>
-            Membres ({{ members.length }})
-          </span>
-          <span class="panel-toggle" :class="{ open: membersPanelOpen }">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-            </svg>
-          </span>
-        </button>
+            <input v-model.trim="searchTerm" type="text" placeholder="Search a list" />
+          </label>
 
-        <div v-show="membersPanelOpen" class="panel-body">
-          <div v-for="member in members" :key="`${member.id}-panel`" class="member-row">
-            <div class="member-row-av" :style="avatarToneStyle(member.id)">
-              <img v-if="memberAvatar(member.id)" :src="memberAvatar(member.id)" :alt="memberDisplayName(member.id, 'panel')" />
-              <span v-else>{{ memberInitials(member.id) }}</span>
-            </div>
-
-            <div class="member-info">
-              <div class="member-name">
-                {{ memberDisplayName(member.id, 'panel') }}
-                <span v-if="member.id === 'you'" class="member-self">(vous)</span>
-              </div>
-              <div class="member-sub">{{ member.summary }}</div>
-            </div>
-
-            <select
-              v-if="member.role !== 'owner'"
-              v-model="member.role"
-              class="perm-select"
-              :class="roleSelectClass(member.role)"
-            >
-              <option v-for="role in assignableRoles" :key="`${member.id}-${role}`" :value="role">
-                {{ roleLabel(role) }}
-              </option>
-            </select>
-
-            <select v-else class="perm-select perm-select-owner" disabled>
-              <option>{{ roleLabel('owner') }}</option>
-            </select>
-
-            <div class="member-actions">
-              <button class="icon-btn" type="button" title="Voir profil">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                </svg>
-              </button>
-              <button v-if="member.role !== 'owner'" class="icon-btn danger" type="button" title="Retirer">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M22 10.5h-6m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0zM4 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 10.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div class="invite-row">
-            <input v-model="inviteQuery" class="invite-input" placeholder="Inviter par nom d'utilisateur ou lien..." />
-            <button class="sl-btn sl-btn-primary invite-btn" type="button">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" aria-hidden="true">
-                <path stroke-linecap="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0zM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 10.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
-              </svg>
-              Inviter
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <div class="tabs-bar" role="tablist" aria-label="Shared list sections">
-        <button
-          v-for="tab in tabs"
-          :key="tab.key"
-          class="tab"
-          :class="{ active: activeTab === tab.key }"
-          type="button"
-          @click="activeTab = tab.key"
-        >
-          <span>{{ tab.label }}</span>
-          <span class="tab-badge" :class="{ attention: tab.key === 'suggestions' && tab.count > 0 }">
-            {{ tab.count }}
-          </span>
-        </button>
-      </div>
-
-      <section v-if="activeTab === 'anime'" class="tab-panel">
-        <div class="add-bar">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" aria-hidden="true">
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.35-4.35" />
-          </svg>
-          <input v-model.trim="searchTerm" class="add-bar-input" placeholder="Rechercher un anime à ajouter..." />
-          <div class="add-bar-divider"></div>
-          <button class="suggest-toggle" :class="{ on: suggestionMode }" type="button" @click="suggestionMode = !suggestionMode">
-            <span class="toggle-knob"></span>
-            Mode suggestion
-          </button>
-          <button class="sl-btn sl-btn-primary add-btn" type="button">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11" aria-hidden="true">
+          <button class="btn-new" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12" aria-hidden="true">
               <path stroke-linecap="round" d="M12 5v14M5 12h14" />
             </svg>
-            Ajouter
+            New list
           </button>
         </div>
+      </section>
 
-        <div class="list-table-wrap">
-          <div class="list-table-scroll">
-            <div class="list-header">
-              <div></div>
-              <div></div>
-              <div>Titre</div>
-              <div>Ajouté par</div>
-              <div>Statuts</div>
-              <div>Scores</div>
-              <div></div>
+      <section class="filter-row" aria-label="Shared list filters">
+        <button
+          v-for="filter in filters"
+          :key="filter.key"
+          class="filter-pill"
+          :class="{ active: activeFilter === filter.key }"
+          type="button"
+          @click="activeFilter = filter.key"
+        >
+          {{ filter.label }} ({{ filter.count }})
+        </button>
+
+        <div class="filter-sep"></div>
+
+        <span class="sort-label">Sort by</span>
+        <select v-model="sortBy" class="sort-select">
+          <option value="recent">Recent</option>
+          <option value="title">Name A-Z</option>
+          <option value="animeCount">Anime count</option>
+          <option value="members">Members</option>
+        </select>
+      </section>
+
+      <div v-if="isLoading" class="status-card">
+        Loading shared lists...
+      </div>
+
+      <div v-else-if="loadError" class="status-card error">
+        {{ loadError }}
+      </div>
+
+      <section v-for="section in sections" v-else :key="section.key" class="list-section">
+        <div v-if="section.items.length" class="section-label">{{ section.label }}</div>
+
+        <div v-if="section.items.length" class="cards-grid">
+          <article
+            v-for="list in section.items"
+            :key="list.id"
+            class="list-card"
+            :class="{ invite: list.kind === 'invite' }"
+            role="link"
+            tabindex="0"
+            @click="openList(list.id)"
+            @keydown.enter.prevent="openList(list.id)"
+            @keydown.space.prevent="openList(list.id)"
+          >
+            <div class="card-strip" :style="{ background: list.strip }"></div>
+            <div v-if="list.hasUnread" class="unread-dot"></div>
+            <div v-if="list.badge" class="card-badge" :class="list.badge.variant">{{ list.badge.label }}</div>
+
+            <div class="card-body">
+              <div class="card-visual">
+                <div class="card-emoji">{{ list.emoji }}</div>
+                <div class="covers-stack" aria-hidden="true">
+                  <div
+                    v-for="(tone, index) in list.coverTones.slice(0, 3)"
+                    :key="`${list.id}-cover-${index}`"
+                    class="cover-thumb"
+                    :style="{ background: tone }"
+                  >
+                    <svg viewBox="0 0 24 24" fill="rgba(255,255,255,0.1)" width="14" height="14">
+                      <rect x="3" y="3" width="18" height="18" rx="2" />
+                    </svg>
+                  </div>
+                  <div class="cover-more">+{{ Math.max(list.animeCount - 3, 0) }}</div>
+                </div>
+              </div>
+
+              <div class="card-info">
+                <div class="card-top">
+                  <div class="card-title">{{ list.title }}</div>
+                  <div class="privacy-chip" :class="privacyChipClass(list.privacy)">
+                    <div class="pc-dot"></div>
+                    {{ privacyLabel(list.privacy) }}
+                  </div>
+                </div>
+
+                <div class="card-desc">{{ list.description }}</div>
+
+                <div class="card-meta">
+                  <div class="meta-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11" aria-hidden="true">
+                      <rect x="3" y="3" width="18" height="18" rx="2" />
+                    </svg>
+                    {{ list.animeCount }} anime
+                  </div>
+
+                  <div class="meta-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11" aria-hidden="true">
+                      <path stroke-linecap="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {{ list.updatedLabel }}
+                  </div>
+
+                  <div class="meta-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11" aria-hidden="true">
+                      <path stroke-linecap="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0z" />
+                    </svg>
+                    <div class="card-members">
+                      <div
+                        v-for="(member, index) in list.members.slice(0, 4)"
+                        :key="`${list.id}-member-${member.name}`"
+                        class="mini-av"
+                        :class="{ stacked: index > 0 }"
+                        :style="{ background: member.color }"
+                      >
+                        {{ member.initials }}
+                      </div>
+                      <span v-if="list.members.length > 4" class="mini-more">+{{ list.members.length - 4 }}</span>
+                    </div>
+                    {{ list.members.length }} members
+                  </div>
+
+                  <div class="meta-item role-chip" :class="roleChipClass(list.role)">{{ roleLabel(list.role) }}</div>
+                </div>
+
+                <div v-if="list.kind !== 'invite'" class="card-prog">
+                  <div class="prog-labels">
+                    <span>{{ list.role === 'owner' ? 'Group progress' : 'Your progress' }}</span>
+                    <span>{{ list.progressLabel }}</span>
+                  </div>
+                  <div class="prog-track">
+                    <div
+                      v-for="(segment, index) in list.progressSegments"
+                      :key="`${list.id}-segment-${index}`"
+                      class="prog-fill"
+                      :style="{ width: `${segment.width}%`, background: segment.color }"
+                    ></div>
+                  </div>
+                </div>
+
+                <div v-else class="invite-actions">
+                  <button class="invite-btn invite-accept" type="button" @click.prevent>Join</button>
+                  <button class="invite-btn invite-ignore" type="button" @click.prevent>Ignore</button>
+                </div>
+              </div>
             </div>
-
-            <div
-              v-for="entry in visibleMainEntries"
-              :key="entry.id"
-              class="anime-row"
-              :class="{ current: entry.isCurrent }"
-            >
-              <div class="row-drag" aria-hidden="true">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-
-              <div class="row-thumb">
-                <img v-if="entry.coverUrl" :src="entry.coverUrl" :alt="entry.title" />
-                <div v-else class="row-thumb-ph">
-                  <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" aria-hidden="true">
-                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                  </svg>
-                </div>
-              </div>
-
-              <div class="row-info">
-                <div class="row-title">{{ entry.title }}</div>
-                <div class="row-sub">
-                  <span class="format-tag">{{ entry.format }}</span>
-                  {{ entry.meta }}
-                  <span v-if="entry.isCurrent" class="row-current-pill">● En cours</span>
-                </div>
-              </div>
-
-              <div class="row-added">
-                <div
-                  v-for="(memberId, index) in entry.addedBy.slice(0, 2)"
-                  :key="`${entry.id}-${memberId}`"
-                  class="added-av"
-                  :class="{ stacked: index > 0 }"
-                  :style="avatarToneStyle(memberId)"
-                >
-                  <img v-if="memberAvatar(memberId)" :src="memberAvatar(memberId)" :alt="memberDisplayName(memberId, 'short')" />
-                  <span v-else>{{ memberInitials(memberId) }}</span>
-                </div>
-                <span class="added-name" :style="{ color: memberTone(primaryAddedBy(entry)) }">
-                  {{ addedByLabel(entry) }}
-                </span>
-              </div>
-
-              <div class="row-status">
-                <div v-for="status in entry.statuses" :key="`${entry.id}-${status.memberId}`" class="status-line">
-                  <span class="s-dot" :class="statusDotClass(status.state)"></span>
-                  <span class="s-name" :style="{ color: memberTone(status.memberId) }">
-                    {{ memberDisplayName(status.memberId, 'short') }}
-                  </span>
-                  <span class="s-text">{{ status.text }}</span>
-                </div>
-              </div>
-
-              <div class="row-scores">
-                <span
-                  v-for="(score, index) in entry.scores"
-                  :key="`${entry.id}-score-${index}`"
-                  class="score-chip"
-                  :class="score.variant"
-                >
-                  {{ score.value }}
-                </span>
-              </div>
-
-              <button class="row-menu-btn" type="button" aria-label="Plus d'options">
-                <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" aria-hidden="true">
-                  <circle cx="12" cy="5" r="1.5" />
-                  <circle cx="12" cy="12" r="1.5" />
-                  <circle cx="12" cy="19" r="1.5" />
-                </svg>
-              </button>
-            </div>
-
-            <div v-if="visibleMainEntries.length === 0" class="table-empty">
-              Aucun anime ne correspond à cette recherche.
-            </div>
-          </div>
+          </article>
         </div>
       </section>
 
-      <section v-else-if="activeTab === 'suggestions'" class="tab-panel">
-        <div class="panel-note">
-          Les suggestions doivent être approuvées par un modérateur avant d'apparaître dans la liste principale.
-        </div>
+      <button v-if="!isLoading && !loadError && !visibleLists.length" class="empty-card" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32" aria-hidden="true">
+          <path stroke-linecap="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0 1 18 0z" />
+        </svg>
+        <div class="empty-title">No shared list matches your filters.</div>
+        <div class="empty-sub">Try another search or create a new collaborative list.</div>
+      </button>
 
-        <div class="list-table-wrap">
-          <div class="list-table-scroll">
-            <div class="list-header">
-              <div></div>
-              <div></div>
-              <div>Titre</div>
-              <div>Suggéré par</div>
-              <div>Statuts</div>
-              <div>Action</div>
-              <div></div>
-            </div>
-
-            <div v-for="entry in visibleSuggestions" :key="entry.id" class="anime-row suggestion">
-              <div class="row-drag visible" aria-hidden="true">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-
-              <div class="row-thumb">
-                <img v-if="entry.coverUrl" :src="entry.coverUrl" :alt="entry.title" />
-                <div v-else class="row-thumb-ph">
-                  <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" aria-hidden="true">
-                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                  </svg>
-                </div>
-              </div>
-
-              <div class="row-info">
-                <div class="row-title">{{ entry.title }}</div>
-                <div class="row-sub">
-                  <span class="format-tag">{{ entry.format }}</span>
-                  {{ entry.meta }}
-                </div>
-              </div>
-
-              <div class="row-added">
-                <div class="added-av" :style="avatarToneStyle(primaryAddedBy(entry))">
-                  <img v-if="memberAvatar(primaryAddedBy(entry))" :src="memberAvatar(primaryAddedBy(entry))" :alt="memberDisplayName(primaryAddedBy(entry), 'short')" />
-                  <span v-else>{{ memberInitials(primaryAddedBy(entry)) }}</span>
-                </div>
-                <span class="added-name" :style="{ color: memberTone(primaryAddedBy(entry)) }">
-                  {{ memberDisplayName(primaryAddedBy(entry), 'panel') }}
-                </span>
-                <span class="suggestion-badge">Suggestion</span>
-              </div>
-
-              <div class="row-status">
-                <div v-for="status in entry.statuses" :key="`${entry.id}-${status.memberId}`" class="status-line">
-                  <span class="s-dot" :class="statusDotClass(status.state)"></span>
-                  <span class="s-name" :style="{ color: memberTone(status.memberId) }">
-                    {{ memberDisplayName(status.memberId, 'short') }}
-                  </span>
-                  <span class="s-text">{{ status.text }}</span>
-                </div>
-              </div>
-
-              <div class="row-scores">
-                <div class="suggest-actions">
-                  <button class="btn-accept" type="button" @click="acceptSuggestion(entry.id)">✓ Accepter</button>
-                  <button class="btn-reject" type="button" @click="rejectSuggestion(entry.id)">✕ Refuser</button>
-                </div>
-              </div>
-
-              <button class="row-menu-btn" type="button" aria-label="Plus d'options">
-                <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" aria-hidden="true">
-                  <circle cx="12" cy="5" r="1.5" />
-                  <circle cx="12" cy="12" r="1.5" />
-                  <circle cx="12" cy="19" r="1.5" />
-                </svg>
-              </button>
-            </div>
-
-            <div v-if="visibleSuggestions.length === 0" class="table-empty">
-              Aucune suggestion en attente.
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section v-else-if="activeTab === 'permissions'" class="tab-panel">
-        <div class="panel">
-          <div class="panel-head">
-            <div class="panel-title">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-              </svg>
-              Tableau des permissions par rôle
-            </div>
-          </div>
-
-          <div class="panel-inner panel-flush">
-            <table class="perms-table">
-              <thead>
-                <tr>
-                  <th>Permission</th>
-                  <th><span class="role-badge owner">★ Owner</span></th>
-                  <th><span class="role-badge moderator">✦ Modérateur</span></th>
-                  <th><span class="role-badge member">Membre</span></th>
-                  <th><span class="role-badge reader">Lecteur</span></th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="permission in permissionRows" :key="permission.label">
-                  <td>{{ permission.label }}</td>
-                  <td><span :class="permission.owner ? 'check' : 'cross'">{{ permission.owner ? '✓' : '—' }}</span></td>
-                  <td><span :class="permission.moderator ? 'check' : 'cross'">{{ permission.moderator ? '✓' : '—' }}</span></td>
-                  <td><span :class="permission.member ? 'check' : 'cross'">{{ permission.member ? '✓' : '—' }}</span></td>
-                  <td><span :class="permission.reader ? 'check' : 'cross'">{{ permission.reader ? '✓' : '—' }}</span></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <section v-else class="tab-panel">
-        <div class="panel">
-          <div class="panel-head">
-            <div class="panel-title">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
-              </svg>
-              Activité récente
-            </div>
-          </div>
-
-          <div class="panel-inner">
-            <div class="activity-list">
-              <div v-for="item in activityItems" :key="item.id" class="activity-item">
-                <div class="act-av" :style="avatarToneStyle(item.actorId)">
-                  <img v-if="memberAvatar(item.actorId)" :src="memberAvatar(item.actorId)" :alt="memberDisplayName(item.actorId, 'short')" />
-                  <span v-else>{{ memberInitials(item.actorId) }}</span>
-                </div>
-                <div class="act-text">
-                  <b>{{ memberDisplayName(item.actorId, 'panel') }}</b>
-                  {{ item.action }}
-                  <span v-if="item.target" class="anime-ref">{{ item.target }}</span>
-                  <template v-if="item.detail"> {{ item.detail }}</template>
-                </div>
-                <div class="act-time">{{ item.time }}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
+      <button v-else-if="!isLoading && !loadError" class="empty-card" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32" aria-hidden="true">
+          <path stroke-linecap="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0 1 18 0z" />
+        </svg>
+        <div class="empty-title">Create a new collaborative list</div>
+        <div class="empty-sub">Invite friends and build an anime list together.</div>
+      </button>
+    </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, unref } from 'vue'
+import { computed, onMounted, ref, unref } from 'vue'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 
 definePageMeta({ middleware: ['auth'] })
 
-type Role = 'owner' | 'moderator' | 'member' | 'reader'
 type Privacy = 'private' | 'friends' | 'public'
-type TabKey = 'anime' | 'suggestions' | 'permissions' | 'activity'
-type WatchState = 'watched' | 'watching' | 'planned' | 'none'
+type ListRole = 'owner' | 'member' | 'reader'
+type ListKind = 'owned' | 'shared' | 'invite'
+type FilterKey = 'all' | 'owned' | 'shared' | 'invites'
+type SortKey = 'recent' | 'title' | 'animeCount' | 'members'
 
-type Member = {
-  id: string
-  name: string
-  shortName: string
-  initials: string
-  role: Role
-  color: string
-  summary: string
-}
-
-type EntryScore = {
-  value: string
-  variant: 'you' | 'friend' | 'none'
-}
-
-type EntryStatus = {
-  memberId: string
-  state: WatchState
-  text: string
-}
-
-type AnimeEntry = {
+type SharedListCard = {
   id: string
   title: string
-  format: string
-  meta: string
-  addedBy: string[]
-  statuses: EntryStatus[]
-  scores: EntryScore[]
-  coverUrl?: string
-  isCurrent?: boolean
+  emoji: string
+  description: string
+  privacy: Privacy
+  role: ListRole
+  kind: ListKind
+  animeCount: number
+  members: { name: string; initials: string; color: string }[]
+  updatedLabel: string
+  updatedRank: number
+  progressLabel: string
+  progressSegments: { width: number; color: string }[]
+  coverTones: string[]
+  strip: string
+  hasUnread?: boolean
+  badge?: { label: string; variant: 'cyan' | 'purple' }
 }
 
-type ActivityItem = {
+type SharedListRecord = {
   id: string
-  actorId: string
-  action: string
-  target?: string
-  detail?: string
-  time: string
+  name?: string
+  privacy_level?: Privacy
+  fk_owner_user_id?: string
+  created?: string
+  updated?: string
 }
 
-const pocketbaseStore = usePocketbaseStore()
-const privacyRootRef = ref<HTMLElement | null>(null)
+type UserSharedListRecord = {
+  id: string
+  fk_user_id?: string | string[]
+  fk_shared_list_id?: string
+  fk_permission_id?: string
+  created?: string
+  updated?: string
+}
 
-const authRecord = computed(() => (unref(pocketbaseStore.authRecord) ?? {}) as Record<string, any>)
-const currentUsername = computed(() => String(authRecord.value.anilist_username || authRecord.value.username || 'Toi'))
-const currentAvatarUrl = computed(() => String(authRecord.value.anilist_avatar_url_large || authRecord.value.anilist_avatar_url_medium || ''))
+type AnimeSharedListRecord = {
+  id: string
+  fk_shared_list_id?: string
+  created?: string
+}
 
-const listTitle = 'À regarder ensemble'
-const createdLabel = '4 mars 2026'
-const groupProgressTarget = 14
-
-const members = ref<Member[]>([
-  {
-    id: 'you',
-    name: 'Toi',
-    shortName: 'Toi',
-    initials: 'TO',
-    role: 'owner',
-    color: '#3db4f2',
-    summary: 'Membre depuis le 4 mars'
-  },
-  {
-    id: 'daz',
-    name: 'DaZaixzv',
-    shortName: 'Daz',
-    initials: 'DZ',
-    role: 'moderator',
-    color: '#9256f3',
-    summary: 'Membre depuis le 4 mars · 2 ajoutés'
-  },
-  {
-    id: 'sakura',
-    name: 'SakuraMoon',
-    shortName: 'Saku',
-    initials: 'SM',
-    role: 'member',
-    color: '#f77f00',
-    summary: 'Membre depuis le 6 mars · 1 ajouté'
-  },
-  {
-    id: 'kaze',
-    name: 'KazeWatcher',
-    shortName: 'Kaze',
-    initials: 'KW',
-    role: 'reader',
-    color: '#06d6a0',
-    summary: 'Membre depuis le 7 mars · lecture seule'
-  }
-])
-
-const mainEntries = ref<AnimeEntry[]>([
-  {
-    id: 'frieren',
-    title: "Frieren: Beyond Journey's End",
-    format: 'TV',
-    meta: '28 eps · 2023',
-    addedBy: ['you'],
-    statuses: [
-      { memberId: 'you', state: 'watched', text: 'Vu ✓' },
-      { memberId: 'daz', state: 'watched', text: 'Vu ✓' }
-    ],
-    scores: [
-      { value: '9.5', variant: 'you' },
-      { value: '9.3', variant: 'friend' }
-    ]
-  },
-  {
-    id: 'apothecary',
-    title: 'The Apothecary Diaries S2',
-    format: 'TV',
-    meta: '24 eps · En cours',
-    addedBy: ['you', 'daz'],
-    statuses: [
-      { memberId: 'you', state: 'watching', text: 'Ep 16/24' },
-      { memberId: 'daz', state: 'watching', text: 'Ep 14/24' }
-    ],
-    scores: [
-      { value: '—', variant: 'none' },
-      { value: '—', variant: 'none' }
-    ],
-    isCurrent: true
-  },
-  {
-    id: 'houseki',
-    title: 'Houseki no Kuni',
-    format: 'TV',
-    meta: '12 eps · 2017',
-    addedBy: ['daz'],
-    statuses: [
-      { memberId: 'you', state: 'none', text: 'Pas encore' },
-      { memberId: 'daz', state: 'watched', text: 'Vu ✓' }
-    ],
-    scores: [
-      { value: '—', variant: 'none' },
-      { value: '9.4', variant: 'friend' }
-    ]
-  },
-  {
-    id: 'dungeon-meshi',
-    title: 'Dungeon Meshi',
-    format: 'TV',
-    meta: '24 eps · 2024',
-    addedBy: ['you'],
-    statuses: [
-      { memberId: 'you', state: 'watched', text: 'Vu ✓' },
-      { memberId: 'sakura', state: 'watched', text: 'Vu ✓' }
-    ],
-    scores: [
-      { value: '8.7', variant: 'you' },
-      { value: '8.5', variant: 'friend' }
-    ]
-  },
-  {
-    id: 'vinland',
-    title: 'Vinland Saga S1',
-    format: 'TV',
-    meta: '24 eps · 2019',
-    addedBy: ['sakura'],
-    statuses: [
-      { memberId: 'you', state: 'watched', text: 'Vu ✓' },
-      { memberId: 'kaze', state: 'watched', text: 'Vu ✓' }
-    ],
-    scores: [
-      { value: '9.0', variant: 'you' },
-      { value: '8.8', variant: 'friend' }
-    ]
-  }
-])
-
-const suggestions = ref<AnimeEntry[]>([
-  {
-    id: 'ping-pong',
-    title: 'Ping Pong The Animation',
-    format: 'TV',
-    meta: '11 eps · 2014',
-    addedBy: ['daz'],
-    statuses: [
-      { memberId: 'you', state: 'none', text: 'Pas encore' },
-      { memberId: 'daz', state: 'watched', text: 'Vu ✓ 8.9' }
-    ],
-    scores: []
-  }
-])
-
-const activityItems = ref<ActivityItem[]>([
-  { id: 'act-1', actorId: 'daz', action: 'a suggéré', target: 'Ping Pong The Animation', time: 'Il y a 1h' },
-  { id: 'act-2', actorId: 'you', action: 'a marqué', target: 'Frieren', detail: 'comme vu · score 9.5', time: 'Il y a 3h' },
-  { id: 'act-3', actorId: 'daz', action: "est passé à l'épisode 14 de", target: 'Apothecary Diaries', time: 'Il y a 5h' },
-  { id: 'act-4', actorId: 'sakura', action: 'a ajouté', target: 'Vinland Saga', detail: 'à la liste', time: 'Hier · 21h14' },
-  { id: 'act-5', actorId: 'you', action: 'a invité', target: 'KazeWatcher', detail: 'en tant que lecteur', time: 'Hier · 18h02' },
-  { id: 'act-6', actorId: 'you', action: 'a changé la confidentialité en', target: 'Friends Only', time: 'Il y a 2 jours' }
-])
-
-const permissionRows = [
-  { label: 'Voir la liste', owner: true, moderator: true, member: true, reader: true },
-  { label: 'Ajouter un anime directement', owner: true, moderator: true, member: true, reader: false },
-  { label: 'Suggérer un anime', owner: true, moderator: true, member: true, reader: true },
-  { label: 'Accepter / refuser suggestions', owner: true, moderator: true, member: false, reader: false },
-  { label: 'Supprimer un anime', owner: true, moderator: true, member: false, reader: false },
-  { label: 'Modifier titre / description', owner: true, moderator: true, member: false, reader: false },
-  { label: 'Inviter des membres', owner: true, moderator: true, member: false, reader: false },
-  { label: 'Gérer les permissions', owner: true, moderator: false, member: false, reader: false },
-  { label: 'Modifier la confidentialité', owner: true, moderator: false, member: false, reader: false },
-  { label: 'Supprimer la liste', owner: true, moderator: false, member: false, reader: false }
-]
-
-const privacyOptions = [
-  { value: 'private' as Privacy, label: 'Privée', hint: 'Seulement les membres', dotClass: 'dot-private' },
-  { value: 'friends' as Privacy, label: 'Friends Only', hint: 'Vos amis mutuels', dotClass: 'dot-friends' },
-  { value: 'public' as Privacy, label: 'Publique', hint: 'Tout le monde peut voir', dotClass: 'dot-public' }
-]
-
-const assignableRoles: Role[] = ['moderator', 'member', 'reader']
-const activeTab = ref<TabKey>('anime')
-const privacy = ref<Privacy>('friends')
-const privacyMenuOpen = ref(false)
-const membersPanelOpen = ref(true)
-const searchTerm = ref('')
-const inviteQuery = ref('')
-const suggestionMode = ref(true)
 const profileTabs = [
   { key: 'anime-list', label: 'Anime List', to: '/animeList' },
   { key: 'favorites', label: 'Favorites', to: '/favorites' },
@@ -755,183 +250,271 @@ const profileTabs = [
   { key: 'shared-lists', label: 'Shared Lists', to: '/sharedLists', active: true }
 ]
 
-const activePrivacyMeta = computed<(typeof privacyOptions)[number]>(() => {
-  return privacyOptions.find((option) => option.value === privacy.value) ?? privacyOptions[0]!
+const searchTerm = ref('')
+const activeFilter = ref<FilterKey>('all')
+const sortBy = ref<SortKey>('recent')
+const isLoading = ref(true)
+const loadError = ref('')
+const lists = ref<SharedListCard[]>([])
+
+const pocketbaseStore = usePocketbaseStore()
+const authRecord = computed(() => (unref(pocketbaseStore.authRecord) ?? {}) as Record<string, any>)
+const currentUserId = computed(() => String(authRecord.value.id ?? ''))
+
+const visibleLists = computed(() => {
+  const needle = searchTerm.value.toLowerCase()
+  const filtered = lists.value.filter((list) => {
+    if (activeFilter.value === 'owned' && list.kind !== 'owned') return false
+    if (activeFilter.value === 'shared' && list.kind !== 'shared') return false
+    if (activeFilter.value === 'invites' && list.kind !== 'invite') return false
+    if (!needle) return true
+    return `${list.title} ${list.description}`.toLowerCase().includes(needle)
+  })
+
+  return [...filtered].sort((a, b) => {
+    if (sortBy.value === 'title') return a.title.localeCompare(b.title)
+    if (sortBy.value === 'animeCount') return b.animeCount - a.animeCount
+    if (sortBy.value === 'members') return b.members.length - a.members.length
+    return a.updatedRank - b.updatedRank
+  })
 })
 
-const tabs = computed(() => [
-  { key: 'anime' as TabKey, label: 'Anime', count: mainEntries.value.length },
-  { key: 'suggestions' as TabKey, label: 'Suggestions', count: suggestions.value.length },
-  { key: 'permissions' as TabKey, label: 'Permissions', count: permissionRows.length },
-  { key: 'activity' as TabKey, label: 'Activité', count: activityItems.value.length }
+const sections = computed(() => [
+  { key: 'owned', label: 'My lists', items: visibleLists.value.filter((list) => list.kind === 'owned') },
+  { key: 'shared', label: 'Shared with me', items: visibleLists.value.filter((list) => list.kind === 'shared' || list.kind === 'invite') }
 ])
 
-const filteredNeedle = computed(() => searchTerm.value.trim().toLowerCase())
+const filters = computed(() => [
+  { key: 'all' as FilterKey, label: 'All', count: lists.value.length },
+  { key: 'owned' as FilterKey, label: 'My lists', count: lists.value.filter((list) => list.kind === 'owned').length },
+  { key: 'shared' as FilterKey, label: 'Shared with me', count: lists.value.filter((list) => list.kind === 'shared').length },
+  { key: 'invites' as FilterKey, label: 'Invites', count: lists.value.filter((list) => list.kind === 'invite').length }
+])
 
-const visibleMainEntries = computed(() => {
-  if (!filteredNeedle.value) return mainEntries.value
-  return mainEntries.value.filter((entry) => entry.title.toLowerCase().includes(filteredNeedle.value))
-})
+const normalizeRelationValue = (value: string | string[] | undefined) => Array.isArray(value) ? value[0] || '' : String(value || '')
 
-const visibleSuggestions = computed(() => {
-  if (!filteredNeedle.value) return suggestions.value
-  return suggestions.value.filter((entry) => entry.title.toLowerCase().includes(filteredNeedle.value))
-})
-
-const progressStats = computed(() => {
-  return [
-    { memberId: 'you', count: 3 },
-    { memberId: 'daz', count: 2 },
-    { memberId: 'sakura', count: 1 },
-    { memberId: 'kaze', count: 1 }
-  ]
-})
-
-const totalWatchedMarks = computed(() => progressStats.value.reduce((sum, item) => sum + item.count, 0))
-
-const memberMap = computed(() => {
-  const map = new Map<string, Member>()
-  for (const member of members.value) {
-    map.set(member.id, member)
-  }
-  return map
-})
-
-const getInitials = (value: string) => {
-  const letters = value
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
-    .join('')
-
-  return letters || 'KZ'
+const initialsFromValue = (value: string) => {
+  const cleaned = value.replace(/[^a-z0-9]/gi, '').toUpperCase()
+  return cleaned.slice(0, 2) || 'SL'
 }
 
-const memberRecord = (memberId: string) => memberMap.value.get(memberId)
-
-const memberDisplayName = (memberId: string, mode: 'short' | 'panel' = 'panel') => {
-  if (memberId === 'you') {
-    if (mode === 'short') return 'Toi'
-    return currentUsername.value || 'Toi'
+const hueFromString = (value: string) => {
+  let hash = 0
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) % 360
   }
-
-  const member = memberRecord(memberId)
-  if (!member) return 'Membre'
-  return mode === 'short' ? member.shortName : member.name
+  return hash
 }
 
-const memberInitials = (memberId: string) => {
-  if (memberId === 'you') {
-    return getInitials(currentUsername.value || 'Toi')
+const memberColor = (value: string) => `hsl(${hueFromString(value)} 72% 52%)`
+
+const formatRelativeDate = (value?: string) => {
+  if (!value) return 'Updated recently'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return 'Updated recently'
+  const diffMs = Date.now() - date.getTime()
+  const diffHours = Math.max(Math.floor(diffMs / 3600000), 0)
+  if (diffHours < 1) return 'Updated just now'
+  if (diffHours < 24) return `Updated ${diffHours}h ago`
+  const diffDays = Math.floor(diffHours / 24)
+  if (diffDays < 7) return `Updated ${diffDays}d ago`
+  return `Updated ${date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
+}
+
+const stripForPrivacy = (privacy: Privacy, owned: boolean) => {
+  if (privacy === 'private') return 'linear-gradient(90deg,#9256F3,#F779A4)'
+  if (privacy === 'public') return 'linear-gradient(90deg,#4361EE,#4CC9F0)'
+  return owned ? 'linear-gradient(90deg,#3db4f2,#1dd3b0)' : 'linear-gradient(90deg,#F77F00,#FFBE0B)'
+}
+
+const roleFromMembership = (record: UserSharedListRecord | undefined, ownerId: string): ListRole => {
+  if (ownerId === currentUserId.value) return 'owner'
+  if (!record) return 'reader'
+  return record.fk_permission_id ? 'member' : 'reader'
+}
+
+const loadSharedLists = async () => {
+  if (!currentUserId.value) {
+    lists.value = []
+    isLoading.value = false
+    return
   }
 
-  return memberRecord(memberId)?.initials || 'KZ'
+  isLoading.value = true
+  loadError.value = ''
+
+  try {
+    const [sharedListRecords, membershipRecords] = await Promise.all([
+      pocketbaseStore.pb.collection('shared_list').getFullList<SharedListRecord>({ sort: '-updated' }),
+      pocketbaseStore.pb.collection('user_shared_list').getFullList<UserSharedListRecord>({ sort: '-updated' })
+    ])
+
+    const membershipByList = new Map<string, UserSharedListRecord[]>()
+    for (const membership of membershipRecords) {
+      const listId = normalizeRelationValue(membership.fk_shared_list_id)
+      if (!listId) continue
+      const current = membershipByList.get(listId) ?? []
+      current.push(membership)
+      membershipByList.set(listId, current)
+    }
+
+    const allowedLists = sharedListRecords.filter((record) => {
+      const ownerId = normalizeRelationValue(record.fk_owner_user_id)
+      return ownerId === currentUserId.value || membershipByList.has(record.id)
+    })
+
+    const ids = allowedLists.map((record) => `"${record.id}"`)
+    const animeRecords = ids.length
+      ? await pocketbaseStore.pb.collection('anime_shared_list').getFullList<AnimeSharedListRecord>({
+          filter: ids.map((id) => `fk_shared_list_id=${id}`).join(' || '),
+          sort: '-created'
+        })
+      : []
+
+    const animeByList = new Map<string, AnimeSharedListRecord[]>()
+    for (const animeRecord of animeRecords) {
+      const listId = normalizeRelationValue(animeRecord.fk_shared_list_id)
+      if (!listId) continue
+      const current = animeByList.get(listId) ?? []
+      current.push(animeRecord)
+      animeByList.set(listId, current)
+    }
+
+    lists.value = allowedLists.map((record) => {
+      const ownerId = normalizeRelationValue(record.fk_owner_user_id)
+      const memberships = membershipByList.get(record.id) ?? []
+      const animeCount = (animeByList.get(record.id) ?? []).length
+      const ownMembership = memberships.find((membership) => normalizeRelationValue(membership.fk_user_id) === currentUserId.value)
+      const role = roleFromMembership(ownMembership, ownerId)
+      const kind: ListKind = ownerId === currentUserId.value ? 'owned' : 'shared'
+      const memberIds = Array.from(new Set([ownerId, ...memberships.map((membership) => normalizeRelationValue(membership.fk_user_id))].filter(Boolean)))
+      const members = memberIds.map((memberId) => ({
+        name: memberId === currentUserId.value ? 'You' : `User ${memberId.slice(0, 4)}`,
+        initials: memberId === currentUserId.value ? 'YO' : initialsFromValue(memberId),
+        color: memberId === currentUserId.value ? '#3db4f2' : memberColor(memberId)
+      }))
+
+      const progressSegments = members.slice(0, Math.max(1, Math.min(members.length, 4))).map((member, index, array) => ({
+        width: Number((100 / array.length).toFixed(2)),
+        color: member.color
+      }))
+
+      return {
+        id: record.id,
+        title: record.name || 'Untitled shared list',
+        emoji: (record.name || 'SL').replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 3) || 'SL',
+        description: `${animeCount || 0} anime shared with ${Math.max(memberIds.length - 1, 0)} other member${memberIds.length > 2 ? 's' : ''}.`,
+        privacy: (record.privacy_level || 'friends') as Privacy,
+        role,
+        kind,
+        animeCount,
+        members,
+        updatedLabel: formatRelativeDate(record.updated),
+        updatedRank: record.updated ? -new Date(record.updated).getTime() : 0,
+        progressLabel: animeCount ? `0 / ${animeCount} watched` : '0 anime',
+        progressSegments,
+        coverTones: [memberColor(`${record.id}-1`), memberColor(`${record.id}-2`), memberColor(`${record.id}-3`)],
+        strip: stripForPrivacy((record.privacy_level || 'friends') as Privacy, kind === 'owned')
+      } satisfies SharedListCard
+    })
+  } catch (error: any) {
+    loadError.value = error?.message || 'Unable to load shared lists from PocketBase.'
+    lists.value = []
+  } finally {
+    isLoading.value = false
+  }
 }
 
-const memberAvatar = (memberId: string) => {
-  if (memberId === 'you') return currentAvatarUrl.value || ''
-  return ''
-}
+const openList = (id: string) => navigateTo(`/sharedLists/${id}`)
 
-const memberTone = (memberId: string) => {
-  if (memberId === 'you') return '#3db4f2'
-  return memberRecord(memberId)?.color || '#3db4f2'
-}
+const privacyLabel = (privacy: Privacy) => privacy === 'private' ? 'Private' : privacy === 'friends' ? 'Friends Only' : 'Public'
+const roleLabel = (role: ListRole) => role === 'owner' ? 'Owner' : role === 'reader' ? 'Reader' : 'Member'
+const privacyChipClass = (privacy: Privacy) => ({ 'pc-private': privacy === 'private', 'pc-friends': privacy === 'friends', 'pc-public': privacy === 'public' })
+const roleChipClass = (role: ListRole) => ({ owner: role === 'owner', member: role === 'member', reader: role === 'reader' })
 
-const avatarToneStyle = (memberId: string) => ({
-  '--member-accent': memberTone(memberId)
-})
-
-const roleLabel = (role: Role) => {
-  if (role === 'owner') return '★ Owner'
-  if (role === 'moderator') return '✦ Modérateur'
-  if (role === 'reader') return 'Lecteur'
-  return 'Membre'
-}
-
-const roleSymbol = (role: Role) => {
-  if (role === 'owner') return '★'
-  if (role === 'moderator') return '✦'
-  if (role === 'reader') return '○'
-  return '·'
-}
-
-const roleDotClass = (role: Role) => ({
-  owner: role === 'owner',
-  moderator: role === 'moderator',
-  member: role === 'member',
-  reader: role === 'reader'
-})
-
-const roleSelectClass = (role: Role) => ({
-  'perm-select-owner': role === 'owner',
-  'perm-select-moderator': role === 'moderator',
-  'perm-select-member': role === 'member',
-  'perm-select-reader': role === 'reader'
-})
-
-const statusDotClass = (state: WatchState) => ({
-  watched: state === 'watched',
-  watching: state === 'watching',
-  planned: state === 'planned',
-  none: state === 'none'
-})
-
-const primaryAddedBy = (entry: AnimeEntry) => entry.addedBy[0] ?? 'you'
-
-const addedByLabel = (entry: AnimeEntry) => {
-  const firstLabel = memberDisplayName(primaryAddedBy(entry), 'panel')
-  const extraCount = Math.max(entry.addedBy.length - 1, 0)
-  if (!extraCount) return firstLabel
-  return `${firstLabel} + ${extraCount}`
-}
-
-const memberTitle = (member: Member) => `${memberDisplayName(member.id, 'panel')} — ${roleLabel(member.role)}`
-
-const progressSegmentStyle = (item: { memberId: string; count: number }) => ({
-  width: `${(item.count / groupProgressTarget) * 100}%`,
-  background: memberTone(item.memberId)
-})
-
-
-const setPrivacy = (value: Privacy) => {
-  privacy.value = value
-  privacyMenuOpen.value = false
-}
-
-const togglePrivacyMenu = () => {
-  privacyMenuOpen.value = !privacyMenuOpen.value
-}
-
-const acceptSuggestion = (entryId: string) => {
-  const index = suggestions.value.findIndex((entry) => entry.id === entryId)
-  if (index === -1) return
-  const [entry] = suggestions.value.splice(index, 1)
-  if (!entry) return
-  mainEntries.value.unshift(entry)
-  activeTab.value = 'anime'
-}
-
-const rejectSuggestion = (entryId: string) => {
-  suggestions.value = suggestions.value.filter((entry) => entry.id !== entryId)
-}
-
-const handleDocumentClick = (event: MouseEvent) => {
-  if (!privacyMenuOpen.value) return
-  const target = event.target as Node | null
-  if (!target) return
-  if (privacyRootRef.value?.contains(target)) return
-  privacyMenuOpen.value = false
-}
-
-onMounted(() => {
-  document.addEventListener('click', handleDocumentClick)
-})
-
-onBeforeUnmount(() => {
-  document.removeEventListener('click', handleDocumentClick)
-})
+onMounted(loadSharedLists)
 </script>
 
-<style scoped src="~/assets/css/pages/sharedLists.css"></style>
+<style scoped>
+.shared-lists-hub { min-height: 100vh; color: var(--kz-text-primary); }
+.page-shell { width: min(100%, 980px); margin: 0 auto; padding: 28px 24px 80px; display: flex; flex-direction: column; gap: 18px; }
+.top-bar { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.page-title { margin: 0; font-size: 20px; font-weight: 800; color: var(--kz-text-primary); }
+.page-subtitle { margin: 6px 0 0; font-size: 12px; color: var(--kz-text-secondary); }
+.top-actions { display: flex; align-items: center; gap: 8px; }
+.search-box { display: flex; align-items: center; gap: 7px; width: 220px; padding: 7px 11px; border-radius: 6px; border: 1px solid var(--kz-border); background: var(--kz-card-bg); color: var(--kz-text-dim); transition: border-color .15s ease; }
+.search-box:focus-within { border-color: rgba(61,180,242,.35); }
+.search-box input { width: 100%; border: 0; background: transparent; outline: none; font-size: 12px; color: var(--kz-text-primary); font-family: 'Overpass', sans-serif; }
+.search-box input::placeholder { color: var(--kz-text-dim); }
+.btn-new { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 14px; border-radius: 6px; border: 1px solid rgba(61,180,242,.3); background: var(--kz-soft-accent-bg); color: var(--kz-accent); font-size: 12px; font-weight: 700; font-family: 'Overpass', sans-serif; cursor: pointer; transition: background .15s ease; }
+.btn-new:hover { background: var(--kz-soft-accent-bg-hover); }
+.filter-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.filter-pill { min-height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--kz-border); background: var(--kz-card-bg); color: var(--kz-text-dim); font-size: 11px; font-weight: 700; font-family: 'Overpass', sans-serif; cursor: pointer; transition: border-color .12s ease,color .12s ease,background .12s ease; }
+.filter-pill:hover { border-color: var(--kz-hover-border); color: var(--kz-text-secondary); }
+.filter-pill.active { background: var(--kz-soft-accent-bg); border-color: rgba(61,180,242,.3); color: var(--kz-accent); }
+.filter-sep { flex: 1; }
+.sort-label { font-size: 11px; color: var(--kz-text-dim); }
+.sort-select { min-height: 30px; padding: 0 28px 0 10px; border-radius: 5px; border: 1px solid var(--kz-border); background: var(--kz-card-bg); color: var(--kz-text-secondary); font-size: 11px; font-family: 'Overpass', sans-serif; outline: none; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%234a6480' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; background-size: 12px; }
+.list-section { display: flex; flex-direction: column; gap: 12px; }
+.section-label { font-size: 10px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; color: var(--kz-text-dim); }
+.cards-grid { display: grid; gap: 14px; }
+.status-card { padding: 16px 18px; border-radius: 10px; border: 1px solid var(--kz-border); background: var(--kz-card-bg); color: var(--kz-text-secondary); font-size: 12px; }
+.status-card.error { color: #f87171; border-color: rgba(248,113,113,.25); background: rgba(248,113,113,.05); }
+.list-card { position: relative; display: block; overflow: hidden; border-radius: 10px; border: 1px solid var(--kz-border); background: var(--kz-card-bg); color: inherit; text-decoration: none; transition: border-color .15s ease,transform .15s ease,box-shadow .15s ease; }
+.list-card:hover { transform: translateY(-1px); border-color: rgba(61,180,242,.25); box-shadow: 0 6px 24px rgba(0,0,0,.3); }
+.list-card.invite { border-style: dashed; border-color: rgba(251,191,36,.2); background: rgba(251,191,36,.03); }
+.card-strip { width: 100%; height: 4px; }
+.card-body { display: flex; align-items: flex-start; gap: 14px; padding: 16px 18px; }
+.card-visual { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.card-emoji { min-width: 36px; font-size: 11px; font-weight: 900; letter-spacing: .12em; color: var(--kz-text-secondary); text-align: center; }
+.covers-stack { position: relative; width: 72px; height: 44px; }
+.cover-thumb { position: absolute; width: 32px; height: 44px; border-radius: 4px; border: 1.5px solid #0b1622; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.cover-thumb:nth-child(1) { left: 0; z-index: 3; }
+.cover-thumb:nth-child(2) { left: 18px; z-index: 2; opacity: .85; }
+.cover-thumb:nth-child(3) { left: 36px; z-index: 1; opacity: .6; }
+.cover-more { position: absolute; right: -2px; bottom: -2px; padding: 1px 4px; border-radius: 3px; border: 1px solid var(--kz-border); background: var(--kz-card-bg); color: var(--kz-text-dim); font-size: 8px; font-weight: 700; font-family: 'Overpass Mono', monospace; z-index: 4; }
+.card-info { flex: 1; min-width: 0; }
+.card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
+.card-title { font-size: 15px; font-weight: 800; color: var(--kz-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.privacy-chip { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; min-height: 22px; padding: 0 8px; border-radius: 999px; border: 1px solid transparent; font-size: 9px; font-weight: 700; }
+.pc-dot { width: 5px; height: 5px; border-radius: 999px; background: currentColor; }
+.pc-private { background: rgba(248,113,113,.1); border-color: rgba(248,113,113,.2); color: #f87171; }
+.pc-friends { background: rgba(251,191,36,.1); border-color: rgba(251,191,36,.2); color: #fbbf24; }
+.pc-public { background: rgba(74,222,128,.1); border-color: rgba(74,222,128,.2); color: #4ade80; }
+.card-desc { margin-bottom: 10px; font-size: 11px; line-height: 1.5; color: var(--kz-text-dim); }
+.card-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.meta-item { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: var(--kz-text-dim); }
+.meta-item svg { color: var(--kz-text-dim); flex-shrink: 0; }
+.card-members { display: inline-flex; align-items: center; }
+.mini-av { width: 20px; height: 20px; border-radius: 4px; border: 1.5px solid var(--kz-card-bg); display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 8px; font-weight: 800; }
+.mini-av.stacked { margin-left: -5px; }
+.mini-more { margin-left: 4px; color: var(--kz-text-dim); font-size: 8px; font-weight: 700; font-family: 'Overpass Mono', monospace; }
+.role-chip { font-weight: 700; }
+.role-chip.owner { color: #fbbf24; }
+.role-chip.member { color: var(--kz-accent); }
+.role-chip.reader { color: var(--kz-text-dim); }
+.card-prog { display: flex; flex-direction: column; gap: 3px; }
+.prog-labels { display: flex; justify-content: space-between; gap: 12px; font-size: 9px; color: var(--kz-text-dim); }
+.prog-track { display: flex; height: 4px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.05); }
+.prog-fill { height: 100%; }
+.card-badge { position: absolute; top: 12px; right: 12px; min-height: 22px; padding: 0 8px; border-radius: 999px; border: 1px solid transparent; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; }
+.card-badge.cyan { background: rgba(61,180,242,.15); border-color: rgba(61,180,242,.25); color: #3db4f2; }
+.card-badge.purple { background: rgba(146,86,243,.15); border-color: rgba(146,86,243,.25); color: #9256f3; }
+.unread-dot { position: absolute; top: 14px; left: 14px; width: 8px; height: 8px; border-radius: 999px; background: #3db4f2; box-shadow: 0 0 6px rgba(61,180,242,.6); }
+.invite-actions { display: flex; gap: 8px; margin-top: 12px; }
+.invite-btn { flex: 1; min-height: 32px; border-radius: 6px; font-size: 11px; font-weight: 700; font-family: 'Overpass', sans-serif; cursor: pointer; transition: background .12s ease; }
+.invite-accept { border: 1px solid rgba(251,191,36,.25); background: rgba(251,191,36,.12); color: #fbbf24; }
+.invite-accept:hover { background: rgba(251,191,36,.2); }
+.invite-ignore { border: 1px solid var(--kz-border); background: rgba(255,255,255,.04); color: var(--kz-text-dim); }
+.invite-ignore:hover { background: rgba(255,255,255,.08); }
+.empty-card { width: 100%; padding: 40px 20px; border-radius: 10px; border: 1px dashed rgba(255,255,255,.08); background: var(--kz-card-bg); color: var(--kz-text-dim); display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; transition: border-color .15s ease,color .15s ease; }
+.empty-card:hover { border-color: rgba(61,180,242,.25); color: var(--kz-accent); }
+.empty-title { font-size: 13px; font-weight: 600; }
+.empty-sub { font-size: 11px; color: var(--kz-text-dim); }
+[data-theme='winter'] .shared-lists-hub .search-box,[data-theme='winter'] .shared-lists-hub .sort-select,[data-theme='winter'] .shared-lists-hub .filter-pill,[data-theme='winter'] .shared-lists-hub .list-card,[data-theme='winter'] .shared-lists-hub .empty-card { background: rgba(244,249,254,.9); border-color: rgba(23,52,78,.18); }
+[data-theme='winter'] .shared-lists-hub .list-card.invite { background: rgba(251,191,36,.08); }
+[data-theme='winter'] .shared-lists-hub .search-box,[data-theme='winter'] .shared-lists-hub .filter-pill,[data-theme='winter'] .shared-lists-hub .sort-select,[data-theme='winter'] .shared-lists-hub .meta-item,[data-theme='winter'] .shared-lists-hub .card-desc,[data-theme='winter'] .shared-lists-hub .empty-sub,[data-theme='winter'] .shared-lists-hub .page-subtitle { color: #5a7693; }
+[data-theme='winter'] .shared-lists-hub .page-title,[data-theme='winter'] .shared-lists-hub .card-title,[data-theme='winter'] .shared-lists-hub .empty-title { color: #17344e; }
+@media (max-width: 840px) { .page-shell { padding-left: 16px; padding-right: 16px; } .top-bar { flex-direction: column; } .top-actions { width: 100%; } .search-box { flex: 1; width: auto; } }
+@media (max-width: 640px) { .page-shell { padding: 18px 12px 56px; } .top-actions { flex-direction: column; align-items: stretch; } .btn-new { justify-content: center; } .filter-row { align-items: stretch; } .filter-sep { display: none; } .card-body { flex-direction: column; } .card-visual { flex-direction: row; justify-content: space-between; width: 100%; } .card-top { flex-direction: column; } .invite-actions { flex-direction: column; } }
+</style>

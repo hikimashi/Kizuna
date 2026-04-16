@@ -91,6 +91,7 @@ POCKETBASE_URL=http://localhost:8090
 ANILIST_CLIENT_ID=votre_client_id
 ANILIST_CLIENT_SECRET=votre_client_secret
 ANILIST_REDIRECT_URI=http://localhost:3000/auth/callback
+VALKEY_URL=redis://localhost:6379
 ```
 
 ## 📄 Licence

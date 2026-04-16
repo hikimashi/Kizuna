@@ -9,7 +9,7 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/main.css'],
   vite: {
-    plugins: [tailwindcss()],
+    plugins: tailwindcss() as any,
   },
   modules: ['@pinia/nuxt'],
   runtimeConfig: {
@@ -19,7 +19,7 @@ export default defineNuxtConfig({
       anilistRedirectUri: process.env.ANILIST_REDIRECT_URI,
     },
     anilistClientSecret: process.env.ANILIST_CLIENT_SECRET,
-    redisUrl: process.env.REDIS_URL,
+    valkeyUrl: process.env.VALKEY_URL || process.env.REDIS_URL,
   },
   app: {
     head: {

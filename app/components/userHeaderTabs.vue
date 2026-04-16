@@ -117,7 +117,7 @@ onMounted(async () => {
     const response = await anilistGraphql.request<any>(
       query,
       {},
-      { token: token.value, skipCache: true }
+      { token: token.value, cacheTtlMs: 86_400_000 }
     )
     joinedCache.value = formatJoined(Number(response?.data?.Viewer?.createdAt || 0) || null)
     if (import.meta.client) {

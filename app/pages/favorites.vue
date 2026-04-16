@@ -48,7 +48,15 @@
             @click.prevent="openItem(item.siteUrl)"
           >
             <div class="favorite-cover-wrap">
-              <img v-if="item.image" :src="item.image" :alt="item.title" class="favorite-cover">
+              <img
+                v-if="item.image"
+                :src="item.image"
+                :srcset="item.imageSrcSet"
+                :alt="item.title"
+                class="favorite-cover"
+                loading="lazy"
+                decoding="async"
+              >
               <div v-else class="favorite-cover placeholder">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22">
                   <rect x="4" y="4" width="16" height="16" rx="2" />
@@ -73,6 +81,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, unref, watch } from 'vue'
+import { getAnilistCoverSrc, getAnilistCoverSrcSet, type AnilistCoverImage } from '~/composables/useAnilistCoverImage'
 import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 
@@ -85,6 +94,7 @@ type FavoriteCard = {
   title: string
   subtitle: string
   image: string
+  imageSrcSet?: string
   siteUrl: string
 }
 
@@ -97,7 +107,7 @@ query ($userId: Int, $userName: String, $page: Int, $perPage: Int) {
         nodes {
           id
           title { romaji english native }
-          coverImage { medium large }
+          coverImage { medium large extraLarge }
           seasonYear
           format
           meanScore
@@ -118,7 +128,7 @@ query ($page: Int, $perPage: Int) {
         nodes {
           id
           title { romaji english native }
-          coverImage { medium large }
+          coverImage { medium large extraLarge }
           seasonYear
           format
           meanScore
@@ -210,7 +220,8 @@ const normalizeAnime = (node: any): FavoriteCard => {
     id: Number(node?.id ?? 0),
     title,
     subtitle,
-    image: String(node?.coverImage?.large || node?.coverImage?.medium || ''),
+    image: getAnilistCoverSrc(node?.coverImage as AnilistCoverImage | null, 'card'),
+    imageSrcSet: getAnilistCoverSrcSet(node?.coverImage as AnilistCoverImage | null, 'card'),
     siteUrl: String(node?.siteUrl || '')
   }
 }

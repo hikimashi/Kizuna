@@ -110,7 +110,14 @@
             </div>
             <div class="anime-grid">
               <article v-for="entry in section.items" :key="entry.id" class="anime-card">
-                <img v-if="coverImageSrc(entry)" :src="coverImageSrc(entry)" :alt="displayTitle(entry)">
+                <img
+                  v-if="coverImageSrc(entry)"
+                  :src="coverImageSrc(entry)"
+                  :srcset="coverImageSrcSet(entry)"
+                  :alt="displayTitle(entry)"
+                  loading="lazy"
+                  decoding="async"
+                >
                 <div v-else class="anime-card-placeholder">
                   <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><rect x="3" y="3" width="18" height="18" rx="2" /></svg>
                 </div>
@@ -131,6 +138,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, unref } from 'vue'
+import { getAnilistCoverSrc, getAnilistCoverSrcSet, type AnilistCoverImage, type AnilistCoverVariant } from '~/composables/useAnilistCoverImage'
 import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 
@@ -161,10 +169,7 @@ type MediaListEntry = {
       english?: string | null
       native?: string | null
     }
-    coverImage?: {
-      medium?: string | null
-      large?: string | null
-    } | null
+    coverImage?: AnilistCoverImage | null
   }
 }
 
@@ -209,8 +214,15 @@ const friendUserId = computed(() => Number(route.params.id ?? 0))
 const displayTitle = (entry: MediaListEntry) =>
   entry.media.title.romaji || entry.media.title.english || entry.media.title.native || 'Unknown title'
 
+const currentCoverVariant = computed<AnilistCoverVariant>(() =>
+  viewMode.value === 'grid' ? 'card' : 'thumb'
+)
+
 const coverImageSrc = (entry: MediaListEntry) =>
-  entry.media.coverImage?.large || entry.media.coverImage?.medium || undefined
+  getAnilistCoverSrc(entry.media.coverImage, currentCoverVariant.value) || undefined
+
+const coverImageSrcSet = (entry: MediaListEntry) =>
+  getAnilistCoverSrcSet(entry.media.coverImage, currentCoverVariant.value)
 
 const normalizeDate = (entry: MediaListEntry): number => {
   const y = entry.startedAt?.year ?? 0
@@ -339,7 +351,7 @@ const fetchFriendProfileAndList = async () => {
               id
               episodes
               title { romaji english native }
-              coverImage { medium large }
+              coverImage { medium large extraLarge }
             }
           }
         }
@@ -352,8 +364,8 @@ const fetchFriendProfileAndList = async () => {
     errorMessage.value = ''
 
     const [profileRes, listRes] = await Promise.all([
-      anilistGraphql.request<any>(profileQuery, { userId: friendUserId.value }, { token: token.value, skipCache: true }),
-      anilistGraphql.request<any>(listQuery, { userId: friendUserId.value }, { token: token.value, skipCache: true })
+      anilistGraphql.request<any>(profileQuery, { userId: friendUserId.value }, { token: token.value, cacheTtlMs: 60_000 }),
+      anilistGraphql.request<any>(listQuery, { userId: friendUserId.value }, { token: token.value, cacheTtlMs: 60_000 })
     ])
 
     if (profileRes?.errors?.length) throw new Error(profileRes.errors[0]?.message || 'Unable to load friend profile')

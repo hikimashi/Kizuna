@@ -20,6 +20,7 @@
               <NuxtLink to="/browse" class="footer-link" @click.prevent="handleProtectedNavigation('/browse')">Anime List</NuxtLink>
               <NuxtLink to="/browse" class="footer-link" @click.prevent="handleProtectedNavigation('/browse')">Browse</NuxtLink>
               <NuxtLink to="/settings" class="footer-link" @click.prevent="handleProtectedNavigation('/settings')">Settings</NuxtLink>
+              <NuxtLink to="/journal-dev" class="footer-link">Journal dev</NuxtLink>
             </div>
           </div>
 

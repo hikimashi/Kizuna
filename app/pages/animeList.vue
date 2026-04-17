@@ -57,7 +57,14 @@
         <section v-if="selectedEntryId" class="editor-panel">
           <div class="editor-panel-media">
             <div class="editor-panel-thumb">
-              <img v-if="selectedEntryCover" :src="selectedEntryCover" :alt="selectedEntryTitle">
+              <img
+                v-if="selectedEntryCoverSrc"
+                :src="selectedEntryCoverSrc"
+                :srcset="selectedEntryCoverSrcSet"
+                :alt="selectedEntryTitle"
+                loading="lazy"
+                decoding="async"
+              >
               <div v-else class="anime-card-placeholder">
                 <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><rect x="3" y="3" width="18" height="18" rx="2" /></svg>
               </div>
@@ -152,7 +159,14 @@
                 @keydown.enter.prevent="openEntryEditor(entry, section.key)"
                 @keydown.space.prevent="openEntryEditor(entry, section.key)"
               >
-                <img v-if="coverImageSrc(entry)" :src="coverImageSrc(entry)" :alt="displayTitle(entry)">
+                <img
+                  v-if="coverImageSrc(entry)"
+                  :src="coverImageSrc(entry)"
+                  :srcset="coverImageSrcSet(entry)"
+                  :alt="displayTitle(entry)"
+                  loading="lazy"
+                  decoding="async"
+                >
                 <div v-else class="anime-card-placeholder">
                   <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><rect x="3" y="3" width="18" height="18" rx="2" /></svg>
                 </div>
@@ -174,6 +188,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, unref } from 'vue'
 import { useAlertStore } from '~/composables/useAlertStore'
+import { getAnilistCoverSrc, getAnilistCoverSrcSet, type AnilistCoverImage, type AnilistCoverVariant } from '~/composables/useAnilistCoverImage'
 import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
 import { useAnilistListEditor } from '~/composables/useAnilistListEditor'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
@@ -207,10 +222,7 @@ type MediaListEntry = {
       english?: string | null
       native?: string | null
     }
-    coverImage?: {
-      medium?: string | null
-      large?: string | null
-    } | null
+    coverImage?: AnilistCoverImage | null
   }
 }
 
@@ -238,7 +250,7 @@ const sortBy = ref<SortKey>('title')
 const searchTerm = ref('')
 const selectedEntryId = ref<number | null>(null)
 const selectedEntryTitle = ref('')
-const selectedEntryCover = ref('')
+const selectedEntryCover = ref<AnilistCoverImage | null>(null)
 const selectedEntryEpisodes = ref<number | null>(null)
 const editStatus = ref<ListStatusKey>('CURRENT')
 const editProgress = ref('0')
@@ -267,8 +279,15 @@ const profileTabs = [
 const displayTitle = (entry: MediaListEntry) =>
   entry.media.title.romaji || entry.media.title.english || entry.media.title.native || 'Unknown title'
 
+const currentCoverVariant = computed<AnilistCoverVariant>(() =>
+  viewMode.value === 'grid' ? 'card' : 'thumb'
+)
+
 const coverImageSrc = (entry: MediaListEntry) =>
-  entry.media.coverImage?.large || entry.media.coverImage?.medium || undefined
+  getAnilistCoverSrc(entry.media.coverImage, currentCoverVariant.value) || undefined
+
+const coverImageSrcSet = (entry: MediaListEntry) =>
+  getAnilistCoverSrcSet(entry.media.coverImage, currentCoverVariant.value)
 
 const normalizeDate = (entry: MediaListEntry): number => {
   const y = entry.startedAt?.year ?? 0
@@ -338,17 +357,25 @@ const visibleSections = computed(() => {
 const openEntryEditor = (entry: MediaListEntry, status: ListStatusKey) => {
   selectedEntryId.value = entry.id
   selectedEntryTitle.value = displayTitle(entry)
-  selectedEntryCover.value = String(entry.media.coverImage?.large || entry.media.coverImage?.medium || '')
+  selectedEntryCover.value = entry.media.coverImage || null
   selectedEntryEpisodes.value = entry.media.episodes ?? null
   editStatus.value = status
   editProgress.value = String(entry.progress ?? 0)
   editScore.value = entry.score ? String(entry.score) : ''
 }
 
+const selectedEntryCoverSrc = computed(() =>
+  getAnilistCoverSrc(selectedEntryCover.value, 'thumb')
+)
+
+const selectedEntryCoverSrcSet = computed(() =>
+  getAnilistCoverSrcSet(selectedEntryCover.value, 'thumb')
+)
+
 const closeEntryEditor = () => {
   selectedEntryId.value = null
   selectedEntryTitle.value = ''
-  selectedEntryCover.value = ''
+  selectedEntryCover.value = null
   selectedEntryEpisodes.value = null
   editStatus.value = 'CURRENT'
   editProgress.value = '0'
@@ -436,6 +463,7 @@ const fetchAnimeList = async () => {
               coverImage {
                 medium
                 large
+                extraLarge
               }
             }
           }
@@ -451,7 +479,7 @@ const fetchAnimeList = async () => {
     const response = await anilistGraphql.request<any>(
       query,
       { userName: username.value },
-      { token: token.value, skipCache: true }
+      { token: token.value, cacheTtlMs: 30_000 }
     )
 
     if (response?.errors?.length) {

@@ -39,12 +39,22 @@
           class="anime-card"
         >
           <div class="card-media">
-            <img
-              v-if="coverSrc(anime)"
-              :src="coverSrc(anime)"
-              :alt="animeTitle(anime)"
-              class="card-cover"
-            >
+            <picture v-if="coverSrc(anime)">
+              <template v-if="currentViewMode === 'list'">
+                <source :srcset="coverSrcSet(anime, 'list')">
+              </template>
+              <template v-else>
+                <source media="(max-width: 640px)" :srcset="coverSrcSet(anime, 'compact-grid')">
+                <source :srcset="coverSrcSet(anime, 'grid')">
+              </template>
+              <img
+                :src="coverSrc(anime)"
+                :alt="animeTitle(anime)"
+                class="card-cover"
+                loading="lazy"
+                decoding="async"
+              >
+            </picture>
             <div v-else class="card-placeholder">
               <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22" aria-hidden="true">
                 <rect x="3" y="3" width="18" height="18" rx="2" />
@@ -142,6 +152,7 @@
 
 <script setup lang="ts">
 import { computed, ref, unref, watch } from 'vue'
+import { getAnilistCoverSrc, getAnilistCoverSrcSet, type AnilistCoverImage } from '~/composables/useAnilistCoverImage'
 import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
 import { useAnilistListEditor } from '~/composables/useAnilistListEditor'
 import { useInfiniteScroll } from '~/composables/useInfiniteScroll'
@@ -165,10 +176,7 @@ type BrowseAnime = {
     romaji?: string | null
     english?: string | null
   }
-  coverImage: {
-    medium?: string | null
-    large?: string | null
-  }
+  coverImage: AnilistCoverImage
   averageScore?: number | null
   format?: string | null
   episodes?: number | null
@@ -238,8 +246,13 @@ const episodesLabel = (episodes?: number | null) => {
   return `${episodes} eps`
 }
 
+type CoverVariant = 'list' | 'compact-grid' | 'grid'
+
 const coverSrc = (anime: BrowseAnime) =>
-  anime.coverImage?.large || anime.coverImage?.medium || ''
+  getAnilistCoverSrc(anime.coverImage, currentViewMode.value === 'list' ? 'thumb' : 'card')
+
+const coverSrcSet = (anime: BrowseAnime, variant: CoverVariant) =>
+  getAnilistCoverSrcSet(anime.coverImage, variant === 'grid' ? 'card' : 'thumb')
 
 const statusLabel = (status?: string | null) => {
   if (status === 'CURRENT') return 'Watching'
@@ -344,6 +357,7 @@ const fetchAnimeList = async (page: number, perPage: number): Promise<BrowseAnim
           coverImage {
             medium
             large
+            extraLarge
           }
           averageScore
           format
@@ -558,6 +572,8 @@ watch(filterSignature, async () => {
   border-radius: 6px;
   overflow: hidden;
   background: #131d2a;
+  content-visibility: auto;
+  contain-intrinsic-size: 220px 330px;
   transition: transform 0.16s, border-color 0.16s, box-shadow 0.16s;
 }
 

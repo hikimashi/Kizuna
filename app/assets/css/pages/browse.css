@@ -38,9 +38,10 @@
   padding: 14px;
   border: 1px solid var(--browse-border);
   border-radius: 18px;
-  background: rgba(11, 22, 34, 0.78);
+  background: rgba(11, 22, 34, 0.92);
   box-shadow: var(--browse-shadow);
-  backdrop-filter: blur(18px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .search-wrap {

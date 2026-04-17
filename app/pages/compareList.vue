@@ -453,9 +453,9 @@ const compatBarWidth = computed(() => {
 const compatibilityLabel = computed(() => {
   const value = Number(compatibilityPercent.value)
   if (!Number.isFinite(value)) return 'Loading...'
-  if (value >= 75) return 'Great match'
-  if (value >= 50) return 'Good match'
-  if (value >= 25) return 'Some overlap'
+  if (value >= 85) return 'Great match'
+  if (value >= 60) return 'Good match'
+  if (value >= 30) return 'Some overlap'
   return 'Low overlap'
 })
 
@@ -550,6 +550,71 @@ const fetchFriendProfile = async () => {
     friendMeanScore.value = Number.isFinite(rawMeanScore) ? rawMeanScore.toFixed(1) : '--'
   } catch {
     // Keep static placeholders if profile fetch fails.
+  }
+}
+
+const fetchMediaMatch = async () => {
+  const selfUserId = Number(authRecord.value.anilist_user_id ?? 0)
+  const selfUserName = String(authRecord.value.anilist_username ?? '')
+
+  if ((!selfUserId && !selfUserName) || !friendUserId.value) return
+
+  try {
+    compareError.value = ''
+    const qs = new URLSearchParams()
+    if (selfUserId) qs.set('selfUserId', String(selfUserId))
+    if (selfUserName) qs.set('selfUserName', selfUserName)
+    if (friendName.value && friendName.value !== 'Friend') qs.set('friendUserName', friendName.value)
+
+    const base = typeof window !== 'undefined' ? window.location.origin : ''
+    const url = `${base}/api/social/compare/${friendUserId.value}${qs.toString() ? `?${qs.toString()}` : ''}`
+    const response = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' } })
+
+    if (!response.ok) {
+      const rawBody = await response.text()
+      let errorMessage = rawBody
+
+      try {
+        const parsed = JSON.parse(rawBody) as { message?: string }
+        if (parsed?.message) errorMessage = parsed.message
+      } catch {
+        // Keep raw body when upstream sent HTML or plain text.
+      }
+
+      throw new Error(`compare api ${response.status}: ${errorMessage}`)
+    }
+
+    const data = await response.json() as {
+      error?: boolean
+      message?: string
+      commonCount: number
+      onlySelfCount: number
+      onlyFriendCount: number
+      selfCount: number
+      friendCount: number
+    }
+
+    if (data?.error) {
+      throw new Error(data.message || 'Comparison failed')
+    }
+
+    const selfTotal = Math.max(Number(data.selfCount) || 0, 0)
+    const friendTotal = Math.max(Number(data.friendCount) || 0, 0)
+    const common = Math.max(Math.min(Number(data.commonCount) || 0, selfTotal, friendTotal), 0)
+    const onlySelf = Math.max(selfTotal - common, 0)
+    const onlyFriend = Math.max(friendTotal - common, 0)
+
+    commonCount.value = String(common)
+    onlySelfCount.value = String(onlySelf)
+    onlyFriendCount.value = String(onlyFriend)
+    selfCount.value = String(selfTotal)
+    friendCount.value = String(friendTotal)
+  } catch (error) {
+    console.error('[compareList] media match failed', error)
+    compareError.value = error instanceof Error ? error.message : 'Comparison failed'
+    commonCount.value = '--'
+    onlySelfCount.value = '--'
+    onlyFriendCount.value = '--'
   }
 }
 

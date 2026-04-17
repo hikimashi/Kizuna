@@ -668,7 +668,7 @@ watch(filterSignature, async () => {
   inset: auto 0 0 0;
   min-height: 66px;
   padding: 9px 9px 8px;
-  background: linear-gradient(180deg, rgba(11, 22, 34, 0.04) 0%, rgba(11, 22, 34, 0.92) 58%, rgba(11, 22, 34, 0.98) 100%);
+  background: rgba(0, 0, 0, 0.74);
   display: flex;
   flex-direction: column;
   justify-content: center;

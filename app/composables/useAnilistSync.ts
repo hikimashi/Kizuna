@@ -8,6 +8,7 @@ export type EditableAniListStatus =
   | 'PAUSED'
   | 'DROPPED'
   | 'PLANNING'
+  | 'REPEATING'
 
 export type EditableFuzzyDate = {
   year?: number | null

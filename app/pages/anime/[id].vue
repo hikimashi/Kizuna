@@ -4,10 +4,11 @@ import { useRoute } from 'vue-router'
 import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
 import { useAnilistSync, type EditableAniListStatus } from '~/composables/useAnilistSync'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
+import BrowseAnimeCard from '~/components/BrowseAnimeCard.vue'
 
 type FuzzyDate = { year?: number | null; month?: number | null; day?: number | null }
 type MediaTitle = { romaji?: string | null; english?: string | null; native?: string | null }
-type CoverImage = { large?: string | null; extraLarge?: string | null; color?: string | null }
+type CoverImage = { medium?: string | null; large?: string | null; color?: string | null }
 type Ranking = { rank?: number | null; type?: string | null; allTime?: boolean | null }
 type MediaTag = { name?: string | null; rank?: number | null; isMediaSpoiler?: boolean | null }
 type StreamingEpisode = { title?: string | null; thumbnail?: string | null; url?: string | null }
@@ -27,7 +28,16 @@ type CharacterEdge = {
 }
 type Recommendation = {
   rating?: number | null
-  mediaRecommendation?: { id: number; title?: MediaTitle | null; coverImage?: CoverImage | null } | null
+  mediaRecommendation?: {
+    id: number
+    title?: MediaTitle | null
+    coverImage?: CoverImage | null
+    averageScore?: number | null
+    episodes?: number | null
+    format?: string | null
+    seasonYear?: number | null
+    genres?: string[] | null
+  } | null
 }
 type Review = {
   id: number
@@ -125,11 +135,13 @@ const listMenuOpen = ref(false)
 const listActionRef = ref<HTMLElement | null>(null)
 const anilistToken = computed(() => String(((pocketbaseStore.authRecord as any) || {})?.anilist_token ?? ''))
 const anilistUserId = computed(() => Number(((pocketbaseStore.authRecord as any) || {})?.anilist_user_id ?? 0))
-const socialFeedType = ref<'SELF' | 'FOLLOWING' | 'GLOBAL'>('SELF')
+const socialFeedType = ref<'SELF' | 'FOLLOWING' | 'GLOBAL'>('GLOBAL')
 const socialPageSize = ref(8)
 const reviewPage = ref(1)
 const reviewPageSize = 10
 const expandedReviews = ref<Record<number, boolean>>({})
+const recommendationViewportWidth = ref(0)
+const showAllRecommendations = ref(false)
 
 const mediaQuery = `
   query ($id: Int) {
@@ -138,7 +150,7 @@ const mediaQuery = `
       title { romaji english native }
       description(asHtml: false)
       bannerImage
-      coverImage { large extraLarge color }
+      coverImage { medium large color }
       averageScore
       meanScore
       popularity
@@ -174,20 +186,25 @@ const mediaQuery = `
             id
             type
             title { romaji english native }
-            coverImage { large extraLarge color }
+            coverImage { medium large color }
           }
         }
       }
-      recommendations(sort: [RATING_DESC]) {
-        nodes {
-          rating
-          mediaRecommendation {
-            id
-            title { romaji english native }
-            coverImage { large extraLarge color }
+        recommendations(sort: [RATING_DESC]) {
+          nodes {
+            rating
+            mediaRecommendation {
+              id
+              title { romaji english native }
+              coverImage { medium large color }
+              averageScore
+              episodes
+              format
+              seasonYear
+              genres
+            }
           }
         }
-      }
       characters(sort: [ROLE, RELEVANCE, ID]) {
         edges {
           role
@@ -399,12 +416,12 @@ const followingActivities = computed(() => socialBundle.value.following ?? [])
 const selfActivities = computed(() => socialBundle.value.self ?? [])
 const socialThreads = computed(() => socialBundle.value.threads ?? [])
 const loading = computed(() => mediaState.pending.value && !mediaState.data.value)
-const hasError = computed(() => Boolean(mediaState.error.value))
+const hasError = computed(() => !mediaState.pending.value && Boolean(mediaState.error.value))
 const socialPending = computed(() => socialState.pending.value)
 const socialLoading = computed(() => socialState.pending.value && !socialBundle.value.global.length && !socialBundle.value.threads.length)
 const pageTitle = computed(() => media.value?.title?.english || media.value?.title?.romaji || 'Anime')
-const bannerImage = computed(() => media.value?.bannerImage || media.value?.coverImage?.extraLarge || media.value?.coverImage?.large || '')
-const coverImage = computed(() => media.value?.coverImage?.extraLarge || media.value?.coverImage?.large || '')
+const bannerImage = computed(() => media.value?.bannerImage || media.value?.coverImage?.large || media.value?.coverImage?.medium || '')
+const coverImage = computed(() => media.value?.coverImage?.large || media.value?.coverImage?.medium || '')
 const description = computed(() =>
   (media.value?.description || '')
     .replace(/<br\s*\/?>/gi, '\n')
@@ -455,7 +472,21 @@ const streamingLinks = computed(() => {
     })
     .slice(0, 8)
 })
-const recommendations = computed(() => (media.value?.recommendations?.nodes || []).filter((item) => item?.mediaRecommendation).slice(0, 4))
+const allRecommendations = computed(() => (media.value?.recommendations?.nodes || []).filter((item) => item?.mediaRecommendation))
+const recommendationBaseLimit = computed(() => {
+  const width = recommendationViewportWidth.value
+  if (width >= 1600) return 10
+  if (width >= 1280) return 8
+  if (width >= 900) return 6
+  if (width >= 640) return 4
+  return 2
+})
+const recommendations = computed(() =>
+  showAllRecommendations.value
+    ? allRecommendations.value
+    : allRecommendations.value.slice(0, recommendationBaseLimit.value)
+)
+const hasHiddenRecommendations = computed(() => allRecommendations.value.length > recommendationBaseLimit.value)
 const reviews = computed(() => (reviewsBundle.value.reviews || []).filter(Boolean))
 const overviewReviews = computed(() => reviews.value.slice(0, 3))
 const hasMoreReviews = computed(() => Boolean(reviewsBundle.value.hasNextPage))
@@ -812,6 +843,11 @@ function providerNameFromUrl(url?: string | null) {
   }
 }
 
+function toAniListSmallCover(url?: string | null) {
+  if (!url) return ''
+  return url.replace('/medium/', '/small/')
+}
+
 function reviewText(review: Review) {
   return (review.body || review.summary || '').trim()
 }
@@ -820,6 +856,10 @@ function reviewPreview(review: Review) {
   const text = reviewText(review)
   if (text.length <= 280) return text
   return `${text.slice(0, 280).trim()}...`
+}
+
+function syncRecommendationViewportWidth() {
+  recommendationViewportWidth.value = window.innerWidth
 }
 
 function isReviewExpanded(reviewId: number) {
@@ -856,11 +896,14 @@ watch(animeId, () => {
 })
 
 onMounted(() => {
+  syncRecommendationViewportWidth()
   document.addEventListener('click', handleDocumentClick)
+  window.addEventListener('resize', syncRecommendationViewportWidth)
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleDocumentClick)
+  window.removeEventListener('resize', syncRecommendationViewportWidth)
 })
 
 useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
@@ -1078,18 +1121,36 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                     <div class="following-score">{{ relativeTime(activity.createdAt) }}</div>
                   </article>
                 </div>
-              </section>
+                </section>
 
-              <section v-if="recommendations.length">
-                <h2 class="section-title">Recommendations</h2>
-                <div class="recommendations-grid">
-                  <NuxtLink v-for="item in recommendations" :key="item.mediaRecommendation?.id" class="rec-card" :to="`/anime/${item.mediaRecommendation?.id}`">
-                    <img :src="item.mediaRecommendation?.coverImage?.large || ''" :alt="item.mediaRecommendation?.title?.english || item.mediaRecommendation?.title?.romaji || ''">
-                    <div class="rec-info">
-                      <div class="rec-title">{{ item.mediaRecommendation?.title?.english || item.mediaRecommendation?.title?.romaji }}</div>
-                      <div class="rec-votes">+{{ item.rating || 0 }}</div>
-                    </div>
-                  </NuxtLink>
+                <section v-if="recommendations.length">
+                  <div class="section-head">
+                    <h2 class="section-title">Recommendations</h2>
+                    <button
+                      v-if="hasHiddenRecommendations"
+                      type="button"
+                      class="section-link-button"
+                      @click="showAllRecommendations = !showAllRecommendations"
+                    >
+                      {{ showAllRecommendations ? 'View less' : 'View all recommendations' }}
+                    </button>
+                  </div>
+                  <div class="recommendations-grid">
+                    <BrowseAnimeCard
+                      v-for="item in recommendations"
+                    :key="item.mediaRecommendation?.id"
+                    :anime="{
+                      id: item.mediaRecommendation?.id,
+                      title: item.mediaRecommendation?.title,
+                      coverImage: item.mediaRecommendation?.coverImage,
+                      averageScore: item.mediaRecommendation?.averageScore ?? item.rating ?? null,
+                      format: item.mediaRecommendation?.format ?? null,
+                      episodes: item.mediaRecommendation?.episodes ?? null,
+                      seasonYear: item.mediaRecommendation?.seasonYear ?? null,
+                      genres: item.mediaRecommendation?.genres ?? []
+                    }"
+                    :to="`/anime/${item.mediaRecommendation?.id}`"
+                  />
                 </div>
               </section>
 

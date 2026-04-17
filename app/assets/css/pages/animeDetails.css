@@ -119,8 +119,7 @@
 .stat-card,
 .review-item,
 .following-item,
-.character-row,
-.rec-card {
+.character-row {
   border-radius: 2.5px;
   border: 1px solid var(--border);
   background:
@@ -150,6 +149,34 @@
   margin-bottom: 16px;
   font-size: 16px;
   letter-spacing: 0.04em;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.section-head .section-title {
+  margin-bottom: 0;
+}
+
+.section-link-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: color 0.18s ease, opacity 0.18s ease;
+}
+
+.section-link-button:hover {
+  color: var(--text-primary);
 }
 
 .data-row {
@@ -330,16 +357,13 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent), #79d8ff);
   color: #092033;
-  box-shadow: 0 14px 30px rgba(61, 180, 242, 0.22);
 }
 
 .btn:hover,
 .favorite-button:hover,
 .trailer-container:hover,
-.relation-card:hover,
-.rec-card:hover {
+.relation-card:hover {
   transform: translateY(-2px);
 }
 
@@ -773,15 +797,14 @@
 
 .recommendations-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
   gap: 16px;
   margin-bottom: 36px;
 }
 
 .relation-card,
 .streaming-card,
-.trailer-container,
-.rec-card {
+.trailer-container {
   overflow: hidden;
   border-radius: 2.5px;
   border: 1px solid var(--border);
@@ -796,8 +819,7 @@
 
 .relation-card:hover,
 .streaming-card:hover,
-.trailer-container:hover,
-.rec-card:hover {
+.trailer-container:hover {
   border-color: var(--hover-border);
   box-shadow: 0 14px 36px rgba(0, 0, 0, 0.26);
 }
@@ -1040,30 +1062,6 @@
   font-size: 13px;
   font-weight: 800;
   white-space: nowrap;
-}
-
-.rec-card img {
-  width: 100%;
-  height: 184px;
-  display: block;
-  object-fit: cover;
-}
-
-.rec-info {
-  padding: 13px;
-}
-
-.rec-title {
-  color: var(--text-primary);
-  font-size: 13px;
-  font-weight: 800;
-  line-height: 1.45;
-}
-
-.rec-votes {
-  margin-top: 6px;
-  color: var(--text-secondary);
-  font-size: 11px;
 }
 
 .review-item {

@@ -501,10 +501,8 @@ watch(filterSignature, async () => {
 .error-state,
 .empty-state {
   border: 1px solid var(--results-border);
-  border-radius: 20px;
-  background: rgba(19, 26, 38, 0.76);
-  box-shadow: var(--results-shadow);
-  backdrop-filter: blur(16px);
+  border-radius: 2.5px;
+  background: color-mix(in srgb, var(--results-surface) 94%, #152232 6%);
 }
 
 .error-state {
@@ -526,11 +524,11 @@ watch(filterSignature, async () => {
 .empty-icon {
   width: 62px;
   height: 62px;
-  border-radius: 18px;
+  border-radius: 2.5px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(61, 180, 242, 0.1);
+  background: color-mix(in srgb, var(--results-surface-soft) 88%, #1c3348 12%);
   color: var(--results-accent);
 }
 
@@ -565,17 +563,17 @@ watch(filterSignature, async () => {
 
 .anime-card {
   position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  border-radius: 6px;
+  border: 1px solid var(--results-border);
+  border-radius: 2.5px;
   overflow: hidden;
-  background: #131d2a;
-  transition: transform 0.16s, border-color 0.16s, box-shadow 0.16s;
+  background: color-mix(in srgb, var(--results-surface) 92%, #0d1a27 8%);
+  transition: border-color 0.16s, background 0.16s, box-shadow 0.16s;
 }
 
 .anime-card:hover {
-  transform: translateY(-3px);
   border-color: rgba(61, 180, 242, 0.18);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  background: color-mix(in srgb, var(--results-surface) 89%, #173049 11%);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
 }
 
 .card-media {
@@ -612,12 +610,13 @@ watch(filterSignature, async () => {
   left: 6px;
   z-index: 2;
   padding: 2px 6px;
-  border-radius: 3px;
-  background: rgba(0, 0, 0, 0.72);
+  border-radius: 2.5px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(11, 22, 34, 0.92);
   color: #9fadbd;
-  font-size: 8px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
@@ -642,8 +641,10 @@ watch(filterSignature, async () => {
   z-index: 2;
   width: 28px;
   height: 28px;
-  border-radius: 5px;
-  background: rgba(61, 180, 242, 0.86);
+  border-radius: 2.5px;
+  border: 1px solid var(--results-border);
+  background: color-mix(in srgb, var(--results-surface) 84%, #1f4f70 16%);
+  color: #d9ebfa;
   opacity: 0;
 }
 
@@ -653,11 +654,13 @@ watch(filterSignature, async () => {
 }
 
 .card-add:hover:not(:disabled) {
-  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--results-surface) 80%, #23587c 20%);
 }
 
 .card-add.added {
-  background: rgba(22, 183, 154, 0.9);
+  background: rgba(22, 183, 154, 0.16);
+  border-color: rgba(22, 183, 154, 0.24);
+  color: #16b79a;
 }
 
 .card-overlay {
@@ -665,7 +668,7 @@ watch(filterSignature, async () => {
   inset: auto 0 0 0;
   min-height: 66px;
   padding: 9px 9px 8px;
-  background: rgba(0, 0, 0, 0.76);
+  background: linear-gradient(180deg, rgba(11, 22, 34, 0.04) 0%, rgba(11, 22, 34, 0.92) 58%, rgba(11, 22, 34, 0.98) 100%);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -717,7 +720,7 @@ watch(filterSignature, async () => {
   align-items: center;
   gap: 12px;
   padding: 8px 12px;
-  border-radius: 5px;
+  border-radius: 2.5px;
   cursor: pointer;
 }
 
@@ -725,7 +728,7 @@ watch(filterSignature, async () => {
   width: 36px;
   height: 50px;
   flex-shrink: 0;
-  border-radius: 4px;
+  border-radius: 2.5px;
 }
 
 .view-list .card-overlay,
@@ -741,8 +744,9 @@ watch(filterSignature, async () => {
   min-width: 0;
   flex: 1;
   padding: 4px 7px;
-  background: rgba(0, 0, 0, 0.92);
-  border-radius: 4px;
+  background: color-mix(in srgb, var(--results-surface) 94%, #152232 6%);
+  border: 1px solid var(--results-border);
+  border-radius: 2.5px;
 }
 
 .card-main {
@@ -766,6 +770,33 @@ watch(filterSignature, async () => {
   font-size: 12px;
   font-weight: 600;
   font-family: 'Overpass Mono', monospace;
+}
+
+.card-genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.genre-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 2.5px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.card-library-state {
+  margin-top: 8px;
+  color: var(--results-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
 }
 
 .view-grid .card-body,
@@ -793,10 +824,10 @@ watch(filterSignature, async () => {
 .card-add-inline {
   width: 28px;
   height: 28px;
-  border-radius: 5px;
-  background: rgba(61, 180, 242, 0.12);
-  border: 1px solid rgba(61, 180, 242, 0.25);
-  color: var(--results-accent);
+  border-radius: 2.5px;
+  background: color-mix(in srgb, var(--results-surface) 90%, #1c3348 10%);
+  border: 1px solid var(--results-border);
+  color: var(--results-text-secondary);
 }
 
 .card-add-inline.added {

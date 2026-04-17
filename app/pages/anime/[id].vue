@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
 import { useAnilistSync, type EditableAniListStatus } from '~/composables/useAnilistSync'
@@ -78,7 +78,32 @@ type Activity = {
   status?: string | null
   progress?: string | null
   createdAt?: number | null
+  replyCount?: number | null
+  likeCount?: number | null
+  isLiked?: boolean | null
+  isSubscribed?: boolean | null
   user?: { name?: string | null; avatar?: { medium?: string | null } | null } | null
+  media?: {
+    id?: number | null
+    title?: MediaTitle | null
+    coverImage?: { medium?: string | null; large?: string | null } | null
+  } | null
+}
+type ThreadCategory = { id?: number | null; name?: string | null }
+type SocialThread = {
+  id: number
+  title?: string | null
+  replyCount?: number | null
+  viewCount?: number | null
+  repliedAt?: number | null
+  user?: { name?: string | null; avatar?: { medium?: string | null } | null } | null
+  categories?: ThreadCategory[] | null
+}
+type SocialBundle = {
+  global: Activity[]
+  following: Activity[]
+  self: Activity[]
+  threads: SocialThread[]
 }
 type AniListGraphqlResponse<T> = { data?: T; errors?: Array<{ message?: string | null }> | null }
 
@@ -91,6 +116,9 @@ const anilistSync = useAnilistSync()
 const actionBusy = ref<'favorite' | 'list' | null>(null)
 const listMenuOpen = ref(false)
 const anilistToken = computed(() => String(((pocketbaseStore.authRecord as any) || {})?.anilist_token ?? ''))
+const anilistUserId = computed(() => Number(((pocketbaseStore.authRecord as any) || {})?.anilist_user_id ?? 0))
+const socialFeedType = ref<'SELF' | 'FOLLOWING' | 'GLOBAL'>('SELF')
+const socialPageSize = ref(8)
 
 const mediaQuery = `
   query ($id: Int) {
@@ -180,19 +208,50 @@ const mediaQuery = `
   }
 `
 
-const socialQuery = `
-  query ($id: Int) {
-    Page(page: 1, perPage: 8) {
-      activities(mediaId: $id, sort: ID_DESC, type: MEDIA_LIST) {
+const socialActivitiesQuery = `
+  query ($id: Int, $page: Int, $perPage: Int, $userId: Int, $isFollowing: Boolean) {
+    Page(page: $page, perPage: $perPage) {
+      activities(mediaId: $id, sort: ID_DESC, type: MEDIA_LIST, userId: $userId, isFollowing: $isFollowing) {
         ... on ListActivity {
           id
           status
           progress
           createdAt
+          replyCount
+          likeCount
+          isLiked
+          isSubscribed
           user {
             name
             avatar { medium }
           }
+          media {
+            id
+            title { romaji english native }
+            coverImage { medium large }
+          }
+        }
+      }
+    }
+  }
+`
+
+const socialThreadsQuery = `
+  query ($id: Int) {
+    Page(page: 1, perPage: 6) {
+      threads(mediaCategoryId: $id, sort: [REPLIED_AT_DESC]) {
+        id
+        title
+        replyCount
+        viewCount
+        repliedAt
+        user {
+          name
+          avatar { medium }
+        }
+        categories {
+          id
+          name
         }
       }
     }
@@ -223,22 +282,70 @@ const mediaState = await useAsyncData(
 )
 
 const socialState = await useAsyncData(
-  () => `anime-social-${animeId.value}`,
+  () => `anime-social-${animeId.value}-${socialPageSize.value}-${anilistToken.value ? 'auth' : 'public'}`,
   async () => {
-    const response = await anilistGraphql.request<AniListGraphqlResponse<{ Page?: { activities?: Activity[] | null } }>>(
-      socialQuery,
-      { id: animeId.value },
-      { cacheTtlMs: 60_000 }
-    )
-    return response.data?.Page?.activities ?? []
+    const activityOptions = {
+      token: anilistToken.value,
+      cacheTtlMs: anilistToken.value ? 20_000 : 45_000
+    }
+
+    const baseVariables = {
+      id: animeId.value,
+      page: 1,
+      perPage: socialPageSize.value
+    }
+
+    const [globalResponse, followingResponse, selfResponse, threadsResponse] = await Promise.all([
+      anilistGraphql.request<AniListGraphqlResponse<{ Page?: { activities?: Activity[] | null } }>>(
+        socialActivitiesQuery,
+        baseVariables,
+        activityOptions
+      ),
+      anilistToken.value
+        ? anilistGraphql.request<AniListGraphqlResponse<{ Page?: { activities?: Activity[] | null } }>>(
+            socialActivitiesQuery,
+            { ...baseVariables, isFollowing: true },
+            activityOptions
+          )
+        : Promise.resolve(null),
+      anilistToken.value && anilistUserId.value
+        ? anilistGraphql.request<AniListGraphqlResponse<{ Page?: { activities?: Activity[] | null } }>>(
+            socialActivitiesQuery,
+            { ...baseVariables, userId: anilistUserId.value },
+            activityOptions
+          )
+        : Promise.resolve(null),
+      anilistGraphql.request<AniListGraphqlResponse<{ Page?: { threads?: SocialThread[] | null } }>>(
+        socialThreadsQuery,
+        { id: animeId.value },
+        { cacheTtlMs: 120_000 }
+      )
+    ])
+
+    return {
+      global: globalResponse.data?.Page?.activities ?? [],
+      following: followingResponse?.data?.Page?.activities ?? [],
+      self: selfResponse?.data?.Page?.activities ?? [],
+      threads: threadsResponse.data?.Page?.threads ?? []
+    } satisfies SocialBundle
   },
-  { default: () => [], watch: [animeId] }
+  {
+    default: () => ({ global: [], following: [], self: [], threads: [] }),
+    watch: [animeId, socialPageSize, anilistToken, anilistUserId]
+  }
 )
 
 const media = computed(() => mediaState.data.value)
-const activities = computed(() => socialState.data.value ?? [])
+const socialBundle = computed<SocialBundle>(() => socialState.data.value ?? { global: [], following: [], self: [], threads: [] })
+const globalActivities = computed(() => socialBundle.value.global ?? [])
+const followingActivities = computed(() => socialBundle.value.following ?? [])
+const selfActivities = computed(() => socialBundle.value.self ?? [])
+const socialThreads = computed(() => socialBundle.value.threads ?? [])
+const activities = computed(() => globalActivities.value)
 const loading = computed(() => mediaState.pending.value && !mediaState.data.value)
 const hasError = computed(() => Boolean(mediaState.error.value))
+const socialPending = computed(() => socialState.pending.value)
+const socialLoading = computed(() => socialState.pending.value && !socialBundle.value.global.length && !socialBundle.value.threads.length)
 const pageTitle = computed(() => media.value?.title?.english || media.value?.title?.romaji || 'Anime')
 const bannerImage = computed(() => media.value?.bannerImage || media.value?.coverImage?.extraLarge || media.value?.coverImage?.large || '')
 const coverImage = computed(() => media.value?.coverImage?.extraLarge || media.value?.coverImage?.large || '')
@@ -268,6 +375,70 @@ const characters = computed(() => allCharacters.value.slice(0, 12))
 const episodes = computed(() => (media.value?.streamingEpisodes || []).filter(Boolean).slice(0, 8))
 const recommendations = computed(() => (media.value?.recommendations?.nodes || []).filter((item) => item?.mediaRecommendation).slice(0, 4))
 const reviews = computed(() => (media.value?.reviews?.nodes || []).filter(Boolean).slice(0, 4))
+const canUsePersonalFeeds = computed(() => Boolean(anilistToken.value && anilistUserId.value))
+const activeSocialActivities = computed(() => {
+  if (socialFeedType.value === 'SELF') return selfActivities.value
+  if (socialFeedType.value === 'FOLLOWING') return followingActivities.value
+  return globalActivities.value
+})
+const canLoadMoreSocial = computed(() => activeSocialActivities.value.length >= socialPageSize.value && activeSocialActivities.value.length > 0)
+const socialFeedOptions = computed(() => [
+  { key: 'SELF' as const, label: 'Self', disabled: !canUsePersonalFeeds.value },
+  { key: 'FOLLOWING' as const, label: 'Following', disabled: !canUsePersonalFeeds.value },
+  { key: 'GLOBAL' as const, label: 'Global', disabled: false }
+])
+const followingLatestByUser = computed(() => {
+  const seen = new Set<string>()
+  return followingActivities.value.filter((activity) => {
+    const name = activity.user?.name || ''
+    if (!name || seen.has(name)) return false
+    seen.add(name)
+    return true
+  })
+})
+const followingUserCount = computed(() => followingLatestByUser.value.length)
+const followingStatusCounts = computed(() => {
+  const counts = new Map<string, number>()
+
+  for (const activity of followingLatestByUser.value) {
+    const key = formatStatus(activity.status)
+    counts.set(key, (counts.get(key) || 0) + 1)
+  }
+
+  return [...counts.entries()].map(([label, count]) => ({ label, count })).slice(0, 4)
+})
+const followingTimelineItems = computed(() => {
+  const sorted = [...followingActivities.value].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0))
+  const items: Array<{ type: 'activity'; activity: Activity } | { type: 'gap'; label: string }> = []
+  let previousTimestamp = 0
+
+  for (const activity of sorted) {
+    const currentTimestamp = activity.createdAt || 0
+    if (previousTimestamp) {
+      const delta = currentTimestamp - previousTimestamp
+      if (delta > 45 * 86_400) {
+        items.push({ type: 'gap', label: formatTimelineGap(delta) })
+      }
+    }
+    items.push({ type: 'activity', activity })
+    previousTimestamp = currentTimestamp
+  }
+
+  return items
+})
+const createThreadUrl = computed(() => `https://anilist.co/forum/thread/editor/new?mediaId=${animeId.value}`)
+const mediaSocialUrl = computed(() => `https://anilist.co/anime/${animeId.value}/social`)
+
+watch(canUsePersonalFeeds, (available) => {
+  if (!available) {
+    socialFeedType.value = 'GLOBAL'
+    return
+  }
+
+  if (socialFeedType.value === 'GLOBAL') {
+    socialFeedType.value = 'SELF'
+  }
+}, { immediate: true })
 
 function formatStatus(value?: string | null) {
   return value
@@ -310,6 +481,51 @@ function relativeTime(timestamp?: number | null) {
 
 function formatProgress(activity: Activity) {
   return [formatStatus(activity.status), activity.progress].filter(Boolean).join(' ')
+}
+
+function activityMediaTitle(activity: Activity) {
+  return activity.media?.title?.english || activity.media?.title?.romaji || activity.media?.title?.native || pageTitle.value
+}
+
+function activitySummary(activity: Activity) {
+  const status = activity.status
+    ? `${activity.status.charAt(0).toUpperCase()}${activity.status.slice(1)}`
+    : 'Updated'
+  return activity.progress ? `${status} ${activity.progress} of` : status
+}
+
+function activityUserUrl(activity: Activity) {
+  const name = activity.user?.name
+  return name ? `https://anilist.co/user/${encodeURIComponent(name)}` : 'https://anilist.co'
+}
+
+function activityExternalUrl(activity: Activity) {
+  return `https://anilist.co/activity/${activity.id}`
+}
+
+function threadExternalUrl(thread: SocialThread) {
+  return `https://anilist.co/forum/thread/${thread.id}`
+}
+
+function formatTimelineDate(timestamp?: number | null) {
+  if (!timestamp) return ''
+  return new Date(timestamp * 1000).toLocaleDateString('en-GB', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  })
+}
+
+function formatTimelineGap(seconds: number) {
+  const days = Math.max(1, Math.round(seconds / 86_400))
+  if (days >= 60) return `- ${Math.round(days / 30)} months -`
+  if (days >= 14) return `- ${Math.round(days / 7)} weeks -`
+  return `- ${days} days -`
+}
+
+function loadMoreSocial() {
+  socialPageSize.value += 8
 }
 
 function formatRankingLabel(type?: string | null) {
@@ -965,20 +1181,225 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
             </template>
 
             <template v-else>
-              <section>
-                <h2 class="section-title">Following</h2>
-                <div class="following-grid">
-                  <article v-for="activity in activities" :key="`${activity.id}-social`" class="following-item">
-                    <div class="following-user">
-                      <img :src="activity.user?.avatar?.medium || coverImage" :alt="activity.user?.name || 'User'" class="following-avatar">
+              <section class="social-layout">
+                <div class="social-main">
+                  <article class="social-panel">
+                    <div class="social-panel-head">
                       <div>
-                        <div class="following-name">{{ activity.user?.name }}</div>
-                        <div class="following-status">{{ formatProgress(activity) }}</div>
+                        <h2 class="social-heading">Recent Activity</h2>
+                        <p class="social-subheading">Live anime list activity around this title.</p>
+                      </div>
+
+                      <div class="social-controls">
+                        <div class="feed-type-toggle">
+                          <button
+                            v-for="option in socialFeedOptions"
+                            :key="option.key"
+                            type="button"
+                            class="feed-type-btn"
+                            :class="{ active: socialFeedType === option.key }"
+                            :disabled="option.disabled"
+                            @click="socialFeedType = option.key"
+                          >
+                            {{ option.label }}
+                          </button>
+                        </div>
                       </div>
                     </div>
-                    <div class="following-score">{{ relativeTime(activity.createdAt) }}</div>
+
+                    <p v-if="!canUsePersonalFeeds" class="social-note">
+                      Link your AniList account to unlock the Self and Following feeds.
+                    </p>
+
+                    <div v-if="socialLoading" class="social-empty">Loading activity...</div>
+
+                    <div v-else-if="activeSocialActivities.length" class="activity-feed-list">
+                      <article v-for="activity in activeSocialActivities" :key="`${activity.id}-feed`" class="activity-entry-card">
+                        <div class="activity-entry-wrap">
+                          <NuxtLink
+                            class="activity-cover"
+                            :to="`/anime/${activity.media?.id || animeId}`"
+                            :style="{ backgroundImage: `url(${activity.media?.coverImage?.large || activity.media?.coverImage?.medium || coverImage})` }"
+                          />
+
+                          <div class="activity-details">
+                            <a
+                              class="activity-user-link"
+                              :href="activityUserUrl(activity)"
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              {{ activity.user?.name || 'AniList User' }}
+                            </a>
+
+                            <div class="activity-status-line">
+                              {{ activitySummary(activity) }}
+                              <NuxtLink class="activity-title-link" :to="`/anime/${activity.media?.id || animeId}`">
+                                {{ activityMediaTitle(activity) }}
+                              </NuxtLink>
+                            </div>
+
+                            <div class="activity-meta-row">
+                              <span class="activity-meta-pill">{{ relativeTime(activity.createdAt) }}</span>
+                              <a
+                                class="activity-meta-link"
+                                :href="activityExternalUrl(activity)"
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                Direct Link
+                              </a>
+                            </div>
+                          </div>
+
+                          <a
+                            class="activity-avatar"
+                            :href="activityUserUrl(activity)"
+                            target="_blank"
+                            rel="noreferrer"
+                            :style="{ backgroundImage: `url(${activity.user?.avatar?.medium || coverImage})` }"
+                          />
+                        </div>
+
+                        <div class="activity-actions">
+                          <span class="activity-action">Replies {{ activity.replyCount || 0 }}</span>
+                          <span class="activity-action">Likes {{ activity.likeCount || 0 }}</span>
+                          <span v-if="activity.isSubscribed" class="activity-action accent">Subscribed</span>
+                        </div>
+                      </article>
+                    </div>
+
+                    <div v-else class="social-empty">
+                      No activity found for this feed yet.
+                    </div>
+
+                    <button
+                      v-if="canLoadMoreSocial"
+                      type="button"
+                      class="load-more-btn"
+                      :disabled="socialPending"
+                      @click="loadMoreSocial"
+                    >
+                      Load More
+                    </button>
                   </article>
                 </div>
+
+                <aside class="social-sidebar">
+                  <article class="social-panel">
+                    <div class="social-side-head">
+                      <div>
+                        <h2 class="social-side-title">Following</h2>
+                        <p class="social-side-subtitle">People you follow who interacted with this anime.</p>
+                      </div>
+                      <span class="social-side-count">Users: {{ followingUserCount }}</span>
+                    </div>
+
+                    <p v-if="!canUsePersonalFeeds" class="social-note">
+                      Connect AniList to see the people you follow here.
+                    </p>
+
+                    <div v-else-if="followingStatusCounts.length" class="social-status-chips">
+                      <span v-for="item in followingStatusCounts" :key="item.label" class="social-status-chip">
+                        {{ item.label }}: {{ item.count }}
+                      </span>
+                    </div>
+
+                    <div v-if="canUsePersonalFeeds && followingLatestByUser.length" class="following-summary-grid">
+                      <article v-for="activity in followingLatestByUser" :key="`${activity.id}-following`" class="social-following-row">
+                        <a
+                          class="social-following-avatar"
+                          :href="activityUserUrl(activity)"
+                          target="_blank"
+                          rel="noreferrer"
+                          :style="{ backgroundImage: `url(${activity.user?.avatar?.medium || coverImage})` }"
+                        />
+                        <div class="social-following-meta">
+                          <a
+                            class="following-name"
+                            :href="activityUserUrl(activity)"
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            {{ activity.user?.name || 'AniList User' }}
+                          </a>
+                          <div class="social-following-progress">{{ formatProgress(activity) }}</div>
+                        </div>
+                        <div class="social-following-time">{{ relativeTime(activity.createdAt) }}</div>
+                      </article>
+                    </div>
+
+                    <div v-else-if="canUsePersonalFeeds" class="social-empty compact">
+                      No followed users found for this anime yet.
+                    </div>
+
+                    <div v-if="canUsePersonalFeeds && followingTimelineItems.length" class="timeline-block">
+                      <h3 class="mini-title">Activity Timeline</h3>
+                      <div class="timeline-list">
+                        <template v-for="(item, index) in followingTimelineItems" :key="`timeline-${index}`">
+                          <div v-if="item.type === 'gap'" class="timeline-gap">{{ item.label }}</div>
+                          <div v-else class="timeline-entry">
+                            <a
+                              :href="activityExternalUrl(item.activity)"
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              {{ activitySummary(item.activity) }}
+                            </a>
+                            <span>{{ formatTimelineDate(item.activity.createdAt) }}</span>
+                          </div>
+                        </template>
+                      </div>
+                    </div>
+                  </article>
+
+                  <article class="social-panel">
+                    <div class="social-side-head threads-head">
+                      <div>
+                        <h2 class="social-side-title">
+                          <a :href="mediaSocialUrl" target="_blank" rel="noreferrer">Threads</a>
+                        </h2>
+                        <p class="social-side-subtitle">Recent discussions from AniList forums.</p>
+                      </div>
+                      <a class="create-thread-link" :href="createThreadUrl" target="_blank" rel="noreferrer">
+                        Create New Thread
+                      </a>
+                    </div>
+
+                    <div v-if="socialThreads.length" class="threads-list">
+                      <article v-for="thread in socialThreads" :key="thread.id" class="social-thread-card">
+                        <a class="thread-title" :href="threadExternalUrl(thread)" target="_blank" rel="noreferrer">
+                          {{ thread.title }}
+                        </a>
+
+                        <div class="thread-footer">
+                          <div class="thread-author">
+                            <span
+                              class="thread-avatar"
+                              :style="{ backgroundImage: `url(${thread.user?.avatar?.medium || coverImage})` }"
+                            />
+                            <span>{{ thread.user?.name || 'AniList User' }}</span>
+                          </div>
+                          <div class="thread-metrics">
+                            <span>{{ formatCompactNumber(thread.viewCount || 0) }} views</span>
+                            <span>{{ thread.replyCount || 0 }} replies</span>
+                          </div>
+                        </div>
+
+                        <div class="thread-meta">
+                          <span v-for="category in thread.categories || []" :key="`${thread.id}-${category.id}`" class="thread-category">
+                            {{ category.name }}
+                          </span>
+                          <span>{{ relativeTime(thread.repliedAt) }}</span>
+                        </div>
+                      </article>
+                    </div>
+
+                    <div v-else class="social-empty compact">
+                      No threads found for this anime.
+                    </div>
+                  </article>
+                </aside>
               </section>
             </template>
           </div>

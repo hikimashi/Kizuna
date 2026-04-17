@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
 import { useAnilistSync, type EditableAniListStatus } from '~/composables/useAnilistSync'
@@ -37,6 +37,12 @@ type Review = {
   body?: string | null
   user?: { name?: string | null; avatar?: { large?: string | null } | null } | null
 }
+type ExternalLink = {
+  site?: string | null
+  url?: string | null
+  color?: string | null
+  icon?: string | null
+}
 type StatsBucket = { score?: number | null; amount?: number | null }
 type StatusBucket = { status?: string | null; amount?: number | null }
 type MediaData = {
@@ -62,6 +68,7 @@ type MediaData = {
   rankings?: Ranking[] | null
   tags?: MediaTag[] | null
   streamingEpisodes?: StreamingEpisode[] | null
+  externalLinks?: ExternalLink[] | null
   startDate?: FuzzyDate | null
   endDate?: FuzzyDate | null
   trailer?: { site?: string | null; id?: string | null; thumbnail?: string | null } | null
@@ -115,10 +122,14 @@ const anilistGraphql = useAnilistGraphql()
 const anilistSync = useAnilistSync()
 const actionBusy = ref<'favorite' | 'list' | null>(null)
 const listMenuOpen = ref(false)
+const listActionRef = ref<HTMLElement | null>(null)
 const anilistToken = computed(() => String(((pocketbaseStore.authRecord as any) || {})?.anilist_token ?? ''))
 const anilistUserId = computed(() => Number(((pocketbaseStore.authRecord as any) || {})?.anilist_user_id ?? 0))
 const socialFeedType = ref<'SELF' | 'FOLLOWING' | 'GLOBAL'>('SELF')
 const socialPageSize = ref(8)
+const reviewPage = ref(1)
+const reviewPageSize = 10
+const expandedReviews = ref<Record<number, boolean>>({})
 
 const mediaQuery = `
   query ($id: Int) {
@@ -142,6 +153,12 @@ const mediaQuery = `
       source
       hashtag
       genres
+      externalLinks {
+        site
+        url
+        color
+        icon
+      }
       startDate { year month day }
       endDate { year month day }
       trailer { site id thumbnail }
@@ -187,22 +204,31 @@ const mediaQuery = `
           }
         }
       }
-      reviews(sort: [RATING_DESC, SCORE_DESC]) {
-        nodes {
-          id
-          rating
-          score
-          summary
-          body(asHtml: false)
-          user {
-            name
-            avatar { large }
-          }
-        }
-      }
       stats {
         scoreDistribution { score amount }
         statusDistribution { status amount }
+      }
+    }
+  }
+`
+
+const reviewsQuery = `
+  query ($id: Int, $page: Int, $perPage: Int) {
+    Page(page: $page, perPage: $perPage) {
+      pageInfo {
+        currentPage
+        hasNextPage
+      }
+      reviews(mediaId: $id, sort: [RATING_DESC, SCORE_DESC]) {
+        id
+        rating
+        score
+        summary
+        body(asHtml: false)
+        user {
+          name
+          avatar { large }
+        }
       }
     }
   }
@@ -335,13 +361,43 @@ const socialState = await useAsyncData(
   }
 )
 
+const reviewsState = await useAsyncData(
+  () => `anime-reviews-${animeId.value}-${reviewPage.value}`,
+  async () => {
+    const aggregated: Review[] = []
+    let hasNextPage = false
+
+    for (let page = 1; page <= reviewPage.value; page += 1) {
+      const response = await anilistGraphql.request<AniListGraphqlResponse<{
+        Page?: {
+          pageInfo?: { hasNextPage?: boolean | null } | null
+          reviews?: Review[] | null
+        } | null
+      }>>(
+        reviewsQuery,
+        { id: animeId.value, page, perPage: reviewPageSize },
+        { cacheTtlMs: 120_000 }
+      )
+
+      aggregated.push(...(response.data?.Page?.reviews || []))
+      hasNextPage = Boolean(response.data?.Page?.pageInfo?.hasNextPage)
+    }
+
+    return { reviews: aggregated, hasNextPage }
+  },
+  {
+    default: () => ({ reviews: [], hasNextPage: false }),
+    watch: [animeId, reviewPage]
+  }
+)
+
 const media = computed(() => mediaState.data.value)
 const socialBundle = computed<SocialBundle>(() => socialState.data.value ?? { global: [], following: [], self: [], threads: [] })
+const reviewsBundle = computed(() => reviewsState.data.value ?? { reviews: [], hasNextPage: false })
 const globalActivities = computed(() => socialBundle.value.global ?? [])
 const followingActivities = computed(() => socialBundle.value.following ?? [])
 const selfActivities = computed(() => socialBundle.value.self ?? [])
 const socialThreads = computed(() => socialBundle.value.threads ?? [])
-const activities = computed(() => globalActivities.value)
 const loading = computed(() => mediaState.pending.value && !mediaState.data.value)
 const hasError = computed(() => Boolean(mediaState.error.value))
 const socialPending = computed(() => socialState.pending.value)
@@ -370,11 +426,39 @@ const genres = computed(() => ((media.value?.genres || []).filter(Boolean) as st
 const tags = computed(() => (media.value?.tags || []).filter((tag) => !tag?.isMediaSpoiler).slice(0, 10))
 const relations = computed(() => (media.value?.relations?.edges || []).filter((edge) => edge?.node).slice(0, 4))
 const allCharacters = computed(() => (media.value?.characters?.edges || []).filter((edge) => edge?.node))
-const overviewCharacters = computed(() => allCharacters.value.slice(0, 6))
-const characters = computed(() => allCharacters.value.slice(0, 12))
-const episodes = computed(() => (media.value?.streamingEpisodes || []).filter(Boolean).slice(0, 8))
+const overviewCharacters = computed(() => allCharacters.value.slice(0, 8))
+const characters = computed(() => allCharacters.value)
+const watchEpisodes = computed(() =>
+  (media.value?.streamingEpisodes || [])
+    .filter((item) => item?.url && item?.thumbnail)
+    .slice(0, 8)
+)
+const streamingLinks = computed(() => {
+  const priority = [
+    'Crunchyroll',
+    'Netflix',
+    'HIDIVE',
+    'Disney Plus',
+    'Hulu',
+    'Prime Video',
+    'ADN',
+    'Anime Digital Network',
+    'Funimation'
+  ]
+
+  const links = (media.value?.externalLinks || []).filter((item) => item?.url && item?.site)
+  return [...links]
+    .sort((a, b) => {
+      const aIndex = priority.findIndex((label) => a.site?.toLowerCase().includes(label.toLowerCase()))
+      const bIndex = priority.findIndex((label) => b.site?.toLowerCase().includes(label.toLowerCase()))
+      return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex)
+    })
+    .slice(0, 8)
+})
 const recommendations = computed(() => (media.value?.recommendations?.nodes || []).filter((item) => item?.mediaRecommendation).slice(0, 4))
-const reviews = computed(() => (media.value?.reviews?.nodes || []).filter(Boolean).slice(0, 4))
+const reviews = computed(() => (reviewsBundle.value.reviews || []).filter(Boolean))
+const overviewReviews = computed(() => reviews.value.slice(0, 3))
+const hasMoreReviews = computed(() => Boolean(reviewsBundle.value.hasNextPage))
 const canUsePersonalFeeds = computed(() => Boolean(anilistToken.value && anilistUserId.value))
 const activeSocialActivities = computed(() => {
   if (socialFeedType.value === 'SELF') return selfActivities.value
@@ -631,6 +715,11 @@ const infoFacts = computed(() => [
   { label: 'Duration', value: media.value?.duration ? `${media.value.duration} mins` : 'Unknown' },
   { label: 'Source', value: formatStatus(media.value?.source) }
 ])
+const scoreMarkers = computed(() => {
+  if (!scoreDistribution.value.length) return []
+  const step = Math.max(10, Math.ceil(scoreDistribution.value.length / 4))
+  return scoreDistribution.value.filter((_, index) => index % step === 0 || index === scoreDistribution.value.length - 1)
+})
 
 const tabs = [
   { key: 'overview', label: 'Overview' },
@@ -703,6 +792,77 @@ async function saveListStatus(status: EditableAniListStatus) {
   }
 }
 
+function providerName(site?: string | null) {
+  return site || 'Streaming'
+}
+
+function providerNameFromUrl(url?: string | null) {
+  if (!url) return 'Watch'
+  try {
+    const hostname = new URL(url).hostname.replace(/^www\./, '')
+    if (hostname.includes('crunchyroll')) return 'Crunchyroll'
+    if (hostname.includes('netflix')) return 'Netflix'
+    if (hostname.includes('hidive')) return 'HIDIVE'
+    if (hostname.includes('youtube')) return 'YouTube'
+    if (hostname.includes('hulu')) return 'Hulu'
+    if (hostname.includes('primevideo') || hostname.includes('amazon')) return 'Prime Video'
+    return hostname.split('.')[0].charAt(0).toUpperCase() + hostname.split('.')[0].slice(1)
+  } catch {
+    return 'Watch'
+  }
+}
+
+function reviewText(review: Review) {
+  return (review.body || review.summary || '').trim()
+}
+
+function reviewPreview(review: Review) {
+  const text = reviewText(review)
+  if (text.length <= 280) return text
+  return `${text.slice(0, 280).trim()}...`
+}
+
+function isReviewExpanded(reviewId: number) {
+  return Boolean(expandedReviews.value[reviewId])
+}
+
+function toggleReviewExpanded(reviewId: number) {
+  expandedReviews.value = {
+    ...expandedReviews.value,
+    [reviewId]: !expandedReviews.value[reviewId]
+  }
+}
+
+function hasReviewOverflow(review: Review) {
+  return reviewText(review).length > 280
+}
+
+function handleDocumentClick(event: MouseEvent) {
+  if (!listMenuOpen.value) return
+  const target = event.target as Node | null
+  if (listActionRef.value && target && !listActionRef.value.contains(target)) {
+    listMenuOpen.value = false
+  }
+}
+
+function loadMoreReviews() {
+  if (!hasMoreReviews.value || reviewsState.pending.value) return
+  reviewPage.value += 1
+}
+
+watch(animeId, () => {
+  reviewPage.value = 1
+  expandedReviews.value = {}
+})
+
+onMounted(() => {
+  document.addEventListener('click', handleDocumentClick)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleDocumentClick)
+})
+
 useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
 </script>
 
@@ -715,24 +875,7 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
         class="banner"
         :class="{ 'banner-empty': !bannerImage }"
         :style="bannerImage ? { backgroundImage: `url(${bannerImage})` } : undefined"
-      >
-        <a
-          v-if="bannerImage"
-          class="hohDownload"
-          :href="bannerImage"
-          :aria-label="`Open ${pageTitle} banner image`"
-          title="Download banner"
-          target="_blank"
-          rel="noreferrer"
-        >
-          <svg aria-hidden="true" viewBox="0 0 512 512">
-            <path
-              fill="currentColor"
-              d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32V274.7l-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7V32zM64 352c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V416c0-35.3-28.7-64-64-64H346.5l-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352H64zM432 456c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"
-            />
-          </svg>
-        </a>
-      </div>
+      />
 
       <div class="container">
         <div class="two-col-layout">
@@ -744,8 +887,9 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
             <div v-if="rankings.length" class="sidebar-section">
               <div class="sidebar-title">Rankings</div>
               <div v-for="item in rankings" :key="`${item.type}-${item.rank}`" class="rank-item">
-                <span>{{ item.type === 'RATED' ? 'Star' : 'Heart' }}</span>
-                <span>#{{ item.rank }} {{ item.type === 'RATED' ? 'Highest Rated All Time' : 'Most Popular All Time' }}</span>
+                <span class="rank-icon">{{ item.type === 'RATED' ? '★' : '♥' }}</span>
+                <span class="rank-label">{{ formatRankingLabel(item.type) }}</span>
+                <span>#{{ item.rank }}</span>
               </div>
             </div>
 
@@ -781,11 +925,21 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
 
           <div>
             <div class="media-content">
+              <div class="media-kicker">Anime Detail</div>
+              <div class="media-meta-strip">
+                <span class="media-meta-pill">{{ formatStatus(media.format) }}</span>
+                <span class="media-meta-pill">{{ formatSeason(media.season, media.seasonYear) }}</span>
+                <span class="media-meta-pill">{{ media.averageScore ? `${media.averageScore}% score` : 'No score yet' }}</span>
+                <span class="media-meta-pill">{{ media.episodes ? `${media.episodes} eps` : 'Episodes TBA' }}</span>
+              </div>
               <h1 class="media-title">{{ pageTitle }}</h1>
+              <div v-if="genres.length" class="media-genre-row">
+                <span v-for="genre in genres" :key="`${genre}-hero`" class="media-genre-chip">{{ genre }}</span>
+              </div>
               <p class="media-description">{{ description }}</p>
 
               <div class="actions">
-                <div class="list-action">
+                <div ref="listActionRef" class="list-action">
                   <button class="btn btn-primary list-button" type="button" :disabled="actionBusy === 'list' || !anilistToken" @click="listMenuOpen = !listMenuOpen">
                     <span>{{ currentListLabel }}</span>
                     <span class="button-arrow">&#9662;</span>
@@ -828,6 +982,24 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
             </div>
 
             <template v-if="selectedTab === 'overview'">
+              <section v-if="relations.length">
+                <h2 class="section-title">Relations</h2>
+                <div class="relations-strip">
+                  <NuxtLink
+                    v-for="relation in relations"
+                    :key="`${relation.relationType}-${relation.node?.id}`"
+                    class="relation-card relation-card-compact"
+                    :to="`/${(relation.node?.type || 'ANIME').toLowerCase()}/${relation.node?.id}`"
+                  >
+                    <img :src="relation.node?.coverImage?.medium || relation.node?.coverImage?.large || ''" :alt="relation.node?.title?.english || relation.node?.title?.romaji || ''">
+                    <div class="relation-copy">
+                      <div class="relation-name">{{ relation.node?.title?.english || relation.node?.title?.romaji || relation.node?.title?.native }}</div>
+                      <div class="relation-type-inline">{{ formatStatus(relation.relationType) }}</div>
+                    </div>
+                  </NuxtLink>
+                </div>
+              </section>
+
               <div class="overview-stats-grid">
                 <article v-for="item in overviewStats" :key="item.label" class="overview-stat-card">
                   <div class="overview-stat-label">{{ item.label }}</div>
@@ -835,74 +1007,6 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                   <div class="overview-stat-meta">{{ item.meta }}</div>
                 </article>
               </div>
-
-              <div class="stats-section">
-                <div class="stat-card">
-                  <div class="stat-header">
-                    <div class="stat-title">Status Distribution</div>
-                    <div class="stat-summary">
-                      <div class="stat-pill">
-                        <span class="stat-pill-label">Tracked</span>
-                        <strong>{{ formatNumber(totalTrackedUsers) }}</strong>
-                      </div>
-                      <div v-if="dominantStatus" class="stat-pill" :style="{ '--pill-accent': dominantStatus.color }">
-                        <span class="stat-pill-label">Top</span>
-                        <strong>{{ dominantStatus.label }}</strong>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="status-bar">
-                    <div v-for="item in statusDistribution" :key="item.key" class="status-item">
-                      <div class="status-badge" :style="{ background: item.color }">{{ item.label }}</div>
-                      <div class="status-count">{{ formatNumber(item.value) }} Users</div>
-                      <div class="status-share">{{ item.share }}</div>
-                    </div>
-                  </div>
-                  <div class="status-progress">
-                    <div v-for="item in statusDistribution" :key="`${item.key}-bar`" class="progress-segment" :style="{ width: item.width, background: item.color }" />
-                  </div>
-                </div>
-
-                <div class="stat-card">
-                  <div class="stat-header">
-                    <div class="stat-title">Score Distribution</div>
-                    <div class="stat-summary">
-                      <div class="stat-pill">
-                        <span class="stat-pill-label">Mean</span>
-                        <strong>{{ media.meanScore ? `${media.meanScore}%` : '-' }}</strong>
-                      </div>
-                      <div v-if="peakScoreBucket" class="stat-pill">
-                        <span class="stat-pill-label">Peak</span>
-                        <strong>{{ peakScoreBucket.score }}</strong>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="score-bars">
-                    <div v-for="item in scoreDistribution" :key="item.score" class="score-column">
-                      <span class="score-count">{{ item.amount ? formatCompactNumber(item.amount) : '' }}</span>
-                      <div class="score-bar-wrap">
-                        <div class="score-bar" :style="{ height: item.height }" />
-                      </div>
-                      <span class="score-label">{{ item.score }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <section v-if="relations.length">
-                <h2 class="section-title">Relations</h2>
-                <div class="relations-grid">
-                  <NuxtLink
-                    v-for="relation in relations"
-                    :key="`${relation.relationType}-${relation.node?.id}`"
-                    class="relation-card"
-                    :to="`/${(relation.node?.type || 'ANIME').toLowerCase()}/${relation.node?.id}`"
-                  >
-                    <img :src="relation.node?.coverImage?.large || ''" :alt="relation.node?.title?.english || relation.node?.title?.romaji || ''">
-                    <div class="relation-type">{{ formatStatus(relation.relationType) }}</div>
-                  </NuxtLink>
-                </div>
-              </section>
 
               <section v-if="overviewCharacters.length">
                 <h2 class="section-title">Characters</h2>
@@ -927,19 +1031,22 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                 </div>
               </section>
 
-              <section v-if="episodes.length" class="watch-section">
+              <section v-if="watchEpisodes.length" class="watch-section">
                 <h2 class="section-title">Watch</h2>
-                <div class="episodes-grid">
+                <div class="watch-provider-grid">
                   <a
-                    v-for="episode in episodes"
-                    :key="`${episode.title}-${episode.url}`"
-                    class="episode-card"
+                    v-for="episode in watchEpisodes"
+                    :key="`${episode.url}-${episode.title}`"
+                    class="watch-provider-card"
                     :href="episode.url || '#'"
                     target="_blank"
                     rel="noreferrer"
                   >
-                    <img :src="episode.thumbnail || coverImage" :alt="episode.title || pageTitle">
-                    <div class="episode-title">{{ episode.title }}</div>
+                    <img :src="episode.thumbnail || ''" :alt="episode.title || pageTitle" class="watch-provider-image">
+                    <div class="watch-provider-copy">
+                      <div class="watch-provider-name">{{ episode.title || 'Episode' }}</div>
+                      <div class="watch-provider-label">{{ providerNameFromUrl(episode.url) }}</div>
+                    </div>
                   </a>
                 </div>
               </section>
@@ -957,10 +1064,10 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                 </a>
               </section>
 
-              <section v-if="activities.length">
+              <section v-if="followingActivities.length">
                 <h2 class="section-title">Following</h2>
                 <div class="following-grid">
-                  <article v-for="activity in activities" :key="activity.id" class="following-item">
+                  <article v-for="activity in followingActivities.slice(0, 6)" :key="activity.id" class="following-item">
                     <div class="following-user">
                       <img :src="activity.user?.avatar?.medium || coverImage" :alt="activity.user?.name || 'User'" class="following-avatar">
                       <div>
@@ -986,9 +1093,9 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                 </div>
               </section>
 
-              <section v-if="reviews.length">
+              <section v-if="overviewReviews.length">
                 <h2 class="section-title">Reviews</h2>
-                <article v-for="review in reviews" :key="review.id" class="review-item">
+                <article v-for="review in overviewReviews" :key="review.id" class="review-item">
                   <div class="review-header">
                     <img :src="review.user?.avatar?.large || coverImage" :alt="review.user?.name || 'User'" class="review-avatar">
                     <div>
@@ -996,7 +1103,15 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                       <div class="following-status">Score: {{ review.score || '-' }}/100</div>
                     </div>
                   </div>
-                  <div class="review-text">{{ review.summary || review.body }}</div>
+                  <div class="review-text">{{ isReviewExpanded(review.id) ? reviewText(review) : reviewPreview(review) }}</div>
+                  <button
+                    v-if="hasReviewOverflow(review)"
+                    type="button"
+                    class="review-expand"
+                    @click="toggleReviewExpanded(review.id)"
+                  >
+                    {{ isReviewExpanded(review.id) ? 'View less' : 'View more' }}
+                  </button>
                   <div class="review-likes">Rating: {{ review.rating || 0 }}</div>
                 </article>
               </section>
@@ -1005,19 +1120,23 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
             <template v-else-if="selectedTab === 'watch'">
               <section class="watch-section">
                 <h2 class="section-title">Watch</h2>
-                <div class="episodes-grid">
+                <div v-if="watchEpisodes.length" class="watch-provider-grid">
                   <a
-                    v-for="episode in episodes"
-                    :key="`${episode.title}-${episode.url}-watch`"
-                    class="episode-card"
+                    v-for="episode in watchEpisodes"
+                    :key="`${episode.url}-${episode.title}-watch`"
+                    class="watch-provider-card"
                     :href="episode.url || '#'"
                     target="_blank"
                     rel="noreferrer"
                   >
-                    <img :src="episode.thumbnail || coverImage" :alt="episode.title || pageTitle">
-                    <div class="episode-title">{{ episode.title }}</div>
+                    <img :src="episode.thumbnail || ''" :alt="episode.title || pageTitle" class="watch-provider-image">
+                    <div class="watch-provider-copy">
+                      <div class="watch-provider-name">{{ episode.title || 'Episode' }}</div>
+                      <div class="watch-provider-label">{{ providerNameFromUrl(episode.url) }}</div>
+                    </div>
                   </a>
                 </div>
+                <div v-else class="social-empty compact">No episode previews with thumbnails were found on AniList for this title.</div>
               </section>
             </template>
 
@@ -1057,8 +1176,26 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                       <div class="following-status">Score: {{ review.score || '-' }}/100</div>
                     </div>
                   </div>
-                  <div class="review-text">{{ review.body || review.summary }}</div>
+                  <div class="review-text">{{ isReviewExpanded(review.id) ? reviewText(review) : reviewPreview(review) }}</div>
+                  <button
+                    v-if="hasReviewOverflow(review)"
+                    type="button"
+                    class="review-expand"
+                    @click="toggleReviewExpanded(review.id)"
+                  >
+                    {{ isReviewExpanded(review.id) ? 'View less' : 'View more' }}
+                  </button>
                 </article>
+                <div v-if="reviewsState.pending" class="social-empty compact">Loading more reviews...</div>
+                <button
+                  v-else-if="hasMoreReviews"
+                  type="button"
+                  class="review-load-more"
+                  :disabled="reviewsState.pending"
+                  @click="loadMoreReviews"
+                >
+                  Load more
+                </button>
               </section>
             </template>
 
@@ -1074,53 +1211,44 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
 
                 <div class="stats-section">
                   <div class="stat-card">
-                    <div class="stat-header">
+                    <div class="profile-like-head">
                       <div class="stat-title">Status Distribution</div>
-                      <div class="stat-summary">
-                        <div class="stat-pill">
-                          <span class="stat-pill-label">Tracked</span>
-                          <strong>{{ formatNumber(totalTrackedUsers) }}</strong>
-                        </div>
-                        <div v-if="dominantStatus" class="stat-pill" :style="{ '--pill-accent': dominantStatus.color }">
-                          <span class="stat-pill-label">Top</span>
-                          <strong>{{ dominantStatus.label }}</strong>
-                        </div>
-                      </div>
+                      <div class="profile-like-meta">{{ formatNumber(totalTrackedUsers) }} tracked</div>
                     </div>
-                    <div class="status-bar">
-                      <div v-for="item in statusDistribution" :key="`${item.key}-stats`" class="status-item">
-                        <div class="status-badge" :style="{ background: item.color }">{{ item.label }}</div>
-                        <div class="status-count">{{ formatNumber(item.value) }} Users</div>
-                        <div class="status-share">{{ item.share }}</div>
-                      </div>
-                    </div>
-                    <div class="status-progress">
+                    <div class="status-progress profile-progress">
                       <div v-for="item in statusDistribution" :key="`${item.key}-statsbar`" class="progress-segment" :style="{ width: item.width, background: item.color }" />
+                    </div>
+                    <div class="status-list">
+                      <div v-for="item in statusDistribution" :key="`${item.key}-stats`" class="status-row">
+                        <div class="status-row-label">
+                          <span class="status-dot" :style="{ background: item.color }" />
+                          <span>{{ item.label }}</span>
+                        </div>
+                        <div class="status-row-value">
+                          <strong>{{ formatNumber(item.value) }}</strong>
+                          <span>{{ item.share }}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
                   <div class="stat-card">
-                    <div class="stat-header">
+                    <div class="profile-like-head">
                       <div class="stat-title">Score Distribution</div>
-                      <div class="stat-summary">
-                        <div class="stat-pill">
-                          <span class="stat-pill-label">Mean</span>
-                          <strong>{{ media.meanScore ? `${media.meanScore}%` : '-' }}</strong>
-                        </div>
-                        <div v-if="peakScoreBucket" class="stat-pill">
-                          <span class="stat-pill-label">Peak</span>
-                          <strong>{{ peakScoreBucket.score }}</strong>
-                        </div>
+                      <div class="profile-like-meta">
+                        {{ media.meanScore ? `${media.meanScore}% mean` : 'No mean score' }}
                       </div>
                     </div>
-                  <div class="score-bars">
+                    <div class="score-bars compact">
                     <div v-for="item in scoreDistribution" :key="`${item.score}-stats`" class="score-column">
-                      <span class="score-count">{{ item.amount ? formatCompactNumber(item.amount) : '' }}</span>
                       <div class="score-bar-wrap">
                         <div class="score-bar" :style="{ height: item.height }" />
-                        </div>
+                      </div>
                       <span class="score-label">{{ item.score }}</span>
                     </div>
+                  </div>
+                  <div class="score-marker-row">
+                    <span v-for="marker in scoreMarkers" :key="`score-marker-${marker.score}`">{{ marker.score }}</span>
                   </div>
                 </div>
                 </div>
@@ -1181,7 +1309,7 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
             </template>
 
             <template v-else>
-              <section class="social-layout">
+              <section class="social-layout tab-panel">
                 <div class="social-main">
                   <article class="social-panel">
                     <div class="social-panel-head">

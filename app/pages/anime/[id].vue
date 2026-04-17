@@ -1,4 +1,3 @@
-
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -12,10 +11,32 @@ type CoverImage = { large?: string | null; extraLarge?: string | null; color?: s
 type Ranking = { rank?: number | null; type?: string | null; allTime?: boolean | null }
 type MediaTag = { name?: string | null; rank?: number | null; isMediaSpoiler?: boolean | null }
 type StreamingEpisode = { title?: string | null; thumbnail?: string | null; url?: string | null }
-type RelationEdge = { relationType?: string | null; node?: { id: number; type?: string | null; title?: MediaTitle | null; coverImage?: CoverImage | null } | null }
-type CharacterEdge = { role?: string | null; node?: { id: number; name?: { full?: string | null } | null; image?: { large?: string | null } | null } | null; voiceActors?: Array<{ id: number; languageV2?: string | null; name?: { full?: string | null } | null; image?: { large?: string | null } | null }> }
-type Recommendation = { rating?: number | null; mediaRecommendation?: { id: number; title?: MediaTitle | null; coverImage?: CoverImage | null } | null }
-type Review = { id: number; rating?: number | null; score?: number | null; summary?: string | null; body?: string | null; user?: { name?: string | null; avatar?: { large?: string | null } | null } | null }
+type RelationEdge = {
+  relationType?: string | null
+  node?: { id: number; type?: string | null; title?: MediaTitle | null; coverImage?: CoverImage | null } | null
+}
+type CharacterEdge = {
+  role?: string | null
+  node?: { id: number; name?: { full?: string | null } | null; image?: { large?: string | null } | null } | null
+  voiceActors?: Array<{
+    id: number
+    languageV2?: string | null
+    name?: { full?: string | null } | null
+    image?: { large?: string | null } | null
+  }>
+}
+type Recommendation = {
+  rating?: number | null
+  mediaRecommendation?: { id: number; title?: MediaTitle | null; coverImage?: CoverImage | null } | null
+}
+type Review = {
+  id: number
+  rating?: number | null
+  score?: number | null
+  summary?: string | null
+  body?: string | null
+  user?: { name?: string | null; avatar?: { large?: string | null } | null } | null
+}
 type StatsBucket = { score?: number | null; amount?: number | null }
 type StatusBucket = { status?: string | null; amount?: number | null }
 type MediaData = {
@@ -37,6 +58,7 @@ type MediaData = {
   seasonYear?: number | null
   source?: string | null
   hashtag?: string | null
+  genres?: string[] | null
   rankings?: Ranking[] | null
   tags?: MediaTag[] | null
   streamingEpisodes?: StreamingEpisode[] | null
@@ -51,7 +73,14 @@ type MediaData = {
   stats?: { scoreDistribution?: StatsBucket[] | null; statusDistribution?: StatusBucket[] | null } | null
   mediaListEntry?: { id?: number | null; status?: string | null } | null
 }
-type Activity = { id: number; status?: string | null; progress?: string | null; createdAt?: number | null; user?: { name?: string | null; avatar?: { medium?: string | null } | null } | null }
+type Activity = {
+  id: number
+  status?: string | null
+  progress?: string | null
+  createdAt?: number | null
+  user?: { name?: string | null; avatar?: { medium?: string | null } | null } | null
+}
+type AniListGraphqlResponse<T> = { data?: T; errors?: Array<{ message?: string | null }> | null }
 
 const route = useRoute()
 const animeId = computed(() => Number(route.params.id))
@@ -63,75 +92,370 @@ const actionBusy = ref<'favorite' | 'list' | null>(null)
 const listMenuOpen = ref(false)
 const anilistToken = computed(() => String(((pocketbaseStore.authRecord as any) || {})?.anilist_token ?? ''))
 
-const mediaQuery = `query($id:Int){Media(id:$id,type:ANIME){id title{romaji english native} description(asHtml:false) bannerImage coverImage{large extraLarge color} averageScore meanScore popularity favourites isFavourite episodes duration format status season seasonYear source hashtag startDate{year month day} endDate{year month day} trailer{site id thumbnail} rankings{rank type allTime} tags{name rank isMediaSpoiler} streamingEpisodes{title thumbnail url} studios{nodes{name isAnimationStudio}} mediaListEntry{id status} relations{edges{relationType node{id type title{romaji english native} coverImage{large extraLarge color}}}} recommendations(sort:[RATING_DESC]){nodes{rating mediaRecommendation{id title{romaji english native} coverImage{large extraLarge color}}}} characters(sort:[ROLE,RELEVANCE,ID]){edges{role node{id name{full} image{large}} voiceActors(language:JAPANESE,sort:[RELEVANCE,ID]){id languageV2 name{full} image{large}}}} reviews(sort:[RATING_DESC,SCORE_DESC]){nodes{id rating score summary body(asHtml:false) user{name avatar{large}}}} stats{scoreDistribution{score amount} statusDistribution{status amount}}}}`
-const socialQuery = `query($id:Int){Page(page:1,perPage:8){activities(mediaId:$id,sort:ID_DESC,type:MEDIA_LIST){... on ListActivity{id status progress createdAt user{name avatar{medium}}}}}}`
-const toggleFavouriteMutation = `mutation($animeId:Int){ToggleFavourite(animeId:$animeId){anime{nodes{id}}}}`
+const mediaQuery = `
+  query ($id: Int) {
+    Media(id: $id, type: ANIME) {
+      id
+      title { romaji english native }
+      description(asHtml: false)
+      bannerImage
+      coverImage { large extraLarge color }
+      averageScore
+      meanScore
+      popularity
+      favourites
+      isFavourite
+      episodes
+      duration
+      format
+      status
+      season
+      seasonYear
+      source
+      hashtag
+      genres
+      startDate { year month day }
+      endDate { year month day }
+      trailer { site id thumbnail }
+      rankings { rank type allTime }
+      tags { name rank isMediaSpoiler }
+      streamingEpisodes { title thumbnail url }
+      studios { nodes { name isAnimationStudio } }
+      mediaListEntry { id status }
+      relations {
+        edges {
+          relationType
+          node {
+            id
+            type
+            title { romaji english native }
+            coverImage { large extraLarge color }
+          }
+        }
+      }
+      recommendations(sort: [RATING_DESC]) {
+        nodes {
+          rating
+          mediaRecommendation {
+            id
+            title { romaji english native }
+            coverImage { large extraLarge color }
+          }
+        }
+      }
+      characters(sort: [ROLE, RELEVANCE, ID]) {
+        edges {
+          role
+          node {
+            id
+            name { full }
+            image { large }
+          }
+          voiceActors(language: JAPANESE, sort: [RELEVANCE, ID]) {
+            id
+            languageV2
+            name { full }
+            image { large }
+          }
+        }
+      }
+      reviews(sort: [RATING_DESC, SCORE_DESC]) {
+        nodes {
+          id
+          rating
+          score
+          summary
+          body(asHtml: false)
+          user {
+            name
+            avatar { large }
+          }
+        }
+      }
+      stats {
+        scoreDistribution { score amount }
+        statusDistribution { status amount }
+      }
+    }
+  }
+`
 
-const mediaState = await useAsyncData(() => `anime-detail-${animeId.value}`, async () => {
-  const response = await anilistGraphql.request<{ data?: { Media?: MediaData } }>(mediaQuery, { id: animeId.value }, { token: anilistToken.value, cacheTtlMs: anilistToken.value ? 15_000 : 120_000 })
-  return response.data?.Media ?? null
-}, { watch: [animeId] })
+const socialQuery = `
+  query ($id: Int) {
+    Page(page: 1, perPage: 8) {
+      activities(mediaId: $id, sort: ID_DESC, type: MEDIA_LIST) {
+        ... on ListActivity {
+          id
+          status
+          progress
+          createdAt
+          user {
+            name
+            avatar { medium }
+          }
+        }
+      }
+    }
+  }
+`
 
-const socialState = await useAsyncData(() => `anime-social-${animeId.value}`, async () => {
-  const response = await $fetch<{ data?: { Page?: { activities?: Activity[] | null } } }>('https://graphql.anilist.co', { method: 'POST', body: { query: socialQuery, variables: { id: animeId.value } }, headers: { 'Content-Type': 'application/json', Accept: 'application/json' } })
-  return response.data?.Page?.activities ?? []
-}, { default: () => [], watch: [animeId] })
+const toggleFavouriteMutation = `
+  mutation ($animeId: Int) {
+    ToggleFavourite(animeId: $animeId) {
+      anime {
+        nodes { id }
+      }
+    }
+  }
+`
+
+const mediaState = await useAsyncData(
+  () => `anime-detail-${animeId.value}-${anilistToken.value ? 'auth' : 'public'}`,
+  async () => {
+    const response = await anilistGraphql.request<AniListGraphqlResponse<{ Media?: MediaData | null }>>(
+      mediaQuery,
+      { id: animeId.value },
+      { token: anilistToken.value, cacheTtlMs: anilistToken.value ? 15_000 : 120_000 }
+    )
+    return response.data?.Media ?? null
+  },
+  { watch: [animeId, anilistToken] }
+)
+
+const socialState = await useAsyncData(
+  () => `anime-social-${animeId.value}`,
+  async () => {
+    const response = await anilistGraphql.request<AniListGraphqlResponse<{ Page?: { activities?: Activity[] | null } }>>(
+      socialQuery,
+      { id: animeId.value },
+      { cacheTtlMs: 60_000 }
+    )
+    return response.data?.Page?.activities ?? []
+  },
+  { default: () => [], watch: [animeId] }
+)
 
 const media = computed(() => mediaState.data.value)
 const activities = computed(() => socialState.data.value ?? [])
-const loading = computed(() => mediaState.pending.value)
+const loading = computed(() => mediaState.pending.value && !mediaState.data.value)
 const hasError = computed(() => Boolean(mediaState.error.value))
 const pageTitle = computed(() => media.value?.title?.english || media.value?.title?.romaji || 'Anime')
 const bannerImage = computed(() => media.value?.bannerImage || media.value?.coverImage?.extraLarge || media.value?.coverImage?.large || '')
 const coverImage = computed(() => media.value?.coverImage?.extraLarge || media.value?.coverImage?.large || '')
-const description = computed(() => (media.value?.description || '').replace(/<br\s*\/?>/gi, '\n').replace(/<\/?[^>]+>/g, '').replace(/\n{3,}/g, '\n\n').trim())
-const rankings = computed(() => (media.value?.rankings || []).filter(item => item.rank && item.allTime).slice(0, 2))
+const description = computed(() =>
+  (media.value?.description || '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/?[^>]+>/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+)
+const rankings = computed(() => (media.value?.rankings || []).filter((item) => item.rank && item.allTime).slice(0, 2))
 const studios = computed(() => (media.value?.studios?.nodes || []).filter(Boolean))
-const animationStudio = computed(() => studios.value.find(item => item?.isAnimationStudio)?.name || studios.value[0]?.name || 'Unknown')
-const producers = computed(() => studios.value.filter(item => !item?.isAnimationStudio).map(item => item?.name).filter(Boolean).slice(0, 5))
-const tags = computed(() => (media.value?.tags || []).filter(tag => !tag?.isMediaSpoiler).slice(0, 10))
-const relations = computed(() => (media.value?.relations?.edges || []).filter(edge => edge?.node).slice(0, 4))
-const characters = computed(() => (media.value?.characters?.edges || []).filter(edge => edge?.node).slice(0, 6))
+const animationStudio = computed(() => studios.value.find((item) => item?.isAnimationStudio)?.name || studios.value[0]?.name || 'Unknown')
+const producers = computed(() =>
+  studios.value
+    .filter((item) => !item?.isAnimationStudio)
+    .map((item) => item?.name)
+    .filter(Boolean)
+    .slice(0, 5)
+)
+const genres = computed(() => ((media.value?.genres || []).filter(Boolean) as string[]).slice(0, 6))
+const tags = computed(() => (media.value?.tags || []).filter((tag) => !tag?.isMediaSpoiler).slice(0, 10))
+const relations = computed(() => (media.value?.relations?.edges || []).filter((edge) => edge?.node).slice(0, 4))
+const allCharacters = computed(() => (media.value?.characters?.edges || []).filter((edge) => edge?.node))
+const overviewCharacters = computed(() => allCharacters.value.slice(0, 6))
+const characters = computed(() => allCharacters.value.slice(0, 12))
 const episodes = computed(() => (media.value?.streamingEpisodes || []).filter(Boolean).slice(0, 8))
-const recommendations = computed(() => (media.value?.recommendations?.nodes || []).filter(item => item?.mediaRecommendation).slice(0, 4))
+const recommendations = computed(() => (media.value?.recommendations?.nodes || []).filter((item) => item?.mediaRecommendation).slice(0, 4))
 const reviews = computed(() => (media.value?.reviews?.nodes || []).filter(Boolean).slice(0, 4))
 
-function formatStatus(value?: string | null) { return value ? value.toLowerCase().split('_').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ') : 'Unknown' }
-function formatDate(date?: FuzzyDate | null) { if (!date?.year) return 'TBA'; return new Date(date.year, (date.month || 1) - 1, date.day || 1).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }
-function formatSeason(season?: string | null, year?: number | null) { return season && year ? `${season.charAt(0)}${season.slice(1).toLowerCase()} ${year}` : 'Unknown' }
-function formatNumber(value?: number | null) { return new Intl.NumberFormat('en-US').format(value || 0) }
-function relativeTime(timestamp?: number | null) { if (!timestamp) return ''; const delta = Math.max(0, Math.floor(Date.now() / 1000) - timestamp); if (delta > 86400) return `${Math.floor(delta / 86400)}d ago`; if (delta > 3600) return `${Math.floor(delta / 3600)}h ago`; if (delta > 60) return `${Math.floor(delta / 60)}m ago`; return 'just now' }
-function formatProgress(activity: Activity) { return [formatStatus(activity.status), activity.progress].filter(Boolean).join(' ') }
+function formatStatus(value?: string | null) {
+  return value
+    ? value.toLowerCase().split('_').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ')
+    : 'Unknown'
+}
+
+function formatDate(date?: FuzzyDate | null) {
+  if (!date?.year) return 'TBA'
+  return new Date(date.year, (date.month || 1) - 1, date.day || 1).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  })
+}
+
+function formatSeason(season?: string | null, year?: number | null) {
+  return season && year ? `${season.charAt(0)}${season.slice(1).toLowerCase()} ${year}` : 'Unknown'
+}
+
+function formatNumber(value?: number | null) {
+  return new Intl.NumberFormat('en-US').format(value || 0)
+}
+
+function formatCompactNumber(value?: number | null) {
+  return new Intl.NumberFormat('en-US', {
+    notation: 'compact',
+    maximumFractionDigits: 1
+  }).format(value || 0)
+}
+
+function relativeTime(timestamp?: number | null) {
+  if (!timestamp) return ''
+  const delta = Math.max(0, Math.floor(Date.now() / 1000) - timestamp)
+  if (delta > 86_400) return `${Math.floor(delta / 86_400)}d ago`
+  if (delta > 3_600) return `${Math.floor(delta / 3_600)}h ago`
+  if (delta > 60) return `${Math.floor(delta / 60)}m ago`
+  return 'just now'
+}
+
+function formatProgress(activity: Activity) {
+  return [formatStatus(activity.status), activity.progress].filter(Boolean).join(' ')
+}
+
+function formatRankingLabel(type?: string | null) {
+  if (type === 'RATED') return 'Highest Rated'
+  if (type === 'POPULAR') return 'Most Popular'
+  return formatStatus(type)
+}
 
 const statusDistribution = computed(() => {
   const total = (media.value?.stats?.statusDistribution || []).reduce((sum, item) => sum + (item.amount || 0), 0) || 1
-  const colors: Record<string, string> = { COMPLETED: '#4CCA5A', PLANNING: '#02A9FF', CURRENT: '#9256F3', PAUSED: '#F779A4', DROPPED: '#E85D75' }
-  return (media.value?.stats?.statusDistribution || []).map(item => ({ key: item.status || 'UNKNOWN', label: formatStatus(item.status), value: item.amount || 0, width: `${((item.amount || 0) / total) * 100}%`, color: colors[item.status || ''] || '#3DB4F2' }))
+  const colors: Record<string, string> = {
+    COMPLETED: '#4cca5a',
+    PLANNING: '#02a9ff',
+    CURRENT: '#9256f3',
+    PAUSED: '#f779a4',
+    DROPPED: '#e85d75'
+  }
+
+  return [...(media.value?.stats?.statusDistribution || [])]
+    .sort((a, b) => (b.amount || 0) - (a.amount || 0))
+    .map((item) => ({
+    key: item.status || 'UNKNOWN',
+    label: formatStatus(item.status),
+    value: item.amount || 0,
+    width: `${((item.amount || 0) / total) * 100}%`,
+    share: `${Math.round(((item.amount || 0) / total) * 100)}%`,
+    color: colors[item.status || ''] || '#3db4f2'
+  }))
 })
 
 const scoreDistribution = computed(() => {
   const buckets = [...(media.value?.stats?.scoreDistribution || [])].sort((a, b) => (a.score || 0) - (b.score || 0))
-  const max = Math.max(...buckets.map(item => item.amount || 0), 1)
-  return buckets.map(item => ({ score: item.score || 0, height: `${((item.amount || 0) / max) * 100}%` }))
+  const max = Math.max(...buckets.map((item) => item.amount || 0), 1)
+  return buckets.map((item) => ({
+    score: item.score || 0,
+    amount: item.amount || 0,
+    height: `${((item.amount || 0) / max) * 100}%`
+  }))
 })
 
-const tabs = [{ key: 'overview', label: 'Overview' }, { key: 'watch', label: 'Watch' }, { key: 'characters', label: 'Characters' }, { key: 'reviews', label: 'Reviews' }, { key: 'stats', label: 'Stats' }, { key: 'social', label: 'Social' }] as const
-const listOptions: Array<{ value: EditableAniListStatus; label: string }> = [{ value: 'CURRENT', label: 'Watching' }, { value: 'PLANNING', label: 'Planning' }, { value: 'COMPLETED', label: 'Completed' }, { value: 'REPEATING', label: 'Rewatching' }, { value: 'PAUSED', label: 'Paused' }, { value: 'DROPPED', label: 'Dropped' }]
+const totalTrackedUsers = computed(() => statusDistribution.value.reduce((sum, item) => sum + item.value, 0))
+const dominantStatus = computed(() => statusDistribution.value[0] || null)
+const peakScoreBucket = computed(() => [...scoreDistribution.value].sort((a, b) => b.amount - a.amount)[0] || null)
+const overviewStats = computed(() => [
+  {
+    label: 'Average Score',
+    value: media.value?.averageScore ? `${media.value.averageScore}%` : '-',
+    meta: 'Community rating'
+  },
+  {
+    label: 'Mean Score',
+    value: media.value?.meanScore ? `${media.value.meanScore}%` : '-',
+    meta: peakScoreBucket.value ? `Peak bucket: ${peakScoreBucket.value.score}` : 'Score trend'
+  },
+  {
+    label: 'Popularity',
+    value: media.value?.popularity ? formatCompactNumber(media.value.popularity) : '-',
+    meta: media.value?.popularity ? formatNumber(media.value.popularity) : 'No data'
+  },
+  {
+    label: 'Favorites',
+    value: media.value?.favourites ? formatCompactNumber(media.value.favourites) : '-',
+    meta: media.value?.favourites ? `${formatNumber(media.value.favourites)} users` : 'No data'
+  }
+])
+const statsSummaryCards = computed(() => [
+  {
+    label: 'Average Score',
+    value: media.value?.averageScore ? `${media.value.averageScore}%` : '-',
+    meta: 'Community rating'
+  },
+  {
+    label: 'Mean Score',
+    value: media.value?.meanScore ? `${media.value.meanScore}%` : '-',
+    meta: peakScoreBucket.value ? `Peak score: ${peakScoreBucket.value.score}` : 'No score trend'
+  },
+  {
+    label: 'Popularity',
+    value: media.value?.popularity ? formatNumber(media.value.popularity) : '-',
+    meta: 'AniList popularity'
+  },
+  {
+    label: 'Favorites',
+    value: media.value?.favourites ? formatNumber(media.value.favourites) : '-',
+    meta: 'Users who favorited it'
+  },
+  {
+    label: 'Episodes',
+    value: media.value?.episodes ? String(media.value.episodes) : '?',
+    meta: media.value?.duration ? `${media.value.duration} mins each` : 'Duration unknown'
+  },
+  {
+    label: 'Studio',
+    value: animationStudio.value,
+    meta: producers.value[0] ? `Producer: ${producers.value[0]}` : 'Production data'
+  }
+])
+const infoFacts = computed(() => [
+  { label: 'Format', value: formatStatus(media.value?.format) },
+  { label: 'Status', value: formatStatus(media.value?.status) },
+  { label: 'Season', value: formatSeason(media.value?.season, media.value?.seasonYear) },
+  { label: 'Episodes', value: media.value?.episodes ? String(media.value.episodes) : '?' },
+  { label: 'Duration', value: media.value?.duration ? `${media.value.duration} mins` : 'Unknown' },
+  { label: 'Source', value: formatStatus(media.value?.source) }
+])
+
+const tabs = [
+  { key: 'overview', label: 'Overview' },
+  { key: 'watch', label: 'Watch' },
+  { key: 'characters', label: 'Characters' },
+  { key: 'reviews', label: 'Reviews' },
+  { key: 'stats', label: 'Stats' },
+  { key: 'social', label: 'Social' }
+] as const
+
+const listOptions: Array<{ value: EditableAniListStatus; label: string }> = [
+  { value: 'CURRENT', label: 'Watching' },
+  { value: 'PLANNING', label: 'Planning' },
+  { value: 'COMPLETED', label: 'Completed' },
+  { value: 'REPEATING', label: 'Rewatching' },
+  { value: 'PAUSED', label: 'Paused' },
+  { value: 'DROPPED', label: 'Dropped' }
+]
+
 const currentListLabel = computed(() => {
   const status = media.value?.mediaListEntry?.status
   if (!status) return 'Add to List'
-  return listOptions.find(option => option.value === status)?.label || formatStatus(status)
+  return listOptions.find((option) => option.value === status)?.label || formatStatus(status)
 })
 
 async function toggleFavorite() {
   if (!media.value?.id || !anilistToken.value || actionBusy.value) return
+
   actionBusy.value = 'favorite'
   const next = !media.value.isFavourite
   const prevCount = media.value.favourites || 0
+
   media.value.isFavourite = next
   media.value.favourites = Math.max(0, prevCount + (next ? 1 : -1))
+
   try {
-    const response = await anilistGraphql.request<any>(toggleFavouriteMutation, { animeId: media.value.id }, { token: anilistToken.value, skipCache: true })
+    const response = await anilistGraphql.request<any>(
+      toggleFavouriteMutation,
+      { animeId: media.value.id },
+      { token: anilistToken.value, skipCache: true }
+    )
     if (response?.errors?.length) throw new Error(response.errors[0]?.message || 'Unable to update favorite.')
   } catch {
     media.value.isFavourite = !next
@@ -143,11 +467,21 @@ async function toggleFavorite() {
 
 async function saveListStatus(status: EditableAniListStatus) {
   if (!media.value?.id || !anilistToken.value || actionBusy.value) return
+
   actionBusy.value = 'list'
   listMenuOpen.value = false
+
   try {
-    const savedEntry = await anilistSync.saveEntry({ entryId: media.value.mediaListEntry?.id || undefined, mediaId: media.value.id, status })
-    media.value.mediaListEntry = { id: Number(savedEntry.id), status: String(savedEntry.status || status) }
+    const savedEntry = await anilistSync.saveEntry({
+      entryId: media.value.mediaListEntry?.id || undefined,
+      mediaId: media.value.id,
+      status
+    })
+
+    media.value.mediaListEntry = {
+      id: Number(savedEntry.id),
+      status: String(savedEntry.status || status)
+    }
   } finally {
     actionBusy.value = null
   }
@@ -155,13 +489,33 @@ async function saveListStatus(status: EditableAniListStatus) {
 
 useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
 </script>
+
 <template>
   <div class="anime-page">
     <div v-if="loading" class="state-panel">Loading anime...</div>
     <div v-else-if="hasError || !media" class="state-panel error">Impossible de charger cette fiche anime.</div>
     <div v-else>
-      <div class="banner" :style="bannerImage ? { backgroundImage: `url(${bannerImage})` } : undefined">
-        <div class="banner-overlay" />
+      <div
+        class="banner"
+        :class="{ 'banner-empty': !bannerImage }"
+        :style="bannerImage ? { backgroundImage: `url(${bannerImage})` } : undefined"
+      >
+        <a
+          v-if="bannerImage"
+          class="hohDownload"
+          :href="bannerImage"
+          :aria-label="`Open ${pageTitle} banner image`"
+          title="Download banner"
+          target="_blank"
+          rel="noreferrer"
+        >
+          <svg aria-hidden="true" viewBox="0 0 512 512">
+            <path
+              fill="currentColor"
+              d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32V274.7l-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7V32zM64 352c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V416c0-35.3-28.7-64-64-64H346.5l-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352H64zM432 456c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"
+            />
+          </svg>
+        </a>
       </div>
 
       <div class="container">
@@ -171,7 +525,7 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
               <img :src="coverImage" :alt="pageTitle">
             </div>
 
-            <div class="sidebar-section" v-if="rankings.length">
+            <div v-if="rankings.length" class="sidebar-section">
               <div class="sidebar-title">Rankings</div>
               <div v-for="item in rankings" :key="`${item.type}-${item.rank}`" class="rank-item">
                 <span>{{ item.type === 'RATED' ? 'Star' : 'Heart' }}</span>
@@ -193,12 +547,12 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
               <div class="data-row"><span class="data-label">Popularity</span><span class="data-value">{{ formatNumber(media.popularity) }}</span></div>
               <div class="data-row"><span class="data-label">Favorites</span><span class="data-value">{{ formatNumber(media.favourites) }}</span></div>
               <div class="data-row"><span class="data-label">Studio</span><span class="data-value">{{ animationStudio }}</span></div>
-              <div class="data-row" v-if="producers.length"><span class="data-label">Producers</span><span class="data-value stacked"><span v-for="producer in producers" :key="producer">{{ producer }}</span></span></div>
+              <div v-if="producers.length" class="data-row"><span class="data-label">Producers</span><span class="data-value stacked"><span v-for="producer in producers" :key="producer">{{ producer }}</span></span></div>
               <div class="data-row"><span class="data-label">Source</span><span class="data-value">{{ formatStatus(media.source) }}</span></div>
-              <div class="data-row" v-if="media.hashtag"><span class="data-label">Hashtag</span><span class="data-value accent">{{ media.hashtag }}</span></div>
+              <div v-if="media.hashtag" class="data-row"><span class="data-label">Hashtag</span><span class="data-value accent">{{ media.hashtag }}</span></div>
             </div>
 
-            <div class="sidebar-section" v-if="tags.length">
+            <div v-if="tags.length" class="sidebar-section">
               <div class="sidebar-title">Tags</div>
               <div class="tag-list">
                 <div v-for="tag in tags" :key="tag.name" class="tag-item">
@@ -222,7 +576,14 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                   </button>
 
                   <div v-if="listMenuOpen" class="list-menu">
-                    <button v-for="option in listOptions" :key="option.value" type="button" class="list-option" :class="{ active: media.mediaListEntry?.status === option.value }" @click="saveListStatus(option.value)">
+                    <button
+                      v-for="option in listOptions"
+                      :key="option.value"
+                      type="button"
+                      class="list-option"
+                      :class="{ active: media.mediaListEntry?.status === option.value }"
+                      @click="saveListStatus(option.value)"
+                    >
                       {{ option.label }}
                     </button>
                   </div>
@@ -237,20 +598,48 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
 
             <div class="tabs">
               <div class="tabs-nav">
-                <button v-for="tab in tabs" :key="tab.key" type="button" class="tab" :class="{ active: selectedTab === tab.key }" @click="selectedTab = tab.key">
+                <button
+                  v-for="tab in tabs"
+                  :key="tab.key"
+                  type="button"
+                  class="tab"
+                  :class="{ active: selectedTab === tab.key }"
+                  @click="selectedTab = tab.key"
+                >
                   {{ tab.label }}
                 </button>
               </div>
             </div>
 
             <template v-if="selectedTab === 'overview'">
+              <div class="overview-stats-grid">
+                <article v-for="item in overviewStats" :key="item.label" class="overview-stat-card">
+                  <div class="overview-stat-label">{{ item.label }}</div>
+                  <div class="overview-stat-value">{{ item.value }}</div>
+                  <div class="overview-stat-meta">{{ item.meta }}</div>
+                </article>
+              </div>
+
               <div class="stats-section">
                 <div class="stat-card">
-                  <div class="stat-title">Status Distribution</div>
+                  <div class="stat-header">
+                    <div class="stat-title">Status Distribution</div>
+                    <div class="stat-summary">
+                      <div class="stat-pill">
+                        <span class="stat-pill-label">Tracked</span>
+                        <strong>{{ formatNumber(totalTrackedUsers) }}</strong>
+                      </div>
+                      <div v-if="dominantStatus" class="stat-pill" :style="{ '--pill-accent': dominantStatus.color }">
+                        <span class="stat-pill-label">Top</span>
+                        <strong>{{ dominantStatus.label }}</strong>
+                      </div>
+                    </div>
+                  </div>
                   <div class="status-bar">
                     <div v-for="item in statusDistribution" :key="item.key" class="status-item">
                       <div class="status-badge" :style="{ background: item.color }">{{ item.label }}</div>
                       <div class="status-count">{{ formatNumber(item.value) }} Users</div>
+                      <div class="status-share">{{ item.share }}</div>
                     </div>
                   </div>
                   <div class="status-progress">
@@ -259,11 +648,26 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                 </div>
 
                 <div class="stat-card">
-                  <div class="stat-title">Score Distribution</div>
+                  <div class="stat-header">
+                    <div class="stat-title">Score Distribution</div>
+                    <div class="stat-summary">
+                      <div class="stat-pill">
+                        <span class="stat-pill-label">Mean</span>
+                        <strong>{{ media.meanScore ? `${media.meanScore}%` : '-' }}</strong>
+                      </div>
+                      <div v-if="peakScoreBucket" class="stat-pill">
+                        <span class="stat-pill-label">Peak</span>
+                        <strong>{{ peakScoreBucket.score }}</strong>
+                      </div>
+                    </div>
+                  </div>
                   <div class="score-bars">
                     <div v-for="item in scoreDistribution" :key="item.score" class="score-column">
-                      <div class="score-bar" :style="{ height: item.height }" />
-                      <span>{{ item.score }}</span>
+                      <span class="score-count">{{ item.amount ? formatCompactNumber(item.amount) : '' }}</span>
+                      <div class="score-bar-wrap">
+                        <div class="score-bar" :style="{ height: item.height }" />
+                      </div>
+                      <span class="score-label">{{ item.score }}</span>
                     </div>
                   </div>
                 </div>
@@ -272,17 +676,22 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
               <section v-if="relations.length">
                 <h2 class="section-title">Relations</h2>
                 <div class="relations-grid">
-                  <NuxtLink v-for="relation in relations" :key="`${relation.relationType}-${relation.node?.id}`" class="relation-card" :to="`/${(relation.node?.type || 'ANIME').toLowerCase()}/${relation.node?.id}`">
+                  <NuxtLink
+                    v-for="relation in relations"
+                    :key="`${relation.relationType}-${relation.node?.id}`"
+                    class="relation-card"
+                    :to="`/${(relation.node?.type || 'ANIME').toLowerCase()}/${relation.node?.id}`"
+                  >
                     <img :src="relation.node?.coverImage?.large || ''" :alt="relation.node?.title?.english || relation.node?.title?.romaji || ''">
                     <div class="relation-type">{{ formatStatus(relation.relationType) }}</div>
                   </NuxtLink>
                 </div>
               </section>
 
-              <section v-if="characters.length">
+              <section v-if="overviewCharacters.length">
                 <h2 class="section-title">Characters</h2>
                 <div class="characters-grid">
-                  <article v-for="character in characters" :key="character.node?.id" class="character-row">
+                  <article v-for="character in overviewCharacters" :key="character.node?.id" class="character-row" :class="{ 'has-voice': !!character.voiceActors?.[0] }">
                     <div class="character-left">
                       <img :src="character.node?.image?.large || ''" :alt="character.node?.name?.full || ''" class="character-img">
                       <div class="character-info">
@@ -301,10 +710,18 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                   </article>
                 </div>
               </section>
+
               <section v-if="episodes.length" class="watch-section">
                 <h2 class="section-title">Watch</h2>
                 <div class="episodes-grid">
-                  <a v-for="episode in episodes" :key="`${episode.title}-${episode.url}`" class="episode-card" :href="episode.url || '#'" target="_blank" rel="noreferrer">
+                  <a
+                    v-for="episode in episodes"
+                    :key="`${episode.title}-${episode.url}`"
+                    class="episode-card"
+                    :href="episode.url || '#'"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
                     <img :src="episode.thumbnail || coverImage" :alt="episode.title || pageTitle">
                     <div class="episode-title">{{ episode.title }}</div>
                   </a>
@@ -313,7 +730,12 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
 
               <section v-if="media.trailer?.thumbnail">
                 <h2 class="section-title">Trailer</h2>
-                <a class="trailer-container" :href="media.trailer.site === 'youtube' ? `https://www.youtube.com/watch?v=${media.trailer.id}` : '#'" target="_blank" rel="noreferrer">
+                <a
+                  class="trailer-container"
+                  :href="media.trailer.site === 'youtube' ? `https://www.youtube.com/watch?v=${media.trailer.id}` : '#'"
+                  target="_blank"
+                  rel="noreferrer"
+                >
                   <img :src="media.trailer.thumbnail" :alt="`${pageTitle} trailer`">
                   <div class="play-btn">Play</div>
                 </a>
@@ -368,7 +790,14 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
               <section class="watch-section">
                 <h2 class="section-title">Watch</h2>
                 <div class="episodes-grid">
-                  <a v-for="episode in episodes" :key="`${episode.title}-${episode.url}-watch`" class="episode-card" :href="episode.url || '#'" target="_blank" rel="noreferrer">
+                  <a
+                    v-for="episode in episodes"
+                    :key="`${episode.title}-${episode.url}-watch`"
+                    class="episode-card"
+                    :href="episode.url || '#'"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
                     <img :src="episode.thumbnail || coverImage" :alt="episode.title || pageTitle">
                     <div class="episode-title">{{ episode.title }}</div>
                   </a>
@@ -380,7 +809,7 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
               <section>
                 <h2 class="section-title">Characters</h2>
                 <div class="characters-grid">
-                  <article v-for="character in characters" :key="`${character.node?.id}-characters`" class="character-row">
+                  <article v-for="character in characters" :key="`${character.node?.id}-characters`" class="character-row" :class="{ 'has-voice': !!character.voiceActors?.[0] }">
                     <div class="character-left">
                       <img :src="character.node?.image?.large || ''" :alt="character.node?.name?.full || ''" class="character-img">
                       <div class="character-info">
@@ -418,28 +847,119 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
             </template>
 
             <template v-else-if="selectedTab === 'stats'">
-              <div class="stats-section">
-                <div class="stat-card">
-                  <div class="stat-title">Status Distribution</div>
-                  <div class="status-bar">
-                    <div v-for="item in statusDistribution" :key="`${item.key}-stats`" class="status-item">
-                      <div class="status-badge" :style="{ background: item.color }">{{ item.label }}</div>
-                      <div class="status-count">{{ formatNumber(item.value) }} Users</div>
-                    </div>
-                  </div>
-                  <div class="status-progress">
-                    <div v-for="item in statusDistribution" :key="`${item.key}-statsbar`" class="progress-segment" :style="{ width: item.width, background: item.color }" />
-                  </div>
+              <div class="stats-page">
+                <div class="stats-summary-grid">
+                  <article v-for="item in statsSummaryCards" :key="item.label" class="overview-stat-card detailed">
+                    <div class="overview-stat-label">{{ item.label }}</div>
+                    <div class="overview-stat-value">{{ item.value }}</div>
+                    <div class="overview-stat-meta">{{ item.meta }}</div>
+                  </article>
                 </div>
 
-                <div class="stat-card">
-                  <div class="stat-title">Score Distribution</div>
-                  <div class="score-bars">
-                    <div v-for="item in scoreDistribution" :key="`${item.score}-stats`" class="score-column">
-                      <div class="score-bar" :style="{ height: item.height }" />
-                      <span>{{ item.score }}</span>
+                <div class="stats-section">
+                  <div class="stat-card">
+                    <div class="stat-header">
+                      <div class="stat-title">Status Distribution</div>
+                      <div class="stat-summary">
+                        <div class="stat-pill">
+                          <span class="stat-pill-label">Tracked</span>
+                          <strong>{{ formatNumber(totalTrackedUsers) }}</strong>
+                        </div>
+                        <div v-if="dominantStatus" class="stat-pill" :style="{ '--pill-accent': dominantStatus.color }">
+                          <span class="stat-pill-label">Top</span>
+                          <strong>{{ dominantStatus.label }}</strong>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="status-bar">
+                      <div v-for="item in statusDistribution" :key="`${item.key}-stats`" class="status-item">
+                        <div class="status-badge" :style="{ background: item.color }">{{ item.label }}</div>
+                        <div class="status-count">{{ formatNumber(item.value) }} Users</div>
+                        <div class="status-share">{{ item.share }}</div>
+                      </div>
+                    </div>
+                    <div class="status-progress">
+                      <div v-for="item in statusDistribution" :key="`${item.key}-statsbar`" class="progress-segment" :style="{ width: item.width, background: item.color }" />
                     </div>
                   </div>
+
+                  <div class="stat-card">
+                    <div class="stat-header">
+                      <div class="stat-title">Score Distribution</div>
+                      <div class="stat-summary">
+                        <div class="stat-pill">
+                          <span class="stat-pill-label">Mean</span>
+                          <strong>{{ media.meanScore ? `${media.meanScore}%` : '-' }}</strong>
+                        </div>
+                        <div v-if="peakScoreBucket" class="stat-pill">
+                          <span class="stat-pill-label">Peak</span>
+                          <strong>{{ peakScoreBucket.score }}</strong>
+                        </div>
+                      </div>
+                    </div>
+                  <div class="score-bars">
+                    <div v-for="item in scoreDistribution" :key="`${item.score}-stats`" class="score-column">
+                      <span class="score-count">{{ item.amount ? formatCompactNumber(item.amount) : '' }}</span>
+                      <div class="score-bar-wrap">
+                        <div class="score-bar" :style="{ height: item.height }" />
+                        </div>
+                      <span class="score-label">{{ item.score }}</span>
+                    </div>
+                  </div>
+                </div>
+                </div>
+
+                <div class="stats-info-grid">
+                  <section class="info-card">
+                    <h3 class="info-card-title">Media Details</h3>
+                    <div class="info-card-list">
+                      <div v-for="item in infoFacts" :key="item.label" class="info-card-row">
+                        <span>{{ item.label }}</span>
+                        <strong>{{ item.value }}</strong>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section class="info-card">
+                    <h3 class="info-card-title">Production</h3>
+                    <div class="info-card-list">
+                      <div class="info-card-row">
+                        <span>Main Studio</span>
+                        <strong>{{ animationStudio }}</strong>
+                      </div>
+                      <div class="info-card-row">
+                        <span>Producers</span>
+                        <strong>{{ producers.length ? producers.join(', ') : 'Unknown' }}</strong>
+                      </div>
+                      <div v-if="media.hashtag" class="info-card-row">
+                        <span>Hashtag</span>
+                        <strong>{{ media.hashtag }}</strong>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section v-if="rankings.length" class="info-card">
+                    <h3 class="info-card-title">Community Highlights</h3>
+                    <div class="info-card-list">
+                      <div v-for="item in rankings" :key="`${item.type}-${item.rank}-detail`" class="info-card-row">
+                        <span>{{ formatRankingLabel(item.type) }}</span>
+                        <strong>#{{ item.rank }}</strong>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section v-if="genres.length || tags.length" class="info-card">
+                    <h3 class="info-card-title">Genres and Tags</h3>
+                    <div v-if="genres.length" class="chip-list">
+                      <span v-for="genre in genres" :key="genre" class="genre-chip">{{ genre }}</span>
+                    </div>
+                    <div v-if="tags.length" class="tag-metric-list">
+                      <div v-for="tag in tags.slice(0, 6)" :key="tag.name" class="tag-metric-row">
+                        <span class="tag-metric-name">{{ tag.name }}</span>
+                        <strong>{{ tag.rank || 0 }}%</strong>
+                      </div>
+                    </div>
+                  </section>
                 </div>
               </div>
             </template>
@@ -467,32 +987,5 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
     </div>
   </div>
 </template>
-<style scoped>
-.anime-page{min-height:100vh;color:#A0B1C5;font-family:Overpass,Roboto,sans-serif;font-size:14px}
-.state-panel{max-width:1520px;margin:120px auto;padding:24px;border-radius:4px;background:#151F2E}.state-panel.error{color:#ff8b9b}
-.banner{position:relative;height:240px;background:center/cover;border-bottom:1px solid rgba(160,177,197,.08)}.banner-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,22,34,.18) 0%,rgba(11,22,34,.55) 60%,rgba(11,22,34,.88) 100%)}
-.container{max-width:1520px;margin:0 auto;padding:24px 40px 0}.two-col-layout{display:grid;grid-template-columns:215px 1fr;gap:30px;margin-top:0;position:relative;margin-bottom:40px}
-.sidebar-left{display:flex;flex-direction:column;gap:18px}.cover{width:215px;height:310px;border-radius:4px;overflow:hidden;box-shadow:0 14px 30px rgba(0,0,0,.5)}.cover img{width:100%;height:100%;object-fit:cover}
-.sidebar-section,.stat-card,.review-item,.following-item,.character-row,.rec-card{background:#151F2E;border-radius:4px}.sidebar-section,.stat-card,.review-item{padding:18px}
-.sidebar-title{font-size:13px;font-weight:700;color:#fff;margin-bottom:15px;text-transform:uppercase;letter-spacing:.3px}
-.data-row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid rgba(160,177,197,.08);font-size:13px}.data-row:last-child{border-bottom:none}.data-label{color:#748899}.data-value{color:#C0D0E0;font-weight:600;text-align:right}.data-value.stacked{display:flex;flex-direction:column;gap:2px}.accent,.tag-percent{color:#3DB4F2}
-.rank-item,.tag-item{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:#C0D0E0}.rank-item+.rank-item,.tag-item+.tag-item{margin-top:8px}.tag-list{display:flex;flex-direction:column;gap:8px}
-.media-content{padding-top:0}.media-title{font-size:27px;font-weight:700;color:#fff;margin-bottom:8px}.media-description{font-size:14px;line-height:1.6;color:#A0B1C5;margin:12px 0 16px;max-width:980px;white-space:pre-line}
-.actions{display:flex;gap:12px;margin:0 0 25px;align-items:center}.btn{padding:12px 24px;border:none;border-radius:4px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit}.btn-primary{background:#3DB4F2;color:#fff}
-.list-action{position:relative}.list-button{display:flex;align-items:center;gap:10px;min-width:190px;justify-content:space-between;box-shadow:none}.button-arrow{font-size:11px;opacity:.9}
-.list-menu{position:absolute;top:calc(100% + 8px);left:0;min-width:190px;background:#151F2E;border:1px solid rgba(160,177,197,.12);border-radius:4px;box-shadow:0 12px 30px rgba(0,0,0,.35);overflow:hidden;z-index:20}
-.list-option{display:block;width:100%;padding:10px 14px;background:transparent;border:none;color:#C0D0E0;text-align:left;font:inherit;cursor:pointer}.list-option:hover,.list-option.active{background:#1C2738;color:#fff}
-.favorite-button{width:48px;height:48px;border-radius:4px;border:2px solid #E85D75;background:transparent;color:#E85D75;font-size:24px;line-height:1;cursor:pointer}.favorite-button:hover{background:#E85D75;color:#fff}.favorite-button:disabled,.list-button:disabled{opacity:.5;cursor:not-allowed}
-.tabs{border-bottom:1px solid rgba(160,177,197,.15);margin:30px 0}.tabs-nav{display:flex;gap:40px}.tab{padding:18px 0;color:#A0B1C5;background:transparent;border:none;border-bottom:3px solid transparent;font-weight:600;font-size:15px;cursor:pointer}.tab.active{color:#3DB4F2;border-bottom-color:#3DB4F2}
-.stats-section{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-bottom:40px}.stat-title,.section-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:20px}
-.status-bar{display:flex;gap:10px;margin-bottom:8px}.status-item{flex:1;text-align:center}.status-badge{padding:8px 12px;border-radius:4px;font-size:12px;font-weight:700;color:#fff;margin-bottom:5px}.status-count{font-size:12px;color:#C0D0E0}.status-progress{height:8px;background:rgba(0,0,0,.3);border-radius:4px;overflow:hidden;display:flex;margin-top:15px}.progress-segment{height:100%}
-.score-bars{display:flex;align-items:flex-end;justify-content:space-around;height:120px;gap:8px}.score-column{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;color:#748899;font-size:11px}.score-bar{width:100%;border-radius:4px 4px 0 0;background:linear-gradient(180deg,#66BB6A 0%,#4CCA5A 100%)}
-.relations-grid,.recommendations-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:40px}.relation-card,.rec-card{position:relative;overflow:hidden;cursor:pointer;text-decoration:none;color:inherit;transition:transform .2s}.relation-card:hover,.rec-card:hover{transform:translateY(-4px)}.relation-card img{width:100%;height:145px;object-fit:cover}.relation-type{position:absolute;left:0;right:0;bottom:0;padding:6px 8px;background:rgba(0,0,0,.72);font-size:11px;font-weight:700;color:#fff;text-align:center;text-transform:uppercase}
-.characters-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:40px}.character-row{display:flex;overflow:hidden}.character-left{display:flex;flex:1}.voice-side{justify-content:flex-end}.character-img{width:60px;height:85px;object-fit:cover}.character-info{padding:10px;display:flex;flex-direction:column;justify-content:center}.character-name{font-size:13px;font-weight:600;color:#C0D0E0;margin-bottom:3px}.character-role{font-size:11px;color:#748899}.text-right{text-align:right}
-.watch-section{margin-bottom:40px}.episodes-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:30px}.episode-card{position:relative;border-radius:4px;overflow:hidden;cursor:pointer;transition:transform .2s;color:#fff;text-decoration:none}.episode-card:hover{transform:scale(1.02)}.episode-card img{width:100%;height:120px;object-fit:cover}.episode-title{position:absolute;left:0;right:0;bottom:0;padding:8px;background:linear-gradient(to top,rgba(0,0,0,.9),transparent);color:#fff;font-size:12px;font-weight:600}
-.trailer-container{position:relative;display:block;width:100%;max-width:700px;aspect-ratio:16/9;background:#000;border-radius:4px;overflow:hidden;margin-bottom:30px}.trailer-container img{width:100%;height:100%;object-fit:cover}.play-btn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);padding:14px 18px;border-radius:999px;background:rgba(255,255,255,.92);color:#000;font-weight:700}
-.following-grid{display:grid;gap:15px;margin-bottom:40px}.following-item{padding:15px;display:flex;align-items:center;justify-content:space-between}.following-user{display:flex;align-items:center;gap:12px}.following-avatar,.review-avatar{border-radius:50%;object-fit:cover}.following-avatar{width:45px;height:45px}.following-name{font-size:14px;font-weight:600;color:#C0D0E0}.following-status,.review-likes{font-size:13px;color:#A0B1C5}.following-score{font-size:14px;font-weight:700;color:#4CCA5A}
-.rec-card img{width:100%;height:180px;object-fit:cover}.rec-info{padding:12px}.rec-title{font-size:13px;font-weight:600;color:#C0D0E0;margin-bottom:5px}.rec-votes{font-size:11px;color:#748899}
-.review-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}.review-avatar{width:50px;height:50px}.review-text{font-size:14px;line-height:1.7;color:#A0B1C5}
-@media (max-width:1200px){.two-col-layout{grid-template-columns:1fr}.cover{margin:0 auto}.media-content{padding-top:0}.stats-section,.relations-grid,.characters-grid,.episodes-grid,.recommendations-grid{grid-template-columns:1fr}.container{padding:20px 20px 0}.banner{height:180px}}
-</style>
+
+<style scoped src="~/assets/css/pages/animeDetails.css"></style>

@@ -154,7 +154,7 @@
 import { computed, ref, unref, watch } from 'vue'
 import { getAnilistCoverSrc, getAnilistCoverSrcSet, type AnilistCoverImage } from '~/composables/useAnilistCoverImage'
 import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
-import { useAnilistListEditor } from '~/composables/useAnilistListEditor'
+import { useAnilistSync } from '~/composables/useAnilistSync'
 import { useInfiniteScroll } from '~/composables/useInfiniteScroll'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 import { useToastStore } from '~/composables/useToastStore'
@@ -218,7 +218,7 @@ const currentViewMode = computed(() => props.viewMode || 'grid')
 
 const pocketbaseStore = usePocketbaseStore()
 const anilistGraphql = useAnilistGraphql()
-const anilistListEditor = useAnilistListEditor()
+const anilistSync = useAnilistSync()
 const toastStore = useToastStore()
 const addingMediaId = ref<number | null>(null)
 const totalResults = ref(0)
@@ -426,7 +426,7 @@ const addToPlanning = async (anime: BrowseAnime) => {
 
   try {
     addingMediaId.value = anime.id
-    const savedEntry = await anilistListEditor.saveEntry({
+    const savedEntry = await anilistSync.saveEntry({
       mediaId: anime.id,
       status: 'PLANNING'
     })

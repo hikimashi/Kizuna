@@ -115,7 +115,7 @@ const normalizeScore = (value: unknown) => {
   return normalized
 }
 
-export const useAnilistListEditor = () => {
+export const useAnilistSync = () => {
   const pocketbaseStore = usePocketbaseStore()
   const anilistGraphql = useAnilistGraphql()
 

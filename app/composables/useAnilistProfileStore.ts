@@ -28,7 +28,7 @@ query ($userId: Int, $page: Int, $perPage: Int) {
         createdAt
         media {
           title { romaji english }
-          coverImage { medium }
+          coverImage { medium large }
           siteUrl
         }
       }
@@ -46,7 +46,7 @@ query ($userId: Int, $userName: String, $page: Int, $perPage: Int) {
         nodes {
           id
           title { romaji english }
-          coverImage { medium large }
+          coverImage { medium large extraLarge }
           siteUrl
         }
       }

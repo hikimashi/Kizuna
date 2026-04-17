@@ -42,7 +42,7 @@
             </svg>
           </div>
           <div class="user-name">{{ selfName }}</div>
-          <div class="user-stat">{{ selfCount }} anime - {{ selfMeanScore }} avg</div>
+          <div class="user-stat">{{ selfListCountLabel }} anime - {{ selfMeanScore }} avg</div>
         </div>
 
         <div class="vs-divider"></div>
@@ -65,15 +65,15 @@
             </svg>
           </div>
           <div class="user-name">{{ friendName }}</div>
-          <div class="user-stat">{{ friendCount }} anime - {{ friendMeanScore }} avg</div>
+          <div class="user-stat">{{ friendListCountLabel }} anime - {{ friendMeanScore }} avg</div>
         </div>
       </div>
 
       <div class="quick-stats">
         <div class="qs-card">
           <div class="qs-label">Anime in Common</div>
-          <div class="qs-value">{{ commonCount }}</div>
-          <div class="qs-sub">out of {{ selfCount }} / {{ friendCount }}</div>
+          <div class="qs-value">{{ commonCountLabel }}</div>
+          <div class="qs-sub">out of {{ selfListCountLabel }} / {{ friendListCountLabel }}</div>
         </div>
         <div class="qs-card">
           <div class="qs-label">Avg Score Diff</div>
@@ -82,12 +82,12 @@
         </div>
         <div class="qs-card">
           <div class="qs-label">Only You Watched</div>
-          <div class="qs-value">{{ onlySelfCount }}</div>
+          <div class="qs-value">{{ onlySelfCountLabel }}</div>
           <div class="qs-sub">anime to recommend</div>
         </div>
         <div class="qs-card">
           <div class="qs-label">Only They Watched</div>
-          <div class="qs-value">{{ onlyFriendCount }}</div>
+          <div class="qs-value">{{ onlyFriendCountLabel }}</div>
           <div class="qs-sub">anime to discover</div>
         </div>
       </div>
@@ -115,9 +115,12 @@
         <div v-else class="shared-grid">
           <div v-for="item in sharedEntries" :key="item.mediaId" class="shared-card">
             <img
-              v-if="item.cover"
-              :src="item.cover"
+              v-if="item.coverSrc"
+              :src="item.coverSrc"
+              :srcset="item.coverSrcSet"
               :alt="item.title"
+              loading="lazy"
+              decoding="async"
             >
             <div v-else class="shared-card-placeholder"></div>
             <div class="shared-card-overlay">
@@ -161,7 +164,14 @@
         <div v-else class="only-list">
           <div v-for="item in onlySelfEntries" :key="item.mediaId" class="only-item">
             <div class="only-thumb">
-              <img v-if="item.cover" :src="item.cover" :alt="item.title">
+              <img
+                v-if="item.coverSrc"
+                :src="item.coverSrc"
+                :srcset="item.coverSrcSet"
+                :alt="item.title"
+                loading="lazy"
+                decoding="async"
+              >
             </div>
             <div class="only-title" :title="item.title">{{ item.title }}</div>
             <div class="only-status">{{ item.statusLabel }}</div>
@@ -176,7 +186,14 @@
         <div v-else class="only-list">
           <div v-for="item in onlyFriendEntries" :key="item.mediaId" class="only-item">
             <div class="only-thumb">
-              <img v-if="item.cover" :src="item.cover" :alt="item.title">
+              <img
+                v-if="item.coverSrc"
+                :src="item.coverSrc"
+                :srcset="item.coverSrcSet"
+                :alt="item.title"
+                loading="lazy"
+                decoding="async"
+              >
             </div>
             <div class="only-title" :title="item.title">{{ item.title }}</div>
             <div class="only-status">{{ item.statusLabel }}</div>
@@ -191,7 +208,14 @@
         <div v-else class="diff-list">
           <div v-for="item in scoreDiffRows" :key="item.mediaId" class="diff-item">
             <div class="diff-thumb">
-              <img v-if="item.cover" :src="item.cover" :alt="item.title">
+              <img
+                v-if="item.coverSrc"
+                :src="item.coverSrc"
+                :srcset="item.coverSrcSet"
+                :alt="item.title"
+                loading="lazy"
+                decoding="async"
+              >
             </div>
             <div class="diff-title" :title="item.title">{{ item.title }}</div>
             <div class="diff-scores">
@@ -211,6 +235,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, unref } from 'vue'
+import { getAnilistCoverSrc, getAnilistCoverSrcSet, type AnilistCoverImage } from '~/composables/useAnilistCoverImage'
 import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 
@@ -235,21 +260,18 @@ const selfAvatar = computed(() =>
 const friendName = ref('Friend')
 const friendAvatar = ref('')
 const bannerUrl = ref('')
-const selfCount = ref('--')
 const selfMeanScore = ref('--')
-const friendCount = ref('--')
 const friendMeanScore = ref('--')
-const commonCount = ref('--')
-const onlySelfCount = ref('--')
-const onlyFriendCount = ref('--')
 const compareError = ref('')
 const isEntriesLoading = ref(false)
+const hasEntriesLoaded = ref(false)
 const activeTab = ref<'shared' | 'genres' | 'only' | 'discover' | 'diff'>('shared')
 
 type CompareEntry = {
   mediaId: number
   title: string
-  cover: string
+  coverSrc: string
+  coverSrcSet?: string
   score: number
   progress: number
   status: 'CURRENT' | 'COMPLETED'
@@ -279,14 +301,44 @@ const friendMap = computed(() => {
   return map
 })
 
+const compareCounts = computed(() => {
+  const selfIds = new Set(selfEntries.value.map(entry => entry.mediaId))
+  const friendIds = new Set(friendEntries.value.map(entry => entry.mediaId))
+
+  let common = 0
+  for (const mediaId of selfIds) {
+    if (friendIds.has(mediaId)) common += 1
+  }
+
+  return {
+    selfTotal: selfIds.size,
+    friendTotal: friendIds.size,
+    common,
+    onlySelf: Math.max(selfIds.size - common, 0),
+    onlyFriend: Math.max(friendIds.size - common, 0)
+  }
+})
+
+const countLabel = (count: number) => {
+  if (isEntriesLoading.value || !hasEntriesLoaded.value) return '--'
+  return String(count)
+}
+
+const selfListCountLabel = computed(() => countLabel(compareCounts.value.selfTotal))
+const friendListCountLabel = computed(() => countLabel(compareCounts.value.friendTotal))
+const commonCountLabel = computed(() => countLabel(compareCounts.value.common))
+const onlySelfCountLabel = computed(() => countLabel(compareCounts.value.onlySelf))
+const onlyFriendCountLabel = computed(() => countLabel(compareCounts.value.onlyFriend))
+
 const sharedEntries = computed(() => {
-  const rows: Array<{
-    mediaId: number
-    title: string
-    cover: string
-    selfScore: number
-    friendScore: number
-    selfGenres: string[]
+    const rows: Array<{
+      mediaId: number
+      title: string
+      coverSrc: string
+      coverSrcSet?: string
+      selfScore: number
+      friendScore: number
+      selfGenres: string[]
     friendGenres: string[]
     updatedAt: number
   }> = []
@@ -296,7 +348,8 @@ const sharedEntries = computed(() => {
     rows.push({
       mediaId: entry.mediaId,
       title: entry.title,
-      cover: entry.cover,
+      coverSrc: entry.coverSrc,
+      coverSrcSet: entry.coverSrcSet,
       selfScore: entry.score,
       friendScore: friendEntry.score,
       selfGenres: entry.genres,
@@ -383,9 +436,9 @@ const avgScoreDiffColor = computed(() => {
 })
 
 const compatibilityPercent = computed(() => {
-  const selfTotal = Number(selfCount.value) || 0
-  const friendTotal = Number(friendCount.value) || 0
-  const common = Number(commonCount.value) || 0
+  const selfTotal = compareCounts.value.selfTotal
+  const friendTotal = compareCounts.value.friendTotal
+  const common = compareCounts.value.common
   const union = selfTotal + friendTotal - common
   if (union <= 0) return '--'
   return String(Math.round((common / union) * 100))
@@ -400,9 +453,9 @@ const compatBarWidth = computed(() => {
 const compatibilityLabel = computed(() => {
   const value = Number(compatibilityPercent.value)
   if (!Number.isFinite(value)) return 'Loading...'
-  if (value >= 75) return 'Great match'
-  if (value >= 50) return 'Good match'
-  if (value >= 25) return 'Some overlap'
+  if (value >= 85) return 'Great match'
+  if (value >= 60) return 'Good match'
+  if (value >= 30) return 'Some overlap'
   return 'Low overlap'
 })
 
@@ -441,13 +494,13 @@ const fetchSelfProfile = async () => {
       response = await anilistGraphql.request<any>(
         viewerQuery,
         {},
-        { token: token.value, skipCache: true }
+        { token: token.value, cacheTtlMs: 60_000 }
       )
     } else if (selfUserId || selfUserName) {
       response = await anilistGraphql.request<any>(
         userQuery,
         { userId: selfUserId || null, userName: selfUserId ? null : selfUserName },
-        { token: token.value, skipCache: true }
+        { token: token.value, cacheTtlMs: 60_000 }
       )
     } else {
       return
@@ -455,7 +508,6 @@ const fetchSelfProfile = async () => {
 
     const stats = response?.data?.Viewer?.statistics?.anime || response?.data?.User?.statistics?.anime
     if (!stats) return
-    selfCount.value = String(stats.count ?? '--')
     const rawMeanScore = Number(stats.meanScore ?? NaN)
     selfMeanScore.value = Number.isFinite(rawMeanScore) ? rawMeanScore.toFixed(1) : '--'
   } catch {
@@ -486,7 +538,7 @@ const fetchFriendProfile = async () => {
     const response = await anilistGraphql.request<any>(
       query,
       { userId: friendUserId.value },
-      { token: token.value, skipCache: true }
+      { token: token.value, cacheTtlMs: 60_000 }
     )
     const user = response?.data?.User
     if (!user) return
@@ -494,7 +546,6 @@ const fetchFriendProfile = async () => {
     friendAvatar.value = String(user.avatar?.large || user.avatar?.medium || '')
     bannerUrl.value = String(user.bannerImage || '')
     const animeStats = user.statistics?.anime
-    friendCount.value = String(animeStats?.count ?? '--')
     const rawMeanScore = Number(animeStats?.meanScore ?? NaN)
     friendMeanScore.value = Number.isFinite(rawMeanScore) ? rawMeanScore.toFixed(1) : '--'
   } catch {
@@ -520,16 +571,31 @@ const fetchMediaMatch = async () => {
     const response = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' } })
 
     if (!response.ok) {
-      const errorBody = await response.text()
-      throw new Error(`compare api ${response.status}: ${errorBody}`)
+      const rawBody = await response.text()
+      let errorMessage = rawBody
+
+      try {
+        const parsed = JSON.parse(rawBody) as { message?: string }
+        if (parsed?.message) errorMessage = parsed.message
+      } catch {
+        // Keep raw body when upstream sent HTML or plain text.
+      }
+
+      throw new Error(`compare api ${response.status}: ${errorMessage}`)
     }
 
     const data = await response.json() as {
+      error?: boolean
+      message?: string
       commonCount: number
       onlySelfCount: number
       onlyFriendCount: number
       selfCount: number
       friendCount: number
+    }
+
+    if (data?.error) {
+      throw new Error(data.message || 'Comparison failed')
     }
 
     const selfTotal = Math.max(Number(data.selfCount) || 0, 0)
@@ -569,7 +635,7 @@ const fetchCompareEntries = async () => {
               id
               genres
               title { romaji english native }
-              coverImage { medium large }
+              coverImage { medium large extraLarge }
             }
           }
         }
@@ -588,11 +654,12 @@ const fetchCompareEntries = async () => {
         const mediaId = Number(entry?.media?.id || 0)
         if (!mediaId) continue
         const title = String(entry?.media?.title?.romaji || entry?.media?.title?.english || entry?.media?.title?.native || 'Unknown title')
-        const cover = String(entry?.media?.coverImage?.large || entry?.media?.coverImage?.medium || '')
+        const coverImage = (entry?.media?.coverImage || null) as AnilistCoverImage | null
         const normalized: CompareEntry = {
           mediaId,
           title,
-          cover,
+          coverSrc: getAnilistCoverSrc(coverImage, 'card'),
+          coverSrcSet: getAnilistCoverSrcSet(coverImage, 'card'),
           score: Number(entry?.score || 0),
           progress: Number(entry?.progress || 0),
           status: status as 'CURRENT' | 'COMPLETED',
@@ -609,22 +676,25 @@ const fetchCompareEntries = async () => {
 
   try {
     isEntriesLoading.value = true
+    hasEntriesLoaded.value = false
+    compareError.value = ''
     const [selfRes, friendRes] = await Promise.all([
-      anilistGraphql.request<any>(query, { userId: selfUserId }, { token: token.value, skipCache: true }),
-      anilistGraphql.request<any>(query, { userId: friendUserId.value }, { token: token.value, skipCache: true })
+      anilistGraphql.request<any>(query, { userId: selfUserId }, { token: token.value, cacheTtlMs: 60_000 }),
+      anilistGraphql.request<any>(query, { userId: friendUserId.value }, { token: token.value, cacheTtlMs: 60_000 })
     ])
     selfEntries.value = mapEntries(selfRes)
     friendEntries.value = mapEntries(friendRes)
   } catch (error) {
     console.error('[compareList] entries failed', error)
+    compareError.value = error instanceof Error ? error.message : 'Comparison failed'
   } finally {
     isEntriesLoading.value = false
+    hasEntriesLoaded.value = true
   }
 }
 
 onMounted(async () => {
   await Promise.all([fetchSelfProfile(), fetchFriendProfile(), fetchCompareEntries()])
-  await fetchMediaMatch()
 })
 </script>
 

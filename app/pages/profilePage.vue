@@ -87,7 +87,13 @@
                 :data-tooltip="getFavoriteAnimeTitle(anime)"
                 :title="getFavoriteAnimeTitle(anime)"
               >
-                <img :src="anime.coverImage?.large || anime.coverImage?.medium" :alt="getFavoriteAnimeTitle(anime)" />
+                <img
+                  :src="favoriteAnimeCoverSrc(anime)"
+                  :srcset="favoriteAnimeCoverSrcSet(anime)"
+                  :alt="getFavoriteAnimeTitle(anime)"
+                  loading="lazy"
+                  decoding="async"
+                />
               </div>
             </div>
           </div>
@@ -165,7 +171,14 @@
             <template v-else>
               <article v-for="activity in activityItems" :key="activity.id" class="a-item">
                 <div class="a-thumb">
-                  <img v-if="activity.media?.coverImage?.medium" :src="activity.media.coverImage.medium" alt="Cover" />
+                  <img
+                    v-if="activityCoverSrc(activity)"
+                    :src="activityCoverSrc(activity)"
+                    :srcset="activityCoverSrcSet(activity)"
+                    alt="Cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
                   <div v-else class="thumb-ph">
                     <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
                       <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z" />
@@ -214,6 +227,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onBeforeUnmount, ref, unref, watch, type ComponentPublicInstance, type VNodeRef } from 'vue'
 import { storeToRefs } from 'pinia'
+import { getAnilistCoverSrc, getAnilistCoverSrcSet, type AnilistCoverImage } from '~/composables/useAnilistCoverImage'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 import { useAnilistProfileStore } from '~/composables/useAnilistProfileStore'
 
@@ -324,8 +338,24 @@ function getFavoriteAnimeTitle(anime: any): string {
   return anime?.title?.english ?? anime?.title?.romaji ?? 'Unknown Anime'
 }
 
+function favoriteAnimeCoverSrc(anime: any): string {
+  return getAnilistCoverSrc(anime?.coverImage as AnilistCoverImage | null, 'card')
+}
+
+function favoriteAnimeCoverSrcSet(anime: any): string | undefined {
+  return getAnilistCoverSrcSet(anime?.coverImage as AnilistCoverImage | null, 'card')
+}
+
 function getFavoriteCharacterName(character: any): string {
   return character?.name?.full ?? character?.name?.userPreferred ?? 'Unknown Character'
+}
+
+function activityCoverSrc(activity: any): string {
+  return getAnilistCoverSrc(activity?.media?.coverImage as AnilistCoverImage | null, 'thumb')
+}
+
+function activityCoverSrcSet(activity: any): string | undefined {
+  return getAnilistCoverSrcSet(activity?.media?.coverImage as AnilistCoverImage | null, 'thumb')
 }
 
 const authRecord = computed<Record<string, any>>(() => unref(pocketbaseStore.authRecord) ?? {})

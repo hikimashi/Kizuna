@@ -12,6 +12,8 @@ type AnilistPageResponse = {
   errors?: Array<{ message?: string }>
 }
 
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
 const LIST_QUERY = `
   query ($userId: Int, $userName: String, $statusIn: [MediaListStatus]) {
     MediaListCollection(userId: $userId, userName: $userName, type: ANIME, status_in: $statusIn) {
@@ -26,39 +28,89 @@ const LIST_QUERY = `
 `
 
 const requestAnilist = async (query: string, variables: Record<string, any>) => {
-  const response = await fetch('https://graphql.anilist.co', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json'
-    },
-    body: JSON.stringify({ query, variables })
-  })
+  const maxAttempts = 4
 
-  let payload: AnilistPageResponse | null = null
-  try {
-    payload = await response.json()
-  } catch {
-    payload = null
-  }
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    try {
+      const response = await fetch('https://graphql.anilist.co', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json'
+        },
+        body: JSON.stringify({ query, variables })
+      })
 
-  if (!payload || typeof payload !== 'object') {
-    throw createError({ statusCode: 502, statusMessage: 'Invalid AniList response' })
-  }
+      const rawBody = await response.text()
+      let payload: AnilistPageResponse | null = null
 
-  if (Array.isArray(payload.errors) && payload.errors.length) {
-    const msg = String(payload.errors[0]?.message || 'AniList query failed')
-    throw createError({
-      statusCode: 502,
-      statusMessage: msg,
-      data: {
-        anilistErrors: payload.errors,
-        variables
+      if (rawBody) {
+        try {
+          payload = JSON.parse(rawBody) as AnilistPageResponse
+        } catch {
+          payload = null
+        }
       }
-    })
-  }
 
-  return payload
+      const isTemporaryUpstreamFailure = (
+        response.status === 429 ||
+        response.status === 500 ||
+        response.status === 502 ||
+        response.status === 503 ||
+        response.status === 504 ||
+        (!payload && !response.ok)
+      )
+
+      if (isTemporaryUpstreamFailure && attempt < maxAttempts - 1) {
+        const retryAfterSeconds = Number(response.headers.get('retry-after') || '0')
+        const baseDelay = retryAfterSeconds > 0
+          ? retryAfterSeconds * 1000
+          : Math.min(750 * (2 ** attempt), 5000)
+        await wait(baseDelay + Math.floor(Math.random() * 300))
+        continue
+      }
+
+      if (!payload || typeof payload !== 'object') {
+        throw createError({
+          statusCode: 424,
+          statusMessage: `AniList upstream returned HTTP ${response.status}`,
+          data: {
+            variables
+          }
+        })
+      }
+
+      if (Array.isArray(payload.errors) && payload.errors.length) {
+        const msg = String(payload.errors[0]?.message || 'AniList query failed')
+        throw createError({
+          statusCode: 424,
+          statusMessage: msg,
+          data: {
+            anilistErrors: payload.errors,
+            variables
+          }
+        })
+      }
+
+      return payload
+    } catch (error: any) {
+      const canRetry = attempt < maxAttempts - 1
+      const statusCode = Number(error?.statusCode || 0)
+      const shouldRetry = !statusCode || statusCode >= 500
+
+      if (canRetry && shouldRetry) {
+        const backoff = Math.min(500 * (2 ** attempt), 4000)
+        await wait(backoff + Math.floor(Math.random() * 250))
+        continue
+      }
+
+      throw createError({
+        statusCode: 424,
+        statusMessage: String(error?.statusMessage || error?.message || 'AniList request failed'),
+        data: error?.data ?? { variables }
+      })
+    }
+  }
 }
 
 const fetchUserMediaIds = async (opts: { userId?: number; userName?: string }) => {
@@ -151,7 +203,7 @@ export default defineEventHandler(async (event) => {
       selfUserName,
       errorMessage: error?.statusMessage || error?.message || 'unknown'
     })
-    setResponseStatus(event, 502)
+    setResponseStatus(event, Number(error?.statusCode || 424))
     return {
       error: true,
       message: String(error?.statusMessage || error?.message || 'Compare failed'),

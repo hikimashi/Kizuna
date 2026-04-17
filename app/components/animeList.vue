@@ -44,12 +44,22 @@
           @keydown.space.prevent="openAnimeDetails(anime.id)"
         >
           <div class="card-media">
-            <img
-              v-if="coverSrc(anime)"
-              :src="coverSrc(anime)"
-              :alt="animeTitle(anime)"
-              class="card-cover"
-            >
+            <picture v-if="coverSrc(anime)">
+              <template v-if="currentViewMode === 'list'">
+                <source :srcset="coverSrcSet(anime, 'list')">
+              </template>
+              <template v-else>
+                <source media="(max-width: 640px)" :srcset="coverSrcSet(anime, 'compact-grid')">
+                <source :srcset="coverSrcSet(anime, 'grid')">
+              </template>
+              <img
+                :src="coverSrc(anime)"
+                :alt="animeTitle(anime)"
+                class="card-cover"
+                loading="lazy"
+                decoding="async"
+              >
+            </picture>
             <div v-else class="card-placeholder">
               <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22" aria-hidden="true">
                 <rect x="3" y="3" width="18" height="18" rx="2" />
@@ -171,10 +181,7 @@ type BrowseAnime = {
     romaji?: string | null
     english?: string | null
   }
-  coverImage: {
-    medium?: string | null
-    large?: string | null
-  }
+  coverImage: AnilistCoverImage
   averageScore?: number | null
   format?: string | null
   episodes?: number | null
@@ -244,8 +251,13 @@ const episodesLabel = (episodes?: number | null) => {
   return `${episodes} eps`
 }
 
+type CoverVariant = 'list' | 'compact-grid' | 'grid'
+
 const coverSrc = (anime: BrowseAnime) =>
-  anime.coverImage?.large || anime.coverImage?.medium || ''
+  getAnilistCoverSrc(anime.coverImage, currentViewMode.value === 'list' ? 'thumb' : 'card')
+
+const coverSrcSet = (anime: BrowseAnime, variant: CoverVariant) =>
+  getAnilistCoverSrcSet(anime.coverImage, variant === 'grid' ? 'card' : 'thumb')
 
 const openAnimeDetails = (animeId?: number | null) => {
   if (!animeId) return
@@ -355,6 +367,7 @@ const fetchAnimeList = async (page: number, perPage: number): Promise<BrowseAnim
           coverImage {
             medium
             large
+            extraLarge
           }
           averageScore
           format

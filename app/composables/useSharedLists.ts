@@ -11,6 +11,8 @@ type SharedListRecord = {
   name?: string
   privacy_level?: SharedListPrivacy
   fk_owner_user_id?: string | string[]
+  image?: string
+  banner?: string
   created?: string
   updated?: string
 }
@@ -20,6 +22,7 @@ type UserSharedListRecord = {
   fk_user_id?: string | string[]
   fk_shared_list_id?: string | string[]
   fk_permission_id?: string | string[]
+  permission?: 'admin' | 'editor' | 'viewer'
   created?: string
   updated?: string
 }
@@ -60,6 +63,12 @@ export type SharedListMember = {
   avatar?: string
   color: string
   role: SharedListRole
+  permission: 'admin' | 'editor' | 'viewer'
+  canRead: boolean
+  canAddAnime: boolean
+  canEditAnime: boolean
+  canDeleteAnime: boolean
+  canManageMembers: boolean
   joinedAt?: string
   membershipId?: string
   isCurrentUser: boolean
@@ -93,6 +102,8 @@ export type SharedListSummary = {
   isMember: boolean
   memberCount: number
   animeCount: number
+  imageUrl?: string
+  bannerUrl?: string
   members: SharedListMember[]
 }
 
@@ -196,6 +207,10 @@ const pocketbaseErrorDetails = (error: any) => {
     .join(' | ')
 }
 
+const sharedListMediaFieldError = () => new Error(
+  'PocketBase shared_list still needs `image` and `banner` file fields.'
+)
+
 const fetchUsersByIds = async (pb: PocketBase, ids: string[]) => {
   const uniqueIds = Array.from(new Set(ids.filter(Boolean)))
   if (!uniqueIds.length) return new Map<string, UserRecord>()
@@ -231,6 +246,12 @@ const buildMember = (
     avatar: isCurrentUser ? getAvatar(currentUserProfile) : getAvatar(user),
     color: isCurrentUser ? '#3db4f2' : memberColor(memberId),
     role,
+    permission: membership?.permission || (role === 'owner' ? 'admin' : 'viewer'),
+    canRead: true,
+    canAddAnime: (membership?.permission || (role === 'owner' ? 'admin' : 'viewer')) !== 'viewer',
+    canEditAnime: (membership?.permission || (role === 'owner' ? 'admin' : 'viewer')) !== 'viewer',
+    canDeleteAnime: (membership?.permission || (role === 'owner' ? 'admin' : 'viewer')) === 'admin',
+    canManageMembers: (membership?.permission || (role === 'owner' ? 'admin' : 'viewer')) === 'admin',
     joinedAt: membership?.created,
     membershipId: membership?.id,
     isCurrentUser
@@ -247,6 +268,47 @@ export const useSharedLists = () => {
     anilist_avatar_url_medium: String(authRecord.value.anilist_avatar_url_medium || ''),
     anilist_avatar_url_large: String(authRecord.value.anilist_avatar_url_large || '')
   }))
+
+  const sharedListFileUrl = (
+    record?: SharedListRecord | null,
+    field?: string,
+    options?: { thumb?: string }
+  ) => {
+    const fileName = String(field || '').trim()
+    if (!record || !fileName) return undefined
+    return pocketbaseStore.pb.files.getURL(record as Record<string, any>, fileName, options)
+  }
+
+  const buildSharedListPayload = (
+    input: {
+      name?: string
+      privacy?: SharedListPrivacy
+      groupImageFile?: File | null
+      bannerImageFile?: File | null
+    },
+    options: {
+      includeName?: boolean
+      includePrivacy?: boolean
+      includeMedia?: boolean
+    } = {}
+  ) => {
+    const payload = new FormData()
+
+    if (options.includeName !== false && typeof input.name === 'string') {
+      payload.append('name', input.name.trim())
+    }
+
+    if (options.includePrivacy !== false && input.privacy) {
+      payload.append('privacy_level', input.privacy)
+    }
+
+    if (options.includeMedia !== false) {
+      if (input.groupImageFile) payload.append('image', input.groupImageFile)
+      if (input.bannerImageFile) payload.append('banner', input.bannerImageFile)
+    }
+
+    return payload
+  }
 
   const getSharedListRecord = async (listId: string) => {
     return await pocketbaseStore.pb.collection('shared_list').getOne<SharedListRecord>(listId)
@@ -267,13 +329,36 @@ export const useSharedLists = () => {
     if (existing) return existing
 
     try {
-      return await pocketbaseStore.pb.collection('user_shared_list').create<UserSharedListRecord>({
-        fk_user_id: userId,
-        fk_shared_list_id: listId
-      })
+      const create = async (withPermission: boolean) => {
+        return await pocketbaseStore.pb.collection('user_shared_list').create<UserSharedListRecord>({
+          fk_user_id: userId,
+          fk_shared_list_id: listId,
+          ...(withPermission ? { permission: 'viewer' as const } : {})
+        })
+      }
+
+      try {
+        return await create(true)
+      } catch (error: any) {
+        if (isUnknownFieldError(error)) {
+          return await create(false)
+        }
+        throw error
+      }
     } catch (error: any) {
       if (!isUniqueConstraintError(error)) throw error
       return await findMembership(listId, userId)
+    }
+  }
+
+  const updateMembershipPermission = async (membershipId: string, permission: 'admin' | 'editor' | 'viewer') => {
+    try {
+      return await pocketbaseStore.pb.collection('user_shared_list').update<UserSharedListRecord>(membershipId, { permission })
+    } catch (error: any) {
+      if (isUnknownFieldError(error)) {
+        throw new Error('PocketBase user_shared_list still needs a `permission` select field (admin/editor/viewer).')
+      }
+      throw error
     }
   }
 
@@ -307,14 +392,14 @@ export const useSharedLists = () => {
     const details = pocketbaseErrorDetails(error)
 
     if (ownerId === currentUserId.value && !membership) {
-      return new Error(`Owner membership is missing on this group. ${details}`.trim())
+      return new Error(`Owner membership is missing on this shared list. ${details}`.trim())
     }
 
     if (ownerId === currentUserId.value) {
       return new Error(`PocketBase rejected anime creation for the owner. ${details || 'Failed to create record.'}`.trim())
     }
 
-    return new Error(`PocketBase rejected anime creation on this group. ${details || 'Failed to create record.'}`.trim())
+    return new Error(`PocketBase rejected anime creation on this shared list. ${details || 'Failed to create record.'}`.trim())
   }
 
   const loadSummaries = async () => {
@@ -391,6 +476,8 @@ export const useSharedLists = () => {
         isMember: ownerId === currentUserId.value || Boolean(ownMembership),
         memberCount: Math.max(memberIds.length, ownerId ? 1 : 0),
         animeCount: Number(animeCountByList.get(record.id) || 0),
+        imageUrl: sharedListFileUrl(record, record.image),
+        bannerUrl: sharedListFileUrl(record, record.banner),
         members
       } satisfies SharedListSummary
     })
@@ -479,6 +566,8 @@ export const useSharedLists = () => {
       isMember: ownerId === currentUserId.value || Boolean(ownMembership),
       memberCount: members.length,
       animeCount: animeEntries.length,
+      imageUrl: sharedListFileUrl(record, record.image),
+      bannerUrl: sharedListFileUrl(record, record.banner),
       members,
       ownMembershipId: ownMembership?.id,
       canManageMembers: ownerId === currentUserId.value,
@@ -487,17 +576,37 @@ export const useSharedLists = () => {
     } satisfies SharedListDetail
   }
 
-  const createSharedList = async (input: { name: string; privacy: SharedListPrivacy }) => {
+  const createSharedList = async (input: {
+    name: string
+    privacy: SharedListPrivacy
+    groupImageFile?: File | null
+    bannerImageFile?: File | null
+  }) => {
     const title = input.name.trim()
     if (!title) {
       throw new Error('List name is required.')
     }
 
-    const created = await pocketbaseStore.pb.collection('shared_list').create<SharedListRecord>({
-      name: title,
-      privacy_level: input.privacy,
-      fk_owner_user_id: currentUserId.value
-    })
+    let created: SharedListRecord
+
+    try {
+      const payload = buildSharedListPayload(
+        {
+          name: title,
+          privacy: input.privacy,
+          groupImageFile: input.groupImageFile,
+          bannerImageFile: input.bannerImageFile
+        },
+        { includeMedia: true }
+      )
+      payload.append('fk_owner_user_id', currentUserId.value)
+      created = await pocketbaseStore.pb.collection('shared_list').create<SharedListRecord>(payload)
+    } catch (error: any) {
+      if (isUnknownFieldError(error) && (input.groupImageFile || input.bannerImageFile)) {
+        throw sharedListMediaFieldError()
+      }
+      throw error
+    }
 
     if (currentUserId.value) {
       await ensureMembership(created.id, currentUserId.value)
@@ -506,11 +615,29 @@ export const useSharedLists = () => {
     return created
   }
 
-  const updateSharedList = async (listId: string, patch: { name?: string; privacy?: SharedListPrivacy }) => {
-    const payload: Record<string, any> = {}
-    if (typeof patch.name === 'string') payload.name = patch.name.trim()
-    if (patch.privacy) payload.privacy_level = patch.privacy
-    return await pocketbaseStore.pb.collection('shared_list').update(listId, payload)
+  const updateSharedList = async (listId: string, patch: {
+    name?: string
+    privacy?: SharedListPrivacy
+    groupImageFile?: File | null
+    bannerImageFile?: File | null
+  }) => {
+    try {
+      const payload = buildSharedListPayload(
+        {
+          name: patch.name,
+          privacy: patch.privacy,
+          groupImageFile: patch.groupImageFile,
+          bannerImageFile: patch.bannerImageFile
+        },
+        { includeMedia: true }
+      )
+      return await pocketbaseStore.pb.collection('shared_list').update(listId, payload)
+    } catch (error: any) {
+      if (isUnknownFieldError(error) && (patch.groupImageFile || patch.bannerImageFile)) {
+        throw sharedListMediaFieldError()
+      }
+      throw error
+    }
   }
 
   const addMemberToList = async (listId: string, userId: string) => {
@@ -578,7 +705,7 @@ export const useSharedLists = () => {
     })
 
     if (existingRelation.items[0]) {
-      throw new Error('This anime is already in the group.')
+      throw new Error('This anime is already in this shared list.')
     }
 
     const createRelation = async (withStateFields: boolean) => {
@@ -600,7 +727,7 @@ export const useSharedLists = () => {
       return await createRelation(true)
     } catch (error: any) {
       if (isUniqueConstraintError(error)) {
-        throw new Error('This anime is already in the group.')
+        throw new Error('This anime is already in this shared list.')
       }
 
       if (isUnknownFieldError(error)) {
@@ -608,7 +735,7 @@ export const useSharedLists = () => {
           return await createRelation(false)
         } catch (retryError: any) {
           if (isUniqueConstraintError(retryError)) {
-            throw new Error('This anime is already in the group.')
+            throw new Error('This anime is already in this shared list.')
           }
           if (isPocketbaseValidationError(retryError)) {
             throw await buildAnimeCreateValidationError(listId, retryError)
@@ -693,6 +820,7 @@ export const useSharedLists = () => {
     updateAnimeListEntry,
     removeAnimeFromList,
     removeMembership,
+    updateMembershipPermission,
     deleteSharedList,
     ensureOwnerMembership,
     searchUsers

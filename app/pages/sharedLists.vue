@@ -188,7 +188,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, unref } from 'vue'
+import { computed, ref, unref, watch } from 'vue'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 
 definePageMeta({ middleware: ['auth'] })
@@ -292,6 +292,15 @@ const filters = computed(() => [
 ])
 
 const normalizeRelationValue = (value: string | string[] | undefined) => Array.isArray(value) ? value[0] || '' : String(value || '')
+const normalizeRelationValues = (value: string | string[] | undefined) => {
+  if (Array.isArray(value)) return value.map((item) => String(item || '')).filter(Boolean)
+  return value ? [String(value)] : []
+}
+
+const relationIncludes = (value: string | string[] | undefined, expected: string) => {
+  if (!expected) return false
+  return normalizeRelationValues(value).includes(expected)
+}
 
 const initialsFromValue = (value: string) => {
   const cleaned = value.replace(/[^a-z0-9]/gi, '').toUpperCase()
@@ -327,9 +336,13 @@ const stripForPrivacy = (privacy: Privacy, owned: boolean) => {
   return owned ? 'linear-gradient(90deg,#3db4f2,#1dd3b0)' : 'linear-gradient(90deg,#F77F00,#FFBE0B)'
 }
 
-const roleFromMembership = (record: UserSharedListRecord | undefined, ownerId: string): ListRole => {
+const roleFromMembership = (
+  record: UserSharedListRecord | undefined,
+  ownerId: string,
+  hasImplicitMembership = false
+): ListRole => {
   if (ownerId === currentUserId.value) return 'owner'
-  if (!record) return 'reader'
+  if (!record) return hasImplicitMembership ? 'member' : 'reader'
   return record.fk_permission_id ? 'member' : 'reader'
 }
 
@@ -360,7 +373,15 @@ const loadSharedLists = async () => {
 
     const allowedLists = sharedListRecords.filter((record) => {
       const ownerId = normalizeRelationValue(record.fk_owner_user_id)
-      return ownerId === currentUserId.value || membershipByList.has(record.id)
+      if (ownerId === currentUserId.value) return true
+
+      const memberships = membershipByList.get(record.id) ?? []
+      const hasOwnMembership = memberships.some((membership) => relationIncludes(membership.fk_user_id, currentUserId.value))
+      if (hasOwnMembership) return true
+
+      // PocketBase already limits access on shared_list. If a non-public list is visible
+      // but membership rows are missing from this query, keep showing it to the invited user.
+      return (record.privacy_level || 'friends') !== 'public'
     })
 
     const ids = allowedLists.map((record) => `"${record.id}"`)
@@ -384,10 +405,17 @@ const loadSharedLists = async () => {
       const ownerId = normalizeRelationValue(record.fk_owner_user_id)
       const memberships = membershipByList.get(record.id) ?? []
       const animeCount = (animeByList.get(record.id) ?? []).length
-      const ownMembership = memberships.find((membership) => normalizeRelationValue(membership.fk_user_id) === currentUserId.value)
-      const role = roleFromMembership(ownMembership, ownerId)
+      const ownMembership = memberships.find((membership) => relationIncludes(membership.fk_user_id, currentUserId.value))
+      const hasImplicitMembership = ownerId !== currentUserId.value && (record.privacy_level || 'friends') !== 'public'
+      const role = roleFromMembership(ownMembership, ownerId, hasImplicitMembership)
       const kind: ListKind = ownerId === currentUserId.value ? 'owned' : 'shared'
-      const memberIds = Array.from(new Set([ownerId, ...memberships.map((membership) => normalizeRelationValue(membership.fk_user_id))].filter(Boolean)))
+      const memberIds = Array.from(
+        new Set([
+          ownerId,
+          ...memberships.flatMap((membership) => normalizeRelationValues(membership.fk_user_id)),
+          ...(hasImplicitMembership ? [currentUserId.value] : [])
+        ].filter(Boolean))
+      )
       const members = memberIds.map((memberId) => ({
         name: memberId === currentUserId.value ? 'You' : `User ${memberId.slice(0, 4)}`,
         initials: memberId === currentUserId.value ? 'YO' : initialsFromValue(memberId),
@@ -432,7 +460,9 @@ const roleLabel = (role: ListRole) => role === 'owner' ? 'Owner' : role === 'rea
 const privacyChipClass = (privacy: Privacy) => ({ 'pc-private': privacy === 'private', 'pc-friends': privacy === 'friends', 'pc-public': privacy === 'public' })
 const roleChipClass = (role: ListRole) => ({ owner: role === 'owner', member: role === 'member', reader: role === 'reader' })
 
-onMounted(loadSharedLists)
+watch(currentUserId, () => {
+  loadSharedLists()
+}, { immediate: true })
 </script>
 
 <style scoped>

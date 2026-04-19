@@ -174,7 +174,7 @@
     {
         "id": "_pb_users_auth_",
         "listRule": "@request.auth.id != ''",
-        "viewRule": "id = @request.auth.id",
+        "viewRule": "@request.auth.id != '' ",
         "createRule": "",
         "updateRule": "id = @request.auth.id",
         "deleteRule": "id = @request.auth.id",
@@ -1073,11 +1073,11 @@
     },
     {
         "id": "pbc_2118266223",
-        "listRule": "@collection.user_shared_list.fk_shared_list_id ?= fk_shared_list_id && @collection.user_shared_list.fk_user_id ?= @request.auth.id",
-        "viewRule": "@collection.user_shared_list.fk_shared_list_id ?= fk_shared_list_id && @collection.user_shared_list.fk_user_id ?= @request.auth.id",
-        "createRule": "@collection.user_shared_list.fk_user_id ?= @request.auth.id && \n@collection.user_shared_list.fk_shared_list_id ?= fk_shared_list_id && \n@collection.user_shared_list.fk_permission_id.modify = true",
-        "updateRule": null,
-        "deleteRule": null,
+        "listRule": "fk_shared_list_id.fk_owner_user_id = @request.auth.id || (\n    @collection.user_shared_list.fk_shared_list_id ?= fk_shared_list_id &&         \n    @collection.user_shared_list.fk_user_id ?= @request.auth.id\n  )",
+        "viewRule": "fk_shared_list_id.fk_owner_user_id = @request.auth.id || (\n    @collection.user_shared_list.fk_shared_list_id ?= fk_shared_list_id &&\n    @collection.user_shared_list.fk_user_id ?= @request.auth.id\n  ) ",
+        "createRule": "fk_shared_list_id.fk_owner_user_id = @request.auth.id",
+        "updateRule": "fk_shared_list_id.fk_owner_user_id = @request.auth.id",
+        "deleteRule": "fk_shared_list_id.fk_owner_user_id = @request.auth.id ",
         "name": "anime_shared_list",
         "type": "base",
         "fields": [
@@ -1133,6 +1133,48 @@
                 "required": false,
                 "system": false,
                 "type": "relation"
+            },
+            {
+                "hidden": false,
+                "id": "select2063623452",
+                "maxSelect": 1,
+                "name": "status",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "select",
+                "values": [
+                    "PLANNING",
+                    "CURRENT",
+                    "PAUSED",
+                    "DROPPED",
+                    "REPEATING",
+                    "COMPLETED"
+                ]
+            },
+            {
+                "hidden": false,
+                "id": "number570552902",
+                "max": null,
+                "min": null,
+                "name": "progress",
+                "onlyInt": false,
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "number"
+            },
+            {
+                "hidden": false,
+                "id": "number848901969",
+                "max": null,
+                "min": null,
+                "name": "score",
+                "onlyInt": false,
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "number"
             },
             {
                 "hidden": false,
@@ -1519,6 +1561,34 @@
             },
             {
                 "hidden": false,
+                "id": "file3309110367",
+                "maxSelect": 1,
+                "maxSize": 0,
+                "mimeTypes": [],
+                "name": "image",
+                "presentable": false,
+                "protected": false,
+                "required": false,
+                "system": false,
+                "thumbs": [],
+                "type": "file"
+            },
+            {
+                "hidden": false,
+                "id": "file1872607463",
+                "maxSelect": 1,
+                "maxSize": 0,
+                "mimeTypes": [],
+                "name": "banner",
+                "presentable": false,
+                "protected": false,
+                "required": false,
+                "system": false,
+                "thumbs": [],
+                "type": "file"
+            },
+            {
+                "hidden": false,
                 "id": "autodate2990389176",
                 "name": "created",
                 "onCreate": true,
@@ -1742,11 +1812,11 @@
     },
     {
         "id": "pbc_1229644944",
-        "listRule": "fk_user_id = @request.auth.id || fk_shared_list_id.fk_owner_user_id = @request.auth.id",
-        "viewRule": "fk_user_id = @request.auth.id || fk_shared_list_id.fk_owner_user_id = @request.auth.id",
+        "listRule": "fk_user_id ?= @request.auth.id || fk_shared_list_id.fk_owner_user_id = @request.auth.id",
+        "viewRule": "fk_user_id ?= @request.auth.id || fk_shared_list_id.fk_owner_user_id = @request.auth.id",
         "createRule": "fk_shared_list_id.fk_owner_user_id = @request.auth.id",
         "updateRule": "",
-        "deleteRule": "fk_shared_list_id.fk_owner_user_id = @request.auth.id || fk_user_id = @request.auth.id",
+        "deleteRule": "fk_shared_list_id.fk_owner_user_id = @request.auth.id || fk_user_id ?= @request.auth.id",
         "name": "user_shared_list",
         "type": "base",
         "fields": [

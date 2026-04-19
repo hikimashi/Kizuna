@@ -1784,11 +1784,11 @@
     },
     {
         "id": "pbc_1229644944",
-        "listRule": "fk_user_id = @request.auth.id || fk_shared_list_id.fk_owner_user_id = @request.auth.id",
-        "viewRule": "fk_user_id = @request.auth.id || fk_shared_list_id.fk_owner_user_id = @request.auth.id",
+        "listRule": "fk_user_id ?= @request.auth.id || fk_shared_list_id.fk_owner_user_id = @request.auth.id",
+        "viewRule": "fk_user_id ?= @request.auth.id || fk_shared_list_id.fk_owner_user_id = @request.auth.id",
         "createRule": "fk_shared_list_id.fk_owner_user_id = @request.auth.id",
         "updateRule": "",
-        "deleteRule": "fk_shared_list_id.fk_owner_user_id = @request.auth.id || fk_user_id = @request.auth.id",
+        "deleteRule": "fk_shared_list_id.fk_owner_user_id = @request.auth.id || fk_user_id ?= @request.auth.id",
         "name": "user_shared_list",
         "type": "base",
         "fields": [
@@ -1811,7 +1811,7 @@
                 "collectionId": "_pb_users_auth_",
                 "hidden": false,
                 "id": "relation1463938745",
-                "maxSelect": 999,
+                "maxSelect": 1,
                 "minSelect": 0,
                 "name": "fk_user_id",
                 "presentable": false,

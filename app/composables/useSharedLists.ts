@@ -310,6 +310,31 @@ export const useSharedLists = () => {
     return payload
   }
 
+  const buildMembershipPayload = (
+    listId: string,
+    userId: string,
+    options: {
+      permission?: 'admin' | 'editor' | 'viewer'
+      includePermission?: boolean
+    } = {}
+  ) => {
+    const payload = new FormData()
+    payload.append('fk_user_id', userId)
+    payload.append('fk_shared_list_id', listId)
+
+    if (options.includePermission !== false && options.permission) {
+      payload.append('permission', options.permission)
+    }
+
+    return payload
+  }
+
+  const buildMembershipFilter = (listId: string, userId: string) => {
+    const safeListId = escapeFilterValue(listId)
+    const safeUserId = escapeFilterValue(userId)
+    return `fk_shared_list_id="${safeListId}" && (fk_user_id ?= "${safeUserId}" || fk_user_id="${safeUserId}")`
+  }
+
   const getSharedListRecord = async (listId: string) => {
     return await pocketbaseStore.pb.collection('shared_list').getOne<SharedListRecord>(listId)
   }
@@ -318,23 +343,40 @@ export const useSharedLists = () => {
     if (!listId || !userId) return null
 
     const existing = await pocketbaseStore.pb.collection('user_shared_list').getList<UserSharedListRecord>(1, 1, {
-      filter: `fk_shared_list_id="${escapeFilterValue(listId)}" && fk_user_id ?= "${escapeFilterValue(userId)}"`
+      filter: buildMembershipFilter(listId, userId)
     })
 
     return existing.items[0] || null
   }
 
+  const repairMembershipRecord = async (membership: UserSharedListRecord, listId: string, userId: string) => {
+    const memberIds = normalizeRelationValues(membership.fk_user_id)
+    if (memberIds.length === 1 && memberIds[0] === userId) {
+      return membership
+    }
+
+    try {
+      return await pocketbaseStore.pb.collection('user_shared_list').update<UserSharedListRecord>(
+        membership.id,
+        buildMembershipPayload(listId, userId, { includePermission: false })
+      )
+    } catch {
+      return membership
+    }
+  }
+
   const ensureMembership = async (listId: string, userId: string) => {
     const existing = await findMembership(listId, userId)
-    if (existing) return existing
+    if (existing) return await repairMembershipRecord(existing, listId, userId)
 
     try {
       const create = async (withPermission: boolean) => {
-        return await pocketbaseStore.pb.collection('user_shared_list').create<UserSharedListRecord>({
-          fk_user_id: userId,
-          fk_shared_list_id: listId,
-          ...(withPermission ? { permission: 'viewer' as const } : {})
-        })
+        return await pocketbaseStore.pb.collection('user_shared_list').create<UserSharedListRecord>(
+          buildMembershipPayload(listId, userId, {
+            permission: 'viewer',
+            includePermission: withPermission
+          })
+        )
       }
 
       try {
@@ -347,7 +389,8 @@ export const useSharedLists = () => {
       }
     } catch (error: any) {
       if (!isUniqueConstraintError(error)) throw error
-      return await findMembership(listId, userId)
+      const retried = await findMembership(listId, userId)
+      return retried ? await repairMembershipRecord(retried, listId, userId) : retried
     }
   }
 

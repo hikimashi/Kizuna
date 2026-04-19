@@ -311,7 +311,7 @@ onBeforeUnmount(() => {
   width: 100%;
   background-color: var(--navy-overlay);
   border-bottom: 1px solid var(--border);
-  z-index: 10;
+  z-index: 80;
   isolation: isolate;
   font-family: var(--font-main);
 }
@@ -451,6 +451,8 @@ onBeforeUnmount(() => {
 
 /* Nav Actions */
 .nav-actions {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -536,6 +538,8 @@ onBeforeUnmount(() => {
 
 /* Dropdown */
 .dropdown-content {
+  position: absolute;
+  z-index: 90 !important;
   background: var(--card-bg) !important;
   border: 1px solid var(--border);
 }
@@ -726,6 +730,41 @@ onBeforeUnmount(() => {
   .theme-toggle svg {
     width: 18px;
     height: 18px;
+  }
+}
+
+@media (max-width: 380px) {
+  .logo-image {
+    width: 48px;
+    height: 48px;
+  }
+
+  .btn-ghost {
+    display: none;
+  }
+
+  .btn-primary {
+    padding: 0 10px;
+    font-size: 11px;
+  }
+
+  .theme-toggle {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 340px) {
+  .navbar-content {
+    column-gap: 6px;
+  }
+
+  .logo-image {
+    width: 42px;
+    height: 42px;
+  }
+
+  .btn-primary {
+    padding: 0 8px;
   }
 }
 </style>

@@ -1533,18 +1533,19 @@ onBeforeUnmount(() => {
   pointer-events: none;
 }
 
-.hero-top,
-.hero-head {
-  position: relative;
-  z-index: 1;
-}
-
 .hero-top {
+  position: relative;
+  z-index: 4;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 24px;
+}
+
+.hero-head {
+  position: relative;
+  z-index: 1;
 }
 
 .back-btn,
@@ -1582,10 +1583,17 @@ onBeforeUnmount(() => {
 }
 
 .hero-actions {
+  position: relative;
+  z-index: 5;
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.settings-btn {
+  position: relative;
+  z-index: 6;
 }
 
 .ghost-btn {
@@ -2999,6 +3007,25 @@ onBeforeUnmount(() => {
   .sidebar-slot { position: static; }
 }
 
+@media (max-width: 900px) {
+  .hero-top {
+    gap: 12px;
+  }
+
+  .hero-actions,
+  .view-bar {
+    flex-wrap: wrap;
+  }
+
+  .hero-actions .sl-btn {
+    flex: 1 1 160px;
+  }
+
+  .members-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+}
+
 @media (max-width: 820px) {
   .hero-top,
   .hero-head {
@@ -3024,6 +3051,45 @@ onBeforeUnmount(() => {
     padding: 18px 12px 56px;
   }
 
+  .shared-breadcrumb {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .group-hero {
+    padding: 16px;
+    text-align: center;
+  }
+
+  .hero-top,
+  .hero-head,
+  .group-copy {
+    align-items: center;
+  }
+
+  .group-copy {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .back-btn,
+  .hero-actions,
+  .group-meta,
+  .hero-members,
+  .view-bar,
+  .tabs-nav {
+    justify-content: center;
+  }
+
+  .group-title-row h1 {
+    font-size: clamp(22px, 7vw, 28px);
+  }
+
+  .group-meta,
+  .group-description {
+    font-size: 12px;
+  }
+
   .tabs-nav {
     gap: 20px;
     overflow-x: auto;
@@ -3031,6 +3097,9 @@ onBeforeUnmount(() => {
 
   .sidebar {
     grid-template-columns: 1fr;
+    max-width: 420px;
+    margin: 0 auto;
+    width: 100%;
   }
 
   .sidebar > :last-child {
@@ -3045,9 +3114,85 @@ onBeforeUnmount(() => {
     width: 100%;
   }
 
+  .view-bar,
+  .editor-panel-actions,
+  .drawer-actions {
+    flex-wrap: wrap;
+  }
+
   .editor-panel-actions,
   .drawer-actions {
     flex-direction: column-reverse;
+  }
+
+  .sidebar-primary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .panel-card,
+  .add-anime-panel,
+  .editor-panel,
+  .member-card,
+  .empty-state {
+    text-align: center;
+  }
+
+  .editor-panel-media {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .section-title {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .members-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-drawer-head {
+    padding: 18px 16px 16px;
+  }
+
+  .settings-drawer-body {
+    padding: 16px;
+  }
+
+  .drawer-card {
+    padding: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .back-btn,
+  .ghost-btn,
+  .danger-btn,
+  .drawer-btn,
+  .sidebar-primary {
+    font-size: 12px;
+  }
+
+  .group-cover {
+    width: 92px;
+    height: 92px;
+    font-size: 20px;
+  }
+
+  .member-card {
+    flex-wrap: wrap;
+  }
+
+  .member-badge,
+  .member-perm,
+  .remove-btn {
+    width: 100%;
+  }
+
+  .editor-panel-title {
+    font-size: 18px;
   }
 }
 </style>

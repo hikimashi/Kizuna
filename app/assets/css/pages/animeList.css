@@ -912,11 +912,22 @@
 
   .sidebar {
     grid-template-columns: 1fr;
+    max-width: 420px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .view-bar,
+  .section-title {
+    justify-content: center;
+    text-align: center;
   }
 
   .view-grid .anime-grid {
-    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
     gap: 9px;
+    max-width: 420px;
+    margin: 0 auto;
   }
 
   .editor-panel {
@@ -929,12 +940,40 @@
 
   .editor-panel-actions {
     flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .view-list .anime-grid,
+  .view-compact .anime-grid {
+    max-width: 420px;
+    margin: 0 auto;
   }
 }
 
 @media (max-width: 768px) {
   .profile-banner {
     height: clamp(200px, 44vw, 250px);
+  }
+}
+
+@media (max-width: 420px) {
+  .page {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .view-grid .anime-grid {
+    grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+    gap: 8px;
+  }
+
+  .view-grid .anime-card-title {
+    font-size: 11px;
+  }
+
+  .view-grid .anime-card-progress,
+  .anime-card-score {
+    font-size: 9px;
   }
 }
 

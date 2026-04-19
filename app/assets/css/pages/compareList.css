@@ -405,6 +405,47 @@
   }
 }
 
+@media (max-width: 560px) {
+  .page {
+    padding: 14px 10px 52px;
+  }
+
+  .genre-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .genre-name {
+    width: auto;
+  }
+
+  .genre-legend {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .only-item,
+  .diff-item {
+    flex-wrap: wrap;
+  }
+
+  .diff-scores {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 420px) {
+  .hero-center {
+    width: 100%;
+  }
+
+  .compat-bar {
+    width: 100%;
+  }
+}
+
 [data-theme="winter"] .compare-sub-tabs,
 [data-theme="winter"] .compare-hero,
 [data-theme="winter"] .qs-card,

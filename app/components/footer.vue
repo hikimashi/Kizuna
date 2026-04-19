@@ -14,12 +14,15 @@
           <div class="footer-group footer-group-nav">
             <h3>Navigation</h3>
             <div class="footer-nav-grid">
-              <NuxtLink to="/" class="footer-link">Home</NuxtLink>
-              <NuxtLink to="/profilePage" class="footer-link" @click.prevent="handleProtectedNavigation('/profilePage')">Profile</NuxtLink>
-              <NuxtLink to="/social" class="footer-link" @click.prevent="handleProtectedNavigation('/social')">Social</NuxtLink>
-              <NuxtLink to="/browse" class="footer-link" @click.prevent="handleProtectedNavigation('/browse')">Anime List</NuxtLink>
-              <NuxtLink to="/browse" class="footer-link" @click.prevent="handleProtectedNavigation('/browse')">Browse</NuxtLink>
-              <NuxtLink to="/settings" class="footer-link" @click.prevent="handleProtectedNavigation('/settings')">Settings</NuxtLink>
+              <NuxtLink
+                v-for="link in navigationLinks"
+                :key="link.to"
+                :to="link.to"
+                class="footer-link"
+                @click.prevent="handleFooterNavigation(link)"
+              >
+                {{ link.label }}
+              </NuxtLink>
             </div>
           </div>
 
@@ -47,10 +50,36 @@ import { computed, unref } from 'vue'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 import { useToastStore } from '~/composables/useToastStore'
 
+type FooterLink = {
+  label: string
+  to: string
+  requiresAuth?: boolean
+}
+
 const currentYear = new Date().getFullYear()
 const pocketbaseStore = usePocketbaseStore()
 const toastStore = useToastStore()
 const authRecord = computed(() => unref(pocketbaseStore.authRecord) as { id?: string } | null)
+const navigationLinks: FooterLink[] = [
+  { label: 'Home', to: '/' },
+  { label: 'Profile', to: '/profilePage', requiresAuth: true },
+  { label: 'Social', to: '/social', requiresAuth: true },
+  { label: 'Friends', to: '/friends', requiresAuth: true },
+  { label: 'Favorites', to: '/favorites', requiresAuth: true },
+  { label: 'Anime List', to: '/animeList', requiresAuth: true },
+  { label: 'Browse', to: '/browse', requiresAuth: true },
+  { label: 'Shared Lists', to: '/sharedLists', requiresAuth: true },
+  { label: 'Settings', to: '/settings', requiresAuth: true }
+]
+
+const handleFooterNavigation = async (link: FooterLink) => {
+  if (!link.requiresAuth) {
+    await navigateTo(link.to)
+    return
+  }
+
+  await handleProtectedNavigation(link.to)
+}
 
 const handleProtectedNavigation = async (to: string) => {
   if (authRecord.value?.id) {
@@ -142,14 +171,13 @@ const handleProtectedNavigation = async (to: string) => {
 }
 
 .footer-group-nav {
-  min-width: 260px;
+  min-width: 440px;
 }
 
 .footer-nav-grid {
   display: grid;
-  grid-auto-flow: column;
-  grid-template-rows: repeat(3, auto);
-  column-gap: 56px;
+  grid-template-columns: repeat(3, minmax(120px, max-content));
+  column-gap: 28px;
   row-gap: 8px;
   justify-content: start;
 }
@@ -237,24 +265,28 @@ const handleProtectedNavigation = async (to: string) => {
   }
 
   .footer-nav-grid {
-    grid-auto-flow: row;
-    grid-template-rows: none;
-    grid-template-columns: repeat(2, minmax(120px, 1fr));
+    grid-template-columns: repeat(3, minmax(120px, 1fr));
     column-gap: 16px;
   }
 }
 
 @media (max-width: 580px) {
-  .footer-groups {
-    grid-template-columns: 1fr;
-  }
-
   .brand-subtitle {
     font-size: 12px;
   }
 
+  .footer-nav-grid {
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+  }
+
   .footer-bottom {
     gap: 10px;
+  }
+}
+
+@media (max-width: 420px) {
+  .footer-nav-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

@@ -135,8 +135,14 @@ body,
   min-height: 100%;
 }
 
+html {
+  overflow-x: clip;
+}
+
 body {
   margin: 0;
+  width: 100%;
+  overflow-x: clip;
   background-image:
     linear-gradient(var(--kz-app-overlay), var(--kz-app-overlay)),
     var(--kz-bg-image);
@@ -144,4 +150,36 @@ body {
   background-position: center, center;
   background-repeat: no-repeat, no-repeat;
   background-attachment: fixed, fixed;
+}
+
+img,
+picture,
+video,
+canvas {
+  max-width: 100%;
+}
+
+textarea {
+  resize: vertical;
+}
+
+@media (max-width: 768px) {
+  body {
+    background-attachment: scroll, scroll;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

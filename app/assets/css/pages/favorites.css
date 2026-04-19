@@ -184,6 +184,12 @@
   }
 }
 
+@media (max-width: 900px) {
+  .favorites-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 760px) {
   .page {
     padding: 20px 12px 68px;
@@ -197,5 +203,33 @@
   .favorites-toolbar {
     overflow-x: auto;
     padding-bottom: 3px;
+  }
+}
+
+@media (max-width: 520px) {
+  .page {
+    padding: 18px 10px 60px;
+  }
+
+  .favorites-grid {
+    grid-template-columns: 1fr;
+    max-width: 320px;
+    margin: 0 auto;
+  }
+
+  .favorites-toolbar {
+    justify-content: center;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 3px;
+  }
+
+  .favorites-tab {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .favorite-meta {
+    text-align: center;
   }
 }

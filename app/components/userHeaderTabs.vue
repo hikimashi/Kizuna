@@ -333,26 +333,34 @@ onMounted(async () => {
 
 @media (max-width: 640px) {
   .banner-content {
-    left: 18px;
-    gap: 14px;
+    left: 12px;
+    right: 12px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    text-align: center;
   }
 
   .banner-meta {
-    transform: translateY(-10px);
+    transform: none;
+    width: 100%;
+    padding-bottom: 12px;
   }
 
   .banner-avatar {
-    width: 102px;
-    height: 102px;
+    width: 92px;
+    height: 92px;
   }
 
   .banner-username {
-    font-size: clamp(24px, 6vw, 32px);
-    margin-bottom: 4px;
+    font-size: clamp(22px, 6vw, 28px);
+    margin-bottom: 2px;
   }
 
   .banner-joined {
-    font-size: 13px;
+    font-size: 12px;
+    transform: none;
   }
 
   .sub-tabs-bar {
@@ -363,6 +371,22 @@ onMounted(async () => {
   .sub-tabs {
     min-width: max-content;
     padding: 0 8px;
+  }
+}
+
+@media (max-width: 420px) {
+  .banner-wrap {
+    height: 188px;
+  }
+
+  .banner-avatar {
+    width: 84px;
+    height: 84px;
+  }
+
+  .sub-tab {
+    padding: 9px 12px;
+    font-size: 11px;
   }
 }
 

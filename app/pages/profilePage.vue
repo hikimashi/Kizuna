@@ -1048,7 +1048,14 @@ onBeforeUnmount(() => {
   }
 
   .banner-content {
-    gap: 14px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .banner-meta {
+    transform: none;
+    padding-bottom: 12px;
   }
 
   .banner-avatar {
@@ -1063,6 +1070,16 @@ onBeforeUnmount(() => {
 
   .banner-joined {
     font-size: 13px;
+  }
+
+  .genre-tags {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+
+  .fav-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .stats-row {
@@ -1093,6 +1110,19 @@ onBeforeUnmount(() => {
     padding-right: 12px;
   }
 
+  .banner-content {
+    left: 12px;
+    right: 12px;
+  }
+
+  .genre-tags {
+    gap: 5px;
+  }
+
+  .fav-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .stats-row {
     grid-template-columns: 1fr;
     gap: 8px;
@@ -1108,6 +1138,12 @@ onBeforeUnmount(() => {
 
   .a-text {
     font-size: 12px;
+  }
+}
+
+@media (max-width: 420px) {
+  .fav-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

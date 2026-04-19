@@ -549,7 +549,14 @@ onMounted(fetchFriendProfileAndList)
   }
 
   .friend-profile-page .banner-content {
-    gap: 14px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .friend-profile-page .banner-meta {
+    transform: none;
+    padding-bottom: 12px;
   }
 
   .friend-profile-page .banner-avatar {
@@ -566,6 +573,16 @@ onMounted(fetchFriendProfileAndList)
 
   .friend-profile-page .banner-joined {
     font-size: 13px;
+  }
+
+  .compare-box {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .compare-btn {
+    width: 100%;
+    justify-content: center;
   }
 }
 

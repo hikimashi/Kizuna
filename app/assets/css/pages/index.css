@@ -725,3 +725,57 @@
     width: 100%;
   }
 }
+
+@media (max-width: 520px) {
+  .hero-content {
+    padding: 64px 16px 36px;
+    gap: 20px;
+  }
+
+  .hero-subtitle {
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  .cta-buttons {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+  }
+
+  .stats-row {
+    gap: 12px;
+    padding-top: 24px;
+  }
+
+  .stat-item {
+    flex: 1 1 140px;
+    padding: 0 12px;
+  }
+
+  .features-section {
+    padding: 32px 16px 36px;
+  }
+
+  .dashboard-container {
+    padding: 16px 12px 24px;
+  }
+
+  .dashboard-panel {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 420px) {
+  .hero-title {
+    letter-spacing: -1px;
+  }
+
+  .friends-grid {
+    grid-template-columns: 1fr;
+  }
+}

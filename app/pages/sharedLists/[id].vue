@@ -5,758 +5,703 @@
     <div class="shared-list-shell">
       <nav class="shared-breadcrumb" aria-label="Breadcrumb">
         <NuxtLink to="/profilePage">Profile</NuxtLink>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6" />
-        </svg>
+        <span>/</span>
         <NuxtLink to="/sharedLists">Shared Lists</NuxtLink>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6" />
-        </svg>
-        <span>{{ listTitle }}</span>
+        <span>/</span>
+        <span>{{ detail?.title || 'Shared list' }}</span>
       </nav>
 
-      <section class="shared-hero">
-        <div class="shared-hero-banner">
-          <div ref="privacyRootRef" class="privacy-slot">
-            <button class="privacy-badge" type="button" @click.stop="togglePrivacyMenu">
-              <span class="privacy-dot" :class="activePrivacyMeta.dotClass"></span>
-              {{ activePrivacyMeta.label }}
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
+      <div v-if="isLoading" class="status-card">
+        Loading shared list...
+      </div>
+
+      <div v-else-if="loadError" class="status-card error">
+        {{ loadError }}
+      </div>
+
+      <template v-else-if="detail">
+        <section class="group-hero" :style="heroBackgroundStyle">
+          <div class="hero-overlay" :style="heroOverlayStyle"></div>
+          <div class="hero-texture"></div>
+
+          <div class="hero-top">
+            <button class="back-btn" type="button" @click="navigateTo('/sharedLists')">
+              <span aria-hidden="true">&lt;</span>
+              Back to Shared Lists
             </button>
 
-            <div v-if="privacyMenuOpen" class="privacy-menu" @click.stop>
+            <div class="hero-actions">
+              <button class="ghost-btn settings-btn" type="button" @click="openSettings">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" width="14" height="14" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317a1.724 1.724 0 0 1 3.35 0 1.724 1.724 0 0 0 2.573 1.066 1.724 1.724 0 0 1 2.455 2.455 1.724 1.724 0 0 0 1.065 2.572 1.724 1.724 0 0 1 0 3.35 1.724 1.724 0 0 0-1.065 2.573 1.724 1.724 0 0 1-2.455 2.455 1.724 1.724 0 0 0-2.573 1.065 1.724 1.724 0 0 1-3.35 0 1.724 1.724 0 0 0-2.572-1.065 1.724 1.724 0 0 1-2.455-2.455 1.724 1.724 0 0 0-1.066-2.573 1.724 1.724 0 0 1 0-3.35 1.724 1.724 0 0 0 1.066-2.572 1.724 1.724 0 0 1 2.455-2.455 1.724 1.724 0 0 0 2.572-1.066Z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                </svg>
+                Settings
+              </button>
+
               <button
-                v-for="option in privacyOptions"
-                :key="option.value"
-                class="privacy-opt"
-                :class="{ selected: privacy === option.value }"
+                v-if="!detail.isOwner"
+                class="danger-btn"
                 type="button"
-                @click="setPrivacy(option.value)"
+                :disabled="isLeaving"
+                @click="leaveGroup"
               >
-                <span class="privacy-opt-dot" :class="option.dotClass"></span>
-                <span>
-                  {{ option.label }}
-                  <small>{{ option.hint }}</small>
-                </span>
+                {{ isLeaving ? 'Leaving...' : 'Leave shared list' }}
               </button>
             </div>
           </div>
-        </div>
 
-        <div class="shared-hero-body">
-          <div class="members-row">
-            <div v-for="member in members" :key="member.id" class="member-av-wrap">
-              <button class="member-av" :style="avatarToneStyle(member.id)" type="button" :title="memberTitle(member)">
-                <img v-if="memberAvatar(member.id)" :src="memberAvatar(member.id)" :alt="memberDisplayName(member.id, 'panel')" />
-                <span v-else>{{ memberInitials(member.id) }}</span>
-              </button>
-              <span class="perm-dot" :class="roleDotClass(member.role)" :title="roleLabel(member.role)">
-                {{ roleSymbol(member.role) }}
-              </span>
+          <div class="hero-head">
+            <div class="group-cover" :style="detail.imageUrl ? undefined : { background: coverGradient }">
+              <img :src="String(detail.imageUrl || '').trim() || DEFAULT_SHARED_LIST_IMAGE" :alt="detail.title" />
             </div>
 
-            <button class="add-member-btn" type="button" title="Inviter quelqu'un">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" aria-hidden="true">
-                <path stroke-linecap="round" d="M12 5v14M5 12h14" />
-              </svg>
+            <div class="group-copy">
+              <div class="group-title-row">
+                <h1>{{ detail.title }}</h1>
+              </div>
+
+              <div class="group-meta">
+                <span class="group-badge" :class="badgeClass(detail.privacy)">
+                  {{ privacyLabel(detail.privacy) }}
+                </span>
+                <span>{{ createdLabel }}</span>
+                <span>{{ detail.memberCount }} member<span v-if="detail.memberCount > 1">s</span></span>
+                <span>{{ detail.animeCount }} anime</span>
+                <span>{{ detail.updatedLabel }}</span>
+                <span class="role-accent">{{ detail.isOwner ? 'Owner' : 'Member' }}</span>
+              </div>
+
+              <p class="group-description">
+                Created by {{ detail.ownerName }}. {{ detail.animeCount }} anime currently in the shared list.
+              </p>
+
+              <div class="hero-members">
+                <div
+                  v-for="(member, index) in detail.members.slice(0, 6)"
+                  :key="`${member.id}-${index}`"
+                  class="hero-member-avatar"
+                  :class="{ 'has-avatar': !!member.avatar, stacked: index > 0 }"
+                  :style="memberAvatarStyle(member)"
+                  :title="member.name"
+                >
+                  <img v-if="member.avatar" :src="member.avatar" :alt="member.name" />
+                  <span v-else>{{ member.initials }}</span>
+                </div>
+                <span v-if="detail.memberCount > 6" class="hero-members-more">+{{ detail.memberCount - 6 }}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div v-if="actionError" class="status-card error inline-error">{{ actionError }}</div>
+
+        <section class="tabs-wrap">
+          <div class="tabs-nav">
+            <button
+              v-for="tab in tabs"
+              :key="tab.key"
+              class="tab-btn"
+              :class="{ active: activeTab === tab.key }"
+              type="button"
+              @click="activeTab = tab.key"
+            >
+              {{ tab.label }}
             </button>
           </div>
+        </section>
 
-          <div class="hero-main">
-            <div class="hero-copy">
-              <div class="list-title-row">
-                <span class="list-emoji">🎬</span>
-                <h1 class="list-title">{{ listTitle }}</h1>
-                <button class="edit-title-btn" type="button" aria-label="Modifier le titre">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 1 1 2.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        <section v-if="activeTab === 'anime'" class="content-section">
+          <div class="anime-browser">
+            <div class="sidebar-slot">
+              <aside class="sidebar">
+                <label class="filter-search">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.35-4.35" />
                   </svg>
+                  <input v-model.trim="animeQuery" type="text" placeholder="Filter anime">
+                </label>
+
+                <div>
+                  <div class="sidebar-section">Lists</div>
+                  <div class="list-links">
+                    <button
+                      v-for="item in animeFilterItems"
+                      :key="item.key"
+                      class="list-link"
+                      :class="{ active: activeAnimeFilter === item.key }"
+                      type="button"
+                      @click="activeAnimeFilter = item.key"
+                    >
+                      {{ item.label }}
+                      <span class="list-count">{{ item.count }}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="sidebar-section">Sort</div>
+                  <select v-model="animeSortBy" class="sort-select">
+                    <option value="title">Title</option>
+                    <option value="score">Score</option>
+                    <option value="progress">Progress</option>
+                    <option value="updatedAt">Last updated</option>
+                  </select>
+                </div>
+
+                <div class="sidebar-stats">
+                  <div class="stat-chip">
+                    <strong>{{ detail.animeCount }}</strong>
+                    <span>Anime</span>
+                  </div>
+                  <div class="stat-chip">
+                    <strong>{{ detail.memberCount }}</strong>
+                    <span>Members</span>
+                  </div>
+                  <div class="stat-chip">
+                    <strong>{{ visibleAnimeCount }}</strong>
+                    <span>Visible</span>
+                  </div>
+                </div>
+
+                <button
+                  v-if="canAddAnime"
+                  class="sidebar-primary"
+                  type="button"
+                  @click="isAnimePickerOpen = !isAnimePickerOpen"
+                >
+                  {{ isAnimePickerOpen ? 'Close add panel' : 'Add anime' }}
+                </button>
+              </aside>
+            </div>
+
+            <section class="main">
+              <div class="view-bar">
+                <button class="view-btn" :class="{ active: viewMode === 'grid' }" type="button" title="Grid" @click="viewMode = 'grid'">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 0h7v7h-7z" /></svg>
+                </button>
+                <button class="view-btn" :class="{ active: viewMode === 'list' }" type="button" title="List" @click="viewMode = 'list'">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M9 6h13M9 12h13M9 18h13M4 6h.01M4 12h.01M4 18h.01" /></svg>
+                </button>
+                <button class="view-btn" :class="{ active: viewMode === 'compact' }" type="button" title="Compact" @click="viewMode = 'compact'">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M3 5h18v2H3zm0 6h18v2H3zm0 6h18v2H3z" /></svg>
                 </button>
               </div>
 
-              <p class="list-desc">
-                Anime qu'on veut regarder ensemble. Chacun peut ajouter ou suggérer des titres.
-                Les suggestions doivent être approuvées par un modérateur.
-              </p>
+              <div v-if="canAddAnime && isAnimePickerOpen" class="panel-card add-anime-panel">
+                <div class="panel-head">
+                  <div>
+                    <h2 class="panel-title">Add anime</h2>
+                    <p class="panel-copy">Search AniList and add a title directly to this shared list.</p>
+                  </div>
+                </div>
 
-              <div class="hero-meta">
-                <div class="meta-chip">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" aria-hidden="true">
-                    <rect x="3" y="4" width="18" height="18" rx="2" />
-                    <path d="M16 2v4M8 2v4M3 10h18" />
-                  </svg>
-                  Créée le {{ createdLabel }}
+                <div class="add-state-row">
+                  <label class="add-state-field">
+                    <span>Status</span>
+                    <select v-model="draftAddStatus" class="editor-input">
+                      <option v-for="status in STATUS_ORDER" :key="status" :value="status">
+                        {{ STATUS_LABELS[status] }}
+                      </option>
+                    </select>
+                  </label>
+
+                  <label class="add-state-field">
+                    <span>Progress</span>
+                    <input v-model="draftAddProgress" class="editor-input" type="number" min="0" inputmode="numeric" />
+                  </label>
+
+                  <label class="add-state-field">
+                    <span>Score</span>
+                    <input v-model="draftAddScore" class="editor-input" type="number" min="0" max="100" step="0.1" inputmode="decimal" />
+                  </label>
                 </div>
-                <div class="meta-chip">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" aria-hidden="true">
-                    <path stroke-linecap="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0zM4.501 20.118a7.5 7.5 0 0 1 14.998 0" />
-                  </svg>
-                  {{ members.length }} membres
-                </div>
-                <div class="meta-chip">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 5.25h16.5M3.75 12h16.5M3.75 18.75h16.5" />
-                  </svg>
-                  {{ mainEntries.length }} anime · {{ suggestions.length }} suggestion<span v-if="suggestions.length > 1">s</span> en attente
+
+                <input
+                  v-model.trim="animeSearchTerm"
+                  type="text"
+                  class="search-box full"
+                  placeholder="Search AniList anime"
+                  @input="handleAnimeSearchInput"
+                />
+
+                <div v-if="isSearchingAnime" class="search-status">Searching AniList...</div>
+                <div v-else-if="animeSearchTerm.length >= 2 && !animeResults.length" class="search-status">No anime found.</div>
+
+                <div v-if="animeResults.length" class="anime-search-results">
+                  <article
+                    v-for="item in animeResults"
+                    :key="item.mediaId"
+                    class="anime-search-item"
+                  >
+                    <div class="anime-search-cover">
+                      <img v-if="item.cover" :src="item.cover" :alt="item.title" />
+                      <span v-else>{{ animeCoverLabel(item.title) }}</span>
+                    </div>
+
+                    <div class="anime-search-copy">
+                      <div class="anime-search-name">{{ item.title }}</div>
+                      <div class="anime-search-secondary">
+                        {{ item.formatLabel }}
+                        <span v-if="item.seasonYear"> - {{ item.seasonYear }}</span>
+                        <span> - AniList #{{ item.mediaId }}</span>
+                      </div>
+                    </div>
+
+                    <button
+                      class="search-result-action"
+                      :class="{ 'is-disabled': item.alreadyAdded }"
+                      type="button"
+                      :disabled="item.alreadyAdded || pendingAnimeMediaId === String(item.mediaId)"
+                      @click="addAnime(item)"
+                    >
+                      {{ item.alreadyAdded ? 'Added' : pendingAnimeMediaId === String(item.mediaId) ? 'Adding...' : 'Add' }}
+                    </button>
+                  </article>
                 </div>
               </div>
 
-              <div class="progress-section">
-                <div class="prog-top">
-                  <span>Progression du groupe</span>
-                  <span>{{ totalWatchedMarks }} / {{ groupProgressTarget }} vues cumulées</span>
+              <section v-if="canManageAnime && selectedAnimeEntry" class="editor-panel">
+                <div class="editor-panel-media">
+                  <div class="editor-panel-thumb">
+                    <img
+                      v-if="selectedAnimeCoverSrc"
+                      :src="selectedAnimeCoverSrc"
+                      :srcset="selectedAnimeCoverSrcSet"
+                      :alt="selectedAnimeEntry.title"
+                      loading="lazy"
+                      decoding="async"
+                    >
+                    <div v-else class="anime-card-placeholder">
+                      <span>{{ animeCoverLabel(selectedAnimeEntry.title) }}</span>
+                    </div>
+                  </div>
+                  <div class="editor-panel-copy">
+                    <div class="editor-panel-label">Edit shared entry</div>
+                    <div class="editor-panel-title">{{ selectedAnimeEntry.title }}</div>
+                    <div class="editor-panel-subtitle">
+                      Progress {{ editAnimeProgress || '0' }} / {{ selectedAnimeEpisodes ?? '?' }}
+                    </div>
+                  </div>
                 </div>
 
-                <div class="prog-bar">
-                  <span
-                    v-for="item in progressStats"
-                    :key="item.memberId"
-                    class="pb-seg"
-                    :style="progressSegmentStyle(item)"
-                  />
-                  <span class="pb-rest" />
+                <div class="editor-panel-fields">
+                  <label class="editor-field">
+                    <span>Status</span>
+                    <select v-model="editAnimeStatus" class="editor-input">
+                      <option v-for="status in STATUS_ORDER" :key="status" :value="status">
+                        {{ STATUS_LABELS[status] }}
+                      </option>
+                    </select>
+                  </label>
+
+                  <label class="editor-field">
+                    <span>Progress</span>
+                    <input
+                      v-model="editAnimeProgress"
+                      class="editor-input"
+                      type="number"
+                      min="0"
+                      :max="selectedAnimeEpisodes ?? undefined"
+                      inputmode="numeric"
+                    >
+                  </label>
+
+                  <label class="editor-field">
+                    <span>Score</span>
+                    <input
+                      v-model="editAnimeScore"
+                      class="editor-input"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      placeholder="No score"
+                      inputmode="decimal"
+                    >
+                  </label>
                 </div>
 
-                <div class="progress-legend">
-                  <div v-for="item in progressStats" :key="`${item.memberId}-legend`" class="meta-chip">
-                    <span class="legend-dot" :style="avatarToneStyle(item.memberId)"></span>
-                    {{ memberDisplayName(item.memberId, 'short') }} — {{ item.count }} vu<span v-if="item.count > 1">s</span>
+                <div class="editor-panel-actions">
+                  <button class="editor-btn editor-btn-muted" type="button" @click="closeAnimeEditor">
+                    Cancel
+                  </button>
+                  <button class="editor-btn editor-btn-danger" type="button" :disabled="isDeletingAnime" @click="deleteAnimeEntry">
+                    {{ isDeletingAnime ? 'Deleting...' : 'Delete' }}
+                  </button>
+                  <button class="editor-btn editor-btn-primary" type="button" :disabled="isSavingAnime" @click="saveAnimeEntry">
+                    {{ isSavingAnime ? 'Saving...' : 'Save changes' }}
+                  </button>
+                </div>
+              </section>
+
+              <div v-if="!visibleAnimeSections.length" class="empty-state">
+                <div class="empty-state-title">No anime found for this filter.</div>
+                <div class="empty-state-text">
+                  {{ canManageAnime ? 'Try another title or use Add anime.' : 'Only the owner can edit this shared list right now.' }}
+                </div>
+              </div>
+
+              <div v-else class="content" :class="`view-${viewMode}`">
+                <div v-for="section in visibleAnimeSections" :key="section.key" class="anime-section">
+                  <div class="section-title">
+                    {{ section.label }}
+                    <span class="section-count">{{ section.items.length }}</span>
+                  </div>
+                  <div class="anime-grid">
+                    <article
+                      v-for="entry in section.items"
+                      :key="entry.relationId"
+                      class="anime-card"
+                      :class="{ 'is-selected': selectedAnimeRelationId === entry.relationId, 'is-readonly': !canManageAnime }"
+                      :tabindex="canManageAnime ? 0 : -1"
+                      :role="canManageAnime ? 'button' : undefined"
+                      @click="openAnimeEditor(entry)"
+                      @keydown.enter.prevent="openAnimeEditor(entry)"
+                      @keydown.space.prevent="openAnimeEditor(entry)"
+                    >
+                      <img
+                        v-if="entryCoverSrc(entry)"
+                        :src="entryCoverSrc(entry)"
+                        :srcset="entryCoverSrcSet(entry)"
+                        :alt="entry.title"
+                        loading="lazy"
+                        decoding="async"
+                      >
+                      <div v-else class="anime-card-placeholder">
+                        <span>{{ animeCoverLabel(entry.title) }}</span>
+                      </div>
+                      <div class="status-dot" :class="statusDotClass(entry.status)"></div>
+                      <div class="anime-card-score">{{ formatAnimeScore(entry.score) }}</div>
+                      <div class="anime-card-overlay">
+                        <div class="anime-card-title" :title="entry.title">{{ entry.title }}</div>
+                        <div class="anime-card-progress">{{ entry.progress }} / {{ entryEpisodes(entry) ?? '?' }}</div>
+                      </div>
+                    </article>
                   </div>
                 </div>
               </div>
-            </div>
-
-            <div class="hero-actions">
-              <button class="sl-btn sl-btn-primary" type="button">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" aria-hidden="true">
-                  <path stroke-linecap="round" d="M12 5v14M5 12h14" />
-                </svg>
-                Ajouter un anime
-              </button>
-              <button class="sl-btn sl-btn-ghost" type="button">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 1 1 0-2.684m0 2.684 6.632 3.316m-6.632-6 6.632-3.316m0 0a3 3 0 1 0 5.367-2.684 3 3 0 0 0-5.367 2.684zm0 9.316a3 3 0 1 0 5.368 2.684 3 3 0 0 0-5.368-2.684z" />
-                </svg>
-                Partager le lien
-              </button>
-              <button class="sl-btn sl-btn-ghost" type="button">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931z" />
-                </svg>
-                Modifier
-              </button>
-              <button class="sl-btn sl-btn-danger" type="button">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-3a2.25 2.25 0 0 0-2.25 2.25V9m-3 0h12M5.25 9 6 20.25A2.25 2.25 0 0 0 8.25 22.5h7.5A2.25 2.25 0 0 0 18 20.25L18.75 9" />
-                </svg>
-                Quitter
-              </button>
-            </div>
+            </section>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section class="member-panel">
-        <button class="panel-header" type="button" @click="membersPanelOpen = !membersPanelOpen">
-          <span class="panel-header-left">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0z" />
-            </svg>
-            Membres ({{ members.length }})
-          </span>
-          <span class="panel-toggle" :class="{ open: membersPanelOpen }">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-            </svg>
-          </span>
-        </button>
+        <section v-else class="content-section">
+          <div v-if="detail.membersVisibilityLimited" class="status-card limited-note">
+            PocketBase still restricts the full roster for non-owners. You may see a partial list here.
+          </div>
 
-        <div v-show="membersPanelOpen" class="panel-body">
-          <div v-for="member in members" :key="`${member.id}-panel`" class="member-row">
-            <div class="member-row-av" :style="avatarToneStyle(member.id)">
-              <img v-if="memberAvatar(member.id)" :src="memberAvatar(member.id)" :alt="memberDisplayName(member.id, 'panel')" />
-              <span v-else>{{ memberInitials(member.id) }}</span>
-            </div>
-
-            <div class="member-info">
-              <div class="member-name">
-                {{ memberDisplayName(member.id, 'panel') }}
-                <span v-if="member.id === 'you'" class="member-self">(vous)</span>
+          <div class="members-grid">
+            <article v-for="member in detail.members" :key="member.id" class="member-card">
+              <div class="member-avatar" :class="{ 'has-avatar': !!member.avatar }" :style="memberAvatarStyle(member)">
+                <img v-if="member.avatar" :src="member.avatar" :alt="member.name" />
+                <span v-else>{{ member.initials }}</span>
               </div>
-              <div class="member-sub">{{ member.summary }}</div>
-            </div>
 
-            <select
-              v-if="member.role !== 'owner'"
-              v-model="member.role"
-              class="perm-select"
-              :class="roleSelectClass(member.role)"
-            >
-              <option v-for="role in assignableRoles" :key="`${member.id}-${role}`" :value="role">
-                {{ roleLabel(role) }}
-              </option>
-            </select>
+              <div class="member-info">
+                <div class="member-name">
+                  {{ member.name }}
+                  <span v-if="member.isCurrentUser" class="member-self">(you)</span>
+                </div>
+                <div class="member-role">
+                  Joined {{ member.joinedAt ? formatDateLabel(member.joinedAt) : 'recently' }}
+                </div>
+              </div>
 
-            <select v-else class="perm-select perm-select-owner" disabled>
-              <option>{{ roleLabel('owner') }}</option>
-            </select>
+              <div class="member-badge" :class="{ owner: member.role === 'owner' }">
+                {{ member.role === 'owner' ? 'Owner' : 'Member' }}
+              </div>
 
-            <div class="member-actions">
-              <button class="icon-btn" type="button" title="Voir profil">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                </svg>
+              <button
+                v-if="detail.isOwner && member.role !== 'owner' && member.membershipId"
+                class="remove-btn"
+                type="button"
+                :disabled="pendingMembershipActionId === member.membershipId"
+                @click="removeMember(member.membershipId)"
+              >
+                {{ pendingMembershipActionId === member.membershipId ? 'Removing...' : 'Remove' }}
               </button>
-              <button v-if="member.role !== 'owner'" class="icon-btn danger" type="button" title="Retirer">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M22 10.5h-6m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0zM4 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 10.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
-                </svg>
-              </button>
-            </div>
+            </article>
           </div>
+        </section>
+      </template>
+    </div>
 
-          <div class="invite-row">
-            <input v-model="inviteQuery" class="invite-input" placeholder="Inviter par nom d'utilisateur ou lien..." />
-            <button class="sl-btn sl-btn-primary invite-btn" type="button">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" aria-hidden="true">
-                <path stroke-linecap="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0zM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 10.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
-              </svg>
-              Inviter
-            </button>
+    <div v-if="isSettingsOpen && detail" class="settings-overlay" @click.self="closeSettings">
+      <aside class="settings-drawer">
+        <div class="settings-drawer-head">
+          <div>
+            <div class="settings-kicker">Shared List Settings</div>
+            <h2>{{ detail.title }}</h2>
           </div>
-        </div>
-      </section>
-
-      <div class="tabs-bar" role="tablist" aria-label="Shared list sections">
-        <button
-          v-for="tab in tabs"
-          :key="tab.key"
-          class="tab"
-          :class="{ active: activeTab === tab.key }"
-          type="button"
-          @click="activeTab = tab.key"
-        >
-          <span>{{ tab.label }}</span>
-          <span class="tab-badge" :class="{ attention: tab.key === 'suggestions' && tab.count > 0 }">
-            {{ tab.count }}
-          </span>
-        </button>
-      </div>
-
-      <section v-if="activeTab === 'anime'" class="tab-panel">
-        <div class="add-bar">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" aria-hidden="true">
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.35-4.35" />
-          </svg>
-          <input v-model.trim="searchTerm" class="add-bar-input" placeholder="Rechercher un anime à ajouter..." />
-          <div class="add-bar-divider"></div>
-          <button class="suggest-toggle" :class="{ on: suggestionMode }" type="button" @click="suggestionMode = !suggestionMode">
-            <span class="toggle-knob"></span>
-            Mode suggestion
-          </button>
-          <button class="sl-btn sl-btn-primary add-btn" type="button">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11" aria-hidden="true">
-              <path stroke-linecap="round" d="M12 5v14M5 12h14" />
-            </svg>
-            Ajouter
-          </button>
+          <button class="icon-close" type="button" aria-label="Close settings" @click="closeSettings">x</button>
         </div>
 
-        <div class="list-table-wrap">
-          <div class="list-table-scroll">
-            <div class="list-header">
-              <div></div>
-              <div></div>
-              <div>Titre</div>
-              <div>Ajouté par</div>
-              <div>Statuts</div>
-              <div>Scores</div>
-              <div></div>
-            </div>
+        <div class="settings-drawer-body">
+          <div v-if="actionError" class="status-card error">{{ actionError }}</div>
 
-            <div
-              v-for="entry in visibleMainEntries"
-              :key="entry.id"
-              class="anime-row"
-              :class="{ current: entry.isCurrent }"
-            >
-              <div class="row-drag" aria-hidden="true">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-
-              <div class="row-thumb">
-                <img v-if="entry.coverUrl" :src="entry.coverUrl" :alt="entry.title" />
-                <div v-else class="row-thumb-ph">
-                  <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" aria-hidden="true">
-                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                  </svg>
+          <template v-if="detail.isOwner">
+            <section class="drawer-card">
+              <div class="drawer-card-head">
+                <div>
+                  <h3>Appearance</h3>
+                  <p>Update the title, privacy, list image and banner. These values are saved on the `shared_list` collection.</p>
                 </div>
               </div>
 
-              <div class="row-info">
-                <div class="row-title">{{ entry.title }}</div>
-                <div class="row-sub">
-                  <span class="format-tag">{{ entry.format }}</span>
-                  {{ entry.meta }}
-                  <span v-if="entry.isCurrent" class="row-current-pill">● En cours</span>
+              <div class="settings-field-grid">
+                <label class="settings-field">
+                  <span>Name</span>
+                  <input v-model.trim="settingsName" class="settings-input" type="text" maxlength="20" />
+                </label>
+
+                <label class="settings-field">
+                  <span>Privacy</span>
+                  <select v-model="settingsPrivacy" class="settings-input">
+                    <option value="friends">Friends only</option>
+                    <option value="private">Private</option>
+                    <option value="public">Public</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="settings-media-grid">
+                <label class="settings-media-field">
+                  <span>List image</span>
+                  <div class="settings-media-preview settings-media-square" :style="settingsGroupImageDisplay ? undefined : { background: coverGradient }">
+                    <img v-if="settingsGroupImageDisplay" :src="settingsGroupImageDisplay" alt="List image preview" />
+                    <img v-else :src="DEFAULT_SHARED_LIST_IMAGE" alt="Default list image" />
+                  </div>
+                  <input class="media-input" type="file" accept="image/*" @change="handleSettingsGroupImageChange" />
+                  <small>{{ settingsGroupImageFile?.name || 'Saved in PocketBase as `image`.' }}</small>
+                </label>
+
+                <label class="settings-media-field">
+                  <span>Banner</span>
+                  <div class="settings-media-preview settings-media-banner" :style="heroBackgroundStyle">
+                    <img v-if="settingsBannerDisplay" :src="settingsBannerDisplay" alt="Banner preview" />
+                    <span v-else>Banner preview</span>
+                  </div>
+                  <input class="media-input" type="file" accept="image/*" @change="handleSettingsBannerChange" />
+                  <small>{{ settingsBannerImageFile?.name || 'Saved in PocketBase as `banner`.' }}</small>
+                </label>
+              </div>
+
+              <div class="drawer-actions">
+                <button class="drawer-btn drawer-btn-muted" type="button" @click="closeSettings">
+                  Cancel
+                </button>
+                <button class="drawer-btn drawer-btn-primary" type="button" :disabled="isSavingSettings || !hasSettingsChanges" @click="saveSettings">
+                  {{ isSavingSettings ? 'Saving...' : 'Save changes' }}
+                </button>
+              </div>
+            </section>
+
+            <section class="drawer-card">
+              <div class="drawer-card-head">
+                <div>
+                  <h3>Members</h3>
+                  <p>Add or remove members. Membership is persisted in `user_shared_list`.</p>
                 </div>
               </div>
 
-              <div class="row-added">
-                <div
-                  v-for="(memberId, index) in entry.addedBy.slice(0, 2)"
-                  :key="`${entry.id}-${memberId}`"
-                  class="added-av"
-                  :class="{ stacked: index > 0 }"
-                  :style="avatarToneStyle(memberId)"
-                >
-                  <img v-if="memberAvatar(memberId)" :src="memberAvatar(memberId)" :alt="memberDisplayName(memberId, 'short')" />
-                  <span v-else>{{ memberInitials(memberId) }}</span>
+              <div class="invite-box">
+                <input
+                  v-model.trim="memberQuery"
+                  type="text"
+                  class="search-box full"
+                  placeholder="Search AniList username"
+                  @input="handleSearchInput"
+                />
+
+                <div v-if="isSearchingUsers" class="search-status">Searching users...</div>
+                <div v-else-if="memberQuery.length >= 2 && !userResults.length" class="search-status">No matching user found.</div>
+
+                <div v-if="userResults.length" class="search-results">
+                  <button
+                    v-for="user in userResults"
+                    :key="user.id"
+                    class="search-result"
+                    type="button"
+                    :disabled="pendingAddUserId === user.id"
+                    @click="addMember(user.id)"
+                  >
+                    <span class="member-avatar small" :class="{ 'has-avatar': !!user.avatar }" :style="memberAvatarStyle(user)">
+                      <img v-if="user.avatar" :src="user.avatar" :alt="user.name" />
+                      <span v-else>{{ user.initials }}</span>
+                    </span>
+                    <span class="search-name">{{ user.name }}</span>
+                    <span class="search-action">{{ pendingAddUserId === user.id ? 'Adding...' : 'Add' }}</span>
+                  </button>
                 </div>
-                <span class="added-name" :style="{ color: memberTone(primaryAddedBy(entry)) }">
-                  {{ addedByLabel(entry) }}
-                </span>
               </div>
 
-              <div class="row-status">
-                <div v-for="status in entry.statuses" :key="`${entry.id}-${status.memberId}`" class="status-line">
-                  <span class="s-dot" :class="statusDotClass(status.state)"></span>
-                  <span class="s-name" :style="{ color: memberTone(status.memberId) }">
-                    {{ memberDisplayName(status.memberId, 'short') }}
-                  </span>
-                  <span class="s-text">{{ status.text }}</span>
+              <div class="drawer-member-list">
+                <article v-for="member in detail.members" :key="member.id" class="drawer-member-row">
+                  <div class="member-avatar small" :class="{ 'has-avatar': !!member.avatar }" :style="memberAvatarStyle(member)">
+                    <img v-if="member.avatar" :src="member.avatar" :alt="member.name" />
+                    <span v-else>{{ member.initials }}</span>
+                  </div>
+                  <div class="drawer-member-copy">
+                    <strong>{{ member.name }}</strong>
+                    <span>{{ member.role === 'owner' ? 'Owner' : 'Member' }}</span>
+                  </div>
+                  <select
+                    v-if="member.role !== 'owner' && member.membershipId"
+                    class="member-perm"
+                    :value="member.permission"
+                    :disabled="pendingMembershipActionId === member.membershipId"
+                    @change="updateMemberPermission(member.membershipId, ($event.target as HTMLSelectElement).value)"
+                  >
+                    <option value="admin">admin</option>
+                    <option value="editor">editor</option>
+                    <option value="viewer">viewer</option>
+                  </select>
+                  <button
+                    v-if="member.role !== 'owner' && member.membershipId"
+                    class="remove-btn"
+                    type="button"
+                    :disabled="pendingMembershipActionId === member.membershipId"
+                    @click="removeMember(member.membershipId)"
+                  >
+                    {{ pendingMembershipActionId === member.membershipId ? 'Removing...' : 'Remove' }}
+                  </button>
+                </article>
+              </div>
+            </section>
+
+            <section class="drawer-card danger-card">
+              <div class="drawer-card-head">
+                <div>
+                  <h3>Danger Zone</h3>
+                  <p>Delete the shared list and all associated access for members.</p>
                 </div>
               </div>
 
-              <div class="row-scores">
-                <span
-                  v-for="(score, index) in entry.scores"
-                  :key="`${entry.id}-score-${index}`"
-                  class="score-chip"
-                  :class="score.variant"
-                >
-                  {{ score.value }}
-                </span>
-              </div>
-
-              <button class="row-menu-btn" type="button" aria-label="Plus d'options">
-                <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" aria-hidden="true">
-                  <circle cx="12" cy="5" r="1.5" />
-                  <circle cx="12" cy="12" r="1.5" />
-                  <circle cx="12" cy="19" r="1.5" />
-                </svg>
+              <button class="drawer-btn drawer-btn-danger" type="button" :disabled="isDeleting" @click="deleteGroup">
+                {{ isDeleting ? 'Deleting...' : 'Delete shared list' }}
               </button>
-            </div>
+            </section>
+          </template>
 
-            <div v-if="visibleMainEntries.length === 0" class="table-empty">
-              Aucun anime ne correspond à cette recherche.
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section v-else-if="activeTab === 'suggestions'" class="tab-panel">
-        <div class="panel-note">
-          Les suggestions doivent être approuvées par un modérateur avant d'apparaître dans la liste principale.
-        </div>
-
-        <div class="list-table-wrap">
-          <div class="list-table-scroll">
-            <div class="list-header">
-              <div></div>
-              <div></div>
-              <div>Titre</div>
-              <div>Suggéré par</div>
-              <div>Statuts</div>
-              <div>Action</div>
-              <div></div>
-            </div>
-
-            <div v-for="entry in visibleSuggestions" :key="entry.id" class="anime-row suggestion">
-              <div class="row-drag visible" aria-hidden="true">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-
-              <div class="row-thumb">
-                <img v-if="entry.coverUrl" :src="entry.coverUrl" :alt="entry.title" />
-                <div v-else class="row-thumb-ph">
-                  <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" aria-hidden="true">
-                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                  </svg>
+          <template v-else>
+            <section class="drawer-card">
+              <div class="drawer-card-head">
+                <div>
+                  <h3>Shared List Info</h3>
+                  <p>Members can view the shared list configuration here. Editing remains restricted to the owner.</p>
                 </div>
               </div>
 
-              <div class="row-info">
-                <div class="row-title">{{ entry.title }}</div>
-                <div class="row-sub">
-                  <span class="format-tag">{{ entry.format }}</span>
-                  {{ entry.meta }}
+              <div class="info-list">
+                <div class="info-row">
+                  <span>Created</span>
+                  <strong>{{ formatDateLabel(detail.createdAt) }}</strong>
+                </div>
+                <div class="info-row">
+                  <span>Privacy</span>
+                  <strong>{{ privacyLabel(detail.privacy) }}</strong>
+                </div>
+                <div class="info-row">
+                  <span>Owner</span>
+                  <strong>{{ detail.ownerName }}</strong>
+                </div>
+                <div class="info-row">
+                  <span>Anime count</span>
+                  <strong>{{ detail.animeCount }}</strong>
+                </div>
+              </div>
+            </section>
+
+            <section class="drawer-card danger-card">
+              <div class="drawer-card-head">
+                <div>
+                  <h3>Leave shared list</h3>
+                  <p>Remove your membership from `user_shared_list`.</p>
                 </div>
               </div>
 
-              <div class="row-added">
-                <div class="added-av" :style="avatarToneStyle(primaryAddedBy(entry))">
-                  <img v-if="memberAvatar(primaryAddedBy(entry))" :src="memberAvatar(primaryAddedBy(entry))" :alt="memberDisplayName(primaryAddedBy(entry), 'short')" />
-                  <span v-else>{{ memberInitials(primaryAddedBy(entry)) }}</span>
-                </div>
-                <span class="added-name" :style="{ color: memberTone(primaryAddedBy(entry)) }">
-                  {{ memberDisplayName(primaryAddedBy(entry), 'panel') }}
-                </span>
-                <span class="suggestion-badge">Suggestion</span>
-              </div>
-
-              <div class="row-status">
-                <div v-for="status in entry.statuses" :key="`${entry.id}-${status.memberId}`" class="status-line">
-                  <span class="s-dot" :class="statusDotClass(status.state)"></span>
-                  <span class="s-name" :style="{ color: memberTone(status.memberId) }">
-                    {{ memberDisplayName(status.memberId, 'short') }}
-                  </span>
-                  <span class="s-text">{{ status.text }}</span>
-                </div>
-              </div>
-
-              <div class="row-scores">
-                <div class="suggest-actions">
-                  <button class="btn-accept" type="button" @click="acceptSuggestion(entry.id)">✓ Accepter</button>
-                  <button class="btn-reject" type="button" @click="rejectSuggestion(entry.id)">✕ Refuser</button>
-                </div>
-              </div>
-
-              <button class="row-menu-btn" type="button" aria-label="Plus d'options">
-                <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" aria-hidden="true">
-                  <circle cx="12" cy="5" r="1.5" />
-                  <circle cx="12" cy="12" r="1.5" />
-                  <circle cx="12" cy="19" r="1.5" />
-                </svg>
+              <button class="drawer-btn drawer-btn-danger" type="button" :disabled="isLeaving" @click="leaveGroup">
+                {{ isLeaving ? 'Leaving...' : 'Leave shared list' }}
               </button>
-            </div>
-
-            <div v-if="visibleSuggestions.length === 0" class="table-empty">
-              Aucune suggestion en attente.
-            </div>
-          </div>
+            </section>
+          </template>
         </div>
-      </section>
-
-      <section v-else-if="activeTab === 'permissions'" class="tab-panel">
-        <div class="panel">
-          <div class="panel-head">
-            <div class="panel-title">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-              </svg>
-              Tableau des permissions par rôle
-            </div>
-          </div>
-
-          <div class="panel-inner panel-flush">
-            <table class="perms-table">
-              <thead>
-                <tr>
-                  <th>Permission</th>
-                  <th><span class="role-badge owner">★ Owner</span></th>
-                  <th><span class="role-badge moderator">✦ Modérateur</span></th>
-                  <th><span class="role-badge member">Membre</span></th>
-                  <th><span class="role-badge reader">Lecteur</span></th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="permission in permissionRows" :key="permission.label">
-                  <td>{{ permission.label }}</td>
-                  <td><span :class="permission.owner ? 'check' : 'cross'">{{ permission.owner ? '✓' : '—' }}</span></td>
-                  <td><span :class="permission.moderator ? 'check' : 'cross'">{{ permission.moderator ? '✓' : '—' }}</span></td>
-                  <td><span :class="permission.member ? 'check' : 'cross'">{{ permission.member ? '✓' : '—' }}</span></td>
-                  <td><span :class="permission.reader ? 'check' : 'cross'">{{ permission.reader ? '✓' : '—' }}</span></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <section v-else class="tab-panel">
-        <div class="panel">
-          <div class="panel-head">
-            <div class="panel-title">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
-              </svg>
-              Activité récente
-            </div>
-          </div>
-
-          <div class="panel-inner">
-            <div class="activity-list">
-              <div v-for="item in activityItems" :key="item.id" class="activity-item">
-                <div class="act-av" :style="avatarToneStyle(item.actorId)">
-                  <img v-if="memberAvatar(item.actorId)" :src="memberAvatar(item.actorId)" :alt="memberDisplayName(item.actorId, 'short')" />
-                  <span v-else>{{ memberInitials(item.actorId) }}</span>
-                </div>
-                <div class="act-text">
-                  <b>{{ memberDisplayName(item.actorId, 'panel') }}</b>
-                  {{ item.action }}
-                  <span v-if="item.target" class="anime-ref">{{ item.target }}</span>
-                  <template v-if="item.detail"> {{ item.detail }}</template>
-                </div>
-                <div class="act-time">{{ item.time }}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      </aside>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, unref } from 'vue'
-import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { getAnilistCoverSrc, getAnilistCoverSrcSet, type AnilistCoverImage } from '~/composables/useAnilistCoverImage'
+import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
+import {
+  useSharedLists,
+  type SharedListAnimeEntry,
+  type SharedListAnimeStatus,
+  type SharedListDetail,
+  type SharedListMember,
+  type SharedListPrivacy
+} from '~/composables/useSharedLists'
 
 definePageMeta({ middleware: ['auth'] })
 
-type Role = 'owner' | 'moderator' | 'member' | 'reader'
-type Privacy = 'private' | 'friends' | 'public'
-type TabKey = 'anime' | 'suggestions' | 'permissions' | 'activity'
-type WatchState = 'watched' | 'watching' | 'planned' | 'none'
-
-type Member = {
-  id: string
-  name: string
-  shortName: string
-  initials: string
-  role: Role
-  color: string
-  summary: string
+type DetailTab = 'anime' | 'members'
+type ViewMode = 'grid' | 'list' | 'compact'
+type AnimeSortKey = 'title' | 'score' | 'progress' | 'updatedAt'
+type AnimeFilterKey = 'ALL' | SharedListAnimeStatus
+type AniListGraphqlResponse<T> = { data?: T; errors?: Array<{ message?: string | null }> | null }
+type AniListSearchMedia = {
+  id?: number | null
+  seasonYear?: number | null
+  episodes?: number | null
+  format?: string | null
+  title?: {
+    romaji?: string | null
+    english?: string | null
+    native?: string | null
+  } | null
+  coverImage?: {
+    large?: string | null
+    medium?: string | null
+  } | null
 }
-
-type EntryScore = {
-  value: string
-  variant: 'you' | 'friend' | 'none'
-}
-
-type EntryStatus = {
-  memberId: string
-  state: WatchState
-  text: string
-}
-
-type AnimeEntry = {
-  id: string
+type AnimeSearchResult = {
+  mediaId: number
   title: string
-  format: string
-  meta: string
-  addedBy: string[]
-  statuses: EntryStatus[]
-  scores: EntryScore[]
-  coverUrl?: string
-  isCurrent?: boolean
+  cover?: string
+  seasonYear?: number
+  episodes?: number
+  formatLabel: string
+  fetchLink: string
+  alreadyAdded: boolean
+}
+type SharedAnimeMedia = {
+  id?: number | null
+  episodes?: number | null
+  title?: {
+    romaji?: string | null
+    english?: string | null
+    native?: string | null
+  } | null
+  coverImage?: AnilistCoverImage | null
+}
+type SearchableUser = { id: string; name: string; avatar?: string; initials: string; color: string }
+
+const STATUS_LABELS: Record<SharedListAnimeStatus, string> = {
+  PLANNING: 'Plan to watch',
+  CURRENT: 'Watching',
+  PAUSED: 'Paused',
+  DROPPED: 'Dropped',
+  REPEATING: 'Rewatching',
+  COMPLETED: 'Completed'
 }
 
-type ActivityItem = {
-  id: string
-  actorId: string
-  action: string
-  target?: string
-  detail?: string
-  time: string
-}
+const STATUS_ORDER: SharedListAnimeStatus[] = ['PLANNING', 'CURRENT', 'PAUSED', 'DROPPED', 'REPEATING', 'COMPLETED']
 
-const pocketbaseStore = usePocketbaseStore()
 const route = useRoute()
-const privacyRootRef = ref<HTMLElement | null>(null)
-
-const authRecord = computed(() => (unref(pocketbaseStore.authRecord) ?? {}) as Record<string, any>)
-const currentUsername = computed(() => String(authRecord.value.anilist_username || authRecord.value.username || 'Toi'))
-const currentAvatarUrl = computed(() => String(authRecord.value.anilist_avatar_url_large || authRecord.value.anilist_avatar_url_medium || ''))
-
-const detailTitles: Record<string, string> = {
-  'a-regarder-ensemble': 'A regarder ensemble',
-  'top-anime-2024': 'Top anime 2024',
-  'romance-favs': 'Romance favs',
-  'shonen-essentials': 'Shonen essentials',
-  'seinen-masterpieces': 'Seinen masterpieces'
-}
-
-const listTitle = computed(() => detailTitles[String(route.params.id || '')] || 'Shared List')
-const createdLabel = '4 mars 2026'
-const groupProgressTarget = 14
-
-const members = ref<Member[]>([
-  {
-    id: 'you',
-    name: 'Toi',
-    shortName: 'Toi',
-    initials: 'TO',
-    role: 'owner',
-    color: '#3db4f2',
-    summary: 'Membre depuis le 4 mars'
-  },
-  {
-    id: 'daz',
-    name: 'DaZaixzv',
-    shortName: 'Daz',
-    initials: 'DZ',
-    role: 'moderator',
-    color: '#9256f3',
-    summary: 'Membre depuis le 4 mars · 2 ajoutés'
-  },
-  {
-    id: 'sakura',
-    name: 'SakuraMoon',
-    shortName: 'Saku',
-    initials: 'SM',
-    role: 'member',
-    color: '#f77f00',
-    summary: 'Membre depuis le 6 mars · 1 ajouté'
-  },
-  {
-    id: 'kaze',
-    name: 'KazeWatcher',
-    shortName: 'Kaze',
-    initials: 'KW',
-    role: 'reader',
-    color: '#06d6a0',
-    summary: 'Membre depuis le 7 mars · lecture seule'
-  }
-])
-
-const mainEntries = ref<AnimeEntry[]>([
-  {
-    id: 'frieren',
-    title: "Frieren: Beyond Journey's End",
-    format: 'TV',
-    meta: '28 eps · 2023',
-    addedBy: ['you'],
-    statuses: [
-      { memberId: 'you', state: 'watched', text: 'Vu ✓' },
-      { memberId: 'daz', state: 'watched', text: 'Vu ✓' }
-    ],
-    scores: [
-      { value: '9.5', variant: 'you' },
-      { value: '9.3', variant: 'friend' }
-    ]
-  },
-  {
-    id: 'apothecary',
-    title: 'The Apothecary Diaries S2',
-    format: 'TV',
-    meta: '24 eps · En cours',
-    addedBy: ['you', 'daz'],
-    statuses: [
-      { memberId: 'you', state: 'watching', text: 'Ep 16/24' },
-      { memberId: 'daz', state: 'watching', text: 'Ep 14/24' }
-    ],
-    scores: [
-      { value: '—', variant: 'none' },
-      { value: '—', variant: 'none' }
-    ],
-    isCurrent: true
-  },
-  {
-    id: 'houseki',
-    title: 'Houseki no Kuni',
-    format: 'TV',
-    meta: '12 eps · 2017',
-    addedBy: ['daz'],
-    statuses: [
-      { memberId: 'you', state: 'none', text: 'Pas encore' },
-      { memberId: 'daz', state: 'watched', text: 'Vu ✓' }
-    ],
-    scores: [
-      { value: '—', variant: 'none' },
-      { value: '9.4', variant: 'friend' }
-    ]
-  },
-  {
-    id: 'dungeon-meshi',
-    title: 'Dungeon Meshi',
-    format: 'TV',
-    meta: '24 eps · 2024',
-    addedBy: ['you'],
-    statuses: [
-      { memberId: 'you', state: 'watched', text: 'Vu ✓' },
-      { memberId: 'sakura', state: 'watched', text: 'Vu ✓' }
-    ],
-    scores: [
-      { value: '8.7', variant: 'you' },
-      { value: '8.5', variant: 'friend' }
-    ]
-  },
-  {
-    id: 'vinland',
-    title: 'Vinland Saga S1',
-    format: 'TV',
-    meta: '24 eps · 2019',
-    addedBy: ['sakura'],
-    statuses: [
-      { memberId: 'you', state: 'watched', text: 'Vu ✓' },
-      { memberId: 'kaze', state: 'watched', text: 'Vu ✓' }
-    ],
-    scores: [
-      { value: '9.0', variant: 'you' },
-      { value: '8.8', variant: 'friend' }
-    ]
-  }
-])
-
-const suggestions = ref<AnimeEntry[]>([
-  {
-    id: 'ping-pong',
-    title: 'Ping Pong The Animation',
-    format: 'TV',
-    meta: '11 eps · 2014',
-    addedBy: ['daz'],
-    statuses: [
-      { memberId: 'you', state: 'none', text: 'Pas encore' },
-      { memberId: 'daz', state: 'watched', text: 'Vu ✓ 8.9' }
-    ],
-    scores: []
-  }
-])
-
-const activityItems = ref<ActivityItem[]>([
-  { id: 'act-1', actorId: 'daz', action: 'a suggéré', target: 'Ping Pong The Animation', time: 'Il y a 1h' },
-  { id: 'act-2', actorId: 'you', action: 'a marqué', target: 'Frieren', detail: 'comme vu · score 9.5', time: 'Il y a 3h' },
-  { id: 'act-3', actorId: 'daz', action: "est passé à l'épisode 14 de", target: 'Apothecary Diaries', time: 'Il y a 5h' },
-  { id: 'act-4', actorId: 'sakura', action: 'a ajouté', target: 'Vinland Saga', detail: 'à la liste', time: 'Hier · 21h14' },
-  { id: 'act-5', actorId: 'you', action: 'a invité', target: 'KazeWatcher', detail: 'en tant que lecteur', time: 'Hier · 18h02' },
-  { id: 'act-6', actorId: 'you', action: 'a changé la confidentialité en', target: 'Friends Only', time: 'Il y a 2 jours' }
-])
-
-const permissionRows = [
-  { label: 'Voir la liste', owner: true, moderator: true, member: true, reader: true },
-  { label: 'Ajouter un anime directement', owner: true, moderator: true, member: true, reader: false },
-  { label: 'Suggérer un anime', owner: true, moderator: true, member: true, reader: true },
-  { label: 'Accepter / refuser suggestions', owner: true, moderator: true, member: false, reader: false },
-  { label: 'Supprimer un anime', owner: true, moderator: true, member: false, reader: false },
-  { label: 'Modifier titre / description', owner: true, moderator: true, member: false, reader: false },
-  { label: 'Inviter des membres', owner: true, moderator: true, member: false, reader: false },
-  { label: 'Gérer les permissions', owner: true, moderator: false, member: false, reader: false },
-  { label: 'Modifier la confidentialité', owner: true, moderator: false, member: false, reader: false },
-  { label: 'Supprimer la liste', owner: true, moderator: false, member: false, reader: false }
-]
-
-const privacyOptions = [
-  { value: 'private' as Privacy, label: 'Privée', hint: 'Seulement les membres', dotClass: 'dot-private' },
-  { value: 'friends' as Privacy, label: 'Friends Only', hint: 'Vos amis mutuels', dotClass: 'dot-friends' },
-  { value: 'public' as Privacy, label: 'Publique', hint: 'Tout le monde peut voir', dotClass: 'dot-public' }
-]
-
-const assignableRoles: Role[] = ['moderator', 'member', 'reader']
-const activeTab = ref<TabKey>('anime')
-const privacy = ref<Privacy>('friends')
-const privacyMenuOpen = ref(false)
-const membersPanelOpen = ref(true)
-const searchTerm = ref('')
-const inviteQuery = ref('')
-const suggestionMode = ref(true)
+const anilistGraphql = useAnilistGraphql()
 const profileTabs = [
   { key: 'anime-list', label: 'Anime List', to: '/animeList' },
   { key: 'favorites', label: 'Favorites', to: '/favorites' },
@@ -764,187 +709,2345 @@ const profileTabs = [
   { key: 'shared-lists', label: 'Shared Lists', to: '/sharedLists', active: true }
 ]
 
-const activePrivacyMeta = computed<(typeof privacyOptions)[number]>(() => {
-  return privacyOptions.find((option) => option.value === privacy.value) ?? privacyOptions[0]!
+const {
+  formatDateLabel,
+  loadDetail,
+  updateSharedList,
+  addMemberToList,
+  addAnimeToList,
+  updateAnimeListEntry,
+  removeAnimeFromList,
+  removeMembership,
+  updateMembershipPermission,
+  deleteSharedList,
+  ensureOwnerMembership,
+  searchUsers
+} = useSharedLists()
+
+const isLoading = ref(true)
+const isDeleting = ref(false)
+const isLeaving = ref(false)
+const isSearchingUsers = ref(false)
+const isSearchingAnime = ref(false)
+const isAnimePickerOpen = ref(false)
+const isSavingAnime = ref(false)
+const isDeletingAnime = ref(false)
+const isSavingSettings = ref(false)
+const isSettingsOpen = ref(false)
+const loadError = ref('')
+const actionError = ref('')
+const pendingAddUserId = ref('')
+const pendingMembershipActionId = ref('')
+const pendingAnimeMediaId = ref('')
+const detail = ref<SharedListDetail | null>(null)
+const animeMediaMap = ref<Record<number, SharedAnimeMedia>>({})
+const memberQuery = ref('')
+const animeQuery = ref('')
+const animeSearchTerm = ref('')
+const animeSortBy = ref<AnimeSortKey>('title')
+const activeAnimeFilter = ref<AnimeFilterKey>('ALL')
+const selectedAnimeRelationId = ref('')
+const editAnimeStatus = ref<SharedListAnimeStatus>('PLANNING')
+const editAnimeProgress = ref('0')
+const editAnimeScore = ref('')
+const draftAddStatus = ref<SharedListAnimeStatus>('PLANNING')
+const draftAddProgress = ref('0')
+const draftAddScore = ref('')
+const activeTab = ref<DetailTab>('anime')
+const viewMode = ref<ViewMode>('grid')
+const userResults = ref<SearchableUser[]>([])
+const animeResults = ref<AnimeSearchResult[]>([])
+const settingsName = ref('')
+const settingsPrivacy = ref<SharedListPrivacy>('friends')
+const settingsGroupImageFile = ref<File | null>(null)
+const settingsBannerImageFile = ref<File | null>(null)
+const settingsGroupImagePreview = ref('')
+const settingsBannerPreview = ref('')
+
+const listId = computed(() => String(route.params.id || ''))
+const canManageAnime = computed(() => Boolean(detail.value?.isOwner))
+const canAddAnime = computed(() => {
+  if (!detail.value) return false
+  if (detail.value.isOwner) return true
+  const me = detail.value.members.find(m => m.isCurrentUser)
+  return Boolean(me?.canAddAnime)
+})
+const existingAnimeIds = computed(() => new Set((detail.value?.animeEntries || []).map(entry => Number(entry.mediaId || 0)).filter(Boolean)))
+const createdLabel = computed(() => detail.value?.createdAt ? `Created ${formatDateLabel(detail.value.createdAt)}` : 'Created recently')
+
+const tabs = [
+  { key: 'anime' as DetailTab, label: 'Anime List' },
+  { key: 'members' as DetailTab, label: 'Members' }
+]
+
+const coverGradient = computed(() => {
+  const gradients = [
+    'linear-gradient(135deg, #ec4899 0%, #f472b6 100%)',
+    'linear-gradient(135deg, #3db4f2 0%, #2e8bc0 100%)',
+    'linear-gradient(135deg, #9256f3 0%, #7c3aed 100%)',
+    'linear-gradient(135deg, #0f766e 0%, #0891b2 100%)'
+  ]
+  const title = String(detail.value?.title || '')
+  let score = 0
+  for (const char of title) score += char.charCodeAt(0)
+  return gradients[score % gradients.length] || gradients[0]
 })
 
-const tabs = computed(() => [
-  { key: 'anime' as TabKey, label: 'Anime', count: mainEntries.value.length },
-  { key: 'suggestions' as TabKey, label: 'Suggestions', count: suggestions.value.length },
-  { key: 'permissions' as TabKey, label: 'Permissions', count: permissionRows.length },
-  { key: 'activity' as TabKey, label: 'Activité', count: activityItems.value.length }
-])
+const DEFAULT_SHARED_LIST_IMAGE = '/img/user.webp'
 
-const filteredNeedle = computed(() => searchTerm.value.trim().toLowerCase())
+const heroBackgroundStyle = computed(() => ({
+  background: 'linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0))'
+}))
 
-const visibleMainEntries = computed(() => {
-  if (!filteredNeedle.value) return mainEntries.value
-  return mainEntries.value.filter((entry) => entry.title.toLowerCase().includes(filteredNeedle.value))
+const heroOverlayStyle = computed(() => {
+  const bannerUrl = String(detail.value?.bannerUrl || '').trim()
+  const defaultBannerUrl = '/img/banner.webp'
+  const resolvedBanner = bannerUrl || defaultBannerUrl
+  if (resolvedBanner) {
+    return {
+      backgroundImage: `linear-gradient(180deg, rgba(11,22,34,.12) 0%, rgba(11,22,34,.72) 100%), url("${resolvedBanner}")`,
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+      backgroundSize: 'cover'
+    }
+  }
+
+  return {
+    background: `linear-gradient(180deg, rgba(11,22,34,.12) 0%, rgba(11,22,34,.72) 100%), ${coverGradient.value}`
+  }
 })
 
-const visibleSuggestions = computed(() => {
-  if (!filteredNeedle.value) return suggestions.value
-  return suggestions.value.filter((entry) => entry.title.toLowerCase().includes(filteredNeedle.value))
+const coverLabel = computed(() => String(detail.value?.title || 'SL').replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 3) || 'SL')
+
+const badgeClass = (privacy: SharedListPrivacy) => ({
+  private: privacy === 'private',
+  friends: privacy === 'friends',
+  public: privacy === 'public'
 })
 
-const progressStats = computed(() => {
+const memberAvatarStyle = (member: Pick<SharedListMember, 'avatar' | 'color'> | SearchableUser) =>
+  member.avatar ? undefined : { background: member.color }
+
+const revokePreviewUrl = (value: string) => {
+  if (value.startsWith('blob:')) URL.revokeObjectURL(value)
+}
+
+const setPreview = (target: typeof settingsGroupImagePreview, file: File | null) => {
+  revokePreviewUrl(target.value)
+  target.value = file ? URL.createObjectURL(file) : ''
+}
+
+const resetSettingsMediaDrafts = () => {
+  settingsGroupImageFile.value = null
+  settingsBannerImageFile.value = null
+  setPreview(settingsGroupImagePreview, null)
+  setPreview(settingsBannerPreview, null)
+}
+
+const syncSettingsDraft = (source: SharedListDetail) => {
+  settingsName.value = source.title
+  settingsPrivacy.value = source.privacy
+  resetSettingsMediaDrafts()
+}
+
+const settingsGroupImageDisplay = computed(() => settingsGroupImagePreview.value || detail.value?.imageUrl || '')
+const settingsBannerDisplay = computed(() => settingsBannerPreview.value || detail.value?.bannerUrl || '')
+const hasSettingsChanges = computed(() => {
+  if (!detail.value) return false
+  return settingsName.value.trim() !== detail.value.title
+    || settingsPrivacy.value !== detail.value.privacy
+    || Boolean(settingsGroupImageFile.value)
+    || Boolean(settingsBannerImageFile.value)
+})
+
+const rawAnimeSections = computed<Record<SharedListAnimeStatus, SharedListAnimeEntry[]>>(() => {
+  const sections = {
+    PLANNING: [],
+    CURRENT: [],
+    PAUSED: [],
+    DROPPED: [],
+    REPEATING: [],
+    COMPLETED: []
+  } as Record<SharedListAnimeStatus, SharedListAnimeEntry[]>
+
+  for (const entry of detail.value?.animeEntries || []) {
+    const key = STATUS_ORDER.includes(entry.status) ? entry.status : 'PLANNING'
+    sections[key].push(entry)
+  }
+
+  return sections
+})
+
+const animeFilterItems = computed(() => {
+  const allCount = STATUS_ORDER.reduce((sum, key) => sum + rawAnimeSections.value[key].length, 0)
   return [
-    { memberId: 'you', count: 3 },
-    { memberId: 'daz', count: 2 },
-    { memberId: 'sakura', count: 1 },
-    { memberId: 'kaze', count: 1 }
+    { key: 'ALL' as AnimeFilterKey, label: 'All', count: allCount },
+    ...STATUS_ORDER.map((key) => ({
+      key: key as AnimeFilterKey,
+      label: STATUS_LABELS[key],
+      count: rawAnimeSections.value[key].length
+    }))
   ]
 })
 
-const totalWatchedMarks = computed(() => progressStats.value.reduce((sum, item) => sum + item.count, 0))
+const sortedAnimeSections = computed(() => {
+  const needle = animeQuery.value.trim().toLowerCase()
 
-const memberMap = computed(() => {
-  const map = new Map<string, Member>()
-  for (const member of members.value) {
-    map.set(member.id, member)
-  }
-  return map
+  return STATUS_ORDER.map((status) => {
+    const filtered = (rawAnimeSections.value[status] || []).filter((entry) => {
+      if (!needle) return true
+      return entry.title.toLowerCase().includes(needle)
+    })
+
+    const items = [...filtered].sort((a, b) => {
+      if (animeSortBy.value === 'title') return a.title.localeCompare(b.title)
+      if (animeSortBy.value === 'score') return (b.score || 0) - (a.score || 0)
+      if (animeSortBy.value === 'progress') return (b.progress || 0) - (a.progress || 0)
+      return new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime()
+    })
+
+    return {
+      key: status,
+      label: STATUS_LABELS[status],
+      items
+    }
+  })
 })
 
-const getInitials = (value: string) => {
-  const letters = value
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
-    .join('')
-
-  return letters || 'KZ'
-}
-
-const memberRecord = (memberId: string) => memberMap.value.get(memberId)
-
-const memberDisplayName = (memberId: string, mode: 'short' | 'panel' = 'panel') => {
-  if (memberId === 'you') {
-    if (mode === 'short') return 'Toi'
-    return currentUsername.value || 'Toi'
-  }
-
-  const member = memberRecord(memberId)
-  if (!member) return 'Membre'
-  return mode === 'short' ? member.shortName : member.name
-}
-
-const memberInitials = (memberId: string) => {
-  if (memberId === 'you') {
-    return getInitials(currentUsername.value || 'Toi')
+const visibleAnimeSections = computed(() => {
+  if (activeAnimeFilter.value === 'ALL') {
+    return sortedAnimeSections.value.filter(section => section.items.length > 0)
   }
 
-  return memberRecord(memberId)?.initials || 'KZ'
-}
-
-const memberAvatar = (memberId: string) => {
-  if (memberId === 'you') return currentAvatarUrl.value || ''
-  return ''
-}
-
-const memberTone = (memberId: string) => {
-  if (memberId === 'you') return '#3db4f2'
-  return memberRecord(memberId)?.color || '#3db4f2'
-}
-
-const avatarToneStyle = (memberId: string) => ({
-  '--member-accent': memberTone(memberId)
+  const selected = sortedAnimeSections.value.find(section => section.key === activeAnimeFilter.value)
+  if (!selected || !selected.items.length) return []
+  return [selected]
 })
 
-const roleLabel = (role: Role) => {
-  if (role === 'owner') return '★ Owner'
-  if (role === 'moderator') return '✦ Modérateur'
-  if (role === 'reader') return 'Lecteur'
-  return 'Membre'
-}
+const visibleAnimeCount = computed(() => visibleAnimeSections.value.reduce((sum, section) => sum + section.items.length, 0))
+const selectedAnimeEntry = computed(() =>
+  detail.value?.animeEntries.find(entry => entry.relationId === selectedAnimeRelationId.value) || null
+)
 
-const roleSymbol = (role: Role) => {
-  if (role === 'owner') return '★'
-  if (role === 'moderator') return '✦'
-  if (role === 'reader') return '○'
-  return '·'
-}
-
-const roleDotClass = (role: Role) => ({
-  owner: role === 'owner',
-  moderator: role === 'moderator',
-  member: role === 'member',
-  reader: role === 'reader'
+const selectedAnimeMedia = computed(() => {
+  const mediaId = Number(selectedAnimeEntry.value?.mediaId || 0)
+  return mediaId ? animeMediaMap.value[mediaId] || null : null
 })
 
-const roleSelectClass = (role: Role) => ({
-  'perm-select-owner': role === 'owner',
-  'perm-select-moderator': role === 'moderator',
-  'perm-select-member': role === 'member',
-  'perm-select-reader': role === 'reader'
-})
+const selectedAnimeEpisodes = computed(() => selectedAnimeMedia.value?.episodes ?? null)
+const selectedAnimeCoverSrc = computed(() => getAnilistCoverSrc(selectedAnimeMedia.value?.coverImage, 'thumb') || undefined)
+const selectedAnimeCoverSrcSet = computed(() => getAnilistCoverSrcSet(selectedAnimeMedia.value?.coverImage, 'thumb'))
 
-const statusDotClass = (state: WatchState) => ({
-  watched: state === 'watched',
-  watching: state === 'watching',
-  planned: state === 'planned',
-  none: state === 'none'
-})
+const loadAnimeMedia = async (entries: SharedListAnimeEntry[]) => {
+  const ids = Array.from(new Set(entries.map(entry => Number(entry.mediaId || 0)).filter(Boolean)))
+  if (!ids.length) {
+    animeMediaMap.value = {}
+    return
+  }
 
-const primaryAddedBy = (entry: AnimeEntry) => entry.addedBy[0] ?? 'you'
+  try {
+    const response = await anilistGraphql.request<AniListGraphqlResponse<{
+      Page?: {
+        media?: SharedAnimeMedia[] | null
+      } | null
+    }>>(
+      `
+        query ($ids: [Int]) {
+          Page(page: 1, perPage: 50) {
+            media(id_in: $ids, type: ANIME) {
+              id
+              episodes
+              title {
+                romaji
+                english
+                native
+              }
+              coverImage {
+                medium
+                large
+                extraLarge
+              }
+            }
+          }
+        }
+      `,
+      { ids },
+      { cacheTtlMs: 60_000 }
+    )
 
-const addedByLabel = (entry: AnimeEntry) => {
-  const firstLabel = memberDisplayName(primaryAddedBy(entry), 'panel')
-  const extraCount = Math.max(entry.addedBy.length - 1, 0)
-  if (!extraCount) return firstLabel
-  return `${firstLabel} + ${extraCount}`
+    if (response?.errors?.length) {
+      animeMediaMap.value = {}
+      return
+    }
+
+    const media = Array.isArray(response?.data?.Page?.media) ? response.data.Page.media : []
+    animeMediaMap.value = Object.fromEntries(
+      media
+        .map(item => [Number(item.id || 0), item] as const)
+        .filter(([id]) => id > 0)
+    )
+  } catch {
+    animeMediaMap.value = {}
+  }
 }
 
-const memberTitle = (member: Member) => `${memberDisplayName(member.id, 'panel')} — ${roleLabel(member.role)}`
+const loadPage = async () => {
+  if (!listId.value) return
 
-const progressSegmentStyle = (item: { memberId: string; count: number }) => ({
-  width: `${(item.count / groupProgressTarget) * 100}%`,
-  background: memberTone(item.memberId)
+  isLoading.value = true
+  loadError.value = ''
+  actionError.value = ''
+
+  try {
+    let result = await loadDetail(listId.value)
+
+    if (result.isOwner && !result.ownMembershipId) {
+      await ensureOwnerMembership(listId.value)
+      result = await loadDetail(listId.value)
+    }
+
+    detail.value = result
+    if (!isSettingsOpen.value) {
+      syncSettingsDraft(result)
+    } else {
+      settingsName.value = result.title
+      settingsPrivacy.value = result.privacy
+    }
+    await loadAnimeMedia(result.animeEntries)
+
+    if (animeResults.value.length) {
+      const existingIds = new Set(result.animeEntries.map(entry => Number(entry.mediaId || 0)).filter(Boolean))
+      animeResults.value = animeResults.value.map(item => ({
+        ...item,
+        alreadyAdded: existingIds.has(item.mediaId)
+      }))
+    }
+  } catch (error: any) {
+    detail.value = null
+    animeMediaMap.value = {}
+    loadError.value = error?.message || 'Unable to load this shared list.'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const privacyLabel = (privacy: SharedListPrivacy) => privacy === 'private' ? 'Private' : privacy === 'friends' ? 'Friends Only' : 'Public'
+
+const openSettings = () => {
+  if (!detail.value) return
+  syncSettingsDraft(detail.value)
+  isSettingsOpen.value = true
+}
+
+const closeSettings = () => {
+  if (detail.value) {
+    syncSettingsDraft(detail.value)
+  } else {
+    resetSettingsMediaDrafts()
+  }
+  memberQuery.value = ''
+  userResults.value = []
+  isSettingsOpen.value = false
+}
+
+const handleSettingsGroupImageChange = (event: Event) => {
+  const input = event.target as HTMLInputElement | null
+  const file = input?.files?.[0] || null
+  settingsGroupImageFile.value = file
+  setPreview(settingsGroupImagePreview, file)
+}
+
+const handleSettingsBannerChange = (event: Event) => {
+  const input = event.target as HTMLInputElement | null
+  const file = input?.files?.[0] || null
+  settingsBannerImageFile.value = file
+  setPreview(settingsBannerPreview, file)
+}
+
+const saveSettings = async () => {
+  if (!detail.value?.isOwner) return
+  if (!settingsName.value.trim()) {
+    actionError.value = 'List name is required.'
+    return
+  }
+
+  isSavingSettings.value = true
+  actionError.value = ''
+
+  try {
+    await updateSharedList(detail.value.id, {
+      name: settingsName.value,
+      privacy: settingsPrivacy.value,
+      groupImageFile: settingsGroupImageFile.value,
+      bannerImageFile: settingsBannerImageFile.value
+    })
+    await loadPage()
+    closeSettings()
+  } catch (error: any) {
+    actionError.value = error?.message || 'Unable to update this shared list.'
+  } finally {
+    isSavingSettings.value = false
+  }
+}
+
+let memberSearchTimer: ReturnType<typeof setTimeout> | null = null
+let animeSearchTimer: ReturnType<typeof setTimeout> | null = null
+
+const handleSearchInput = () => {
+  if (!detail.value) return
+  if (memberSearchTimer) clearTimeout(memberSearchTimer)
+
+  if (memberQuery.value.trim().length < 2) {
+    userResults.value = []
+    isSearchingUsers.value = false
+    return
+  }
+
+  memberSearchTimer = setTimeout(async () => {
+    if (!detail.value) return
+    isSearchingUsers.value = true
+
+    try {
+      userResults.value = await searchUsers(
+        memberQuery.value,
+        detail.value.members.map(member => member.id)
+      )
+    } catch {
+      userResults.value = []
+    } finally {
+      isSearchingUsers.value = false
+    }
+  }, 200)
+}
+
+const addMember = async (userId: string) => {
+  if (!detail.value) return
+
+  pendingAddUserId.value = userId
+  actionError.value = ''
+
+  try {
+    await addMemberToList(detail.value.id, userId)
+    memberQuery.value = ''
+    userResults.value = []
+    await loadPage()
+  } catch (error: any) {
+    actionError.value = error?.message || 'Unable to add this member.'
+  } finally {
+    pendingAddUserId.value = ''
+  }
+}
+
+const formatAnimeSearchTitle = (media: AniListSearchMedia) => {
+  return String(media.title?.romaji || media.title?.english || media.title?.native || '').trim() || `AniList #${media.id || 0}`
+}
+
+const formatMediaFormat = (value?: string | null) => {
+  const label = String(value || '').trim().toLowerCase()
+  if (!label) return 'Anime'
+  return label
+    .split('_')
+    .map(part => part ? `${part[0].toUpperCase()}${part.slice(1)}` : '')
+    .join(' ')
+}
+
+const searchAnime = async (query: string) => {
+  const response = await anilistGraphql.request<AniListGraphqlResponse<{
+    Page?: {
+      media?: AniListSearchMedia[] | null
+    } | null
+  }>>(
+    `
+      query ($search: String) {
+        Page(page: 1, perPage: 8) {
+          media(search: $search, type: ANIME, isAdult: false) {
+            id
+            seasonYear
+            episodes
+            format
+            title {
+              romaji
+              english
+              native
+            }
+            coverImage {
+              large
+              medium
+            }
+          }
+        }
+      }
+    `,
+    { search: query },
+    { cacheTtlMs: 60_000 }
+  )
+
+  if (response?.errors?.length) {
+    throw new Error(response.errors[0]?.message || 'Unable to search AniList.')
+  }
+
+  const items = Array.isArray(response?.data?.Page?.media) ? response.data.Page.media : []
+  return items
+    .map((media) => {
+      const mediaId = Number(media.id || 0)
+      return {
+        mediaId,
+        title: formatAnimeSearchTitle(media),
+        cover: String(media.coverImage?.large || media.coverImage?.medium || '').trim() || undefined,
+        seasonYear: Number(media.seasonYear || 0) || undefined,
+        episodes: Number(media.episodes || 0) || undefined,
+        formatLabel: formatMediaFormat(media.format),
+        fetchLink: `https://anilist.co/anime/${mediaId}`,
+        alreadyAdded: existingAnimeIds.value.has(mediaId)
+      } satisfies AnimeSearchResult
+    })
+    .filter(item => item.mediaId > 0)
+}
+
+const handleAnimeSearchInput = () => {
+  if (animeSearchTimer) clearTimeout(animeSearchTimer)
+
+  if (animeSearchTerm.value.trim().length < 2) {
+    animeResults.value = []
+    isSearchingAnime.value = false
+    return
+  }
+
+  animeSearchTimer = setTimeout(async () => {
+    isSearchingAnime.value = true
+
+    try {
+      animeResults.value = await searchAnime(animeSearchTerm.value)
+    } catch (error: any) {
+      animeResults.value = []
+      actionError.value = error?.message || 'Unable to search AniList.'
+    } finally {
+      isSearchingAnime.value = false
+    }
+  }, 220)
+}
+
+const addAnime = async (item: AnimeSearchResult) => {
+  if (!detail.value) return
+  if (!canAddAnime.value) {
+    actionError.value = 'You do not have permission to add anime to this shared list.'
+    return
+  }
+
+  const resolvedEpisodes = Number(item.episodes || 0) || null
+  const resolvedStatus = draftAddStatus.value
+  const resolvedProgress = resolvedStatus === 'COMPLETED' && resolvedEpisodes
+    ? resolvedEpisodes
+    : Number(draftAddProgress.value || 0) || 0
+  const resolvedScore = Number(draftAddScore.value || 0) || 0
+
+  pendingAnimeMediaId.value = String(item.mediaId)
+  actionError.value = ''
+
+  try {
+    await addAnimeToList(detail.value.id, {
+      mediaId: item.mediaId,
+      title: item.title,
+      fetchLink: item.fetchLink,
+      status: resolvedStatus,
+      progress: resolvedProgress,
+      score: resolvedScore
+    })
+    animeSearchTerm.value = ''
+    animeResults.value = []
+    isAnimePickerOpen.value = false
+    await loadPage()
+  } catch (error: any) {
+    actionError.value = error?.message || 'Unable to add this anime.'
+  } finally {
+    pendingAnimeMediaId.value = ''
+  }
+}
+
+const formatAnimeScore = (score: number) => {
+  if (!score) return '-'
+  return score % 1 === 0 ? String(score) : score.toFixed(1)
+}
+
+const statusDotClass = (status: SharedListAnimeStatus) => {
+  if (status === 'CURRENT') return 'dot-watching'
+  if (status === 'COMPLETED') return 'dot-completed'
+  if (status === 'PAUSED') return 'dot-paused'
+  if (status === 'DROPPED') return 'dot-dropped'
+  if (status === 'REPEATING') return 'dot-rewatching'
+  return 'dot-planned'
+}
+
+const entryCoverSrc = (entry: SharedListAnimeEntry) =>
+  getAnilistCoverSrc(animeMediaMap.value[Number(entry.mediaId || 0)]?.coverImage, viewMode.value === 'grid' ? 'card' : 'thumb') || undefined
+
+const entryCoverSrcSet = (entry: SharedListAnimeEntry) =>
+  getAnilistCoverSrcSet(animeMediaMap.value[Number(entry.mediaId || 0)]?.coverImage, viewMode.value === 'grid' ? 'card' : 'thumb')
+
+const entryEpisodes = (entry: SharedListAnimeEntry) =>
+  animeMediaMap.value[Number(entry.mediaId || 0)]?.episodes ?? null
+
+const openAnimeEditor = (entry: SharedListAnimeEntry) => {
+  if (!canManageAnime.value) return
+  selectedAnimeRelationId.value = entry.relationId
+  editAnimeStatus.value = entry.status
+  editAnimeProgress.value = String(entry.progress ?? 0)
+  editAnimeScore.value = entry.score ? String(entry.score) : ''
+}
+
+const closeAnimeEditor = () => {
+  selectedAnimeRelationId.value = ''
+  editAnimeStatus.value = 'PLANNING'
+  editAnimeProgress.value = '0'
+  editAnimeScore.value = ''
+}
+
+const saveAnimeEntry = async () => {
+  if (!selectedAnimeEntry.value) return
+  if (!canManageAnime.value) {
+    actionError.value = 'Only the owner can edit anime entries in this shared list.'
+    return
+  }
+
+  isSavingAnime.value = true
+  actionError.value = ''
+
+  try {
+    const nextProgressRaw = Number(editAnimeProgress.value)
+    const nextScore = Number(editAnimeScore.value)
+    const completedEpisodes = editAnimeStatus.value === 'COMPLETED'
+      ? Number(selectedAnimeEpisodes.value || 0) || 0
+      : 0
+    const resolvedProgress = completedEpisodes > 0 ? completedEpisodes : (Number.isFinite(nextProgressRaw) ? nextProgressRaw : 0)
+    await updateAnimeListEntry(selectedAnimeEntry.value.relationId, {
+      status: editAnimeStatus.value,
+      progress: editAnimeProgress.value === '' ? 0 : resolvedProgress,
+      score: editAnimeScore.value === '' || !Number.isFinite(nextScore) ? 0 : nextScore
+    })
+    await loadPage()
+    closeAnimeEditor()
+  } catch (error: any) {
+    actionError.value = error?.message || 'Unable to update this anime entry.'
+  } finally {
+    isSavingAnime.value = false
+  }
+}
+
+watch([editAnimeStatus, selectedAnimeEpisodes], () => {
+  if (editAnimeStatus.value !== 'COMPLETED') return
+  const episodes = Number(selectedAnimeEpisodes.value || 0) || 0
+  if (!episodes) return
+  editAnimeProgress.value = String(episodes)
 })
 
+watch(draftAddStatus, () => {
+  if (draftAddStatus.value !== 'COMPLETED') return
+  draftAddProgress.value = '0'
+})
 
-const setPrivacy = (value: Privacy) => {
-  privacy.value = value
-  privacyMenuOpen.value = false
+const deleteAnimeEntry = async () => {
+  if (!selectedAnimeEntry.value) return
+  if (!canManageAnime.value) {
+    actionError.value = 'Only the owner can remove anime from this shared list.'
+    return
+  }
+  if (typeof window !== 'undefined' && !window.confirm(`Delete "${selectedAnimeEntry.value.title}" from this shared list?`)) {
+    return
+  }
+
+  isDeletingAnime.value = true
+  actionError.value = ''
+
+  try {
+    await removeAnimeFromList(selectedAnimeEntry.value.relationId)
+    await loadPage()
+    closeAnimeEditor()
+  } catch (error: any) {
+    actionError.value = error?.message || 'Unable to delete this anime entry.'
+  } finally {
+    isDeletingAnime.value = false
+  }
 }
 
-const togglePrivacyMenu = () => {
-  privacyMenuOpen.value = !privacyMenuOpen.value
+const removeMember = async (membershipId: string) => {
+  pendingMembershipActionId.value = membershipId
+  actionError.value = ''
+
+  try {
+    await removeMembership(membershipId)
+    await loadPage()
+  } catch (error: any) {
+    actionError.value = error?.message || 'Unable to remove this member.'
+  } finally {
+    pendingMembershipActionId.value = ''
+  }
 }
 
-const acceptSuggestion = (entryId: string) => {
-  const index = suggestions.value.findIndex((entry) => entry.id === entryId)
-  if (index === -1) return
-  const [entry] = suggestions.value.splice(index, 1)
-  if (!entry) return
-  mainEntries.value.unshift(entry)
+const updateMemberPermission = async (membershipId: string, permissionRaw: string) => {
+  const permission = (permissionRaw === 'admin' || permissionRaw === 'editor' || permissionRaw === 'viewer')
+    ? permissionRaw
+    : 'viewer'
+
+  pendingMembershipActionId.value = membershipId
+  actionError.value = ''
+
+  try {
+    await updateMembershipPermission(membershipId, permission)
+    await loadPage()
+  } catch (error: any) {
+    actionError.value = error?.message || 'Unable to update member permissions.'
+  } finally {
+    pendingMembershipActionId.value = ''
+  }
+}
+
+const leaveGroup = async () => {
+  if (!detail.value?.ownMembershipId) {
+    actionError.value = 'Your membership record could not be found.'
+    return
+  }
+
+  isLeaving.value = true
+  actionError.value = ''
+
+  try {
+    await removeMembership(detail.value.ownMembershipId)
+    closeSettings()
+    await navigateTo('/sharedLists')
+  } catch (error: any) {
+    actionError.value = error?.message || 'Unable to leave this shared list.'
+  } finally {
+    isLeaving.value = false
+  }
+}
+
+const deleteGroup = async () => {
+  if (!detail.value) return
+  if (typeof window !== 'undefined' && !window.confirm(`Delete "${detail.value.title}"? This cannot be undone.`)) {
+    return
+  }
+
+  isDeleting.value = true
+  actionError.value = ''
+
+  try {
+    await deleteSharedList(detail.value.id)
+    closeSettings()
+    await navigateTo('/sharedLists')
+  } catch (error: any) {
+    actionError.value = error?.message || 'Unable to delete this shared list.'
+  } finally {
+    isDeleting.value = false
+  }
+}
+
+const animeCoverLabel = (title: string) => title.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 3) || 'AN'
+
+watch(listId, () => {
+  memberQuery.value = ''
+  animeQuery.value = ''
+  animeSearchTerm.value = ''
+  animeSortBy.value = 'title'
+  activeAnimeFilter.value = 'ALL'
+  userResults.value = []
+  animeResults.value = []
+  isAnimePickerOpen.value = false
+  isSettingsOpen.value = false
+  viewMode.value = 'grid'
+  closeAnimeEditor()
   activeTab.value = 'anime'
-}
-
-const rejectSuggestion = (entryId: string) => {
-  suggestions.value = suggestions.value.filter((entry) => entry.id !== entryId)
-}
-
-const handleDocumentClick = (event: MouseEvent) => {
-  if (!privacyMenuOpen.value) return
-  const target = event.target as Node | null
-  if (!target) return
-  if (privacyRootRef.value?.contains(target)) return
-  privacyMenuOpen.value = false
-}
-
-onMounted(() => {
-  document.addEventListener('click', handleDocumentClick)
+  loadPage()
 })
+
+onMounted(loadPage)
 
 onBeforeUnmount(() => {
-  document.removeEventListener('click', handleDocumentClick)
+  if (memberSearchTimer) clearTimeout(memberSearchTimer)
+  if (animeSearchTimer) clearTimeout(animeSearchTimer)
+  revokePreviewUrl(settingsGroupImagePreview.value)
+  revokePreviewUrl(settingsBannerPreview.value)
 })
 </script>
 
-<style scoped src="~/assets/css/pages/sharedLists.css"></style>
+<style scoped>
+.shared-list-page {
+  min-height: 100vh;
+  color: var(--kz-text-primary);
+  background:
+    radial-gradient(circle at top, rgba(61,180,242,.08), transparent 38%),
+    linear-gradient(180deg, rgba(4,10,22,.92) 0%, transparent 24%),
+    transparent;
+}
 
+.shared-list-shell {
+  width: min(100%, 1240px);
+  margin: 0 auto;
+  padding: 28px 24px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
 
+.shared-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--kz-text-dim);
+}
 
+.shared-breadcrumb a {
+  color: inherit;
+  text-decoration: none;
+}
 
+.group-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid var(--kz-border);
+  min-height: 290px;
+  padding: 24px;
+  color: #fff;
+}
+
+.hero-banner-image,
+.hero-overlay,
+.hero-texture {
+  position: absolute;
+  inset: 0;
+}
+
+.hero-banner-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-overlay {
+  background: linear-gradient(180deg, rgba(11,22,34,.12) 0%, rgba(11,22,34,.72) 100%);
+}
+
+.hero-texture {
+  background: repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(255,255,255,.012) 20px, rgba(255,255,255,.012) 21px);
+  pointer-events: none;
+}
+
+.hero-top,
+.hero-head {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.back-btn,
+.ghost-btn,
+.danger-btn,
+.search-result-action,
+.sidebar-primary,
+.drawer-btn {
+  cursor: pointer;
+}
+
+.back-btn,
+.ghost-btn,
+.danger-btn,
+.sidebar-primary,
+.search-result-action,
+.settings-input,
+.search-box,
+.sort-select {
+  min-height: 38px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Overpass', sans-serif;
+}
+
+.back-btn {
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.12);
+  color: #fff;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ghost-btn {
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.08);
+  color: #fff;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ghost-btn:hover,
+.back-btn:hover {
+  background: rgba(255,255,255,.16);
+}
+
+.danger-btn {
+  border: 1px solid rgba(248,113,113,.25);
+  background: rgba(248,113,113,.14);
+  color: #fff;
+  padding: 0 14px;
+}
+
+.hero-head {
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+}
+
+.group-cover {
+  width: 128px;
+  height: 128px;
+  border-radius: 16px;
+  box-shadow: 0 16px 36px rgba(0,0,0,.34);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: .12em;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.group-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.group-copy {
+  min-width: 0;
+}
+
+.group-title-row h1 {
+  margin: 0 0 8px;
+  font-size: clamp(28px, 3vw, 42px);
+  font-weight: 700;
+  color: #fff;
+}
+
+.group-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  font-size: 14px;
+  color: rgba(255,255,255,.84);
+}
+
+.group-badge {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  border: 1px solid transparent;
+}
+
+.group-badge.private {
+  background: rgba(248,113,113,.12);
+  border-color: rgba(248,113,113,.2);
+  color: #fecaca;
+}
+
+.group-badge.friends {
+  background: rgba(251,191,36,.12);
+  border-color: rgba(251,191,36,.22);
+  color: #fde68a;
+}
+
+.group-badge.public {
+  background: rgba(74,222,128,.12);
+  border-color: rgba(74,222,128,.22);
+  color: #bbf7d0;
+}
+
+.role-accent {
+  color: #fde68a;
+  font-weight: 700;
+}
+
+.group-description {
+  margin: 12px 0 0;
+  font-size: 14px;
+  color: rgba(255,255,255,.78);
+}
+
+.hero-members {
+  display: flex;
+  align-items: center;
+  margin-top: 14px;
+}
+
+.hero-member-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 2px solid rgba(11,22,34,.42);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.hero-member-avatar.has-avatar {
+  background: transparent !important;
+}
+
+.hero-member-avatar.stacked {
+  margin-left: -8px;
+}
+
+.hero-member-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-members-more {
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255,255,255,.74);
+}
+
+.tabs-wrap {
+  border-bottom: 1px solid rgba(160,177,197,.15);
+}
+
+.tabs-nav {
+  display: flex;
+  gap: 28px;
+}
+
+.tab-btn {
+  padding: 16px 0;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: var(--kz-text-dim);
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'Overpass', sans-serif;
+  cursor: pointer;
+  margin-bottom: -1px;
+}
+
+.tab-btn.active {
+  color: var(--kz-accent);
+  border-bottom-color: var(--kz-accent);
+}
+
+.content-section {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.anime-browser {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
+  gap: clamp(16px, 1.8vw, 28px);
+  align-items: start;
+}
+
+.sidebar-slot {
+  position: static;
+}
+
+.sidebar {
+  position: static;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.filter-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #131d2a;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 6px;
+  padding: 7px 10px;
+  transition: border-color 0.15s;
+}
+
+.filter-search:focus-within {
+  border-color: rgba(61, 180, 242, 0.35);
+}
+
+.filter-search svg {
+  color: #3d5570;
+  flex-shrink: 0;
+}
+
+.filter-search input {
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 12px;
+  color: #e8f0ff;
+  width: 100%;
+}
+
+.filter-search input::placeholder {
+  color: #3d5570;
+}
+
+.sidebar-section {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.8px;
+  color: #3d5570;
+  margin-bottom: 5px;
+}
+
+.list-links {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.list-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #7a9ab8;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  transition: background 0.12s, color 0.12s;
+  position: relative;
+}
+
+.list-link:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: #e8f0ff;
+}
+
+.list-link.active {
+  background: rgba(61, 180, 242, 0.08);
+  color: #3db4f2;
+  font-weight: 600;
+}
+
+.list-link.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  border-radius: 999px;
+  background: #3db4f2;
+}
+
+.list-count {
+  color: #4a6480;
+  font-family: 'Overpass Mono', monospace;
+}
+
+.sort-select {
+  width: 100%;
+  height: 36px;
+  border-radius: 6px;
+  padding: 0 34px 0 10px;
+  background: #131d2a;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: #e8f0ff;
+  appearance: none;
+  outline: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%237a9ab8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px;
+}
+
+.sidebar-stats {
+  display: grid;
+  gap: 8px;
+}
+
+.stat-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.06);
+  background: #131d2a;
+}
+
+.stat-chip strong {
+  color: #e8f0ff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.stat-chip span {
+  color: #7a9ab8;
+  font-size: 11px;
+}
+
+.sidebar-primary {
+  border: 1px solid rgba(61,180,242,.3);
+  background: rgba(61,180,242,.14);
+  color: #3db4f2;
+  padding: 0 14px;
+}
+
+.main {
+  min-width: 0;
+}
+
+.view-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.view-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #3d5570;
+  transition: all 0.12s;
+}
+
+.view-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #7a9ab8;
+}
+
+.view-btn.active {
+  background: rgba(61, 180, 242, 0.1);
+  border-color: rgba(61, 180, 242, 0.3);
+  color: #3db4f2;
+}
+
+.panel-card,
+.editor-panel,
+.member-card,
+.drawer-card,
+.status-card,
+.search-box,
+.settings-input {
+  background: var(--kz-card-bg);
+  border: 1px solid rgba(160,177,197,.08);
+  border-radius: 12px;
+}
+
+.add-anime-panel {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.panel-title {
+  margin: 0;
+  font-size: 16px;
+  color: var(--kz-text-primary);
+}
+
+.panel-copy {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--kz-text-dim);
+}
+
+.search-box {
+  width: 100%;
+  color: var(--kz-text-primary);
+  padding: 0 14px;
+}
+
+.search-box.full {
+  width: 100%;
+}
+
+.search-box:focus,
+.settings-input:focus {
+  outline: none;
+}
+
+.search-status,
+.empty-state-text {
+  font-size: 13px;
+  color: var(--kz-text-dim);
+}
+
+.anime-search-results,
+.search-results,
+.drawer-member-list {
+  display: grid;
+  gap: 10px;
+}
+
+.anime-search-item,
+.search-result,
+.drawer-member-row {
+  border: 1px solid rgba(160,177,197,.08);
+  background: rgba(255,255,255,.02);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.anime-search-cover {
+  width: 46px;
+  height: 64px;
+  border-radius: 8px;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(61,180,242,.3), rgba(146,86,243,.3));
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.anime-search-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.add-state-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.add-state-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.add-state-field span {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+  color: #4a6480;
+}
+
+.anime-search-copy,
+.drawer-member-copy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.anime-search-name,
+.drawer-member-copy strong {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--kz-text-primary);
+}
+
+.anime-search-secondary,
+.drawer-member-copy span,
+.search-action {
+  font-size: 11px;
+  color: var(--kz-text-dim);
+}
+
+.search-result-action {
+  border: 1px solid rgba(61,180,242,.24);
+  background: rgba(61,180,242,.12);
+  color: var(--kz-accent);
+  padding: 0 12px;
+  flex-shrink: 0;
+}
+
+.search-result-action.is-disabled,
+.search-result-action:disabled {
+  border-color: rgba(160,177,197,.1);
+  background: rgba(255,255,255,.04);
+  color: var(--kz-text-dim);
+  cursor: default;
+}
+
+.search-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--kz-text-primary);
+}
+
+.search-action {
+  font-weight: 700;
+  color: var(--kz-accent);
+}
+
+.editor-panel {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.editor-panel-media {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.editor-panel-thumb {
+  width: 72px;
+  height: 98px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: rgba(255,255,255,.03);
+}
+
+.editor-panel-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.anime-card-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, #1a2a3a 0%, #0d1a27 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+
+.editor-panel-copy {
+  min-width: 0;
+}
+
+.editor-panel-label {
+  font-size: 11px;
+  color: var(--kz-text-dim);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.editor-panel-title {
+  margin-top: 4px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--kz-text-primary);
+}
+
+.editor-panel-subtitle {
+  margin-top: 5px;
+  font-size: 12px;
+  color: #7a9ab8;
+  font-family: 'Overpass Mono', monospace;
+}
+
+.editor-panel-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.editor-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.editor-field span {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+  color: #4a6480;
+}
+
+.editor-input {
+  width: 100%;
+  height: 36px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(7, 12, 18, 0.4);
+  color: #e8f0ff;
+  padding: 0 10px;
+  outline: none;
+}
+
+.editor-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editor-btn {
+  height: 36px;
+  border-radius: 6px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Overpass', sans-serif;
+  cursor: pointer;
+  transition: transform 0.12s, background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.editor-btn-muted {
+  background: transparent;
+  color: #7a9ab8;
+}
+
+.editor-btn-danger {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
+}
+
+.editor-btn-primary {
+  background: rgba(61, 180, 242, 0.14);
+  border-color: rgba(61, 180, 242, 0.3);
+  color: #3db4f2;
+}
+
+.content {
+  min-width: 0;
+}
+
+.anime-section {
+  margin-bottom: 28px;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #e8f0ff;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.section-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: #3d5570;
+  font-family: 'Overpass Mono', monospace;
+}
+
+.status-dot {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0, 0, 0, 0.6);
+}
+
+.dot-watching { background: #3db4f2; }
+.dot-completed { background: #4ade80; }
+.dot-paused { background: #ffbe0b; }
+.dot-dropped { background: #ef4444; }
+.dot-planned { background: #9256f3; }
+.dot-rewatching { background: #c084fc; }
+
+.view-grid .anime-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 12px;
+}
+
+.view-grid .anime-card {
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+  background: #131d2a;
+  transition: transform 0.15s, box-shadow 0.15s;
+  aspect-ratio: 2 / 3;
+  cursor: pointer;
+}
+
+.view-grid .anime-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.view-grid .anime-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.view-grid .anime-card-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.74);
+  min-height: 60px;
+  padding: 8px 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.anime-card-title {
+  color: #e8f0ff;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.view-grid .anime-card-title {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  margin-bottom: 3px;
+}
+
+.view-grid .anime-card-progress {
+  font-size: 10px;
+  font-weight: 600;
+  color: #3db4f2;
+  font-family: 'Overpass Mono', monospace;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.75);
+}
+
+.anime-card-score {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: rgba(0, 0, 0, 0.75);
+  border-radius: 3px;
+  padding: 2px 5px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #3db4f2;
+  font-family: 'Overpass Mono', monospace;
+}
+
+.view-list .anime-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.view-list .anime-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #131d2a;
+  border-radius: 5px;
+  padding: 8px 12px;
+  transition: background 0.12s;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+}
+
+.view-list .anime-card:hover {
+  background: #192638;
+}
+
+.view-list .anime-card img,
+.view-list .anime-card-placeholder {
+  width: 36px;
+  height: 50px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.view-list .anime-card-overlay {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 4px 7px;
+  background: rgba(0, 0, 0, 0.92);
+  backdrop-filter: blur(2px);
+  border-radius: 4px;
+}
+
+.view-list .anime-card-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.view-list .anime-card-progress {
+  font-size: 12px;
+  color: #7a9ab8;
+  font-family: 'Overpass Mono', monospace;
+}
+
+.view-list .anime-card-score {
+  margin-left: auto;
+  font-size: 13px;
+  top: auto;
+  right: auto;
+  background: transparent;
+  padding: 0;
+}
+
+.view-list .status-dot {
+  position: static;
+  width: 8px;
+  height: 8px;
+  border: none;
+}
+
+.view-compact .anime-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.view-compact .anime-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border-radius: 4px;
+  padding: 5px 10px;
+  transition: background 0.1s;
+  position: relative;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+}
+
+.view-compact .anime-card:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.view-compact .anime-card img,
+.view-compact .anime-card-placeholder {
+  width: 24px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.view-compact .anime-card-overlay {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 3px 7px;
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(2px);
+  border-radius: 4px;
+}
+
+.view-compact .anime-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.view-compact .anime-card-progress {
+  font-size: 11px;
+  color: #4a6480;
+  font-family: 'Overpass Mono', monospace;
+  white-space: nowrap;
+}
+
+.view-compact .anime-card-score {
+  font-size: 11px;
+  top: auto;
+  right: auto;
+  background: transparent;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.view-compact .status-dot {
+  position: static;
+  width: 6px;
+  height: 6px;
+  border: none;
+}
+
+.anime-card.is-selected {
+  outline: 1px solid rgba(61, 180, 242, 0.55);
+  outline-offset: 0;
+}
+
+.anime-card.is-readonly {
+  cursor: default;
+}
+
+.anime-card:focus-visible {
+  outline: 1px solid rgba(61, 180, 242, 0.65);
+  outline-offset: 1px;
+}
+
+.members-grid {
+  display: grid;
+  gap: 15px;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+}
+
+.member-card {
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  transition: background .16s ease, transform .16s ease;
+}
+
+.member-card:hover {
+  background: rgba(255,255,255,.025);
+  transform: translateX(4px);
+}
+
+.member-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: #fff;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.member-avatar.has-avatar {
+  background: transparent !important;
+}
+
+.member-avatar.small {
+  width: 34px;
+  height: 34px;
+}
+
+.member-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.member-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.member-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--kz-text-primary);
+}
+
+.member-self {
+  color: var(--kz-accent);
+}
+
+.member-role {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--kz-text-dim);
+}
+
+.member-badge {
+  background: rgba(247,154,99,.15);
+  color: #f79a63;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.member-badge.owner {
+  background: rgba(247,154,99,.2);
+}
+
+.remove-btn {
+  border: 0;
+  background: transparent;
+  color: #f87171;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.member-perm {
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(160,177,197,.12);
+  background: rgba(255,255,255,.02);
+  color: var(--kz-text-secondary);
+  padding: 0 10px;
+  font-size: 12px;
+  font-family: 'Overpass', sans-serif;
+  cursor: pointer;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 54px 20px;
+  border-radius: 12px;
+  border: 1px dashed rgba(255,255,255,.08);
+  background: rgba(255,255,255,.02);
+}
+
+.empty-state-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--kz-text-primary);
+  margin-bottom: 10px;
+}
+
+.status-card {
+  padding: 16px 18px;
+  color: var(--kz-text-secondary);
+  font-size: 12px;
+}
+
+.status-card.error {
+  color: #f87171;
+  border-color: rgba(248,113,113,.25);
+  background: rgba(248,113,113,.05);
+}
+
+.limited-note {
+  background: rgba(251,191,36,.06);
+  border-color: rgba(251,191,36,.18);
+  color: #f5c14d;
+}
+
+.inline-error {
+  margin-top: -2px;
+}
+
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 12, 24, 0.72);
+  z-index: 60;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.settings-drawer {
+  width: min(100%, 540px);
+  height: 100%;
+  overflow: auto;
+  background: var(--kz-card-bg);
+  border-left: 1px solid rgba(160,177,197,.12);
+  box-shadow: -12px 0 40px rgba(0,0,0,.28);
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-drawer-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 22px 18px;
+  border-bottom: 1px solid rgba(160,177,197,.08);
+}
+
+.settings-kicker {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--kz-text-dim);
+}
+
+.settings-drawer-head h2 {
+  margin: 6px 0 0;
+  font-size: 24px;
+  color: var(--kz-text-primary);
+}
+
+.icon-close {
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(160,177,197,.12);
+  background: transparent;
+  color: var(--kz-text-dim);
+  cursor: pointer;
+}
+
+.settings-drawer-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 22px 28px;
+}
+
+.drawer-card {
+  padding: 18px;
+}
+
+.drawer-card-head h3 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--kz-text-primary);
+}
+
+.drawer-card-head p {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--kz-text-dim);
+  line-height: 1.55;
+}
+
+.settings-field-grid,
+.settings-media-grid {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.settings-field-grid {
+  grid-template-columns: minmax(0, 1.2fr) minmax(180px, .8fr);
+}
+
+.settings-media-grid {
+  grid-template-columns: 160px minmax(0, 1fr);
+}
+
+.settings-field,
+.settings-media-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-field span,
+.settings-media-field span {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--kz-text-dim);
+}
+
+.settings-input {
+  color: var(--kz-text-primary);
+  padding: 0 12px;
+  background: rgba(255,255,255,.02);
+}
+
+.settings-media-preview {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid rgba(160,177,197,.12);
+  background: rgba(255,255,255,.02);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,.88);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+
+.settings-media-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.settings-media-square {
+  aspect-ratio: 1 / 1;
+}
+
+.settings-media-banner {
+  min-height: 140px;
+}
+
+.media-input {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px dashed rgba(160,177,197,.18);
+  background: rgba(255,255,255,.02);
+  padding: 10px;
+  color: var(--kz-text-secondary);
+  font-family: 'Overpass', sans-serif;
+}
+
+.settings-media-field small {
+  color: var(--kz-text-dim);
+  font-size: 11px;
+}
+
+.drawer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.drawer-btn {
+  min-height: 38px;
+  border-radius: 10px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Overpass', sans-serif;
+}
+
+.drawer-btn-muted {
+  border-color: rgba(160,177,197,.12);
+  background: transparent;
+  color: var(--kz-text-secondary);
+}
+
+.drawer-btn-primary {
+  border-color: rgba(61,180,242,.28);
+  background: rgba(61,180,242,.12);
+  color: var(--kz-accent);
+}
+
+.drawer-btn-danger {
+  border-color: rgba(248,113,113,.24);
+  background: rgba(248,113,113,.12);
+  color: #f87171;
+}
+
+.danger-card {
+  border-color: rgba(248,113,113,.14);
+}
+
+.info-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--kz-text-dim);
+  font-size: 13px;
+}
+
+.info-row strong {
+  color: var(--kz-text-primary);
+}
+
+[data-theme='winter'] .shared-list-page {
+  background:
+    radial-gradient(circle at top, rgba(61,180,242,.12), transparent 40%),
+    linear-gradient(180deg, rgba(222,236,248,.9) 0%, transparent 28%),
+    transparent;
+}
+
+[data-theme='winter'] .group-hero,
+[data-theme='winter'] .member-card,
+[data-theme='winter'] .panel-card,
+[data-theme='winter'] .editor-panel,
+[data-theme='winter'] .drawer-card,
+[data-theme='winter'] .status-card,
+[data-theme='winter'] .settings-drawer,
+[data-theme='winter'] .search-box,
+[data-theme='winter'] .settings-input,
+[data-theme='winter'] .media-input,
+[data-theme='winter'] .search-result,
+[data-theme='winter'] .anime-search-item {
+  border-color: rgba(23,52,78,.14);
+}
+
+[data-theme='winter'] .sidebar .filter-search,
+[data-theme='winter'] .sidebar .sort-select,
+[data-theme='winter'] .sidebar .stat-chip,
+[data-theme='winter'] .view-list .anime-card,
+[data-theme='winter'] .drawer-member-row {
+  background: rgba(244,249,254,.9);
+  border-color: rgba(23,52,78,.18);
+}
+
+[data-theme='winter'] .sidebar .filter-search input,
+[data-theme='winter'] .sidebar .sort-select,
+[data-theme='winter'] .settings-drawer-head h2,
+[data-theme='winter'] .drawer-card-head h3,
+[data-theme='winter'] .info-row strong,
+[data-theme='winter'] .member-name,
+[data-theme='winter'] .search-name,
+[data-theme='winter'] .anime-search-name {
+  color: #17344e;
+}
+
+[data-theme='winter'] .shared-list-page .group-hero {
+  color: #fff;
+}
+
+[data-theme='winter'] .section-title::after {
+  background: rgba(23,52,78,.12);
+}
+
+[data-theme='winter'] .view-grid .anime-card {
+  background: rgba(236,245,253,.9);
+}
+
+[data-theme='winter'] .view-grid .anime-card-overlay,
+[data-theme='winter'] .view-list .anime-card-overlay,
+[data-theme='winter'] .view-compact .anime-card-overlay {
+  background: rgba(20,44,66,.72);
+}
+
+[data-theme='winter'] .anime-card-placeholder {
+  background: linear-gradient(180deg, #e6f1fb 0%, #d4e6f7 100%);
+  color: rgba(23,52,78,.22);
+}
+
+@media (max-width: 1024px) {
+  .shared-list-shell {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .anime-browser {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .sidebar > :last-child {
+    grid-column: span 2;
+  }
+
+  .sidebar-slot { position: static; }
+}
+
+@media (max-width: 820px) {
+  .hero-top,
+  .hero-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .group-cover {
+    width: 110px;
+    height: 110px;
+  }
+
+  .settings-field-grid,
+  .settings-media-grid,
+  .editor-panel-fields,
+  .add-state-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .shared-list-shell {
+    padding: 18px 12px 56px;
+  }
+
+  .tabs-nav {
+    gap: 20px;
+    overflow-x: auto;
+  }
+
+  .sidebar {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar > :last-child {
+    grid-column: auto;
+  }
+
+  .group-hero {
+    padding: 18px;
+  }
+
+  .settings-drawer {
+    width: 100%;
+  }
+
+  .editor-panel-actions,
+  .drawer-actions {
+    flex-direction: column-reverse;
+  }
+}
+</style>

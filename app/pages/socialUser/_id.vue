@@ -20,6 +20,17 @@
           <div class="banner-joined">Joined {{ joinedDisplay }}</div>
         </div>
       </div>
+      <div v-if="showFollowButton" class="banner-follow-action">
+        <button
+          class="banner-follow-btn"
+          :class="{ following: isFollowingFriend }"
+          type="button"
+          :disabled="isFollowBusy"
+          @click="toggleFollowFromBanner"
+        >
+          {{ isFollowBusy ? 'Updating...' : isFollowingFriend ? 'Unfollow' : 'Follow' }}
+        </button>
+      </div>
     </section>
 
     <div class="sub-tabs-bar">
@@ -138,8 +149,10 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, unref } from 'vue'
+import { storeToRefs } from 'pinia'
 import { getAnilistCoverSrc, getAnilistCoverSrcSet, type AnilistCoverImage, type AnilistCoverVariant } from '~/composables/useAnilistCoverImage'
 import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
+import { useAnilistSocialStore } from '~/composables/useAnilistSocialStore'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 
 definePageMeta({
@@ -186,6 +199,8 @@ const STATUS_ORDER: ListStatusKey[] = ['CURRENT', 'COMPLETED', 'PAUSED', 'DROPPE
 const route = useRoute()
 const pocketbaseStore = usePocketbaseStore()
 const anilistGraphql = useAnilistGraphql()
+const socialStore = useAnilistSocialStore()
+const { followingUsers, followPendingIds } = storeToRefs(socialStore)
 
 const isLoading = ref(true)
 const errorMessage = ref('')
@@ -209,7 +224,12 @@ const rawSections = ref<Record<ListStatusKey, MediaListEntry[]>>({
 
 const authRecord = computed(() => (unref(pocketbaseStore.authRecord) ?? {}) as Record<string, any>)
 const token = computed(() => String(authRecord.value.anilist_token ?? ''))
+const currentAniListUserId = computed(() => Number(authRecord.value.anilist_user_id ?? 0))
 const friendUserId = computed(() => Number(route.params.id ?? 0))
+const isOwnProfile = computed(() => currentAniListUserId.value > 0 && currentAniListUserId.value === friendUserId.value)
+const showFollowButton = computed(() => Boolean(token.value) && friendUserId.value > 0 && !isOwnProfile.value)
+const isFollowingFriend = computed(() => followingUsers.value.some(user => user.id === friendUserId.value))
+const isFollowBusy = computed(() => followPendingIds.value.includes(friendUserId.value))
 
 const displayTitle = (entry: MediaListEntry) =>
   entry.media.title.romaji || entry.media.title.english || entry.media.title.native || 'Unknown title'
@@ -391,7 +411,22 @@ const goToCompare = () => {
   navigateTo(`/social/compare/${friendUserId.value}`)
 }
 
-onMounted(fetchFriendProfileAndList)
+const toggleFollowFromBanner = async () => {
+  if (!showFollowButton.value || isFollowBusy.value) return
+
+  try {
+    await socialStore.toggleFollowUser(friendUserId.value)
+  } catch (error: any) {
+    errorMessage.value = error?.message || 'Unable to update AniList follow.'
+  }
+}
+
+onMounted(async () => {
+  await Promise.all([
+    fetchFriendProfileAndList(),
+    socialStore.loadSocial()
+  ])
+})
 </script>
 
 <style scoped src="~/assets/css/pages/animeList.css"></style>
@@ -454,6 +489,49 @@ onMounted(fetchFriendProfileAndList)
   display: flex;
   align-items: flex-end;
   gap: 18px;
+}
+
+.friend-profile-page .banner-follow-action {
+  position: absolute;
+  right: clamp(16px, 2.4vw, 40px);
+  bottom: 22px;
+  z-index: 3;
+}
+
+.friend-profile-page .banner-follow-btn {
+  min-width: 132px;
+  height: 42px;
+  border: 1px solid rgba(61, 180, 242, 0.45);
+  border-radius: 999px;
+  background: rgba(61, 180, 242, 0.14);
+  color: #8edcff;
+  font-size: 13px;
+  font-weight: 800;
+  font-family: 'Overpass', sans-serif;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.friend-profile-page .banner-follow-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: rgba(61, 180, 242, 0.24);
+}
+
+.friend-profile-page .banner-follow-btn.following {
+  background: rgba(239, 68, 68, 0.16);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #ff9d9d;
+}
+
+.friend-profile-page .banner-follow-btn.following:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.24);
+}
+
+.friend-profile-page .banner-follow-btn:disabled {
+  opacity: 0.72;
+  cursor: default;
+  transform: none;
 }
 
 .friend-profile-page .banner-meta {
@@ -554,6 +632,11 @@ onMounted(fetchFriendProfileAndList)
     gap: 10px;
   }
 
+  .friend-profile-page .banner-follow-action {
+    right: 16px;
+    bottom: 16px;
+  }
+
   .friend-profile-page .banner-meta {
     transform: none;
     padding-bottom: 12px;
@@ -573,6 +656,12 @@ onMounted(fetchFriendProfileAndList)
 
   .friend-profile-page .banner-joined {
     font-size: 13px;
+  }
+
+  .friend-profile-page .banner-follow-btn {
+    min-width: 118px;
+    height: 38px;
+    font-size: 12px;
   }
 
   .compare-box {

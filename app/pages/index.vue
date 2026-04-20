@@ -212,7 +212,16 @@
           </div>
 
           <div v-if="followSearchResults.length" class="follow-results">
-            <div v-for="user in followSearchResults" :key="user.id" class="follow-result-card">
+            <div
+              v-for="user in followSearchResults"
+              :key="user.id"
+              class="follow-result-card"
+              role="button"
+              tabindex="0"
+              @click="openUserFromSearch(user)"
+              @keydown.enter.prevent="openUserFromSearch(user)"
+              @keydown.space.prevent="openUserFromSearch(user)"
+            >
               <div class="follow-result-main">
                 <div class="follow-result-avatar" :style="user.avatar ? undefined : { background: user.color }">
                   <img v-if="user.avatar" :src="user.avatar" :alt="user.name">
@@ -233,14 +242,11 @@
               </div>
 
               <div class="follow-result-actions">
-                <button class="follow-action-btn follow-action-secondary" type="button" @click="openUserFromSearch(user)">
-                  View profile
-                </button>
                 <button
                   class="follow-action-btn follow-action-primary"
                   type="button"
                   :disabled="!user.anilistUserId || user.alreadyFriend || isFollowBusy(user.anilistUserId)"
-                  @click="followUserFromSearch(user)"
+                  @click.stop="followUserFromSearch(user)"
                 >
                   {{ isFollowBusy(user.anilistUserId) ? 'Updating...' : user.alreadyFriend ? 'Friend added' : 'Follow' }}
                 </button>
@@ -791,6 +797,19 @@ watch(isAniListLinked, async (linked) => {
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.03);
   padding: 14px;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.follow-result-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(61, 180, 242, 0.28);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.follow-result-card:focus-visible {
+  outline: 2px solid rgba(61, 180, 242, 0.65);
+  outline-offset: 2px;
 }
 
 .follow-result-main {

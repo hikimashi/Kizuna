@@ -39,8 +39,13 @@
               <button class="btn-view-profile" type="button" @click="openFriendProfile(user.id)">
                 View profile
               </button>
-              <button class="btn-follow following" type="button" @click="toggleFollow(user.id)">
-                Following
+              <button
+                class="btn-follow following"
+                type="button"
+                :disabled="isFollowBusy(user.id)"
+                @click="toggleFollow(user.id)"
+              >
+                {{ isFollowBusy(user.id) ? 'Updating...' : 'Following' }}
               </button>
             </div>
           </div>
@@ -66,7 +71,7 @@ import { useAnilistSocialStore } from '~/composables/useAnilistSocialStore'
 definePageMeta({ middleware: ['auth'] })
 
 const socialStore = useAnilistSocialStore()
-const { isLoading, loadError, followingUsers, followerUsers, friendUsers } = storeToRefs(socialStore)
+const { isLoading, loadError, friendUsers, followPendingIds } = storeToRefs(socialStore)
 const searchText = ref('')
 
 const profileTabs = [
@@ -83,40 +88,14 @@ const filteredFriends = computed(() => {
   return mutuals.filter(user => user.username.toLowerCase().includes(query))
 })
 
-const toggleFollow = (id: number) => {
-  const current =
-    followingUsers.value.find(user => user.id === id)
-    || followerUsers.value.find(user => user.id === id)
-    || friendUsers.value.find(user => user.id === id)
+const isFollowBusy = (id: number) => followPendingIds.value.includes(id)
 
-  if (!current) return
-  const nextFollowing = !current.following
-
-  followingUsers.value = nextFollowing
-    ? (() => {
-      const fromFollower = followerUsers.value.find(user => user.id === id)
-      const base = fromFollower || current
-      const nextUser = { ...base, following: true, isFriend: Boolean(base.isFollower) }
-      const exists = followingUsers.value.some(user => user.id === id)
-      return exists
-        ? followingUsers.value.map(user => user.id === id ? nextUser : user)
-        : [nextUser, ...followingUsers.value]
-    })()
-    : followingUsers.value.filter(user => user.id !== id)
-
-  followerUsers.value = followerUsers.value.map((user) => {
-    if (user.id !== id) return user
-    return { ...user, following: nextFollowing, isFriend: Boolean(user.isFollower && nextFollowing) }
-  })
-
-  friendUsers.value = (() => {
-    const all = [...followingUsers.value, ...followerUsers.value]
-    const map = new Map<number, typeof all[number]>()
-    for (const user of all) {
-      if (user.isFollower && user.following) map.set(user.id, { ...user, isFriend: true })
-    }
-    return Array.from(map.values())
-  })()
+const toggleFollow = async (id: number) => {
+  try {
+    await socialStore.toggleFollowUser(id)
+  } catch (error) {
+    console.error('[friends] toggle follow failed', error)
+  }
 }
 
 const noResultText = computed(() => {

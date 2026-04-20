@@ -538,27 +538,71 @@
 .lists-container {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 12px;
 }
 
 .list-item {
+  position: relative;
   text-decoration: none;
-  display: flex;
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
   align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border-radius: 6px;
+  gap: 14px;
+  min-height: 88px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  isolation: isolate;
   cursor: pointer;
-  transition: background 0.2s;
+  background: linear-gradient(135deg, rgba(8, 16, 24, 0.34), rgba(8, 16, 24, 0.18));
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .list-item:hover {
-  background: var(--hover-fill);
+  transform: translateY(-2px);
+  border-color: var(--hover-border);
+  box-shadow: var(--shadow-strong);
 }
 
-.list-item span {
-  font-size: 14px;
-  color: var(--text-primary);
+.list-item-banner {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(135deg, rgba(61, 180, 242, 0.24), rgba(29, 211, 176, 0.16));
+}
+
+.list-item-banner img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.list-item-banner-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(7, 15, 23, 0.26) 0%, rgba(7, 15, 23, 0.62) 40%, rgba(7, 15, 23, 0.9) 100%);
+}
+
+.list-item-thumb {
+  position: relative;
+  z-index: 1;
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+  background: var(--card-input);
+}
+
+.list-item-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 /* Friends Grid */
@@ -724,6 +768,10 @@
   .anilist-link-button {
     width: 100%;
   }
+
+  .lists-container {
+    gap: 10px;
+  }
 }
 
 @media (max-width: 520px) {
@@ -767,6 +815,20 @@
 
   .dashboard-panel {
     padding: 16px;
+  }
+
+  .list-item {
+    grid-template-columns: 56px minmax(0, 1fr);
+    gap: 12px;
+    min-height: 80px;
+    padding: 10px 12px;
+    border-radius: 12px;
+  }
+
+  .list-item-thumb {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
   }
 }
 

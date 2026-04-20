@@ -15,7 +15,7 @@
 ## 🎯 Fonctionnalités
 
 - ✅ Authentification multi-provider (Email, Google, GitHub)
-- ✅ Intégration AniList OAuth (profil anime/manga)
+- ✅ Intégration AniList OAuth (profil anime)
 - ✅ Gestion complète du profil utilisateur
 - ✅ Thèmes clair/sombre (forest/winter)
 - ✅ Interface responsive (mobile-first)
@@ -26,7 +26,7 @@
 ### Prérequis
 
 - Node.js 18+
-- npm ou yarn
+- npm
 - Un backend PocketBase
 
 ### Installation
@@ -93,10 +93,6 @@ ANILIST_CLIENT_SECRET=votre_client_secret
 ANILIST_REDIRECT_URI=http://localhost:3000/auth/callback
 VALKEY_URL=redis://localhost:6379
 ```
-
-## 📄 Licence
-
-MIT
 
 ---
 

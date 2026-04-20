@@ -1,36 +1,27 @@
 <template>
   <div class="kizuna-page">
-    <!-- Guest Landing Page -->
-    <template v-if="!pocketbaseStore.authRecord">
-      <!-- Hero Section -->
+    <template v-if="!hasAuthRecord">
       <section class="hero-section">
         <div class="hero-content">
-          <!-- Eyebrow Pill -->
           <div class="eyebrow-pill fade-up">
             <span class="pulsing-dot"></span>
             <span>Powered by AniList API</span>
           </div>
 
-          <!-- H1 Title -->
           <h1 class="hero-title fade-up">
             Your anime,<br />
             <em>shared</em> together.
           </h1>
 
-          <!-- Subtitle -->
           <p class="hero-subtitle fade-up">
             Kizuna connects your AniList profile with your friends. Build joint watchlists,
             track progress together, and discover what to watch next, as a group.
           </p>
 
-          <!-- CTA Buttons -->
           <div class="cta-buttons fade-up">
             <button @click="openLoginDrawer" class="btn-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                   fill="none" stroke="currentColor" stroke-width="2"
-                   class="hero-icon">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                      d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"/>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="hero-icon">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"/>
               </svg>
               Sign in
             </button>
@@ -42,7 +33,6 @@
             </button>
           </div>
 
-          <!-- Stats Row -->
           <div class="stats-row fade-up">
             <div class="stat-item">
               <span class="stat-label">POWERED BY</span>
@@ -62,7 +52,6 @@
         </div>
       </section>
 
-      <!-- Features Section -->
       <section ref="featuresSection" class="features-section">
         <div class="features-content">
           <span class="section-label">WHY KIZUNA</span>
@@ -95,53 +84,78 @@
       </section>
     </template>
 
-    <!-- Authenticated Home -->
     <template v-else>
       <template v-if="isAniListLinked">
         <div class="dashboard-container">
           <div class="dashboard-grid">
-            <!-- Left Panel: Shared Lists -->
             <div class="dashboard-panel">
               <h2 class="panel-title">Shared lists</h2>
               <div class="search-bar">
                 <svg class="hamburger-icon" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/>
                 </svg>
-                <input type="text" placeholder="Search a list" />
+                <input v-model.trim="dashboardListSearch" type="text" placeholder="Search a list" />
                 <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <circle cx="11" cy="11" r="8"/>
                   <path d="M21 21l-4.35-4.35"/>
                 </svg>
               </div>
-              <div class="lists-container">
-                <NuxtLink v-for="list in dashboardLists" :key="list.name" class="list-item" :to="list.to">
+
+              <div v-if="dashboardListsLoading" class="dashboard-empty-state">
+                Loading shared lists...
+              </div>
+              <div v-else-if="dashboardListsError" class="dashboard-empty-state dashboard-error-state">
+                {{ dashboardListsError }}
+              </div>
+              <div v-else-if="filteredDashboardLists.length" class="lists-container">
+                <NuxtLink v-for="list in filteredDashboardLists" :key="list.id" class="list-item" :to="`/sharedLists/${list.id}`">
                   <svg class="hamburger-icon" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/>
                   </svg>
-                  <span>{{ list.name }}</span>
+                  <div class="list-item-copy">
+                    <span class="list-item-name">{{ list.title }}</span>
+                    <span class="list-item-meta">{{ list.memberCount }} members · {{ list.animeCount }} anime</span>
+                  </div>
                 </NuxtLink>
+              </div>
+              <div v-else class="dashboard-empty-state">
+                No shared list found.
               </div>
             </div>
 
-            <!-- Right Panel: Friends -->
             <div class="dashboard-panel">
               <div class="panel-header">
                 <h2 class="panel-title">Friends</h2>
-                <button class="add-friend-btn">
+                <button class="add-friend-btn" type="button" @click="openFollowModal">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 5v14M5 12h14"/>
                   </svg>
                 </button>
               </div>
-              <div class="friends-grid">
-                <div v-for="i in 6" :key="i" class="friend-card">
-                  <div class="friend-avatar">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                    </svg>
+
+              <div v-if="friendsLoading" class="dashboard-empty-state">
+                Loading friends...
+              </div>
+              <div v-else-if="friendsError" class="dashboard-empty-state dashboard-error-state">
+                {{ friendsError }}
+              </div>
+              <div v-else-if="dashboardFriends.length" class="friends-grid">
+                <button
+                  v-for="friend in dashboardFriends"
+                  :key="friend.id"
+                  class="friend-card"
+                  type="button"
+                  @click="openFriendProfile(friend.id)"
+                >
+                  <div class="friend-avatar" :style="friend.avatar ? undefined : { background: friend.avatarColor }">
+                    <img v-if="friend.avatar" :src="friend.avatar" :alt="friend.username">
+                    <span v-else>{{ friendInitials(friend.username) }}</span>
                   </div>
-                  <span class="friend-name">Friend {{ i }}</span>
-                </div>
+                  <span class="friend-name">{{ friend.username }}</span>
+                </button>
+              </div>
+              <div v-else class="dashboard-empty-state">
+                No mutual friends yet.
               </div>
             </div>
           </div>
@@ -163,6 +177,84 @@
       </template>
     </template>
 
+    <Teleport to="body">
+      <div v-if="isFollowModalOpen" class="follow-modal-layer" @click.self="closeFollowModal">
+        <div class="follow-modal">
+          <div class="follow-modal-head">
+            <div>
+              <p class="follow-modal-kicker">Find users</p>
+              <h2>Search users to follow</h2>
+            </div>
+            <button class="follow-modal-close" type="button" @click="closeFollowModal">×</button>
+          </div>
+
+          <label class="follow-search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input
+              v-model.trim="followSearchQuery"
+              type="text"
+              placeholder="Search AniList username"
+              @input="handleFollowSearch"
+            >
+          </label>
+
+          <div v-if="isSearchingUsers" class="follow-search-state">
+            Searching AniList users...
+          </div>
+          <div v-else-if="followSearchError" class="follow-search-state dashboard-error-state">
+            {{ followSearchError }}
+          </div>
+          <div v-else-if="followSearchQuery.length >= 2 && !followSearchResults.length" class="follow-search-state">
+            No matching user found.
+          </div>
+
+          <div v-if="followSearchResults.length" class="follow-results">
+            <div v-for="user in followSearchResults" :key="user.id" class="follow-result-card">
+              <div class="follow-result-main">
+                <div class="follow-result-avatar" :style="user.avatar ? undefined : { background: user.color }">
+                  <img v-if="user.avatar" :src="user.avatar" :alt="user.name">
+                  <span v-else>{{ user.initials }}</span>
+                </div>
+                <div class="follow-result-copy">
+                  <div class="follow-result-name">{{ user.name }}</div>
+                  <div class="follow-result-subtitle">
+                    {{ `AniList #${user.anilistUserId} · ${user.animeCount} anime · score ${user.meanScore || '-'}` }}
+                  </div>
+                  <div class="follow-result-badges">
+                    <span v-if="isFollowBusy(user.anilistUserId)" class="follow-badge">Updating...</span>
+                    <span v-if="user.alreadyFriend" class="follow-badge follow-badge-friend">Already friend</span>
+                    <span v-else-if="user.inKizuna" class="follow-badge follow-badge-kizuna">On Kizuna</span>
+                    <span v-else class="follow-badge">AniList only</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="follow-result-actions">
+                <button class="follow-action-btn follow-action-secondary" type="button" @click="openUserFromSearch(user)">
+                  View profile
+                </button>
+                <button
+                  class="follow-action-btn follow-action-primary"
+                  type="button"
+                  :disabled="!user.anilistUserId || user.alreadyFriend || isFollowBusy(user.anilistUserId)"
+                  @click="followUserFromSearch(user)"
+                >
+                  {{ isFollowBusy(user.anilistUserId) ? 'Updating...' : user.alreadyFriend ? 'Friend added' : 'Follow' }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <p class="follow-modal-note">
+            Search now comes from AniList directly. If the profile is already synced on Kizuna, it is marked in the result card.
+          </p>
+        </div>
+      </div>
+    </Teleport>
+
     <ScrollToTop />
   </div>
 </template>
@@ -172,30 +264,71 @@ import { computed, ref, reactive, onMounted, onUnmounted, nextTick, watch } from
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 import { useDrawersStore } from '~/composables/useDrawersStore'
 import { useAnilistAuthStore } from '~/composables/useAnilistAuthStore'
+import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
+import { useSharedLists, type SharedListSummary } from '~/composables/useSharedLists'
+import { useAnilistSocialStore, type SocialUser } from '~/composables/useAnilistSocialStore'
 
 const pocketbaseStore = usePocketbaseStore()
 const drawerStore = useDrawersStore()
 const anilistAuthStore = useAnilistAuthStore()
+const anilistGraphql = useAnilistGraphql()
+const sharedListsStore = useSharedLists()
+const socialStore = useAnilistSocialStore()
+
 const featuresSection = ref<HTMLElement | null>(null)
-const isAniListLinked = computed(() => {
+const dashboardListSearch = ref('')
+const dashboardLists = ref<SharedListSummary[]>([])
+const dashboardListsLoading = ref(false)
+const dashboardListsError = ref('')
+const isFollowModalOpen = ref(false)
+const followSearchQuery = ref('')
+const isSearchingUsers = ref(false)
+const followSearchError = ref('')
+const followSearchResults = ref<Array<{
+  id: number
+  name: string
+  avatar?: string
+  initials: string
+  color: string
+  anilistUserId: number
+  animeCount: number
+  meanScore: number
+  inKizuna: boolean
+  pocketbaseUserId?: string
+  alreadyFriend: boolean
+}>>([])
+let followSearchTimer: ReturnType<typeof setTimeout> | null = null
+
+const authRecord = computed(() => {
   const authRefOrRecord = pocketbaseStore.authRecord as any
-  const authRecord = authRefOrRecord?.value ?? authRefOrRecord
-  return Boolean(authRecord?.anilist_user_id && authRecord?.anilist_token)
+  return (authRefOrRecord?.value ?? authRefOrRecord ?? {}) as Record<string, any>
 })
 
-// Plain object — NOT ref([])
-// ref="..." on v-for inside v-if is broken in Vue 3
+const hasAuthRecord = computed(() => Boolean(authRecord.value?.id))
+const currentUserId = computed(() => String(authRecord.value.id ?? ''))
+const isAniListLinked = computed(() => Boolean(authRecord.value?.anilist_user_id && authRecord.value?.anilist_token))
+const friendsLoading = computed(() => socialStore.isLoading)
+const friendsError = computed(() => socialStore.loadError)
+const dashboardFriends = computed<SocialUser[]>(() => socialStore.friendUsers.slice(0, 8))
+const friendIds = computed(() => new Set(socialStore.friendUsers.map(friend => Number(friend.id))))
+const pendingFollowIds = computed(() => new Set((socialStore.followPendingIds ?? []).map(id => Number(id))))
+
+const filteredDashboardLists = computed(() => {
+  const needle = dashboardListSearch.value.toLowerCase()
+  const source = dashboardLists.value.slice(0, 12)
+  if (!needle) return source.slice(0, 8)
+  return source.filter((list) => `${list.title} ${list.ownerName}`.toLowerCase().includes(needle)).slice(0, 8)
+})
+
 const cardEls: Record<number, HTMLElement> = {}
 const featureVisible = reactive<Record<number, boolean>>({
   0: false, 1: false, 2: false, 3: false, 4: false, 5: false
 })
 
-// Callback ref function — called by Vue for each card
 function setCardRef(el: unknown, index: number) {
   if (el instanceof HTMLElement) cardEls[index] = el
 }
 
-// Features data
 const features = [
   {
     title: 'Friends & Social',
@@ -229,14 +362,6 @@ const features = [
   }
 ]
 
-const dashboardLists = [
-  { name: 'À regarder ensemble', to: '/sharedLists' },
-  { name: 'Weekend picks', to: '/sharedLists' },
-  { name: 'Films à rattraper', to: '/sharedLists' },
-  { name: 'Late night chaos', to: '/sharedLists' },
-  { name: 'Spring season', to: '/sharedLists' }
-]
-
 const openLoginDrawer = () => {
   drawerStore.openDrawer('drawerLogin')
 }
@@ -249,7 +374,209 @@ const connectAniList = async () => {
   await anilistAuthStore.loginWithAniListWithWarning()
 }
 
-// IntersectionObserver for feature cards
+const friendInitials = (value: string) => {
+  return value
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('') || 'FR'
+}
+
+const openFriendProfile = (friendId: number) => {
+  const id = Number(friendId)
+  if (!Number.isFinite(id) || id <= 0) return
+  navigateTo(`/social/user/${id}`)
+}
+
+const openFollowModal = () => {
+  isFollowModalOpen.value = true
+}
+
+const closeFollowModal = () => {
+  isFollowModalOpen.value = false
+  followSearchQuery.value = ''
+  followSearchError.value = ''
+  followSearchResults.value = []
+  isSearchingUsers.value = false
+  if (followSearchTimer) {
+    clearTimeout(followSearchTimer)
+    followSearchTimer = null
+  }
+}
+
+const searchAniListUsersQuery = `
+query ($search: String, $page: Int, $perPage: Int) {
+  Page(page: $page, perPage: $perPage) {
+    users(search: $search) {
+      id
+      name
+      avatar {
+        medium
+        large
+      }
+      statistics {
+        anime {
+          count
+          meanScore
+        }
+      }
+    }
+  }
+}
+`
+
+type AniListSearchUser = {
+  id?: number
+  name?: string
+  avatar?: {
+    medium?: string | null
+    large?: string | null
+  } | null
+  statistics?: {
+    anime?: {
+      count?: number | null
+      meanScore?: number | null
+    } | null
+  } | null
+}
+
+const buildHue = (value: string) => {
+  return Array.from(value).reduce((sum, char) => sum + char.charCodeAt(0), 0) % 360
+}
+
+const fetchPocketBaseMatches = async (anilistIds: number[]) => {
+  const uniqueIds = Array.from(new Set(anilistIds.filter(id => Number.isFinite(id) && id > 0)))
+  if (!uniqueIds.length) return new Map<number, Record<string, any>>()
+
+  const filter = uniqueIds.map(id => `anilist_user_id=${id}`).join(' || ')
+  const users = await pocketbaseStore.pb.collection('user').getFullList<Record<string, any>>({
+    filter
+  })
+
+  return new Map(
+    users
+      .map(user => [Number(user.anilist_user_id || 0), user] as const)
+      .filter(([id]) => id > 0)
+  )
+}
+
+const handleFollowSearch = () => {
+  if (followSearchTimer) clearTimeout(followSearchTimer)
+
+  if (followSearchQuery.value.trim().length < 2) {
+    followSearchError.value = ''
+    followSearchResults.value = []
+    isSearchingUsers.value = false
+    return
+  }
+
+  followSearchTimer = setTimeout(async () => {
+    isSearchingUsers.value = true
+    followSearchError.value = ''
+
+    try {
+      const payload = await anilistGraphql.request<any>(searchAniListUsersQuery, {
+        search: followSearchQuery.value.trim(),
+        page: 1,
+        perPage: 8
+      }, {
+        cacheTtlMs: 30_000
+      })
+      const errorMessage = Array.isArray(payload?.errors)
+        ? payload.errors.map((error: any) => String(error?.message || '')).filter(Boolean).join(' | ')
+        : ''
+      if (errorMessage) {
+        throw new Error(errorMessage)
+      }
+
+      const rawUsers: AniListSearchUser[] = Array.isArray(payload?.data?.Page?.users) ? payload.data.Page.users : []
+      const filteredUsers = rawUsers.filter((user: AniListSearchUser) => Number(user?.id || 0) !== Number(authRecord.value?.anilist_user_id || 0))
+      const pocketbaseMatches = await fetchPocketBaseMatches(filteredUsers.map((user: AniListSearchUser) => Number(user?.id || 0)))
+
+      followSearchResults.value = filteredUsers
+        .map((user: AniListSearchUser) => {
+          const anilistUserId = Number(user?.id || 0)
+          const name = String(user?.name || 'Unknown user')
+          const avatar = String(user?.avatar?.large || user?.avatar?.medium || '')
+          const localUser = pocketbaseMatches.get(anilistUserId)
+          const hue = buildHue(name)
+          return {
+            id: anilistUserId,
+            name,
+            avatar: avatar || undefined,
+            initials: friendInitials(name),
+            color: `hsl(${hue} 72% 52%)`,
+            anilistUserId,
+            animeCount: Number(user?.statistics?.anime?.count || 0),
+            meanScore: Number(user?.statistics?.anime?.meanScore || 0),
+            inKizuna: Boolean(localUser?.id && String(localUser.id) !== currentUserId.value),
+            pocketbaseUserId: localUser?.id ? String(localUser.id) : undefined,
+            alreadyFriend: friendIds.value.has(anilistUserId)
+          }
+        })
+        .filter(user => user.anilistUserId > 0)
+    } catch {
+      followSearchError.value = 'Unable to search AniList users right now.'
+      followSearchResults.value = []
+    } finally {
+      isSearchingUsers.value = false
+    }
+  }, 220)
+}
+
+const openUserFromSearch = (user: { anilistUserId: number }) => {
+  if (!user.anilistUserId) return
+  closeFollowModal()
+  navigateTo(`/social/user/${user.anilistUserId}`)
+}
+
+const isFollowBusy = (userId: number) => pendingFollowIds.value.has(Number(userId))
+
+const followUserFromSearch = async (user: { anilistUserId: number }) => {
+  if (!user.anilistUserId) return
+  if (isFollowBusy(user.anilistUserId)) return
+
+  followSearchError.value = ''
+
+  try {
+    await socialStore.toggleFollowUser(user.anilistUserId)
+    followSearchResults.value = followSearchResults.value.map((entry) =>
+      entry.anilistUserId === user.anilistUserId
+        ? { ...entry, alreadyFriend: true, inKizuna: true }
+        : entry
+    )
+  } catch (error: any) {
+    followSearchError.value = error?.message || 'Unable to update AniList follow right now.'
+  }
+}
+
+const loadDashboardLists = async () => {
+  if (!isAniListLinked.value) {
+    dashboardLists.value = []
+    dashboardListsError.value = ''
+    dashboardListsLoading.value = false
+    return
+  }
+
+  dashboardListsLoading.value = true
+  dashboardListsError.value = ''
+
+  try {
+    dashboardLists.value = await sharedListsStore.loadSummaries()
+  } catch (error: any) {
+    dashboardLists.value = []
+    dashboardListsError.value = error?.message || 'Unable to load shared lists.'
+  } finally {
+    dashboardListsLoading.value = false
+  }
+}
+
+const loadDashboardSocial = async () => {
+  if (!isAniListLinked.value) return
+  await socialStore.loadSocial()
+}
+
 let observer: IntersectionObserver | null = null
 
 onMounted(() => {
@@ -271,6 +598,7 @@ onMounted(() => {
       },
       { threshold: 0.1, root: null, rootMargin: '0px 0px -30px 0px' }
     )
+
     Object.values(cardEls).forEach((el) => {
       if (el) observer?.observe(el)
     })
@@ -279,12 +607,330 @@ onMounted(() => {
 
 onUnmounted(() => {
   observer?.disconnect()
+  if (followSearchTimer) clearTimeout(followSearchTimer)
 })
 
-// Watch for auth changes
-watch(() => pocketbaseStore.authRecord, () => {
-  // Reactive update when auth state changes
+watch(isAniListLinked, async (linked) => {
+  if (!linked) {
+    dashboardLists.value = []
+    socialStore.reset()
+    closeFollowModal()
+    return
+  }
+
+  await Promise.all([loadDashboardLists(), loadDashboardSocial()])
 }, { immediate: true })
 </script>
 
 <style scoped src="~/assets/css/pages/index.css"></style>
+
+<style scoped>
+.dashboard-empty-state {
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.dashboard-error-state {
+  color: #fda4af;
+}
+
+.list-item-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.list-item-name {
+  font-size: 14px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.list-item-meta {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.friend-card {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.18s ease;
+}
+
+.friend-card:hover {
+  transform: translateY(-2px);
+}
+
+.friend-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 8px;
+}
+
+.friend-avatar span {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.follow-modal-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(8, 14, 24, 0.42);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.follow-modal {
+  width: min(100%, 720px);
+  max-height: min(82vh, 760px);
+  overflow: auto;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(11, 22, 34, 0.98), rgba(17, 28, 42, 0.98));
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+  padding: 24px;
+}
+
+.follow-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.follow-modal-kicker {
+  margin: 0 0 6px;
+  font-size: 11px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--teal);
+}
+
+.follow-modal-head h2 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.15;
+}
+
+.follow-modal-close {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.follow-search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0 14px;
+}
+
+.follow-search-box input {
+  flex: 1;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 15px;
+  font-family: var(--font-main);
+}
+
+.follow-search-box input::placeholder {
+  color: var(--text-dim);
+}
+
+.follow-search-state {
+  padding: 18px 4px 6px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.follow-results {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.follow-result-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 14px;
+}
+
+.follow-result-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.follow-result-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.follow-result-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.follow-result-avatar span {
+  color: #fff;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.follow-result-copy {
+  min-width: 0;
+}
+
+.follow-result-name {
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.follow-result-subtitle {
+  color: var(--text-dim);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.follow-result-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.follow-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.follow-badge-kizuna {
+  background: rgba(61, 180, 242, 0.16);
+  color: #87dbff;
+}
+
+.follow-badge-friend {
+  background: rgba(34, 197, 94, 0.16);
+  color: #8ef0a8;
+}
+
+.follow-result-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.follow-action-btn {
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-main);
+  cursor: pointer;
+}
+
+.follow-action-secondary {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+}
+
+.follow-action-primary {
+  background: linear-gradient(135deg, var(--cyan), #5ac4ff);
+  color: var(--navy);
+  border-color: transparent;
+}
+
+.follow-action-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.follow-modal-note {
+  margin: 18px 0 0;
+  color: var(--text-dim);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .follow-modal {
+    padding: 18px;
+  }
+
+  .follow-modal-head h2 {
+    font-size: 22px;
+  }
+
+  .follow-result-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .follow-result-actions {
+    width: 100%;
+  }
+
+  .follow-action-btn {
+    flex: 1;
+  }
+}
+</style>

@@ -63,6 +63,9 @@ import { computed, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAnilistSocialStore } from '~/composables/useAnilistSocialStore'
 
+// Cette page est une vue specialisee des amis mutuels.
+// Un utilisateur n'apparait ici que s'il est a la fois follower et following.
+
 definePageMeta({ middleware: ['auth'] })
 
 const socialStore = useAnilistSocialStore()
@@ -77,6 +80,7 @@ const profileTabs = [
 ]
 
 const filteredFriends = computed(() => {
+  // On repart de friendUsers mais on refiltre encore sur les drapeaux logiques.
   const mutuals = friendUsers.value.filter(user => user.isFollower && user.following)
   const query = searchText.value.toLowerCase()
   if (!query) return mutuals
@@ -84,6 +88,7 @@ const filteredFriends = computed(() => {
 })
 
 const toggleFollow = (id: number) => {
+  // Ici on modifie surtout l'etat local du store social.
   const current =
     followingUsers.value.find(user => user.id === id)
     || followerUsers.value.find(user => user.id === id)

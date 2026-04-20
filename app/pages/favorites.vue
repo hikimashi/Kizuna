@@ -76,6 +76,10 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, unref, watch } fro
 import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 
+// Cette page affiche les favoris AniList.
+// Deux onglets existent : anime et personnages.
+// Le chargement se fait page par page avec une sentinelle observee.
+
 definePageMeta({ middleware: ['auth'] })
 
 type FavoriteTab = 'anime' | 'characters'
@@ -200,6 +204,7 @@ const activeItems = computed(() => activeTab.value === 'anime' ? animeItems.valu
 const activeHasNext = computed(() => activeTab.value === 'anime' ? animeHasNext.value : characterHasNext.value)
 
 const normalizeAnime = (node: any): FavoriteCard => {
+  // On transforme la reponse AniList en objet simple pour l'interface.
   const title = node?.title?.romaji || node?.title?.english || node?.title?.native || 'Unknown title'
   const format = node?.format ? String(node.format).replaceAll('_', ' ') : 'ANIME'
   const year = node?.seasonYear ? String(node.seasonYear) : ''
@@ -229,6 +234,7 @@ const normalizeCharacter = (node: any): FavoriteCard => {
 }
 
 const loadNextPage = async () => {
+  // On bloque si une requete est deja en cours ou si l'onglet n'a plus de page suivante.
   if (loadingMore.value || initialLoading.value || !activeHasNext.value) return
   const hasToken = Boolean(token.value)
   if (!hasToken && !anilistUserId.value && !anilistUsername.value) {
@@ -249,6 +255,7 @@ const loadNextPage = async () => {
   errorMessage.value = ''
 
   try {
+    // La requete change selon qu'on utilise Viewer ou User.
     const response = await anilistGraphql.request<any>(
       query,
       hasToken
@@ -271,6 +278,7 @@ const loadNextPage = async () => {
     const pageInfo = connection?.pageInfo ?? {}
 
     if (isAnime) {
+      // On ajoute les nouvelles cartes a la fin de la liste deja visible.
       animeItems.value.push(...nodes.map(normalizeAnime))
       animeHasNext.value = Boolean(pageInfo?.hasNextPage)
       animePage.value = Number(pageInfo?.currentPage ?? page) + 1
@@ -290,6 +298,7 @@ const loadNextPage = async () => {
 }
 
 const ensureActiveTabLoaded = async () => {
+  // Un onglet n'est charge qu'au premier affichage.
   if (activeTab.value === 'anime' && !animeLoaded.value) {
     await loadNextPage()
     return
@@ -301,6 +310,7 @@ const ensureActiveTabLoaded = async () => {
 
 let observer: IntersectionObserver | null = null
 const bindObserver = () => {
+  // L'IntersectionObserver surveille la zone basse pour demander la suite automatiquement.
   if (!import.meta.client) return
   observer?.disconnect()
   if (!sentinelRef.value) return
@@ -315,6 +325,7 @@ const bindObserver = () => {
 }
 
 const openItem = (url: string) => {
+  // Ouverture protegee dans un nouvel onglet.
   if (!url || !import.meta.client) return
   window.open(url, '_blank', 'noopener,noreferrer')
 }

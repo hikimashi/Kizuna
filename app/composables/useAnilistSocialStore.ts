@@ -2,6 +2,11 @@ import { defineStore } from 'pinia'
 import { computed, ref, unref } from 'vue'
 import { usePocketbaseStore } from './usePocketbaseStore'
 
+// Ce store s'occupe de tout ce qui concerne le reseau social AniList :
+// les comptes suivis, les abonnes et les amis.
+// Un ami, ici, est simplement quelqu'un qui est a la fois "following" et "follower".
+
+// Structure minimale attendue depuis AniList pour les listes sociales.
 type AniListUserNode = {
   id: number
   name: string
@@ -25,6 +30,7 @@ export type SocialUser = {
   avatarColor: string
 }
 
+// Requete des comptes suivis.
 const followingQuery = `
 query ($userId: Int!, $page: Int, $perPage: Int) {
   Page(page: $page, perPage: $perPage) {
@@ -46,6 +52,7 @@ query ($userId: Int!, $page: Int, $perPage: Int) {
 }
 `
 
+// Requete des abonnes du compte.
 const followersQuery = `
 query ($userId: Int!, $page: Int, $perPage: Int) {
   Page(page: $page, perPage: $perPage) {
@@ -67,17 +74,23 @@ query ($userId: Int!, $page: Int, $perPage: Int) {
 }
 `
 
+// Palette deterministe pour donner une couleur d'avatar de secours.
 const palette = ['#4F378A', '#9256F3', '#F77F00', '#06D6A0', '#D62828', '#4361EE', '#FF6B9D', '#FFBE0B', '#6A0572', '#1DD3B0']
 
 const formatJoined = (timestamp?: number) => {
+  // Si AniList n'envoie rien, on renvoie une valeur lisible plutot qu'une erreur.
   if (!timestamp) return 'Unknown'
+  // AniList renvoie un timestamp en secondes ; JavaScript attend des millisecondes.
   const date = new Date(timestamp * 1000)
   return new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' }).format(date)
 }
 
+// Associe toujours le meme identifiant a la meme couleur.
 const hashColor = (id: number) => palette[Math.abs(id) % palette.length] ?? palette[0] ?? '#4F378A'
 
+// Normalise la forme AniList brute vers le format consomme par l'interface.
 const mapUser = (user: AniListUserNode): SocialUser => ({
+  // Number(...) force un nombre meme si l'API renvoie une valeur d'un autre type.
   id: Number(user.id),
   username: user.name || 'Unknown',
   joined: formatJoined(user.createdAt),
@@ -95,6 +108,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
   const pocketbaseStore = usePocketbaseStore()
   const anilistGraphql = useAnilistGraphql()
 
+  // Cle de cache simple pour savoir si les donnees chargees correspondent deja a l'utilisateur courant.
   const authRecord = computed<Record<string, any>>(() => unref(pocketbaseStore.authRecord) ?? {})
   const token = computed(() => String(authRecord.value.anilist_token ?? ''))
   const anilistUserId = computed(() => Number(authRecord.value.anilist_user_id ?? 0))
@@ -107,6 +121,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
   const friendUsers = ref<SocialUser[]>([])
   const loadedForKey = ref('')
 
+  // Vide l'etat social courant, avec option pour conserver le message d'erreur precedent.
   const reset = (keepError = false) => {
     followingUsers.value = []
     followerUsers.value = []
@@ -115,11 +130,14 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
     loadedForKey.value = ''
   }
 
+  // Passe par un helper unique pour injecter ou non le token AniList.
   const requestGraphql = async (
     query: string,
     variables: Record<string, any>,
     includeToken: boolean
   ) => {
+    // Certaines requetes sociales fonctionnent mieux avec le token,
+    // mais on veut parfois pouvoir retenter sans ce token si AniList le refuse.
     const payload = await anilistGraphql.request<any>(
       query,
       variables,
@@ -132,17 +150,21 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
     return payload
   }
 
+  // Rejoue sans token quand AniList refuse une requete privee ou un token invalide.
   const graphqlFetch = async (query: string, variables: Record<string, any>) => {
     const parseErrors = (response: any) => {
       if (!response?.errors?.length) return ''
+      // On rassemble plusieurs messages d'erreur dans une seule chaine.
       return response.errors.map((error: any) => error?.message).filter(Boolean).join(' | ')
     }
 
+    // Premier essai : on envoie le token.
     let response = await requestGraphql(query, variables, true)
     let errorMessage = parseErrors(response)
 
     if (!errorMessage) return response
 
+    // On convertit en minuscules pour faire des tests de texte plus simples.
     const lowered = errorMessage.toLowerCase()
     const shouldRetryWithoutToken =
       lowered.includes('token')
@@ -151,6 +173,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
       || lowered.includes('private')
 
     if (shouldRetryWithoutToken) {
+      // Deuxieme essai : on retire le token, utile si AniList considere qu'il bloque l'acces.
       response = await requestGraphql(query, variables, false)
       errorMessage = parseErrors(response)
       if (!errorMessage) return response
@@ -159,6 +182,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
     throw new Error(errorMessage || 'AniList GraphQL error')
   }
 
+  // Rassemble toutes les pages d'une relation sociale.
   const fetchPagedUsers = async (query: string, field: 'following' | 'followers') => {
     const all: AniListUserNode[] = []
     let page = 1
@@ -166,10 +190,12 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
     let hasNextPage = true
 
     while (hasNextPage && page <= 100) {
+      // On demande une page a la fois pour reconstruire la liste complete.
       const response = await graphqlFetch(query, { userId: anilistUserId.value, page, perPage })
 
       const pageNode = response?.data?.Page
       const chunk = (pageNode?.[field] ?? []) as AniListUserNode[]
+      // On fusionne cette page avec ce qu'on a deja recupere.
       all.push(...chunk)
       hasNextPage = Boolean(pageNode?.pageInfo?.hasNextPage)
       page += 1
@@ -178,10 +204,12 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
     return all
   }
 
+  // Construit les listes "suivis", "abonnes" et "amis" a partir des donnees AniList.
   const loadSocial = async (force = false) => {
     if (!force && loadedForKey.value === userKey.value) return
     if (isLoading.value) return
 
+    // Sans identifiant AniList, on ne peut pas recuperer les relations sociales.
     if (!anilistUserId.value) {
       reset()
       return
@@ -191,6 +219,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
     loadError.value = ''
 
     try {
+      // On charge "following" et "followers" en parallele pour reduire l'attente.
       const [followingResult, followersResult] = await Promise.allSettled([
         fetchPagedUsers(followingQuery, 'following'),
         fetchPagedUsers(followersQuery, 'followers')
@@ -207,6 +236,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
       const followersIds = new Set(followersRaw.map(user => Number(user.id)))
       const followingIds = new Set(followingRaw.map(user => Number(user.id)))
 
+      // On marque chaque utilisateur suivi avec ses drapeaux logiques.
       followingUsers.value = followingRaw.map((user) => {
         const mapped = mapUser(user)
         mapped.following = true
@@ -215,6 +245,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
         return mapped
       })
 
+      // Meme travail pour les abonnes, mais avec l'indicateur inverse.
       followerUsers.value = followersRaw.map((user) => {
         const mapped = mapUser(user)
         mapped.isFollower = true
@@ -223,6 +254,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
         return mapped
       })
 
+      // On dedoublonne les amis via une Map indexee par id.
       const friendMap = new Map<number, SocialUser>()
       for (const user of [...followingUsers.value, ...followerUsers.value]) {
         if (user.isFriend) friendMap.set(user.id, user)
@@ -249,3 +281,13 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
     reset
   }
 })
+
+/*
+Definition des termes techniques :
+- normaliser : transformer des donnees pour leur donner un format unique et previsible.
+- cache key : identifiant servant a savoir si une donnee deja chargee peut etre reutilisee.
+- pagination : chargement des resultats par blocs successifs.
+- fallback : solution de repli utilisee quand le chemin principal echoue.
+- GraphQL : protocole de requete d'API ou le client choisit les champs retournes.
+- token : jeton d'autorisation transmis avec une requete protegee.
+*/

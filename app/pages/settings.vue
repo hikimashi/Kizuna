@@ -217,6 +217,9 @@ import { useMyAuthStore } from '~/composables/useMyAuthStore'
 import { useToastStore } from '~/composables/useToastStore'
 import { useAlertStore } from '~/composables/useAlertStore'
 
+// Cette page regroupe les reglages du compte :
+// liaison AniList, informations de profil, securite et apparence.
+
 definePageMeta({ middleware: ['auth'] })
 
 type SectionKey = 'anilist' | 'profile' | 'security' | 'appearance'
@@ -262,6 +265,7 @@ const anilistTokenExpiryDisplay = computed(() => {
   return 'Unavailable (not stored)'
 })
 const passwordChangeError = computed(() => {
+  // Validation locale avant tout appel reseau.
   if (!currentPassword.value && !newPassword.value && !confirmPassword.value) return ''
   if (!currentPassword.value || !newPassword.value || !confirmPassword.value) return 'All fields are required.'
   if (newPassword.value.length < 8) return 'New password must be at least 8 characters.'
@@ -311,11 +315,13 @@ function getSectionRef(key: SectionKey): HTMLElement | null {
 }
 
 function scrollToSection(key: SectionKey) {
+  // Le clic dans la sidebar fait defiler vers la section correspondante.
   activeSection.value = key
   getSectionRef(key)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 function setupScrollSpy() {
+  // L'observer met a jour la sidebar selon la section actuellement visible.
   const sections: Array<{ key: SectionKey; el: HTMLElement | null }> = [
     { key: 'anilist', el: anilistSectionRef.value },
     { key: 'profile', el: profileSectionRef.value },
@@ -346,6 +352,7 @@ function setupScrollSpy() {
 }
 
 const previewTheme = (theme: 'forest' | 'winter') => {
+  // Le theme est applique tout de suite en apercu, meme avant sauvegarde.
   selectedTheme.value = theme
   themeStore.setThemeByName(theme)
 }
@@ -361,6 +368,7 @@ const refreshAnilistData = async () => {
 }
 
 const unlinkAniList = async () => {
+  // Cette action efface tous les champs AniList stockes dans le profil local.
   if (isUnlinking.value) return
   const ok = await alertStore.openAlert({ type: 'warning', message: 'Unlink AniList account from Kizuna?' })
   if (!ok) return
@@ -391,6 +399,7 @@ const unlinkAniList = async () => {
 }
 
 const saveTheme = async () => {
+  // Le theme choisi est persiste en base puis resynchronise localement.
   if (isSavingTheme.value) return
   isSavingTheme.value = true
   try {
@@ -414,6 +423,7 @@ const toggleEmailChange = () => {
 }
 
 const submitEmailChange = async () => {
+  // PocketBase envoie un email de confirmation au lieu de changer directement l'adresse.
   const nextEmail = pendingEmail.value.trim()
   if (!nextEmail) {
     toastStore.openToast({ type: 'error', message: 'Please enter a valid email.' })
@@ -442,6 +452,7 @@ const togglePasswordReset = () => {
 }
 
 const updatePasswordDirectly = async () => {
+  // Si la validation locale echoue, on n'envoie aucune requete.
   if (passwordChangeError.value) {
     toastStore.openToast({ type: 'error', message: passwordChangeError.value })
     return
@@ -472,6 +483,7 @@ const updatePasswordDirectly = async () => {
 }
 
 const deleteAccount = async () => {
+  // Suppression irreversible apres confirmation utilisateur.
   if (isDeleting.value) return
   const ok = await alertStore.openAlert({
     type: 'error',

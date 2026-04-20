@@ -217,6 +217,9 @@ import { storeToRefs } from 'pinia'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 import { useAnilistProfileStore } from '~/composables/useAnilistProfileStore'
 
+// Cette page presente le profil AniList de l'utilisateur :
+// statistiques, favoris, genres dominants et activite recente.
+
 definePageMeta({ middleware: ['auth'] })
 
 const pocketbaseStore = usePocketbaseStore()
@@ -238,6 +241,7 @@ const activityPage = ref(1)
 const activityPerPage = 15
 
 const loadMoreActivity = async () => {
+  // Chargement progressif de l'activite pour ne pas bloquer toute la page.
   if (activityLoading.value || !activityHasMore.value) return
 
   activityLoading.value = true
@@ -260,6 +264,7 @@ const loadMoreActivity = async () => {
 }
 
 const resetActivityList = async () => {
+  // On repart proprement de la premiere page d'activite.
   activityItems.value = []
   activityHasMore.value = true
   activityPage.value = 1
@@ -291,6 +296,7 @@ function getGenreColor(genre: string): string {
 }
 
 function timeAgo(timestamp: number): string {
+  // Convertit un timestamp brut en texte relatif lisible.
   const seconds = Math.floor((Date.now() - timestamp * 1000) / 1000)
   if (seconds < 60) return 'just now'
   const minutes = Math.floor(seconds / 60)
@@ -359,6 +365,7 @@ const barGenreTotal = computed(() => {
 })
 
 const progressStep = computed(() => {
+  // L'echelle du mini graphique s'adapte au volume reel d'animes regardes.
   const perSegment = Math.max(10, Math.ceil((totalAnimes.value || 0) / 3))
   if (perSegment <= 25) return 25
   if (perSegment <= 50) return 50
@@ -393,6 +400,7 @@ function setGenreMeasureRef(genreName: string): VNodeRef {
   }
 }
 async function computeVisibleGenres() {
+  // On mesure la place disponible pour n'afficher que les tags qui tiennent vraiment.
   if (isLoading.value) return
   await nextTick()
   const container = genreTagsContainerRef.value
@@ -427,6 +435,7 @@ watch(topGenres, () => {
 }, { deep: true })
 
 onMounted(async () => {
+  // Chargement principal du profil, puis de l'activite et enfin des mesures visuelles.
   await profileStore.loadProfile()
   await resetActivityList()
   await computeVisibleGenres()

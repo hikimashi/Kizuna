@@ -519,6 +519,10 @@
 import { computed, onBeforeUnmount, onMounted, ref, unref } from 'vue'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 
+// Cette page detaille une shared list.
+// Elle repose encore largement sur des donnees locales de demonstration,
+// mais elle montre deja la structure cible : membres, suggestions, permissions et activite.
+
 definePageMeta({ middleware: ['auth'] })
 
 type Role = 'owner' | 'moderator' | 'member' | 'reader'
@@ -768,6 +772,7 @@ const activePrivacyMeta = computed<(typeof privacyOptions)[number]>(() => {
   return privacyOptions.find((option) => option.value === privacy.value) ?? privacyOptions[0]!
 })
 
+// Chaque onglet affiche aussi un compteur pour resumer rapidement son contenu.
 const tabs = computed(() => [
   { key: 'anime' as TabKey, label: 'Anime', count: mainEntries.value.length },
   { key: 'suggestions' as TabKey, label: 'Suggestions', count: suggestions.value.length },
@@ -778,16 +783,19 @@ const tabs = computed(() => [
 const filteredNeedle = computed(() => searchTerm.value.trim().toLowerCase())
 
 const visibleMainEntries = computed(() => {
+  // Filtrage texte applique a la liste principale.
   if (!filteredNeedle.value) return mainEntries.value
   return mainEntries.value.filter((entry) => entry.title.toLowerCase().includes(filteredNeedle.value))
 })
 
 const visibleSuggestions = computed(() => {
+  // Meme filtrage mais sur la file des suggestions.
   if (!filteredNeedle.value) return suggestions.value
   return suggestions.value.filter((entry) => entry.title.toLowerCase().includes(filteredNeedle.value))
 })
 
 const progressStats = computed(() => {
+  // Donnees de progression groupees par membre.
   return [
     { memberId: 'you', count: 3 },
     { memberId: 'daz', count: 2 },
@@ -820,6 +828,7 @@ const getInitials = (value: string) => {
 const memberRecord = (memberId: string) => memberMap.value.get(memberId)
 
 const memberDisplayName = (memberId: string, mode: 'short' | 'panel' = 'panel') => {
+  // Le membre "you" est relie a la session reelle, pas seulement au tableau local.
   if (memberId === 'you') {
     if (mode === 'short') return 'Toi'
     return currentUsername.value || 'Toi'
@@ -905,6 +914,7 @@ const progressSegmentStyle = (item: { memberId: string; count: number }) => ({
 
 
 const setPrivacy = (value: Privacy) => {
+  // Change la confidentialite puis ferme le menu.
   privacy.value = value
   privacyMenuOpen.value = false
 }
@@ -914,6 +924,7 @@ const togglePrivacyMenu = () => {
 }
 
 const acceptSuggestion = (entryId: string) => {
+  // Accepter = retirer des suggestions puis pousser dans la liste principale.
   const index = suggestions.value.findIndex((entry) => entry.id === entryId)
   if (index === -1) return
   const [entry] = suggestions.value.splice(index, 1)
@@ -923,10 +934,12 @@ const acceptSuggestion = (entryId: string) => {
 }
 
 const rejectSuggestion = (entryId: string) => {
+  // Refuser = simple suppression de la suggestion.
   suggestions.value = suggestions.value.filter((entry) => entry.id !== entryId)
 }
 
 const handleDocumentClick = (event: MouseEvent) => {
+  // Clic a l'exterieur du menu => fermeture.
   if (!privacyMenuOpen.value) return
   const target = event.target as Node | null
   if (!target) return

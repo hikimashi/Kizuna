@@ -234,6 +234,9 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import AnimeList from '~/components/animeList.vue'
 
+// Cette page ne charge pas elle-meme les animes.
+// Son role est de piloter les filtres et de les transmettre au composant AnimeList.
+
 type DropdownKey = 'genre' | 'year' | 'season' | 'format' | 'status' | null
 type ViewMode = 'grid' | 'list'
 type FilterOption = {
@@ -339,6 +342,7 @@ const openDropdown = ref<DropdownKey>(null)
 
 let searchTimer: ReturnType<typeof setTimeout> | null = null
 
+// Ces libelles servent a rendre les "pills" de filtre plus lisibles.
 const currentFormatLabel = computed(() => formatOptions.find((option) => option.value === format.value)?.label || 'Format')
 const currentSeasonLabel = computed(() => seasonOptions.find((option) => option.value === season.value)?.label || 'Season')
 const currentStatusLabel = computed(() => statusOptions.find((option) => option.value === status.value)?.label || 'Status')
@@ -364,6 +368,7 @@ type ActiveFilter = {
 const activeFilters = computed<ActiveFilter[]>(() => {
   const nextFilters: ActiveFilter[] = []
 
+  // On reconstruit la liste des filtres actifs pour afficher des tags supprimables.
   if (searchTerm.value) {
     nextFilters.push({
       key: `search:${searchTerm.value}`,
@@ -422,6 +427,7 @@ const activeFilters = computed<ActiveFilter[]>(() => {
 })
 
 const closeDropdown = () => {
+  // Un seul menu deroulant doit rester ouvert a la fois.
   openDropdown.value = null
 }
 
@@ -450,6 +456,7 @@ const setStatus = (value: string) => {
 }
 
 const toggleGenre = (genreValue: string) => {
+  // Clique une fois = ajoute le genre ; clique une seconde fois = retire le genre.
   selectedGenres.value = selectedGenres.value.includes(genreValue)
     ? selectedGenres.value.filter((entry) => entry !== genreValue)
     : [...selectedGenres.value, genreValue]
@@ -486,6 +493,7 @@ const removeFilter = (filterItem: ActiveFilter) => {
 }
 
 const clearAllFilters = () => {
+  // Remise a zero complete de tous les filtres de la page.
   searchInput.value = ''
   searchTerm.value = ''
   selectedGenres.value = []
@@ -512,6 +520,7 @@ const handleDocumentClick = () => {
 }
 
 watch(searchInput, (value) => {
+  // Petit debounce pour eviter une mise a jour immediate a chaque touche.
   if (searchTimer) clearTimeout(searchTimer)
   searchTimer = setTimeout(() => {
     searchTerm.value = value.trim()

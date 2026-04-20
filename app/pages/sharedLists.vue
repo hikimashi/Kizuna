@@ -191,6 +191,9 @@
 import { computed, onMounted, ref, unref } from 'vue'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 
+// Cette page est le hub des shared lists.
+// Elle lit PocketBase puis transforme les enregistrements en cartes faciles a afficher.
+
 definePageMeta({ middleware: ['auth'] })
 
 type Privacy = 'private' | 'friends' | 'public'
@@ -263,6 +266,7 @@ const currentUserId = computed(() => String(authRecord.value.id ?? ''))
 
 const visibleLists = computed(() => {
   const needle = searchTerm.value.toLowerCase()
+  // Filtrage par type et texte.
   const filtered = lists.value.filter((list) => {
     if (activeFilter.value === 'owned' && list.kind !== 'owned') return false
     if (activeFilter.value === 'shared' && list.kind !== 'shared') return false
@@ -271,6 +275,7 @@ const visibleLists = computed(() => {
     return `${list.title} ${list.description}`.toLowerCase().includes(needle)
   })
 
+  // Puis tri selon la preference utilisateur.
   return [...filtered].sort((a, b) => {
     if (sortBy.value === 'title') return a.title.localeCompare(b.title)
     if (sortBy.value === 'animeCount') return b.animeCount - a.animeCount
@@ -334,6 +339,7 @@ const roleFromMembership = (record: UserSharedListRecord | undefined, ownerId: s
 }
 
 const loadSharedLists = async () => {
+  // Sans utilisateur courant, il n'y a aucune liste a afficher.
   if (!currentUserId.value) {
     lists.value = []
     isLoading.value = false
@@ -344,6 +350,7 @@ const loadSharedLists = async () => {
   loadError.value = ''
 
   try {
+    // On charge d'abord les listes et les liaisons utilisateur <-> liste.
     const [sharedListRecords, membershipRecords] = await Promise.all([
       pocketbaseStore.pb.collection('shared_list').getFullList<SharedListRecord>({ sort: '-updated' }),
       pocketbaseStore.pb.collection('user_shared_list').getFullList<UserSharedListRecord>({ sort: '-updated' })
@@ -358,11 +365,13 @@ const loadSharedLists = async () => {
       membershipByList.set(listId, current)
     }
 
+    // On conserve seulement les listes que l'utilisateur possede ou auxquelles il appartient.
     const allowedLists = sharedListRecords.filter((record) => {
       const ownerId = normalizeRelationValue(record.fk_owner_user_id)
       return ownerId === currentUserId.value || membershipByList.has(record.id)
     })
 
+    // On charge ensuite les animes associes pour construire les compteurs.
     const ids = allowedLists.map((record) => `"${record.id}"`)
     const animeRecords = ids.length
       ? await pocketbaseStore.pb.collection('anime_shared_list').getFullList<AnimeSharedListRecord>({
@@ -381,6 +390,7 @@ const loadSharedLists = async () => {
     }
 
     lists.value = allowedLists.map((record) => {
+      // Chaque objet final est "pret a afficher" dans le template.
       const ownerId = normalizeRelationValue(record.fk_owner_user_id)
       const memberships = membershipByList.get(record.id) ?? []
       const animeCount = (animeByList.get(record.id) ?? []).length

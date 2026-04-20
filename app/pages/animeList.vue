@@ -179,6 +179,12 @@ import { useAnilistSync } from '~/composables/useAnilistSync'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 import { useToastStore } from '~/composables/useToastStore'
 
+// Cette page affiche la liste anime du compte AniList lie.
+// Elle permet :
+// 1. de charger les entrees regroupees par statut,
+// 2. de filtrer et trier l'affichage,
+// 3. de modifier ou supprimer une entree selectionnee.
+
 type ListStatusKey = 'CURRENT' | 'COMPLETED' | 'PAUSED' | 'DROPPED' | 'PLANNING'
 type FilterKey = 'ALL' | ListStatusKey
 type ViewMode = 'grid' | 'list' | 'compact'
@@ -230,6 +236,7 @@ const anilistSync = useAnilistSync()
 const toastStore = useToastStore()
 const alertStore = useAlertStore()
 
+// Etats principaux de l'ecran.
 const isLoading = ref(true)
 const errorMessage = ref('')
 const viewMode = ref<ViewMode>('grid')
@@ -254,6 +261,7 @@ const rawSections = ref<Record<ListStatusKey, MediaListEntry[]>>({
   PLANNING: []
 })
 
+// On relit les informations AniList enregistrees dans la session locale.
 const authRecord = computed(() => (unref(pocketbaseStore.authRecord) ?? {}) as Record<string, any>)
 const token = computed(() => String(authRecord.value.anilist_token ?? ''))
 const username = computed(() => String(authRecord.value.anilist_username ?? ''))
@@ -291,6 +299,7 @@ const statusDotClass = (status: ListStatusKey) => {
 }
 
 const listFilterItems = computed(() => {
+  // Les compteurs affiches dans la barre laterale sont derives des sections chargees.
   const allCount = STATUS_ORDER.reduce((sum, key) => sum + rawSections.value[key].length, 0)
   return [
     { key: 'ALL' as FilterKey, label: 'All', count: allCount },
@@ -304,6 +313,7 @@ const listFilterItems = computed(() => {
 
 const sortedAndFilteredSections = computed(() => {
   const needle = searchTerm.value.toLowerCase()
+  // La fonction de tri change selon l'option choisie.
   const sorter = (a: MediaListEntry, b: MediaListEntry) => {
     if (sortBy.value === 'title') return displayTitle(a).localeCompare(displayTitle(b))
     if (sortBy.value === 'score') return (b.score || 0) - (a.score || 0)
@@ -314,10 +324,12 @@ const sortedAndFilteredSections = computed(() => {
 
   return STATUS_ORDER.map((status) => {
     const baseItems = rawSections.value[status] ?? []
+    // On filtre d'abord par texte...
     const filtered = baseItems.filter((entry) => {
       if (!needle) return true
       return displayTitle(entry).toLowerCase().includes(needle)
     })
+    // ...puis on trie la liste finale.
     return {
       key: status,
       label: STATUS_LABELS[status],
@@ -327,6 +339,7 @@ const sortedAndFilteredSections = computed(() => {
 })
 
 const visibleSections = computed(() => {
+  // "ALL" garde toutes les sections non vides.
   if (activeFilter.value === 'ALL') {
     return sortedAndFilteredSections.value.filter((section) => section.items.length > 0)
   }
@@ -336,6 +349,7 @@ const visibleSections = computed(() => {
 })
 
 const openEntryEditor = (entry: MediaListEntry, status: ListStatusKey) => {
+  // On copie les donnees de l'entree dans le panneau d'edition.
   selectedEntryId.value = entry.id
   selectedEntryTitle.value = displayTitle(entry)
   selectedEntryCover.value = String(entry.media.coverImage?.large || entry.media.coverImage?.medium || '')
@@ -346,6 +360,7 @@ const openEntryEditor = (entry: MediaListEntry, status: ListStatusKey) => {
 }
 
 const closeEntryEditor = () => {
+  // On remet tous les champs a leur valeur par defaut.
   selectedEntryId.value = null
   selectedEntryTitle.value = ''
   selectedEntryCover.value = ''
@@ -360,12 +375,14 @@ const saveSelectedEntry = async () => {
 
   try {
     isSavingEntry.value = true
+    // Mutation AniList pour sauvegarder l'etat de l'entree.
     await anilistSync.saveEntry({
       entryId: selectedEntryId.value,
       status: editStatus.value,
       progress: editProgress.value === '' ? 0 : Number(editProgress.value),
       score: editScore.value === '' ? null : Number(editScore.value)
     })
+    // On recharge ensuite toute la liste pour rester parfaitement aligne sur AniList.
     await fetchAnimeList()
     toastStore.openToast({ type: 'success', message: 'AniList entry updated.' })
     closeEntryEditor()
@@ -388,6 +405,7 @@ const deleteSelectedEntry = async () => {
   try {
     isDeletingEntry.value = true
     await anilistSync.deleteEntry(selectedEntryId.value)
+    // Meme principe : on relit la source distante apres suppression.
     await fetchAnimeList()
     toastStore.openToast({ type: 'success', message: 'AniList entry deleted.' })
     closeEntryEditor()
@@ -399,6 +417,7 @@ const deleteSelectedEntry = async () => {
 }
 
 const fetchAnimeList = async () => {
+  // Sans token ou username AniList, la page ne peut pas recuperer la liste.
   if (!token.value || !username.value) {
     errorMessage.value = 'AniList account not linked. Please reconnect in Settings.'
     isLoading.value = false
@@ -448,6 +467,7 @@ const fetchAnimeList = async () => {
     isLoading.value = true
     errorMessage.value = ''
 
+    // Cette requete charge toute la MediaListCollection anime de l'utilisateur.
     const response = await anilistGraphql.request<any>(
       query,
       { userName: username.value },
@@ -467,6 +487,7 @@ const fetchAnimeList = async () => {
     }
 
     const lists = response?.data?.MediaListCollection?.lists ?? []
+    // AniList renvoie des groupes par statut ; on les remappe dans nos sections locales.
     for (const list of lists) {
       const key = list?.status as ListStatusKey
       if (!STATUS_ORDER.includes(key)) continue

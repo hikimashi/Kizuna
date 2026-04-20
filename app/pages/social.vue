@@ -74,6 +74,9 @@ import { computed, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAnilistSocialStore } from '~/composables/useAnilistSocialStore'
 
+// Cette page est la vue sociale generale.
+// Elle affiche successivement les comptes suivis, les followers et les amis.
+
 definePageMeta({ middleware: ['auth'] })
 
 type SocialTab = 'followed' | 'followers' | 'friends'
@@ -89,6 +92,7 @@ const friendsCount = computed(() => friendUsers.value.length)
 const activeLabel = computed(() => activeTab.value === 'followed' ? 'Followed' : activeTab.value === 'followers' ? 'Followers' : 'Friends')
 
 const filteredUsers = computed(() => {
+  // La source depend de l'onglet actif.
   const source =
     activeTab.value === 'followed'
       ? followingUsers.value
@@ -102,6 +106,7 @@ const filteredUsers = computed(() => {
 })
 
 const toggleFollow = (id: number) => {
+  // Cette bascule met a jour l'etat local visible de la relation sociale.
   const current =
     followingUsers.value.find(user => user.id === id)
     || followerUsers.value.find(user => user.id === id)

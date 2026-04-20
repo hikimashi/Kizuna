@@ -248,6 +248,10 @@ import { useAnilistSync } from '~/composables/useAnilistSync'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 import { useToastStore } from '~/composables/useToastStore'
 
+// Cette page affiche le detail d'un anime AniList.
+// Elle charge la fiche complete, prepare des blocs lisibles pour le template
+// et permet un ajout rapide a la liste "Planning".
+
 type AnimeMedia = Record<string, any>
 type DataRow = {
   label: string
@@ -346,12 +350,14 @@ const errorMessage = ref('')
 const media = ref<AnimeMedia | null>(null)
 
 const mediaId = computed(() => {
+  // L'id vient de l'URL ; on le valide avant de lancer une requete.
   const raw = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
   const value = Number(raw)
   return Number.isInteger(value) && value > 0 ? value : 0
 })
 
 const cleanList = (values: Array<string | null | undefined>) => {
+  // Nettoyage utilitaire : supprime les vides et les doublons.
   const seen = new Set<string>()
   return values.reduce<string[]>((items, value) => {
     const next = String(value || '').trim()
@@ -389,6 +395,7 @@ const label = (value?: string | null) => {
 }
 
 const sanitizeHtml = (value: string) => {
+  // Petit nettoyage defensif avant affichage de HTML venant de l'API.
   return value
     .replace(/<script[\s\S]*?<\/script>/gi, '')
     .replace(/<style[\s\S]*?<\/style>/gi, '')
@@ -398,6 +405,7 @@ const sanitizeHtml = (value: string) => {
 }
 
 const plainText = (value: string) => {
+  // Version texte de la description HTML, utile pour calculer sa longueur.
   return value
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<[^>]+>/g, ' ')
@@ -480,6 +488,7 @@ const hashtagHref = computed(() => media.value?.hashtag
   : '')
 
 const dataRows = computed<DataRow[]>(() => {
+  // Conversion des infos brutes AniList en lignes simples pour la sidebar.
   const rows: DataRow[] = [
     { label: 'Format', value: label(media.value?.format) },
     { label: 'Episodes', value: media.value?.episodes ? String(media.value.episodes) : '-' },
@@ -519,6 +528,7 @@ const watchIcon = (link: any) => String(link?.icon || '')
 const coverStyle = (image: string) => image ? { backgroundImage: `url(${image})` } : {}
 
 const loadMedia = async () => {
+  // Charge la fiche complete de l'anime courant.
   if (!mediaId.value) {
     media.value = null
     errorMessage.value = 'Invalid anime id.'
@@ -542,6 +552,7 @@ const loadMedia = async () => {
 }
 
 const addToPlanning = async () => {
+  // Ajoute l'anime a la liste AniList de l'utilisateur avec le statut PLANNING.
   if (!media.value?.id || adding.value || inUserList.value) return
 
   try {

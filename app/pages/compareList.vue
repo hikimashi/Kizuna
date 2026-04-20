@@ -214,6 +214,10 @@ import { computed, onMounted, ref, unref } from 'vue'
 import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 
+// Cette page compare l'utilisateur courant avec un profil AniList ami.
+// Elle calcule les oeuvres communes, les exclusivites, les ecarts de score
+// et une estimation simple de compatibilite.
+
 definePageMeta({
   path: '/social/compare/:id',
   ssr: false
@@ -268,6 +272,7 @@ const formatScore = (score: number) => {
 const statusLabel = (status: 'CURRENT' | 'COMPLETED') => (status === 'CURRENT' ? 'Watching' : 'Completed')
 
 const selfMap = computed(() => {
+  // Map pratique pour retrouver rapidement une entree a partir de son mediaId.
   const map = new Map<number, CompareEntry>()
   for (const entry of selfEntries.value) map.set(entry.mediaId, entry)
   return map
@@ -280,6 +285,7 @@ const friendMap = computed(() => {
 })
 
 const sharedEntries = computed(() => {
+  // Cette collection contient uniquement les animes presents chez les deux personnes.
   const rows: Array<{
     mediaId: number
     title: string
@@ -329,6 +335,7 @@ const scoreDiffRows = computed(() =>
 )
 
 const genreRows = computed(() => {
+  // On compte les genres a partir des animes en commun pour voir les recouvrements.
   const selfGenreCounts = new Map<string, number>()
   const friendGenreCounts = new Map<string, number>()
   for (const row of sharedEntries.value) {
@@ -383,6 +390,7 @@ const avgScoreDiffColor = computed(() => {
 })
 
 const compatibilityPercent = computed(() => {
+  // Compatibilite = intersection / union.
   const selfTotal = Number(selfCount.value) || 0
   const friendTotal = Number(friendCount.value) || 0
   const common = Number(commonCount.value) || 0
@@ -435,7 +443,7 @@ const fetchSelfProfile = async () => {
   `
 
   try {
-    // Prefer Viewer when token exists; fallback to explicit User query.
+    // On prefere Viewer si un token existe ; sinon on repasse par la requete User.
     let response: any = null
     if (token.value) {
       response = await anilistGraphql.request<any>(
@@ -464,6 +472,7 @@ const fetchSelfProfile = async () => {
 }
 
 const fetchFriendProfile = async () => {
+  // Charge le bloc de presentation de l'ami : nom, avatar, banner et stats.
   if (!friendUserId.value) return
 
   const query = `
@@ -503,6 +512,7 @@ const fetchFriendProfile = async () => {
 }
 
 const fetchMediaMatch = async () => {
+  // Le serveur calcule ici les compteurs synthese de comparaison.
   const selfUserId = Number(authRecord.value.anilist_user_id ?? 0)
   const selfUserName = String(authRecord.value.anilist_username ?? '')
 
@@ -553,6 +563,7 @@ const fetchMediaMatch = async () => {
 }
 
 const fetchCompareEntries = async () => {
+  // Ici on charge les vraies listes CURRENT / COMPLETED pour les analyses detaillees.
   const selfUserId = Number(authRecord.value.anilist_user_id ?? 0)
   if (!selfUserId || !friendUserId.value) return
 
@@ -578,6 +589,7 @@ const fetchCompareEntries = async () => {
   `
 
   const mapEntries = (response: any): CompareEntry[] => {
+    // AniList renvoie des groupes ; on les aplatit dans une seule liste dedoublonnee.
     const lists = Array.isArray(response?.data?.MediaListCollection?.lists) ? response.data.MediaListCollection.lists : []
     const result = new Map<number, CompareEntry>()
     for (const list of lists) {
@@ -623,6 +635,7 @@ const fetchCompareEntries = async () => {
 }
 
 onMounted(async () => {
+  // On charge d'abord les profils et les listes, puis les compteurs consolides.
   await Promise.all([fetchSelfProfile(), fetchFriendProfile(), fetchCompareEntries()])
   await fetchMediaMatch()
 })

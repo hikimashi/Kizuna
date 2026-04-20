@@ -134,6 +134,9 @@ import { computed, onMounted, ref, unref } from 'vue'
 import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 
+// Cette page affiche la liste anime publique d'un autre utilisateur AniList.
+// Elle reprend une logique proche de la liste perso, mais en lecture seule.
+
 definePageMeta({
   path: '/social/user/:id'
 })
@@ -242,6 +245,7 @@ const statusDotClass = (status: ListStatusKey) => {
 }
 
 const listFilterItems = computed(() => {
+  // Compteurs de la sidebar, derives directement des sections chargees.
   const allCount = STATUS_ORDER.reduce((sum, key) => sum + rawSections.value[key].length, 0)
   return [
     { key: 'ALL' as FilterKey, label: 'All', count: allCount },
@@ -255,6 +259,7 @@ const listFilterItems = computed(() => {
 
 const sortedAndFilteredSections = computed(() => {
   const needle = searchTerm.value.toLowerCase()
+  // On applique le filtre texte puis le tri selectionne.
   const sorter = (a: MediaListEntry, b: MediaListEntry) => {
     if (sortBy.value === 'title') return displayTitle(a).localeCompare(displayTitle(b))
     if (sortBy.value === 'score') return (b.score || 0) - (a.score || 0)
@@ -287,6 +292,7 @@ const visibleSections = computed(() => {
 })
 
 const mapListsToSections = (lists: any[]) => {
+  // AniList renvoie des groupes par statut ; on les convertit vers notre structure locale.
   const nextSections: Record<ListStatusKey, MediaListEntry[]> = {
     CURRENT: [],
     COMPLETED: [],
@@ -306,6 +312,9 @@ const mapListsToSections = (lists: any[]) => {
 }
 
 const fetchFriendProfileAndList = async () => {
+  // Charge en parallele :
+  // - le profil de l'ami,
+  // - sa liste anime complete.
   if (!friendUserId.value) {
     errorMessage.value = 'Invalid friend profile.'
     isLoading.value = false
@@ -375,6 +384,7 @@ const fetchFriendProfileAndList = async () => {
 }
 
 const goToCompare = () => {
+  // Navigation rapide vers la comparaison avec ce profil.
   if (!friendUserId.value) return
   navigateTo(`/social/compare/${friendUserId.value}`)
 }

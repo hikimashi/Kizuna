@@ -205,6 +205,9 @@
 </template>
 
 <script setup lang="ts">
+// Cette page est un contenu editorial statique.
+// Elle ne charge pas de donnees externes : tout le journal est defini ici.
+
 type TimelineItem = {
   date: string
   title: string
@@ -611,6 +614,7 @@ const watchpoints: Watchpoint[] = [
   }
 ]
 
+// Ce calcul sert a afficher un resume numerique dans le hero de la page.
 const referencedFileCount = new Set(chapters.flatMap((chapter) => chapter.files)).size
 
 const scopeStats = [

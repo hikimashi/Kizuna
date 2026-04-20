@@ -67,6 +67,14 @@ query ($userId: Int!, $page: Int, $perPage: Int) {
 }
 `
 
+const toggleFollowMutation = `
+mutation ($userId: Int) {
+  ToggleFollow(userId: $userId) {
+    id
+  }
+}
+`
+
 const palette = ['#4F378A', '#9256F3', '#F77F00', '#06D6A0', '#D62828', '#4361EE', '#FF6B9D', '#FFBE0B', '#6A0572', '#1DD3B0']
 
 const formatJoined = (timestamp?: number) => {
@@ -105,6 +113,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
   const followingUsers = ref<SocialUser[]>([])
   const followerUsers = ref<SocialUser[]>([])
   const friendUsers = ref<SocialUser[]>([])
+  const followPendingIds = ref<number[]>([])
   const loadedForKey = ref('')
 
   const reset = (keepError = false) => {
@@ -118,14 +127,19 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
   const requestGraphql = async (
     query: string,
     variables: Record<string, any>,
-    includeToken: boolean
+    includeToken: boolean,
+    options: {
+      cacheTtlMs?: number
+      skipCache?: boolean
+    } = {}
   ) => {
     const payload = await anilistGraphql.request<any>(
       query,
       variables,
       {
         token: includeToken ? token.value : '',
-        cacheTtlMs: 60_000
+        cacheTtlMs: options.cacheTtlMs ?? 60_000,
+        skipCache: options.skipCache ?? false
       }
     )
 
@@ -158,6 +172,8 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
 
     throw new Error(errorMessage || 'AniList GraphQL error')
   }
+
+  const isFollowPending = (userId: number) => followPendingIds.value.includes(Number(userId))
 
   const fetchPagedUsers = async (query: string, field: 'following' | 'followers') => {
     const all: AniListUserNode[] = []
@@ -239,12 +255,57 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
     }
   }
 
+  const toggleFollowUser = async (targetUserId: number) => {
+    const userId = Number(targetUserId || 0)
+    if (!Number.isFinite(userId) || userId <= 0) {
+      throw new Error('Invalid AniList user.')
+    }
+    if (!anilistUserId.value || !token.value) {
+      throw new Error('AniList account is not linked.')
+    }
+    if (userId === anilistUserId.value) {
+      throw new Error('You cannot follow your own AniList account.')
+    }
+    if (isFollowPending(userId)) return
+
+    followPendingIds.value = [...followPendingIds.value, userId]
+
+    try {
+      const response = await requestGraphql(
+        toggleFollowMutation,
+        { userId },
+        true,
+        {
+          skipCache: true,
+          cacheTtlMs: 0
+        }
+      )
+      const errorMessage = Array.isArray(response?.errors)
+        ? response.errors.map((error: any) => String(error?.message || '')).filter(Boolean).join(' | ')
+        : ''
+      if (errorMessage) {
+        throw new Error(errorMessage)
+      }
+
+      await loadSocial(true)
+    } catch (error: any) {
+      const message = error?.data?.errors?.[0]?.message || error?.message || 'Failed to update AniList follow.'
+      loadError.value = message
+      throw new Error(message)
+    } finally {
+      followPendingIds.value = followPendingIds.value.filter(id => id !== userId)
+    }
+  }
+
   return {
     isLoading,
     loadError,
     followingUsers,
     followerUsers,
     friendUsers,
+    followPendingIds,
+    isFollowPending,
+    toggleFollowUser,
     loadSocial,
     reset
   }

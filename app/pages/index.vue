@@ -109,12 +109,17 @@
               </div>
               <div v-else-if="filteredDashboardLists.length" class="lists-container">
                 <NuxtLink v-for="list in filteredDashboardLists" :key="list.id" class="list-item" :to="`/sharedLists/${list.id}`">
-                  <svg class="hamburger-icon" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/>
-                  </svg>
+                  <div class="list-item-banner" aria-hidden="true">
+                    <img :src="dashboardListBannerSrc(list)" alt="" loading="lazy" decoding="async">
+                    <div class="list-item-banner-overlay"></div>
+                  </div>
+                  <div class="list-item-thumb">
+                    <img :src="dashboardListImageSrc(list)" :alt="`${list.title} image`" loading="lazy" decoding="async">
+                  </div>
                   <div class="list-item-copy">
                     <span class="list-item-name">{{ list.title }}</span>
-                    <span class="list-item-meta">{{ list.memberCount }} members · {{ list.animeCount }} anime</span>
+                    <span class="list-item-meta">{{ list.memberCount }} members &middot; {{ list.animeCount }} anime</span>
+                    <span class="list-item-owner">Owned by {{ list.ownerName }}</span>
                   </div>
                 </NuxtLink>
               </div>
@@ -325,6 +330,12 @@ const filteredDashboardLists = computed(() => {
   if (!needle) return source.slice(0, 8)
   return source.filter((list) => `${list.title} ${list.ownerName}`.toLowerCase().includes(needle)).slice(0, 8)
 })
+
+const DEFAULT_SHARED_LIST_BANNER = '/img/banner.webp'
+const DEFAULT_SHARED_LIST_IMAGE = '/img/user.webp'
+
+const dashboardListBannerSrc = (list: SharedListSummary) => String(list.bannerUrl || '').trim() || DEFAULT_SHARED_LIST_BANNER
+const dashboardListImageSrc = (list: SharedListSummary) => String(list.imageUrl || '').trim() || DEFAULT_SHARED_LIST_IMAGE
 
 const cardEls: Record<number, HTMLElement> = {}
 const featureVisible = reactive<Record<number, boolean>>({
@@ -649,23 +660,38 @@ watch(isAniListLinked, async (linked) => {
 }
 
 .list-item-copy {
+  position: relative;
+  z-index: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .list-item-name {
-  font-size: 14px;
-  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #f7fbff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .list-item-meta {
+  font-size: 12px;
+  color: rgba(244, 249, 254, 0.82);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.list-item-owner {
   font-size: 11px;
-  color: var(--text-dim);
+  color: rgba(244, 249, 254, 0.66);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .friend-card {

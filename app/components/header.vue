@@ -86,13 +86,20 @@
             </button>
 
             <!-- Notification bell -->
-            <button class="icon-btn notification-btn">
+            <NuxtLink
+              class="icon-btn notification-btn"
+              :class="{ active: route.path === '/notifications' }"
+              to="/notifications"
+              aria-label="Open notifications"
+            >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                 <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
               </svg>
-              <span class="notification-badge"></span>
-            </button>
+              <span v-if="unreadCount > 0" class="notification-badge">
+                {{ unreadBadgeLabel }}
+              </span>
+            </NuxtLink>
 
             <!-- Avatar -->
             <div class="dropdown dropdown-bottom dropdown-end">
@@ -285,19 +292,23 @@
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, unref, watch } from 'vue'
 import { useThemeStore } from '~/composables/useThemeStore'
 import { useDrawersStore } from '~/composables/useDrawersStore'
 import { useMyAuthStore } from '~/composables/useMyAuthStore'
 import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
+import { useAnilistNotificationsStore } from '~/composables/useAnilistNotificationsStore'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 
 const themeStore = useThemeStore()
 const drawerStore = useDrawersStore()
 const authStore = useMyAuthStore()
 const anilistGraphql = useAnilistGraphql()
+const notificationStore = useAnilistNotificationsStore()
 const pocketbaseStore = usePocketbaseStore()
 const route = useRoute()
+const { unreadCount } = storeToRefs(notificationStore)
 const authRecord = computed(() => unref(pocketbaseStore.authRecord) as any)
 const isLoggedIn = computed(() => Boolean(authRecord.value?.id))
 const isAniListLinked = computed(() => Boolean(authRecord.value?.anilist_user_id && authRecord.value?.anilist_token))
@@ -343,6 +354,7 @@ const navItems = [
 const activeSearchResults = computed(() =>
   searchModalTab.value === 'anime' ? animeSearchResults.value : userSearchResults.value
 )
+const unreadBadgeLabel = computed(() => unreadCount.value > 99 ? '99+' : String(unreadCount.value))
 
 // Use AniList avatar if available
 const avatarUrl = computed(() => {
@@ -561,7 +573,13 @@ watch(() => route.fullPath, () => {
   }
 })
 watch(showFullNav, (value) => {
+  if (value) {
+    notificationStore.loadUnreadCount(true)
+    return
+  }
+
   if (!value) {
+    notificationStore.reset()
     closeMobileMenu()
     closeSearchModal()
   }
@@ -570,6 +588,9 @@ watch(showFullNav, (value) => {
 onMounted(() => {
   document.addEventListener('click', handleOutsideClick)
   document.addEventListener('keydown', handleEscapeKey)
+  if (showFullNav.value) {
+    notificationStore.loadUnreadCount()
+  }
 })
 
 onBeforeUnmount(() => {
@@ -762,6 +783,10 @@ onBeforeUnmount(() => {
   transition: color 0.2s, transform 0.2s;
 }
 
+.icon-btn.active {
+  color: var(--cyan);
+}
+
 .icon-btn:hover {
   color: var(--text-primary);
   transform: translateY(-1px);
@@ -779,13 +804,21 @@ onBeforeUnmount(() => {
 
 .notification-badge {
   position: absolute;
-  top: 7px;
-  right: 7px;
-  width: 9px;
-  height: 9px;
+  top: 2px;
+  right: 0;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: #ef4444;
-  border-radius: 50%;
+  border-radius: 999px;
   border: 2px solid var(--navy);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 /* Avatar Button */
@@ -1327,4 +1360,3 @@ onBeforeUnmount(() => {
   }
 }
 </style>
-

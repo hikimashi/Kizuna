@@ -11,7 +11,6 @@ export default defineEventHandler(async (event) => {
     expiresAt: number
     payload: any
     statusCode: number
-    tokenHash: string
   }
 
   type RateLimitEntry = {
@@ -24,10 +23,8 @@ export default defineEventHandler(async (event) => {
     connect: () => Promise<void>
     get: (key: string) => Promise<string | null>
     set: (key: string, value: string, mode: 'EX', ttlSeconds: number) => Promise<unknown>
-    sadd: (key: string, ...members: string[]) => Promise<number>
-    smembers: (key: string) => Promise<string[]>
-    del: (...keys: string[]) => Promise<number>
-    expire: (key: string, seconds: number) => Promise<number>
+    on?: (event: string, listener: (...args: any[]) => void) => unknown
+    disconnect?: () => void
   }
 
   const body = await readBody<GraphqlBody>(event)
@@ -47,50 +44,24 @@ export default defineEventHandler(async (event) => {
 
   const globalState = globalThis as typeof globalThis & {
     __anilistCache?: Map<string, CacheEntry>
-    __anilistCacheByTokenHash?: Map<string, Set<string>>
     __anilistInFlight?: Map<string, Promise<{ statusCode: number; payload: any }>>
     __anilistRateLimit?: Map<string, RateLimitEntry>
     __anilistValkeyClientPromise?: Promise<ValkeyClientLike | null>
     __anilistValkeyDisabled?: boolean
+    __anilistValkeyErrorLogged?: boolean
   }
 
   const cache = globalState.__anilistCache ?? new Map<string, CacheEntry>()
-  const cacheByTokenHash = globalState.__anilistCacheByTokenHash ?? new Map<string, Set<string>>()
   const inFlight = globalState.__anilistInFlight ?? new Map<string, Promise<{ statusCode: number; payload: any }>>()
   const rateLimit = globalState.__anilistRateLimit ?? new Map<string, RateLimitEntry>()
   globalState.__anilistCache = cache
-  globalState.__anilistCacheByTokenHash = cacheByTokenHash
   globalState.__anilistInFlight = inFlight
   globalState.__anilistRateLimit = rateLimit
-
-  const removeMemoryCacheKey = (key: string) => {
-    const existing = cache.get(key)
-    if (!existing) return
-
-    cache.delete(key)
-    const tokenKeys = cacheByTokenHash.get(existing.tokenHash)
-    if (!tokenKeys) return
-
-    tokenKeys.delete(key)
-    if (tokenKeys.size === 0) {
-      cacheByTokenHash.delete(existing.tokenHash)
-    }
-  }
-
-  const setMemoryCacheKey = (key: string, entry: CacheEntry) => {
-    removeMemoryCacheKey(key)
-    cache.set(key, entry)
-    if (entry.tokenHash === 'anon') return
-
-    const tokenKeys = cacheByTokenHash.get(entry.tokenHash) ?? new Set<string>()
-    tokenKeys.add(key)
-    cacheByTokenHash.set(entry.tokenHash, tokenKeys)
-  }
 
   const now = Date.now()
   if (cache.size > 2000) {
     for (const [key, entry] of cache) {
-      if (entry.expiresAt <= now) removeMemoryCacheKey(key)
+      if (entry.expiresAt <= now) cache.delete(key)
     }
   }
 
@@ -127,7 +98,6 @@ export default defineEventHandler(async (event) => {
 
   const cacheKey = JSON.stringify({ query, variables, tokenHash })
   const valkeyCacheKey = `kizuna:anilist:gql:${cacheKey}`
-  const valkeyTokenIndexKey = `kizuna:anilist:gql:index:token:${tokenHash}`
 
   const defaultTtlMs = token ? 15_000 : 120_000
   const requestedTtl = Number(body.cacheTtlMs)
@@ -138,6 +108,13 @@ export default defineEventHandler(async (event) => {
 
   const config = useRuntimeConfig(event)
   const valkeyUrl = String((config as any).valkeyUrl ?? '').trim()
+  const disableValkey = (reason: unknown) => {
+    if (!globalState.__anilistValkeyErrorLogged) {
+      console.error('Valkey cache unavailable, fallback to memory cache:', reason)
+      globalState.__anilistValkeyErrorLogged = true
+    }
+    globalState.__anilistValkeyDisabled = true
+  }
 
   const getValkeyClient = async (): Promise<ValkeyClientLike | null> => {
     if (!valkeyUrl || globalState.__anilistValkeyDisabled) return null
@@ -150,42 +127,30 @@ export default defineEventHandler(async (event) => {
           const Valkey = valkeyModule?.default ?? valkeyModule?.Redis
           if (typeof Valkey !== 'function') return null
 
-          const client = new Valkey(valkeyUrl, { lazyConnect: true }) as ValkeyClientLike
+          const client = new Valkey(valkeyUrl, {
+            lazyConnect: true,
+            maxRetriesPerRequest: 0,
+            enableOfflineQueue: false,
+            retryStrategy: () => null
+          }) as ValkeyClientLike
+
+          client.on?.('error', (error: unknown) => {
+            disableValkey(error)
+            client.disconnect?.()
+          })
+
           if (client.status === 'wait') {
             await client.connect()
           }
           return client
         } catch (error) {
-          console.error('Valkey cache unavailable, fallback to memory cache:', error)
-          globalState.__anilistValkeyDisabled = true
+          disableValkey(error)
           return null
         }
       })()
     }
 
     return await globalState.__anilistValkeyClientPromise
-  }
-
-  const invalidateTokenCaches = async () => {
-    if (!token || tokenHash === 'anon') return
-
-    const memoryKeys = Array.from(cacheByTokenHash.get(tokenHash) ?? [])
-    for (const key of memoryKeys) {
-      removeMemoryCacheKey(key)
-    }
-
-    const valkeyClient = await getValkeyClient()
-    if (!valkeyClient) return
-
-    try {
-      const valkeyKeys = await valkeyClient.smembers(valkeyTokenIndexKey)
-      if (valkeyKeys.length > 0) {
-        await valkeyClient.del(...valkeyKeys)
-      }
-      await valkeyClient.del(valkeyTokenIndexKey)
-    } catch (error) {
-      console.error('Valkey invalidation failed:', error)
-    }
   }
 
   if (!skipCache && ttlMs > 0) {
@@ -202,7 +167,7 @@ export default defineEventHandler(async (event) => {
           }
         }
       } catch (error) {
-        console.error('Valkey read failed, fallback to memory cache:', error)
+        disableValkey(error)
       }
     }
 
@@ -303,11 +268,6 @@ export default defineEventHandler(async (event) => {
   try {
     const result = await requestPromise
 
-    if (isMutation && result.statusCode >= 200 && result.statusCode < 300) {
-      await invalidateTokenCaches()
-      setHeader(event, 'X-Cache-Invalidated', 'TOKEN')
-    }
-
     if (!skipCache && ttlMs > 0 && result.statusCode >= 200 && result.statusCode < 300) {
       const valkeyClient = await getValkeyClient()
       if (valkeyClient) {
@@ -316,27 +276,21 @@ export default defineEventHandler(async (event) => {
             statusCode: result.statusCode,
             payload: result.payload
           }), 'EX', ttlSeconds)
-          if (tokenHash !== 'anon') {
-            await valkeyClient.sadd(valkeyTokenIndexKey, valkeyCacheKey)
-            await valkeyClient.expire(valkeyTokenIndexKey, Math.max(ttlSeconds, 3600))
-          }
           setHeader(event, 'X-Cache', 'MISS-VALKEY')
         } catch (error) {
-          console.error('Valkey write failed, fallback to memory cache:', error)
-          setMemoryCacheKey(cacheKey, {
+          disableValkey(error)
+          cache.set(cacheKey, {
             expiresAt: Date.now() + ttlMs,
             payload: result.payload,
-            statusCode: result.statusCode,
-            tokenHash
+            statusCode: result.statusCode
           })
           setHeader(event, 'X-Cache', 'MISS-MEMORY')
         }
       } else {
-        setMemoryCacheKey(cacheKey, {
+        cache.set(cacheKey, {
           expiresAt: Date.now() + ttlMs,
           payload: result.payload,
-          statusCode: result.statusCode,
-          tokenHash
+          statusCode: result.statusCode
         })
         setHeader(event, 'X-Cache', 'MISS-MEMORY')
       }

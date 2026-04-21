@@ -9,7 +9,7 @@
           </div>
 
           <h1 class="hero-title fade-up">
-            Your anime,<br />
+            Your animeee,<br />
             <em>shared</em> together.
           </h1>
 

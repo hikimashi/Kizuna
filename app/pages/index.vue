@@ -265,8 +265,6 @@
         </div>
       </div>
     </Teleport>
-
-    <ScrollToTop />
   </div>
 </template>
 

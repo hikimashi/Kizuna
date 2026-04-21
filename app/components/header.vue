@@ -78,7 +78,7 @@
         <template v-else>
           <div class="nav-actions">
             <!-- Search icon -->
-            <button class="icon-btn">
+            <button class="icon-btn" type="button" aria-label="Open search" @click="openSearchModal">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="11" cy="11" r="8"/>
                 <path d="M21 21l-4.35-4.35"/>
@@ -191,19 +191,111 @@
         </NuxtLink>
       </nav>
     </transition>
+
+        <Teleport to="body">
+      <div
+        v-if="isSearchModalOpen"
+        class="search-modal-layer"
+        @click.self="closeSearchModal"
+      >
+        <div class="search-modal-shell" role="dialog" aria-modal="true" aria-labelledby="search-modal-title">
+          <div class="search-modal-head">
+            <div class="search-modal-title-block">
+              <p class="search-modal-kicker">Search</p>
+              <h2 id="search-modal-title">Anime and users</h2>
+            </div>
+            <button class="search-modal-close" type="button" aria-label="Close search" @click="closeSearchModal">
+              X
+            </button>
+          </div>
+
+          <label class="search-modal-input-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="18" height="18" aria-hidden="true">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            <input
+              ref="searchInputRef"
+              v-model.trim="searchModalQuery"
+              type="text"
+              placeholder="Search anime or AniList user"
+              @input="handleGlobalSearch"
+            >
+          </label>
+
+          <div class="search-modal-tabs">
+            <button
+              class="search-modal-tab"
+              :class="{ active: searchModalTab === 'anime' }"
+              type="button"
+              @click="searchModalTab = 'anime'"
+            >
+              Anime
+            </button>
+            <button
+              class="search-modal-tab"
+              :class="{ active: searchModalTab === 'users' }"
+              type="button"
+              @click="searchModalTab = 'users'"
+            >
+              Users
+            </button>
+          </div>
+
+          <div v-if="isSearchLoading" class="search-modal-state">
+            Searching AniList...
+          </div>
+          <div v-else-if="searchModalError" class="search-modal-state search-modal-error">
+            {{ searchModalError }}
+          </div>
+          <div v-else-if="searchModalQuery.length < 2" class="search-modal-state">
+            Type at least 2 characters to search AniList.
+          </div>
+          <div v-else-if="activeSearchResults.length === 0" class="search-modal-state">
+            No results found.
+          </div>
+          <div v-else class="search-modal-results">
+            <button
+              v-for="item in activeSearchResults"
+              :key="item.key"
+              class="search-modal-result"
+              type="button"
+              @click="openSearchResult(item)"
+            >
+              <div class="search-modal-result-cover" :class="{ 'is-user': item.type === 'user' }">
+                <img v-if="item.image" :src="item.image" :alt="item.title">
+                <div v-else class="search-modal-result-fallback">
+                  {{ item.fallback }}
+                </div>
+              </div>
+              <div class="search-modal-result-copy">
+                <div class="search-modal-result-title">{{ item.title }}</div>
+                <div class="search-modal-result-subtitle">{{ item.subtitle }}</div>
+                <div v-if="item.meta" class="search-modal-result-meta">{{ item.meta }}</div>
+              </div>
+              <div class="search-modal-result-tag" :class="item.type === 'anime' ? 'is-anime' : 'is-user'">
+                {{ item.type === 'anime' ? 'Anime' : 'User' }}
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </header>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, unref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, unref, watch } from 'vue'
 import { useThemeStore } from '~/composables/useThemeStore'
 import { useDrawersStore } from '~/composables/useDrawersStore'
 import { useMyAuthStore } from '~/composables/useMyAuthStore'
+import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 
 const themeStore = useThemeStore()
 const drawerStore = useDrawersStore()
 const authStore = useMyAuthStore()
+const anilistGraphql = useAnilistGraphql()
 const pocketbaseStore = usePocketbaseStore()
 const route = useRoute()
 const authRecord = computed(() => unref(pocketbaseStore.authRecord) as any)
@@ -212,7 +304,34 @@ const isAniListLinked = computed(() => Boolean(authRecord.value?.anilist_user_id
 const showPendingLinkState = computed(() => isLoggedIn.value && !isAniListLinked.value)
 const showFullNav = computed(() => isLoggedIn.value && isAniListLinked.value)
 const headerRef = ref<HTMLElement | null>(null)
+const searchInputRef = ref<HTMLInputElement | null>(null)
 const isMobileMenuOpen = ref(false)
+const isSearchModalOpen = ref(false)
+const searchModalQuery = ref('')
+const searchModalError = ref('')
+const isSearchLoading = ref(false)
+const searchModalTab = ref<'anime' | 'users'>('anime')
+const animeSearchResults = ref<Array<{
+  key: string
+  type: 'anime'
+  id: number
+  title: string
+  subtitle: string
+  meta: string
+  image?: string
+  fallback: string
+}>>([])
+const userSearchResults = ref<Array<{
+  key: string
+  type: 'user'
+  id: number
+  title: string
+  subtitle: string
+  meta: string
+  image?: string
+  fallback: string
+}>>([])
+let searchModalTimer: ReturnType<typeof setTimeout> | null = null
 const navItems = [
   { label: 'Home', to: '/' },
   { label: 'Profile', to: '/profilePage' },
@@ -221,6 +340,10 @@ const navItems = [
   { label: 'Browse', to: '/browse' }
 ] as const
 
+const activeSearchResults = computed(() =>
+  searchModalTab.value === 'anime' ? animeSearchResults.value : userSearchResults.value
+)
+
 // Use AniList avatar if available
 const avatarUrl = computed(() => {
   return authRecord.value?.anilist_avatar_url_large || authRecord.value?.anilist_avatar_url_medium || '/img/user.webp'
@@ -228,6 +351,26 @@ const avatarUrl = computed(() => {
 
 const openLoginDrawer = () => {
   drawerStore.openDrawer('drawerLogin')
+}
+
+const openSearchModal = async () => {
+  isSearchModalOpen.value = true
+  closeMobileMenu()
+  await nextTick()
+  searchInputRef.value?.focus()
+}
+
+const closeSearchModal = () => {
+  isSearchModalOpen.value = false
+  searchModalQuery.value = ''
+  searchModalError.value = ''
+  isSearchLoading.value = false
+  animeSearchResults.value = []
+  userSearchResults.value = []
+  if (searchModalTimer) {
+    clearTimeout(searchModalTimer)
+    searchModalTimer = null
+  }
 }
 
 const closeMobileMenu = () => {
@@ -266,15 +409,161 @@ const handleOutsideClick = (event: MouseEvent) => {
 }
 
 const handleEscapeKey = (event: KeyboardEvent) => {
+  if (event.key === 'Enter' && isSearchModalOpen.value && !isSearchLoading.value && activeSearchResults.value.length) {
+    const firstResult = activeSearchResults.value[0]
+    const target = event.target as HTMLElement | null
+    const tagName = target?.tagName ?? ''
+
+    if (firstResult && tagName !== 'BUTTON') {
+      event.preventDefault()
+      openSearchResult(firstResult)
+    }
+    return
+  }
+
   if (event.key === 'Escape') {
+    if (isSearchModalOpen.value) {
+      closeSearchModal()
+      return
+    }
     closeMobileMenu()
   }
 }
 
+const makeFallback = (value: string, type: 'anime' | 'user') => {
+  const clean = value.trim()
+  if (!clean) return type === 'anime' ? 'AN' : 'US'
+  return clean.slice(0, 2).toUpperCase()
+}
+
+const globalSearchQuery = `
+query ($search: String) {
+  anime: Page(page: 1, perPage: 6) {
+    media(search: $search, type: ANIME, isAdult: false, sort: SEARCH_MATCH) {
+      id
+      episodes
+      format
+      status
+      seasonYear
+      averageScore
+      genres
+      title {
+        romaji
+        english
+        native
+      }
+      coverImage {
+        medium
+        large
+      }
+    }
+  }
+  users: Page(page: 1, perPage: 6) {
+    users(search: $search) {
+      id
+      name
+      avatar {
+        medium
+        large
+      }
+      statistics {
+        anime {
+          count
+          meanScore
+        }
+      }
+    }
+  }
+}
+`
+
+const handleGlobalSearch = () => {
+  if (searchModalTimer) clearTimeout(searchModalTimer)
+
+  if (searchModalQuery.value.trim().length < 2) {
+    animeSearchResults.value = []
+    userSearchResults.value = []
+    searchModalError.value = ''
+    isSearchLoading.value = false
+    return
+  }
+
+  searchModalTimer = setTimeout(async () => {
+    isSearchLoading.value = true
+    searchModalError.value = ''
+
+    try {
+      const response = await anilistGraphql.request<any>(
+        globalSearchQuery,
+        { search: searchModalQuery.value.trim() },
+        { cacheTtlMs: 30_000 }
+      )
+
+      if (Array.isArray(response?.errors) && response.errors.length) {
+        throw new Error(response.errors.map((error: any) => String(error?.message || '')).filter(Boolean).join(' | '))
+      }
+
+      const animeItems = Array.isArray(response?.data?.anime?.media) ? response.data.anime.media : []
+      const userItems = Array.isArray(response?.data?.users?.users) ? response.data.users.users : []
+
+      animeSearchResults.value = animeItems.map((item: any) => {
+        const title = String(item?.title?.romaji || item?.title?.english || item?.title?.native || 'Unknown anime')
+        return {
+          key: `anime:${item?.id}`,
+          type: 'anime' as const,
+          id: Number(item?.id || 0),
+          title,
+          subtitle: [item?.format, item?.seasonYear].filter(Boolean).join(' - ') || 'Anime result',
+          meta: [item?.status, item?.episodes ? `${item.episodes} eps` : ''].filter(Boolean).join(' - '),
+          image: String(item?.coverImage?.large || item?.coverImage?.medium || '') || undefined,
+          fallback: makeFallback(title, 'anime')
+        }
+      }).filter((item: { id: number }) => item.id > 0)
+
+      userSearchResults.value = userItems.map((item: any) => {
+        const title = String(item?.name || 'Unknown user')
+        const animeCount = Number(item?.statistics?.anime?.count || 0)
+        const meanScore = Number(item?.statistics?.anime?.meanScore || 0)
+        return {
+          key: `user:${item?.id}`,
+          type: 'user' as const,
+          id: Number(item?.id || 0),
+          title,
+          subtitle: `AniList #${Number(item?.id || 0) || '-'}`,
+          meta: `${animeCount} anime${meanScore ? ` - score ${meanScore}` : ''}`,
+          image: String(item?.avatar?.large || item?.avatar?.medium || '') || undefined,
+          fallback: makeFallback(title, 'user')
+        }
+      }).filter((item: { id: number }) => item.id > 0)
+    } catch (error: any) {
+      animeSearchResults.value = []
+      userSearchResults.value = []
+      searchModalError.value = error?.message || 'Unable to search AniList right now.'
+    } finally {
+      isSearchLoading.value = false
+    }
+  }, 220)
+}
+
+const openSearchResult = (item: { type: 'anime' | 'user'; id: number }) => {
+  closeSearchModal()
+  if (item.type === 'anime') {
+    navigateTo(`/anime/${item.id}`)
+    return
+  }
+  navigateTo(`/social/user/${item.id}`)
+}
+
 watch(() => route.fullPath, closeMobileMenu)
+watch(() => route.fullPath, () => {
+  if (isSearchModalOpen.value) {
+    closeSearchModal()
+  }
+})
 watch(showFullNav, (value) => {
   if (!value) {
     closeMobileMenu()
+    closeSearchModal()
   }
 })
 
@@ -286,6 +575,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleOutsideClick)
   document.removeEventListener('keydown', handleEscapeKey)
+  if (searchModalTimer) clearTimeout(searchModalTimer)
 })
 </script>
 
@@ -628,6 +918,254 @@ onBeforeUnmount(() => {
   transform: translateY(-8px);
 }
 
+.search-modal-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 72px 20px 20px;
+  background: color-mix(in srgb, var(--kz-page-navy) 22%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.search-modal-shell {
+  width: min(100%, 720px);
+  max-height: min(82vh, 720px);
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--kz-card-bg);
+  box-shadow: 0 24px 70px color-mix(in srgb, var(--kz-page-navy) 18%, transparent);
+  padding: 22px;
+}
+
+.search-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.search-modal-title-block h2 {
+  margin: 0;
+  font-size: 26px;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.search-modal-kicker {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--cyan);
+}
+
+.search-modal-close {
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--kz-soft-bg);
+  color: var(--text-primary);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.search-modal-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  margin-top: 18px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--kz-card-input);
+  color: var(--text-secondary);
+}
+
+.search-modal-input-wrap input {
+  flex: 1;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-family: var(--font-main);
+}
+
+.search-modal-input-wrap input::placeholder {
+  color: var(--text-secondary);
+}
+
+.search-modal-tabs {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.search-modal-tab {
+  min-height: 38px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--kz-soft-bg);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.search-modal-tab.active {
+  border-color: rgba(61, 180, 242, 0.4);
+  background: rgba(61, 180, 242, 0.12);
+  color: var(--text-primary);
+}
+
+.search-modal-state {
+  padding: 22px 4px 4px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.search-modal-error {
+  color: #f87171;
+}
+
+.search-modal-results {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.search-modal-result {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--kz-soft-bg);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.search-modal-result:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--kz-accent) 26%, var(--border));
+  background: var(--kz-soft-bg-hover);
+}
+
+.search-modal-result-cover {
+  width: 54px;
+  height: 72px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--kz-hover-fill);
+}
+
+.search-modal-result-cover.is-user {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+}
+
+.search-modal-result-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.search-modal-result-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.search-modal-result-copy {
+  min-width: 0;
+}
+
+.search-modal-result-title {
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-modal-result-subtitle,
+.search-modal-result-meta {
+  margin-top: 4px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.search-modal-result-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.search-modal-result-tag.is-anime {
+  background: rgba(61, 180, 242, 0.14);
+  color: var(--cyan);
+}
+
+.search-modal-result-tag.is-user {
+  background: rgba(34, 197, 94, 0.14);
+  color: #22c55e;
+}
+
+.search-modal-hint-row {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.search-modal-hints {
+  display: flex;
+  gap: 16px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.search-modal-hints kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  margin-right: 6px;
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--kz-soft-bg);
+  color: var(--text-primary);
+  font-size: 11px;
+  font-weight: 700;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .nav-links {
@@ -659,6 +1197,10 @@ onBeforeUnmount(() => {
 
   .mobile-nav-panel {
     display: flex;
+  }
+
+  .search-modal-layer {
+    padding-top: 62px;
   }
 }
 
@@ -696,6 +1238,23 @@ onBeforeUnmount(() => {
   .mobile-nav-panel {
     left: 8px;
     right: 8px;
+  }
+
+  .search-modal-shell {
+    padding: 18px;
+  }
+
+  .search-modal-title-block h2 {
+    font-size: 22px;
+  }
+
+  .search-modal-result {
+    grid-template-columns: auto 1fr;
+  }
+
+  .search-modal-result-tag {
+    grid-column: 2;
+    justify-self: start;
   }
 }
 
@@ -768,3 +1327,4 @@ onBeforeUnmount(() => {
   }
 }
 </style>
+

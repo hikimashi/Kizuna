@@ -9,7 +9,7 @@
           </div>
 
           <h1 class="hero-title fade-up">
-            Your animeee,<br />
+            Your anime,<br />
             <em>shared</em> together.
           </h1>
 
@@ -724,7 +724,7 @@ watch(isAniListLinked, async (linked) => {
   position: fixed;
   inset: 0;
   z-index: 90;
-  background: rgba(8, 14, 24, 0.42);
+  background: color-mix(in srgb, var(--kz-page-navy) 28%, transparent);
   backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
@@ -738,8 +738,10 @@ watch(isAniListLinked, async (linked) => {
   overflow: auto;
   border-radius: 18px;
   border: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(11, 22, 34, 0.98), rgba(17, 28, 42, 0.98));
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--kz-card-bg) 96%, white 4%), color-mix(in srgb, var(--kz-card-bg) 100%, transparent)),
+    color-mix(in srgb, var(--kz-card-bg) 92%, transparent);
+  box-shadow: 0 24px 80px color-mix(in srgb, var(--kz-page-navy) 24%, transparent);
   padding: 24px;
 }
 
@@ -770,7 +772,7 @@ watch(isAniListLinked, async (linked) => {
   height: 38px;
   border-radius: 999px;
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--kz-soft-bg);
   color: var(--text-primary);
   cursor: pointer;
   font-size: 24px;
@@ -784,7 +786,7 @@ watch(isAniListLinked, async (linked) => {
   min-height: 52px;
   border: 1px solid var(--border);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--kz-card-input);
   padding: 0 14px;
 }
 
@@ -821,7 +823,7 @@ watch(isAniListLinked, async (linked) => {
   gap: 16px;
   border: 1px solid var(--border);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--kz-soft-bg);
   padding: 14px;
   cursor: pointer;
   transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
@@ -829,8 +831,8 @@ watch(isAniListLinked, async (linked) => {
 
 .follow-result-card:hover {
   transform: translateY(-1px);
-  border-color: rgba(61, 180, 242, 0.28);
-  background: rgba(255, 255, 255, 0.05);
+  border-color: color-mix(in srgb, var(--kz-accent) 28%, var(--border));
+  background: var(--kz-soft-bg-hover);
 }
 
 .follow-result-card:focus-visible {
@@ -900,7 +902,7 @@ watch(isAniListLinked, async (linked) => {
   min-height: 22px;
   padding: 0 8px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--kz-hover-fill);
   color: var(--text-secondary);
   font-size: 11px;
   font-weight: 700;
@@ -934,7 +936,7 @@ watch(isAniListLinked, async (linked) => {
 }
 
 .follow-action-secondary {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--kz-soft-bg);
   color: var(--text-primary);
 }
 

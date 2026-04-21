@@ -1,6 +1,7 @@
 <template>
-  <div
+  <button
     v-if="showButton"
+    type="button"
     @click="scrollToTop"
     class="scroll-to-top-btn"
     aria-label="Scroll to top"
@@ -15,7 +16,7 @@
     >
       <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
     </svg>
-  </div>
+  </button>
 </template>
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
@@ -27,9 +28,11 @@ const handleScroll = () => {
 };
 
 const scrollToTop = () => {
+  const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+
   window.scrollTo({
     top: 0,
-    behavior: 'smooth',
+    behavior,
   });
 };
 
@@ -51,8 +54,8 @@ onUnmounted(() => {
   z-index: 50;
   width: 36px;
   height: 36px;
-  background: rgba(61, 180, 242, 0.10);
-  border: 1px solid rgba(61, 180, 242, 0.3);
+  background: var(--kz-soft-accent-bg);
+  border: 1px solid var(--kz-hover-border);
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -62,13 +65,18 @@ onUnmounted(() => {
 }
 
 .scroll-to-top-btn:hover {
-  background: rgba(61, 180, 242, 0.25);
+  background: var(--kz-soft-accent-bg-hover);
   transform: translateY(-2px);
+}
+
+.scroll-to-top-btn:focus-visible {
+  outline: 2px solid var(--kz-accent);
+  outline-offset: 3px;
 }
 
 .scroll-to-top-icon {
   width: 16px;
   height: 16px;
-  color: rgba(232, 240, 255, 0.6);
+  color: var(--kz-text-primary);
 }
 </style>

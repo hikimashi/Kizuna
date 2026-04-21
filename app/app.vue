@@ -9,6 +9,7 @@
       <Toast />
       <Alert />
     </main>
+    <ScrollToTop />
     <Footer class="mt-auto" />
 
   </div>
@@ -21,5 +22,6 @@ import Footer from './components/footer.vue';
 import DrawersContainer from './components/drawers/drawersContainer.vue';
 import Toast from './components/toast/toast.vue';
 import Alert from './components/alerts/alert.vue';
+import ScrollToTop from './components/scrollToTop.vue';
 
 </script>

@@ -5,6 +5,7 @@ import { useUserStore } from './useUserStore';
 export const useMyAuthStore = defineStore('auth', () => {
   const pocketbaseStore = usePocketbaseStore();
   const userStore = useUserStore();
+  const unverifiedEmailMessage = 'Please verify your email address before logging in.';
 
   // Convertit les donnees PocketBase vers le format UserType utilise par l'app.
   const mapAuthDataToUser = (authData: { token: string; record: any }): UserType => {
@@ -33,7 +34,7 @@ export const useMyAuthStore = defineStore('auth', () => {
     };
   };
 
-  // Cree un compte local puis connecte automatiquement l'utilisateur.
+  // Cree un compte local puis envoie l'email de verification.
   const createAccount = async (newUser: NewUserType) => {
     const data = {
       email: newUser.email,
@@ -50,9 +51,11 @@ export const useMyAuthStore = defineStore('auth', () => {
 
     try {
       await pocketbaseStore.pb.collection('user').create(data);
-      const authData = await login(newUser.email, newUser.password);
-      userStore.saveUserData(mapAuthDataToUser(authData));
-      return authData;
+      await pocketbaseStore.pb.collection('user').requestVerification(newUser.email);
+      return {
+        email: newUser.email,
+        verificationSent: true
+      };
     } catch (error: any) {
       const errorMsg = error.response?.data?.message || error.message || 'Account creation failed. Please try again.';
       throw new Error(errorMsg);
@@ -63,6 +66,14 @@ export const useMyAuthStore = defineStore('auth', () => {
   const login = async (email: string, password: string) => {
     try {
       const authData = await pocketbaseStore.pb.collection('user').authWithPassword(email, password);
+
+      if (!authData.record?.verified) {
+        pocketbaseStore.pb.authStore.clear();
+        localStorage.removeItem('pocketbase_auth');
+        userStore.clearUser();
+        throw new Error(unverifiedEmailMessage);
+      }
+
       userStore.saveUserData(mapAuthDataToUser(authData));
       return authData;
     } catch (error: any) {

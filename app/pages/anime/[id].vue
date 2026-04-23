@@ -436,11 +436,15 @@ const producers = computed(() =>
   studios.value
     .filter((item) => !item?.isAnimationStudio)
     .map((item) => item?.name)
-    .filter(Boolean)
+    .filter((name): name is string => Boolean(name))
     .slice(0, 5)
 )
 const genres = computed(() => ((media.value?.genres || []).filter(Boolean) as string[]).slice(0, 6))
-const tags = computed(() => (media.value?.tags || []).filter((tag) => !tag?.isMediaSpoiler).slice(0, 10))
+const tags = computed(() =>
+  (media.value?.tags || [])
+    .filter((tag): tag is MediaTag & { name: string } => Boolean(tag?.name) && !tag.isMediaSpoiler)
+    .slice(0, 10)
+)
 const relations = computed(() => (media.value?.relations?.edges || []).filter((edge) => edge?.node).slice(0, 4))
 const allCharacters = computed(() => (media.value?.characters?.edges || []).filter((edge) => edge?.node))
 const overviewCharacters = computed(() => allCharacters.value.slice(0, 8))
@@ -837,7 +841,9 @@ function providerNameFromUrl(url?: string | null) {
     if (hostname.includes('youtube')) return 'YouTube'
     if (hostname.includes('hulu')) return 'Hulu'
     if (hostname.includes('primevideo') || hostname.includes('amazon')) return 'Prime Video'
-    return hostname.split('.')[0].charAt(0).toUpperCase() + hostname.split('.')[0].slice(1)
+    const primaryLabel = hostname.split('.')[0] || ''
+    if (!primaryLabel) return 'Watch'
+    return primaryLabel.charAt(0).toUpperCase() + primaryLabel.slice(1)
   } catch {
     return 'Watch'
   }

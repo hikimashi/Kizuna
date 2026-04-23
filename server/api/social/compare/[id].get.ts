@@ -111,6 +111,12 @@ const requestAnilist = async (query: string, variables: Record<string, any>) => 
       })
     }
   }
+
+  throw createError({
+    statusCode: 424,
+    statusMessage: 'AniList request failed after retries',
+    data: { variables }
+  })
 }
 
 const fetchUserMediaIds = async (opts: { userId?: number; userName?: string }) => {

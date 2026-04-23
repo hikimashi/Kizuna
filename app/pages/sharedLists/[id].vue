@@ -1156,7 +1156,10 @@ const formatMediaFormat = (value?: string | null) => {
   if (!label) return 'Anime'
   return label
     .split('_')
-    .map(part => part ? `${part[0].toUpperCase()}${part.slice(1)}` : '')
+    .map(part => {
+      const normalizedPart = part || ''
+      return normalizedPart ? `${normalizedPart[0]?.toUpperCase() || ''}${normalizedPart.slice(1)}` : ''
+    })
     .join(' ')
 }
 

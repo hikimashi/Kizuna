@@ -52,3 +52,6 @@ docker-compose.override.yaml
 
 # Docs
 docs/pocketbase-setup.md
+
+# TXT
+DEPENDANCES_INSTALLEES.txt

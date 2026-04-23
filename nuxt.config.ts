@@ -1,5 +1,3 @@
-import tailwindcss from '@tailwindcss/vite';
-
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
@@ -8,8 +6,18 @@ export default defineNuxtConfig({
     server: false,
   },
   css: ['~/assets/css/main.css'],
+  postcss: {
+    plugins: {
+      '@tailwindcss/postcss': {},
+    },
+  },
   vite: {
-    plugins: tailwindcss() as any,
+    build: {
+      // Avoid Vite's modulepreload polyfill virtual module, which emits no source map.
+      modulePreload: {
+        polyfill: false,
+      },
+    },
   },
   modules: ['@pinia/nuxt'],
   runtimeConfig: {

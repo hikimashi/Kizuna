@@ -42,7 +42,7 @@
           <a
             :href="favoriteHref(item)"
             class="favorite-link"
-            :class="{ disabled: activeTab !== 'anime' && !item.siteUrl }"
+            :class="{ disabled: activeTab !== 'anime' && !item.siteUrl, 'is-loading': activeTab === 'anime' && navigatingAnimeId === item.id }"
             :target="activeTab === 'anime' ? undefined : '_blank'"
             :rel="activeTab === 'anime' ? undefined : 'noopener noreferrer'"
             @click="handleFavoriteLinkClick($event, item)"
@@ -61,6 +61,10 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22">
                   <rect x="4" y="4" width="16" height="16" rx="2" />
                 </svg>
+              </div>
+              <div v-if="activeTab === 'anime' && navigatingAnimeId === item.id" class="favorite-loader">
+                <div class="spinner"></div>
+                <span>Opening...</span>
               </div>
             </div>
             <div class="favorite-meta">
@@ -184,6 +188,7 @@ const activeTab = ref<FavoriteTab>('anime')
 const initialLoading = ref(false)
 const loadingMore = ref(false)
 const errorMessage = ref('')
+const navigatingAnimeId = ref<number | null>(null)
 const animeItems = ref<FavoriteCard[]>([])
 const characterItems = ref<FavoriteCard[]>([])
 const animePage = ref(1)
@@ -334,10 +339,42 @@ const bindObserver = () => {
 }
 
 const handleFavoriteLinkClick = (event: MouseEvent, item: FavoriteCard) => {
-  if (activeTab.value === 'anime') return
+  if (activeTab.value === 'anime') {
+    if (!item.id) {
+      event.preventDefault()
+      return
+    }
+    if (!shouldHandleClientNavigation(event)) return
+    event.preventDefault()
+    void openAnimeFavorite(item.id)
+    return
+  }
   if (!item.siteUrl) {
     event.preventDefault()
   }
+}
+
+const openAnimeFavorite = async (animeId: number) => {
+  if (navigatingAnimeId.value === animeId) return
+  navigatingAnimeId.value = animeId
+  try {
+    await nextTick()
+    await waitForPaint()
+    await navigateTo(animeRoute(animeId))
+  } catch (error) {
+    navigatingAnimeId.value = null
+    throw error
+  }
+}
+
+const shouldHandleClientNavigation = (event: MouseEvent) =>
+  event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey
+
+const waitForPaint = () => {
+  if (!import.meta.client) return Promise.resolve()
+  return new Promise<void>((resolve) => {
+    requestAnimationFrame(() => resolve())
+  })
 }
 
 watch(activeTab, async () => {

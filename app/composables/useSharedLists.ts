@@ -857,7 +857,7 @@ export const useSharedLists = () => {
       return await pocketbaseStore.pb.collection('anime').create<AnimeRecord>({
         anilist_media_id: mediaId,
         aniilist_media_name: input.title.trim() || `AniList #${mediaId}`,
-        fetch_link: String(input.fetchLink || '').trim() || `https://anilist.co/anime/${mediaId}`
+        fetch_link: String(input.fetchLink || '').trim() || `/anime/${mediaId}`
       })
     } catch (error: any) {
       if (!isUniqueConstraintError(error)) throw error

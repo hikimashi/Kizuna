@@ -40,12 +40,12 @@
       <div v-else class="favorites-grid">
         <article v-for="item in activeItems" :key="item.id" class="favorite-card">
           <a
-            :href="item.siteUrl || '#'"
+            :href="favoriteHref(item)"
             class="favorite-link"
-            :class="{ disabled: !item.siteUrl }"
-            target="_blank"
-            rel="noopener noreferrer"
-            @click.prevent="openItem(item.siteUrl)"
+            :class="{ disabled: activeTab !== 'anime' && !item.siteUrl }"
+            :target="activeTab === 'anime' ? undefined : '_blank'"
+            :rel="activeTab === 'anime' ? undefined : 'noopener noreferrer'"
+            @click="handleFavoriteLinkClick($event, item)"
           >
             <div class="favorite-cover-wrap">
               <img
@@ -209,6 +209,14 @@ const profileTabs = [
 const activeItems = computed(() => activeTab.value === 'anime' ? animeItems.value : characterItems.value)
 const activeHasNext = computed(() => activeTab.value === 'anime' ? animeHasNext.value : characterHasNext.value)
 
+const animeRoute = (animeId: number) => `/anime/${animeId}`
+
+const favoriteHref = (item: FavoriteCard) => (
+  activeTab.value === 'anime'
+    ? animeRoute(item.id)
+    : (item.siteUrl || '#')
+)
+
 const normalizeAnime = (node: any): FavoriteCard => {
   const title = node?.title?.romaji || node?.title?.english || node?.title?.native || 'Unknown title'
   const format = node?.format ? String(node.format).replaceAll('_', ' ') : 'ANIME'
@@ -325,9 +333,11 @@ const bindObserver = () => {
   observer.observe(sentinelRef.value)
 }
 
-const openItem = (url: string) => {
-  if (!url || !import.meta.client) return
-  window.open(url, '_blank', 'noopener,noreferrer')
+const handleFavoriteLinkClick = (event: MouseEvent, item: FavoriteCard) => {
+  if (activeTab.value === 'anime') return
+  if (!item.siteUrl) {
+    event.preventDefault()
+  }
 }
 
 watch(activeTab, async () => {

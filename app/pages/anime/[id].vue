@@ -546,7 +546,6 @@ const followingTimelineItems = computed(() => {
   return items
 })
 const createThreadUrl = computed(() => `https://anilist.co/forum/thread/editor/new?mediaId=${animeId.value}`)
-const mediaSocialUrl = computed(() => `https://anilist.co/anime/${animeId.value}/social`)
 
 watch(canUsePersonalFeeds, (available) => {
   if (!available) {
@@ -1552,7 +1551,7 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                     <div class="social-side-head threads-head">
                       <div>
                         <h2 class="social-side-title">
-                          <a :href="mediaSocialUrl" target="_blank" rel="noreferrer">Threads</a>
+                          Threads
                         </h2>
                         <p class="social-side-subtitle">Recent discussions from AniList forums.</p>
                       </div>

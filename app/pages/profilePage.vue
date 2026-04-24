@@ -79,13 +79,20 @@
               <div v-if="isLoading" v-for="n in 5" :key="`fav-anime-skeleton-${n}`" class="fav-card">
                 <div class="fav-placeholder skeleton-pulse">-</div>
               </div>
-              <div
+              <a
                 v-else
                 v-for="anime in favoriteAnime"
                 :key="`fav-anime-${anime.id}`"
                 class="fav-card"
+                :class="{ 'is-clickable': Boolean(anime?.id) }"
+                :href="animeHref(anime?.id)"
                 :data-tooltip="getFavoriteAnimeTitle(anime)"
                 :title="getFavoriteAnimeTitle(anime)"
+                :role="anime?.id ? 'link' : undefined"
+                :tabindex="anime?.id ? 0 : undefined"
+                @click="handleAnimeLinkClick($event, anime?.id)"
+                @keydown.enter.prevent="openAnimePage(anime?.id)"
+                @keydown.space.prevent="openAnimePage(anime?.id)"
               >
                 <img
                   :src="favoriteAnimeCoverSrc(anime)"
@@ -94,7 +101,7 @@
                   loading="lazy"
                   decoding="async"
                 />
-              </div>
+              </a>
             </div>
           </div>
 
@@ -170,7 +177,15 @@
             </template>
             <template v-else>
               <article v-for="activity in activityItems" :key="activity.id" class="a-item">
-                <div class="a-thumb">
+                <div
+                  class="a-thumb"
+                  :class="{ 'is-clickable': Boolean(activity.media?.id) }"
+                  :role="activity.media?.id ? 'link' : undefined"
+                  :tabindex="activity.media?.id ? 0 : undefined"
+                  @click="openAnimePage(activity.media?.id)"
+                  @keydown.enter.prevent="openAnimePage(activity.media?.id)"
+                  @keydown.space.prevent="openAnimePage(activity.media?.id)"
+                >
                   <img
                     v-if="activityCoverSrc(activity)"
                     :src="activityCoverSrc(activity)"
@@ -188,14 +203,14 @@
                 <div class="a-body">
                   <div class="a-text">
                     {{ getActivityPrefix(activity) }}
-                    <a
-                      v-if="activity.media?.siteUrl"
-                      :href="activity.media.siteUrl"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      v-if="activity.media?.id"
+                      type="button"
+                      class="a-title-link"
+                      @click="openAnimePage(activity.media.id)"
                     >
                       {{ getActivityTitle(activity) }}
-                    </a>
+                    </button>
                     <span v-else>{{ getActivityTitle(activity) }}</span>
                   </div>
                 </div>
@@ -336,6 +351,22 @@ function getActivityPrefix(activity: any): string {
 
 function getFavoriteAnimeTitle(anime: any): string {
   return anime?.title?.english ?? anime?.title?.romaji ?? 'Unknown Anime'
+}
+
+async function openAnimePage(animeId?: number | null) {
+  if (!animeId) return
+  await navigateTo(`/anime/${animeId}`)
+}
+
+function animeHref(animeId?: number | null): string {
+  return animeId ? `/anime/${animeId}` : '#'
+}
+
+function handleAnimeLinkClick(event: MouseEvent, animeId?: number | null) {
+  if (!animeId) {
+    event.preventDefault()
+    return
+  }
 }
 
 function favoriteAnimeCoverSrc(anime: any): string {
@@ -757,11 +788,20 @@ onBeforeUnmount(() => {
 }
 
 .fav-card {
+  display: block;
   aspect-ratio: 2 / 3;
   border-radius: 5px;
   background: #0d1a27;
   overflow: hidden;
   position: relative;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.fav-card.is-clickable:focus-visible {
+  outline: 2px solid #25A5F2;
+  outline-offset: 2px;
 }
 
 .fav-card img {
@@ -920,6 +960,14 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   background: rgba(31, 38, 49, 0.6);
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.a-thumb.is-clickable:focus-visible {
+  outline: 2px solid #25A5F2;
+  outline-offset: -2px;
 }
 
 .a-thumb img {
@@ -949,14 +997,24 @@ onBeforeUnmount(() => {
   line-height: 1.5;
 }
 
-.a-text a {
+.a-text a,
+.a-title-link {
   color: #25A5F2;
   text-decoration: none;
   font-weight: 500;
 }
 
-.a-text a:hover {
+.a-text a:hover,
+.a-title-link:hover {
   text-decoration: underline;
+}
+
+.a-title-link {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
 }
 
 .a-date {
@@ -1206,7 +1264,8 @@ onBeforeUnmount(() => {
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.42);
 }
 
-[data-theme="winter"] .profile-page .a-text a {
+[data-theme="winter"] .profile-page .a-text a,
+[data-theme="winter"] .profile-page .a-title-link {
   color: #1d8ed8;
 }
 

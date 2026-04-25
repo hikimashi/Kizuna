@@ -1209,7 +1209,7 @@ const searchAnime = async (query: string) => {
         seasonYear: Number(media.seasonYear || 0) || undefined,
         episodes: Number(media.episodes || 0) || undefined,
         formatLabel: formatMediaFormat(media.format),
-        fetchLink: `https://anilist.co/anime/${mediaId}`,
+        fetchLink: `/anime/${mediaId}`,
         alreadyAdded: existingAnimeIds.value.has(mediaId)
       } satisfies AnimeSearchResult
     })

@@ -1138,8 +1138,36 @@ export const useSharedLists = () => {
 
   const deleteSharedList = async (listId: string) => {
     await assertSharedListOwner(listId)
-    return await pocketbaseStore.pb.collection('shared_list').delete(listId)
+
+  const [memberships, animeRelations] = await Promise.all([
+    pocketbaseStore.pb.collection('user_shared_list').getFullList<UserSharedListRecord>({
+      filter: `fk_shared_list_id="${escapeFilterValue(listId)}"`
+    }),
+    pocketbaseStore.pb.collection('anime_shared_list').getFullList<AnimeSharedListRecord>({
+      filter: `fk_shared_list_id="${escapeFilterValue(listId)}"`
+    })
+  ])
+
+  for (const relation of animeRelations) {
+    await pocketbaseStore.pb.collection('anime_shared_list').delete(relation.id)
   }
+
+  for (const membership of memberships) {
+    const permissionId = normalizeRelationValue(membership.fk_permission_id)
+
+    await pocketbaseStore.pb.collection('user_shared_list').delete(membership.id)
+
+    if (permissionId) {
+      try {
+        await pocketbaseStore.pb.collection('permission').delete(permissionId)
+      } catch {
+        // pas grave si la permission est déjà supprimée ou protégée
+      }
+    }
+  }
+
+  return await pocketbaseStore.pb.collection('shared_list').delete(listId)
+ }
 
   const ensureAnimeRecord = async (input: { mediaId: number; title: string; fetchLink?: string }) => {
     const mediaId = Number(input.mediaId || 0)

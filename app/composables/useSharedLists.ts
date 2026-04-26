@@ -1,5 +1,4 @@
 import { computed, unref } from 'vue'
-import type PocketBase from 'pocketbase'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 
 export type SharedListPrivacy = 'private' | 'friends' | 'public'
@@ -236,7 +235,7 @@ const sharedListMediaFieldError = () => new Error(
   'PocketBase shared_list still needs `image` and `banner` file fields.'
 )
 
-const fetchUsersByIds = async (pb: PocketBase, ids: string[]) => {
+const fetchUsersByIds = async (pb: PocketBaseClient, ids: string[]) => {
   const uniqueIds = Array.from(new Set(ids.filter(Boolean)))
   if (!uniqueIds.length) return new Map<string, UserRecord>()
 
@@ -1126,7 +1125,7 @@ export const useSharedLists = () => {
       return await pocketbaseStore.pb.collection('anime').create<AnimeRecord>({
         anilist_media_id: mediaId,
         aniilist_media_name: input.title.trim() || `AniList #${mediaId}`,
-        fetch_link: String(input.fetchLink || '').trim() || `https://anilist.co/anime/${mediaId}`
+        fetch_link: String(input.fetchLink || '').trim() || `/anime/${mediaId}`
       })
     } catch (error: any) {
       if (!isUniqueConstraintError(error)) throw error
@@ -1296,3 +1295,4 @@ export const useSharedLists = () => {
     searchUsers
   }
 }
+type PocketBaseClient = ReturnType<typeof usePocketbaseStore>['pb']

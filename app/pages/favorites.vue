@@ -40,12 +40,12 @@
       <div v-else class="favorites-grid">
         <article v-for="item in activeItems" :key="item.id" class="favorite-card">
           <a
-            :href="item.siteUrl || '#'"
+            :href="favoriteHref(item)"
             class="favorite-link"
-            :class="{ disabled: !item.siteUrl }"
-            target="_blank"
-            rel="noopener noreferrer"
-            @click.prevent="openItem(item.siteUrl)"
+            :class="{ disabled: activeTab !== 'anime' && !item.siteUrl, 'is-loading': activeTab === 'anime' && navigatingAnimeId === item.id }"
+            :target="activeTab === 'anime' ? undefined : '_blank'"
+            :rel="activeTab === 'anime' ? undefined : 'noopener noreferrer'"
+            @click="handleFavoriteLinkClick($event, item)"
           >
             <div class="favorite-cover-wrap">
               <img
@@ -61,6 +61,10 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22">
                   <rect x="4" y="4" width="16" height="16" rx="2" />
                 </svg>
+              </div>
+              <div v-if="activeTab === 'anime' && navigatingAnimeId === item.id" class="favorite-loader">
+                <div class="spinner"></div>
+                <span>Opening...</span>
               </div>
             </div>
             <div class="favorite-meta">
@@ -184,6 +188,7 @@ const activeTab = ref<FavoriteTab>('anime')
 const initialLoading = ref(false)
 const loadingMore = ref(false)
 const errorMessage = ref('')
+const navigatingAnimeId = ref<number | null>(null)
 const animeItems = ref<FavoriteCard[]>([])
 const characterItems = ref<FavoriteCard[]>([])
 const animePage = ref(1)
@@ -208,6 +213,14 @@ const profileTabs = [
 
 const activeItems = computed(() => activeTab.value === 'anime' ? animeItems.value : characterItems.value)
 const activeHasNext = computed(() => activeTab.value === 'anime' ? animeHasNext.value : characterHasNext.value)
+
+const animeRoute = (animeId: number) => `/anime/${animeId}`
+
+const favoriteHref = (item: FavoriteCard) => (
+  activeTab.value === 'anime'
+    ? animeRoute(item.id)
+    : (item.siteUrl || '#')
+)
 
 const normalizeAnime = (node: any): FavoriteCard => {
   const title = node?.title?.romaji || node?.title?.english || node?.title?.native || 'Unknown title'
@@ -325,9 +338,43 @@ const bindObserver = () => {
   observer.observe(sentinelRef.value)
 }
 
-const openItem = (url: string) => {
-  if (!url || !import.meta.client) return
-  window.open(url, '_blank', 'noopener,noreferrer')
+const handleFavoriteLinkClick = (event: MouseEvent, item: FavoriteCard) => {
+  if (activeTab.value === 'anime') {
+    if (!item.id) {
+      event.preventDefault()
+      return
+    }
+    if (!shouldHandleClientNavigation(event)) return
+    event.preventDefault()
+    void openAnimeFavorite(item.id)
+    return
+  }
+  if (!item.siteUrl) {
+    event.preventDefault()
+  }
+}
+
+const openAnimeFavorite = async (animeId: number) => {
+  if (navigatingAnimeId.value === animeId) return
+  navigatingAnimeId.value = animeId
+  try {
+    await nextTick()
+    await waitForPaint()
+    await navigateTo(animeRoute(animeId))
+  } catch (error) {
+    navigatingAnimeId.value = null
+    throw error
+  }
+}
+
+const shouldHandleClientNavigation = (event: MouseEvent) =>
+  event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey
+
+const waitForPaint = () => {
+  if (!import.meta.client) return Promise.resolve()
+  return new Promise<void>((resolve) => {
+    requestAnimationFrame(() => resolve())
+  })
 }
 
 watch(activeTab, async () => {

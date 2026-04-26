@@ -143,11 +143,15 @@ const clearForm = () => {
 const createUser = async () => {
   try {
     await authStore.createAccount(newUser.value);
-    toast.openToast({ type: 'success', message: `Account created successfully! Welcome` });
+    toast.openToast({
+      type: 'success',
+      message: 'Account created. Check your inbox and verify your email before logging in.'
+    });
   } catch (e: any) {
     toast.openToast({ type: 'error', message: e.message || 'Account creation failed!' });
     return;
   }
+  clearForm();
   close();
 };
 

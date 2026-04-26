@@ -27,6 +27,7 @@ query ($userId: Int, $page: Int, $perPage: Int) {
         progress
         createdAt
         media {
+          id
           title { romaji english }
           coverImage { medium large }
           siteUrl

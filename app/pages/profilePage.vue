@@ -79,13 +79,20 @@
               <div v-if="isLoading" v-for="n in 5" :key="`fav-anime-skeleton-${n}`" class="fav-card">
                 <div class="fav-placeholder skeleton-pulse">-</div>
               </div>
-              <div
+              <a
                 v-else
                 v-for="anime in favoriteAnime"
                 :key="`fav-anime-${anime.id}`"
                 class="fav-card"
+                :class="{ 'is-clickable': Boolean(anime?.id), 'is-loading': navigatingFavoriteAnimeId === anime?.id }"
+                :href="animeHref(anime?.id)"
                 :data-tooltip="getFavoriteAnimeTitle(anime)"
                 :title="getFavoriteAnimeTitle(anime)"
+                :role="anime?.id ? 'link' : undefined"
+                :tabindex="anime?.id ? 0 : undefined"
+                @click="handleAnimeLinkClick($event, anime?.id)"
+                @keydown.enter.prevent="openFavoriteAnimePage(anime?.id)"
+                @keydown.space.prevent="openFavoriteAnimePage(anime?.id)"
               >
                 <img
                   :src="favoriteAnimeCoverSrc(anime)"
@@ -94,7 +101,11 @@
                   loading="lazy"
                   decoding="async"
                 />
-              </div>
+                <div v-if="navigatingFavoriteAnimeId === anime?.id" class="fav-card-loader">
+                  <div class="fav-card-loader-spinner" />
+                  <span>Opening...</span>
+                </div>
+              </a>
             </div>
           </div>
 
@@ -169,8 +180,22 @@
               </div>
             </template>
             <template v-else>
-              <article v-for="activity in activityItems" :key="activity.id" class="a-item">
-                <div class="a-thumb">
+              <article
+                v-for="activity in activityItems"
+                :key="activity.id"
+                class="a-item"
+                :class="{ 'is-loading': navigatingActivityAnimeId === activity.media?.id }"
+              >
+                <a
+                  class="a-thumb"
+                  :class="{ 'is-clickable': Boolean(activity.media?.id), 'is-loading': navigatingActivityAnimeId === activity.media?.id }"
+                  :href="animeHref(activity.media?.id)"
+                  :role="activity.media?.id ? 'link' : undefined"
+                  :tabindex="activity.media?.id ? 0 : undefined"
+                  @click="handleActivityAnimeLinkClick($event, activity.media?.id)"
+                  @keydown.enter.prevent="openActivityAnimePage(activity.media?.id)"
+                  @keydown.space.prevent="openActivityAnimePage(activity.media?.id)"
+                >
                   <img
                     v-if="activityCoverSrc(activity)"
                     :src="activityCoverSrc(activity)"
@@ -184,15 +209,19 @@
                       <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z" />
                     </svg>
                   </div>
-                </div>
+                  <div v-if="navigatingActivityAnimeId === activity.media?.id" class="a-thumb-loader">
+                    <div class="a-thumb-spinner" />
+                  </div>
+                </a>
                 <div class="a-body">
                   <div class="a-text">
                     {{ getActivityPrefix(activity) }}
                     <a
-                      v-if="activity.media?.siteUrl"
-                      :href="activity.media.siteUrl"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      v-if="activity.media?.id"
+                      class="a-title-link"
+                      :class="{ 'is-loading': navigatingActivityAnimeId === activity.media?.id }"
+                      :href="animeHref(activity.media.id)"
+                      @click="handleActivityAnimeLinkClick($event, activity.media.id)"
                     >
                       {{ getActivityTitle(activity) }}
                     </a>
@@ -250,6 +279,9 @@ const activityLoading = ref(false)
 const activityHasMore = ref(true)
 const activityPage = ref(1)
 const activityPerPage = 15
+const navigatingFavoriteAnimeId = ref<number | null>(null)
+const navigatingActivityAnimeId = ref<number | null>(null)
+const profileSyncPending = ref(false)
 
 const loadMoreActivity = async () => {
   if (activityLoading.value || !activityHasMore.value) return
@@ -338,6 +370,72 @@ function getFavoriteAnimeTitle(anime: any): string {
   return anime?.title?.english ?? anime?.title?.romaji ?? 'Unknown Anime'
 }
 
+async function openAnimePage(animeId?: number | null) {
+  if (!animeId) return
+  await navigateTo(`/anime/${animeId}`)
+}
+
+async function openFavoriteAnimePage(animeId?: number | null) {
+  if (!animeId || navigatingFavoriteAnimeId.value === animeId) return
+  navigatingFavoriteAnimeId.value = animeId
+  try {
+    await nextTick()
+    await waitForPaint()
+    await openAnimePage(animeId)
+  } catch (error) {
+    navigatingFavoriteAnimeId.value = null
+    throw error
+  }
+}
+
+async function openActivityAnimePage(animeId?: number | null) {
+  if (!animeId || navigatingActivityAnimeId.value === animeId) return
+  navigatingActivityAnimeId.value = animeId
+  try {
+    await nextTick()
+    await waitForPaint()
+    await openAnimePage(animeId)
+  } catch (error) {
+    navigatingActivityAnimeId.value = null
+    throw error
+  }
+}
+
+function animeHref(animeId?: number | null): string {
+  return animeId ? `/anime/${animeId}` : '#'
+}
+
+function handleAnimeLinkClick(event: MouseEvent, animeId?: number | null) {
+  if (!animeId) {
+    event.preventDefault()
+    return
+  }
+  if (!shouldHandleClientNavigation(event)) return
+  event.preventDefault()
+  void openFavoriteAnimePage(animeId)
+}
+
+function handleActivityAnimeLinkClick(event: MouseEvent, animeId?: number | null) {
+  if (!animeId) {
+    event.preventDefault()
+    return
+  }
+  if (!shouldHandleClientNavigation(event)) return
+  event.preventDefault()
+  void openActivityAnimePage(animeId)
+}
+
+function shouldHandleClientNavigation(event: MouseEvent): boolean {
+  return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey
+}
+
+function waitForPaint(): Promise<void> {
+  if (!import.meta.client) return Promise.resolve()
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => resolve())
+  })
+}
+
 function favoriteAnimeCoverSrc(anime: any): string {
   return getAnilistCoverSrc(anime?.coverImage as AnilistCoverImage | null, 'card')
 }
@@ -359,6 +457,9 @@ function activityCoverSrcSet(activity: any): string | undefined {
 }
 
 const authRecord = computed<Record<string, any>>(() => unref(pocketbaseStore.authRecord) ?? {})
+const authUserId = computed(() => Number(authRecord.value.anilist_user_id ?? 0))
+const authUsername = computed(() => String(authRecord.value.anilist_username ?? ''))
+const authUserKey = computed(() => `${authUserId.value}:${authUsername.value}`)
 const username = computed(() => authRecord.value.anilist_username ?? 'Username')
 const anilistIdDisplay = computed(() => authRecord.value.anilist_user_id ?? '-')
 const avatarSrc = computed(() => authRecord.value.anilist_avatar_url_large || authRecord.value.anilist_avatar_url_medium || '')
@@ -452,19 +553,66 @@ const handleGenreResize = () => {
   computeVisibleGenres()
 }
 
+const resetNavigationStates = () => {
+  navigatingFavoriteAnimeId.value = null
+  navigatingActivityAnimeId.value = null
+}
+
+const syncProfilePageData = async (
+  options: {
+    forceProfile?: boolean
+    forceActivity?: boolean
+  } = {}
+) => {
+  if (profileSyncPending.value) return
+  if (!authUserId.value && !authUsername.value) return
+
+  profileSyncPending.value = true
+  try {
+    await profileStore.loadProfile(Boolean(options.forceProfile))
+
+    if (options.forceActivity || !activityItems.value.length) {
+      await resetActivityList()
+    }
+
+    await computeVisibleGenres()
+  } finally {
+    profileSyncPending.value = false
+  }
+}
+
+const handlePageShow = async (event: PageTransitionEvent) => {
+  resetNavigationStates()
+
+  if (event.persisted || !activityItems.value.length) {
+    await syncProfilePageData({ forceActivity: true })
+  }
+}
+
 watch(topGenres, () => {
   computeVisibleGenres()
 }, { deep: true })
 
+watch(authUserKey, async (next, previous) => {
+  if (!import.meta.client) return
+  if (!authUserId.value && !authUsername.value) return
+
+  const userChanged = next !== previous
+  await syncProfilePageData({
+    forceProfile: userChanged,
+    forceActivity: userChanged || !activityItems.value.length
+  })
+})
+
 onMounted(async () => {
-  await profileStore.loadProfile()
-  await resetActivityList()
-  await computeVisibleGenres()
+  await syncProfilePageData({ forceActivity: true })
   window.addEventListener('resize', handleGenreResize, { passive: true })
+  window.addEventListener('pageshow', handlePageShow)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleGenreResize)
+  window.removeEventListener('pageshow', handlePageShow)
 })
 </script>
 
@@ -757,11 +905,24 @@ onBeforeUnmount(() => {
 }
 
 .fav-card {
+  display: block;
   aspect-ratio: 2 / 3;
   border-radius: 5px;
   background: #0d1a27;
   overflow: hidden;
   position: relative;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.fav-card.is-clickable:focus-visible {
+  outline: 2px solid #25A5F2;
+  outline-offset: 2px;
+}
+
+.fav-card.is-loading {
+  pointer-events: none;
 }
 
 .fav-card img {
@@ -769,6 +930,12 @@ onBeforeUnmount(() => {
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.fav-card.is-loading img {
+  opacity: 0.28;
+  transform: scale(1.04);
 }
 .fav-card::after {
   content: attr(data-tooltip);
@@ -794,6 +961,36 @@ onBeforeUnmount(() => {
 }
 .fav-card:hover::after {
   opacity: 1;
+}
+
+.fav-card.is-loading::after {
+  opacity: 0;
+}
+
+.fav-card-loader {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(8, 14, 24, 0.56);
+  color: #f0f7ff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  z-index: 3;
+}
+
+.fav-card-loader-spinner {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 2.5px solid rgba(255, 255, 255, 0.22);
+  border-top-color: #25A5F2;
+  animation: spin 0.75s linear infinite;
 }
 
 .fav-placeholder {
@@ -908,6 +1105,10 @@ onBeforeUnmount(() => {
   margin-bottom: 8px;
 }
 
+.a-item.is-loading {
+  border-color: rgba(37, 165, 242, 0.42);
+}
+
 .a-item:last-child {
   margin-bottom: 0;
 }
@@ -920,6 +1121,15 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   background: rgba(31, 38, 49, 0.6);
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  position: relative;
+}
+
+.a-thumb.is-clickable:focus-visible {
+  outline: 2px solid #25A5F2;
+  outline-offset: -2px;
 }
 
 .a-thumb img {
@@ -927,10 +1137,34 @@ onBeforeUnmount(() => {
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.a-thumb.is-loading img {
+  opacity: 0.3;
+  transform: scale(1.04);
 }
 
 .thumb-ph {
   color: rgba(255, 255, 255, 0.15);
+}
+
+.a-thumb-loader {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 14, 24, 0.56);
+}
+
+.a-thumb-spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.24);
+  border-top-color: #25A5F2;
+  animation: spin 0.75s linear infinite;
 }
 
 .a-body {
@@ -949,14 +1183,29 @@ onBeforeUnmount(() => {
   line-height: 1.5;
 }
 
-.a-text a {
+.a-text a,
+.a-title-link {
   color: #25A5F2;
   text-decoration: none;
   font-weight: 500;
 }
 
-.a-text a:hover {
+.a-text a:hover,
+.a-title-link:hover {
   text-decoration: underline;
+}
+
+.a-title-link {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.a-title-link.is-loading {
+  opacity: 0.72;
+  pointer-events: none;
 }
 
 .a-date {
@@ -1026,6 +1275,12 @@ onBeforeUnmount(() => {
   }
   50% {
     opacity: 0.8;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
@@ -1206,8 +1461,28 @@ onBeforeUnmount(() => {
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.42);
 }
 
-[data-theme="winter"] .profile-page .a-text a {
+[data-theme="winter"] .profile-page .a-text a,
+[data-theme="winter"] .profile-page .a-title-link {
   color: #1d8ed8;
+}
+
+[data-theme="winter"] .profile-page .fav-card-loader {
+  background: rgba(240, 247, 255, 0.72);
+  color: #24415c;
+}
+
+[data-theme="winter"] .profile-page .fav-card-loader-spinner {
+  border-color: rgba(36, 65, 92, 0.18);
+  border-top-color: #1d8ed8;
+}
+
+[data-theme="winter"] .profile-page .a-thumb-loader {
+  background: rgba(240, 247, 255, 0.72);
+}
+
+[data-theme="winter"] .profile-page .a-thumb-spinner {
+  border-color: rgba(36, 65, 92, 0.18);
+  border-top-color: #1d8ed8;
 }
 
 </style>

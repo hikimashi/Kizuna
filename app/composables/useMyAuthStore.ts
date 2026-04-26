@@ -1,10 +1,12 @@
 import { defineStore } from 'pinia';
 import { usePocketbaseStore } from './usePocketbaseStore';
 import { useUserStore } from './useUserStore';
+import { authEmailCandidates, normalizeAuthEmail } from '~/utils/authEmail';
 
 export const useMyAuthStore = defineStore('auth', () => {
   const pocketbaseStore = usePocketbaseStore();
   const userStore = useUserStore();
+  const unverifiedEmailMessage = 'Please verify your email address before logging in.';
 
   // Convertit les donnees PocketBase vers le format UserType utilise par l'app.
   const mapAuthDataToUser = (authData: { token: string; record: any }): UserType => {
@@ -33,10 +35,11 @@ export const useMyAuthStore = defineStore('auth', () => {
     };
   };
 
-  // Cree un compte local puis connecte automatiquement l'utilisateur.
+  // Cree un compte local puis envoie l'email de verification.
   const createAccount = async (newUser: NewUserType) => {
+    const email = normalizeAuthEmail(newUser.email);
     const data = {
-      email: newUser.email,
+      email,
       emailVisibility: false,
       password: newUser.password,
       passwordConfirm: newUser.passwordConfirm,
@@ -50,9 +53,11 @@ export const useMyAuthStore = defineStore('auth', () => {
 
     try {
       await pocketbaseStore.pb.collection('user').create(data);
-      const authData = await login(newUser.email, newUser.password);
-      userStore.saveUserData(mapAuthDataToUser(authData));
-      return authData;
+      await pocketbaseStore.pb.collection('user').requestVerification(email);
+      return {
+        email,
+        verificationSent: true
+      };
     } catch (error: any) {
       const errorMsg = error.response?.data?.message || error.message || 'Account creation failed. Please try again.';
       throw new Error(errorMsg);
@@ -61,10 +66,32 @@ export const useMyAuthStore = defineStore('auth', () => {
 
   // Connexion email/mot de passe.
   const login = async (email: string, password: string) => {
+    let lastError: any = null;
+
     try {
-      const authData = await pocketbaseStore.pb.collection('user').authWithPassword(email, password);
-      userStore.saveUserData(mapAuthDataToUser(authData));
-      return authData;
+      for (const candidateEmail of authEmailCandidates(email)) {
+        try {
+          const authData = await pocketbaseStore.pb.collection('user').authWithPassword(candidateEmail, password);
+
+          if (!authData.record?.verified) {
+            pocketbaseStore.pb.authStore.clear();
+            localStorage.removeItem('pocketbase_auth');
+            userStore.clearUser();
+            throw new Error(unverifiedEmailMessage);
+          }
+
+          userStore.saveUserData(mapAuthDataToUser(authData));
+          return authData;
+        } catch (error: any) {
+          if (error?.message === unverifiedEmailMessage) {
+            throw error;
+          }
+
+          lastError = error;
+        }
+      }
+
+      throw lastError;
     } catch (error: any) {
       throw new Error(error?.message || 'Login failed. Please check your credentials.');
     }
@@ -137,7 +164,7 @@ export const useMyAuthStore = defineStore('auth', () => {
 
   const emailChange = async (newEmail: string) => {
     try {
-      await pocketbaseStore.pb.collection('user').requestEmailChange(newEmail);
+      await pocketbaseStore.pb.collection('user').requestEmailChange(normalizeAuthEmail(newEmail));
     } catch (error: any) {
       throw new Error(error?.message || 'Email change failed. Please try again.');
     }

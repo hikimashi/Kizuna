@@ -1161,7 +1161,10 @@ const formatMediaFormat = (value?: string | null) => {
   if (!label) return 'Anime'
   return label
     .split('_')
-    .map(part => part ? `${part[0].toUpperCase()}${part.slice(1)}` : '')
+    .map(part => {
+      const normalizedPart = part || ''
+      return normalizedPart ? `${normalizedPart[0]?.toUpperCase() || ''}${normalizedPart.slice(1)}` : ''
+    })
     .join(' ')
 }
 
@@ -1211,7 +1214,7 @@ const searchAnime = async (query: string) => {
         seasonYear: Number(media.seasonYear || 0) || undefined,
         episodes: Number(media.episodes || 0) || undefined,
         formatLabel: formatMediaFormat(media.format),
-        fetchLink: `https://anilist.co/anime/${mediaId}`,
+        fetchLink: `/anime/${mediaId}`,
         alreadyAdded: existingAnimeIds.value.has(mediaId)
       } satisfies AnimeSearchResult
     })

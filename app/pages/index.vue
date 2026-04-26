@@ -642,7 +642,6 @@ watch(isAniListLinked, async (linked) => {
 <style scoped>
 .dashboard-empty-state {
   min-height: 120px;
-  flex: 1 1 auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -728,7 +727,7 @@ watch(isAniListLinked, async (linked) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: clamp(1rem, 3vw, 1.25rem);
+  padding: 20px;
 }
 
 .follow-modal {
@@ -741,7 +740,7 @@ watch(isAniListLinked, async (linked) => {
     linear-gradient(180deg, color-mix(in srgb, var(--kz-card-bg) 96%, white 4%), color-mix(in srgb, var(--kz-card-bg) 100%, transparent)),
     color-mix(in srgb, var(--kz-card-bg) 92%, transparent);
   box-shadow: 0 24px 80px color-mix(in srgb, var(--kz-page-navy) 24%, transparent);
-  padding: clamp(1rem, 2.5vw, 1.5rem);
+  padding: 24px;
 }
 
 .follow-modal-head {
@@ -762,7 +761,7 @@ watch(isAniListLinked, async (linked) => {
 
 .follow-modal-head h2 {
   margin: 0;
-  font-size: clamp(1.375rem, 3vw, 1.75rem);
+  font-size: 28px;
   line-height: 1.15;
 }
 
@@ -819,7 +818,6 @@ watch(isAniListLinked, async (linked) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
   gap: 16px;
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -921,13 +919,11 @@ watch(isAniListLinked, async (linked) => {
 .follow-result-actions {
   display: flex;
   gap: 8px;
-  flex: 1 1 12rem;
-  justify-content: flex-end;
+  flex-shrink: 0;
 }
 
 .follow-action-btn {
   min-height: 38px;
-  flex: 1 1 10rem;
   padding: 0 14px;
   border-radius: 10px;
   border: 1px solid var(--border);
@@ -960,13 +956,13 @@ watch(isAniListLinked, async (linked) => {
   line-height: 1.6;
 }
 
-@media (width <= 48rem) {
+@media (max-width: 768px) {
   .follow-modal {
     padding: 18px;
   }
 
-  .follow-modal-head {
-    align-items: center;
+  .follow-modal-head h2 {
+    font-size: 22px;
   }
 
   .follow-result-card {

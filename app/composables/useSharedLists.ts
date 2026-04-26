@@ -579,12 +579,45 @@ export const useSharedLists = () => {
     return access
   }
 
+  const assertCanManageMembersInList = async (listId: string) => {
+    const access = await assertSharedListAccess(listId)
+    if (access.isOwner) return access
+
+    if (!getPermissionCapabilities(access.membership).canManageMembers) {
+      throw new Error('You do not have permission to manage members in this shared list.')
+    }
+
+    return access
+  }
+
   const assertCanAddAnimeToList = async (listId: string) => {
     const access = await assertSharedListAccess(listId)
     if (access.isOwner) return access
 
     if (!getPermissionCapabilities(access.membership).canAddAnime) {
       throw new Error('You do not have permission to add anime to this shared list.')
+    }
+
+    return access
+  }
+
+  const assertCanEditAnimeInList = async (listId: string) => {
+    const access = await assertSharedListAccess(listId)
+    if (access.isOwner) return access
+
+    if (!getPermissionCapabilities(access.membership).canEditAnime) {
+      throw new Error('You do not have permission to edit anime entries in this shared list.')
+    }
+
+    return access
+  }
+
+  const assertCanDeleteAnimeFromList = async (listId: string) => {
+    const access = await assertSharedListAccess(listId)
+    if (access.isOwner) return access
+
+    if (!getPermissionCapabilities(access.membership).canDeleteAnime) {
+      throw new Error('You do not have permission to remove anime from this shared list.')
     }
 
     return access
@@ -673,7 +706,7 @@ export const useSharedLists = () => {
       throw new Error('This membership record is missing its member.')
     }
 
-    const access = await assertSharedListOwner(listId)
+    const access = await assertCanManageMembersInList(listId)
     const permissionId = normalizeRelationValue(membership.fk_permission_id)
 
     if (!permissionId) {
@@ -1007,8 +1040,8 @@ export const useSharedLists = () => {
       bannerUrl: sharedListFileUrl(record, record.banner),
       members,
       ownMembershipId: ownMembership?.id,
-      canManageMembers: ownerId === userId,
-      membersVisibilityLimited: ownerId !== userId,
+      canManageMembers: ownerId === userId || getPermissionCapabilities(ownMembership).canManageMembers,
+      membersVisibilityLimited: !(ownerId === userId || getPermissionCapabilities(ownMembership).canManageMembers),
       animeEntries
     } satisfies SharedListDetail
   }
@@ -1057,7 +1090,7 @@ export const useSharedLists = () => {
     groupImageFile?: File | null
     bannerImageFile?: File | null
   }) => {
-    await assertSharedListOwner(listId)
+    await assertCanManageMembersInList(listId)
 
     try {
       const payload = buildSharedListPayload(
@@ -1079,7 +1112,7 @@ export const useSharedLists = () => {
   }
 
   const addMemberToList = async (listId: string, userId: string) => {
-    await assertSharedListOwner(listId)
+    await assertCanManageMembersInList(listId)
     return await ensureMembership(listId, userId)
   }
 
@@ -1093,8 +1126,8 @@ export const useSharedLists = () => {
     }
 
     const access = await assertSharedListAccess(listId)
-    if (!access.isOwner && memberId !== access.userId) {
-      throw new Error('Only the owner can remove other members from this shared list.')
+    if (!access.isOwner && memberId !== access.userId && !getPermissionCapabilities(access.membership).canManageMembers) {
+      throw new Error('You do not have permission to remove other members from this shared list.')
     }
     if (memberId && memberId === access.ownerId) {
       throw new Error('The owner cannot be removed from this shared list.')
@@ -1224,7 +1257,7 @@ export const useSharedLists = () => {
       throw new Error('This anime entry is missing its shared list.')
     }
 
-    await assertSharedListOwner(listId)
+    await assertCanEditAnimeInList(listId)
 
     const payload: Record<string, any> = {}
     if (patch.status) payload.status = patch.status
@@ -1247,7 +1280,7 @@ export const useSharedLists = () => {
       throw new Error('This anime entry is missing its shared list.')
     }
 
-    await assertSharedListOwner(listId)
+    await assertCanDeleteAnimeFromList(listId)
     return await pocketbaseStore.pb.collection('anime_shared_list').delete(relationId)
   }
 

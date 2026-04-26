@@ -327,7 +327,13 @@
                   <button class="editor-btn editor-btn-muted" type="button" @click="closeAnimeEditor">
                     Cancel
                   </button>
-                  <button class="editor-btn editor-btn-danger" type="button" :disabled="isDeletingAnime" @click="deleteAnimeEntry">
+                  <button
+                    v-if="canDeleteAnime"
+                    class="editor-btn editor-btn-danger"
+                    type="button"
+                    :disabled="isDeletingAnime"
+                    @click="deleteAnimeEntry"
+                  >
                     {{ isDeletingAnime ? 'Deleting...' : 'Delete' }}
                   </button>
                   <button class="editor-btn editor-btn-primary" type="button" :disabled="isSavingAnime" @click="saveAnimeEntry">
@@ -339,7 +345,7 @@
               <div v-if="!visibleAnimeSections.length" class="empty-state">
                 <div class="empty-state-title">No anime found for this filter.</div>
                 <div class="empty-state-text">
-                  {{ canManageAnime ? 'Try another title or use Add anime.' : 'Only the owner can edit this shared list right now.' }}
+                  {{ canManageAnime ? 'Try another title or use Add anime.' : 'You can browse this shared list, but you cannot edit its anime entries.' }}
                 </div>
               </div>
 
@@ -413,7 +419,7 @@
               </div>
 
               <button
-                v-if="detail.isOwner && member.role !== 'owner' && member.membershipId"
+                v-if="detail.canManageMembers && member.role !== 'owner' && member.membershipId"
                 class="remove-btn"
                 type="button"
                 :disabled="pendingMembershipActionId === member.membershipId"
@@ -440,7 +446,7 @@
         <div class="settings-drawer-body">
           <div v-if="actionError" class="status-card error">{{ actionError }}</div>
 
-          <template v-if="detail.isOwner">
+          <template v-if="detail.isOwner || detail.canManageMembers">
             <section class="drawer-card">
               <div class="drawer-card-head">
                 <div>
@@ -570,7 +576,7 @@
               </div>
             </section>
 
-            <section class="drawer-card danger-card">
+            <section v-if="detail.isOwner" class="drawer-card danger-card">
               <div class="drawer-card-head">
                 <div>
                   <h3>Danger Zone</h3>
@@ -589,7 +595,7 @@
               <div class="drawer-card-head">
                 <div>
                   <h3>Shared List Info</h3>
-                  <p>Members can view the shared list configuration here. Editing remains restricted to the owner.</p>
+                  <p>Members can view the shared list configuration here.</p>
                 </div>
               </div>
 
@@ -766,12 +772,21 @@ const settingsGroupImagePreview = ref('')
 const settingsBannerPreview = ref('')
 
 const listId = computed(() => String(route.params.id || ''))
-const canManageAnime = computed(() => Boolean(detail.value?.isOwner))
+const currentMember = computed(() => detail.value?.members.find(member => member.isCurrentUser) || null)
+const canManageAnime = computed(() => {
+  if (!detail.value) return false
+  if (detail.value.isOwner) return true
+  return Boolean(currentMember.value?.canEditAnime)
+})
+const canDeleteAnime = computed(() => {
+  if (!detail.value) return false
+  if (detail.value.isOwner) return true
+  return Boolean(currentMember.value?.canDeleteAnime)
+})
 const canAddAnime = computed(() => {
   if (!detail.value) return false
   if (detail.value.isOwner) return true
-  const me = detail.value.members.find(m => m.isCurrentUser)
-  return Boolean(me?.canAddAnime)
+  return Boolean(currentMember.value?.canAddAnime)
 })
 const existingAnimeIds = computed(() => new Set((detail.value?.animeEntries || []).map(entry => Number(entry.mediaId || 0)).filter(Boolean)))
 const createdLabel = computed(() => detail.value?.createdAt ? `Created ${formatDateLabel(detail.value.createdAt)}` : 'Created recently')
@@ -1079,7 +1094,7 @@ const handleSettingsBannerChange = (event: Event) => {
 }
 
 const saveSettings = async () => {
-  if (!detail.value?.isOwner) return
+  if (!detail.value || (!detail.value.isOwner && !detail.value.canManageMembers)) return
   if (!settingsName.value.trim()) {
     actionError.value = 'List name is required.'
     return
@@ -1109,6 +1124,7 @@ let animeSearchTimer: ReturnType<typeof setTimeout> | null = null
 
 const handleSearchInput = () => {
   if (!detail.value) return
+  if (!detail.value.canManageMembers) return
   if (memberSearchTimer) clearTimeout(memberSearchTimer)
 
   if (memberQuery.value.trim().length < 2) {
@@ -1136,6 +1152,10 @@ const handleSearchInput = () => {
 
 const addMember = async (userId: string) => {
   if (!detail.value) return
+  if (!detail.value.canManageMembers) {
+    actionError.value = 'You do not have permission to add members to this shared list.'
+    return
+  }
 
   pendingAddUserId.value = userId
   actionError.value = ''
@@ -1322,7 +1342,7 @@ const closeAnimeEditor = () => {
 const saveAnimeEntry = async () => {
   if (!selectedAnimeEntry.value) return
   if (!canManageAnime.value) {
-    actionError.value = 'Only the owner can edit anime entries in this shared list.'
+    actionError.value = 'You do not have permission to edit anime entries in this shared list.'
     return
   }
 
@@ -1364,8 +1384,8 @@ watch(draftAddStatus, () => {
 
 const deleteAnimeEntry = async () => {
   if (!selectedAnimeEntry.value) return
-  if (!canManageAnime.value) {
-    actionError.value = 'Only the owner can remove anime from this shared list.'
+  if (!canDeleteAnime.value) {
+    actionError.value = 'You do not have permission to remove anime from this shared list.'
     return
   }
   if (typeof window !== 'undefined' && !window.confirm(`Delete "${selectedAnimeEntry.value.title}" from this shared list?`)) {
@@ -1387,6 +1407,11 @@ const deleteAnimeEntry = async () => {
 }
 
 const removeMember = async (membershipId: string) => {
+  if (!detail.value?.canManageMembers) {
+    actionError.value = 'You do not have permission to remove members from this shared list.'
+    return
+  }
+
   pendingMembershipActionId.value = membershipId
   actionError.value = ''
 
@@ -1404,6 +1429,11 @@ const updateMemberPermission = async (membershipId: string, permissionRaw: strin
   const permission = (permissionRaw === 'admin' || permissionRaw === 'editor' || permissionRaw === 'viewer')
     ? permissionRaw
     : 'viewer'
+
+  if (!detail.value?.canManageMembers) {
+    actionError.value = 'You do not have permission to update member roles in this shared list.'
+    return
+  }
 
   pendingMembershipActionId.value = membershipId
   actionError.value = ''

@@ -721,7 +721,7 @@ const {
   removeMembership,
   updateMembershipPermission,
   deleteSharedList,
-  ensureOwnerMembership,
+  migrateLegacyMemberships,
   searchUsers
 } = useSharedLists()
 
@@ -1010,9 +1010,14 @@ const loadPage = async () => {
   try {
     let result = await loadDetail(listId.value)
 
-    if (result.isOwner && !result.ownMembershipId) {
-      await ensureOwnerMembership(listId.value)
-      result = await loadDetail(listId.value)
+    if (result.isOwner) {
+      const migration = await migrateLegacyMemberships(listId.value)
+      if (!result.ownMembershipId || migration.changed) {
+        result = await loadDetail(listId.value)
+      }
+      if (migration.failedMembershipIds.length) {
+        actionError.value = 'Some legacy member permissions could not be migrated automatically.'
+      }
     }
 
     detail.value = result

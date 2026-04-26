@@ -419,7 +419,7 @@
               </div>
 
               <button
-                v-if="detail.canManageMembers && member.role !== 'owner' && member.membershipId"
+                v-if="detail.canManageMembers && member.role !== 'owner' && member.membershipId && !member.isCurrentUser"
                 class="remove-btn"
                 type="button"
                 :disabled="pendingMembershipActionId === member.membershipId"
@@ -553,7 +553,7 @@
                     <span>{{ member.role === 'owner' ? 'Owner' : 'Member' }}</span>
                   </div>
                   <select
-                    v-if="member.role !== 'owner' && member.membershipId"
+                    v-if="member.role !== 'owner' && member.membershipId && !member.isCurrentUser"
                     class="member-perm"
                     :value="member.permission"
                     :disabled="pendingMembershipActionId === member.membershipId"
@@ -564,7 +564,7 @@
                     <option value="viewer">viewer</option>
                   </select>
                   <button
-                    v-if="member.role !== 'owner' && member.membershipId"
+                    v-if="member.role !== 'owner' && member.membershipId && !member.isCurrentUser"
                     class="remove-btn"
                     type="button"
                     :disabled="pendingMembershipActionId === member.membershipId"

@@ -5,6 +5,7 @@ import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 export type SharedListPrivacy = 'private' | 'friends' | 'public'
 export type SharedListRole = 'owner' | 'member'
 export type SharedListAnimeStatus = 'CURRENT' | 'COMPLETED' | 'PAUSED' | 'DROPPED' | 'PLANNING' | 'REPEATING'
+export type SharedListPermission = 'admin' | 'editor' | 'viewer'
 
 type SharedListRecord = {
   id: string
@@ -22,7 +23,26 @@ type UserSharedListRecord = {
   fk_user_id?: string | string[]
   fk_shared_list_id?: string | string[]
   fk_permission_id?: string | string[]
-  permission?: 'admin' | 'editor' | 'viewer'
+  permission?: SharedListPermission
+  expand?: {
+    fk_permission_id?: PermissionRecord | PermissionRecord[]
+  }
+  created?: string
+  updated?: string
+}
+
+type PermissionRecord = {
+  id: string
+  name?: SharedListPermission
+  fk_user_id?: string | string[]
+  fk_granted_by_user_id?: string | string[]
+  read?: boolean
+  modify?: boolean
+  suggest_modification?: boolean
+  delete?: boolean
+  add_user?: boolean
+  delete_user?: boolean
+  suggest_add_user?: boolean
   created?: string
   updated?: string
 }
@@ -63,7 +83,7 @@ export type SharedListMember = {
   avatar?: string
   color: string
   role: SharedListRole
-  permission: 'admin' | 'editor' | 'viewer'
+  permission: SharedListPermission
   canRead: boolean
   canAddAnime: boolean
   canEditAnime: boolean
@@ -145,6 +165,11 @@ const isUnknownFieldError = (error: any) => {
     || haystack.includes('validation_unknown')
 }
 const isPocketbaseValidationError = (error: any) => Number(error?.status || error?.response?.status || 0) === 400
+const isPocketbaseAccessError = (error: any) => {
+  const status = Number(error?.status || error?.response?.status || 0)
+  return status === 401 || status === 403
+}
+const isPocketbaseNotFoundError = (error: any) => Number(error?.status || error?.response?.status || 0) === 404
 
 const getDisplayName = (user?: Partial<UserRecord> | null, fallbackId = '') => {
   const label = String(user?.anilist_username || '').trim()
@@ -222,6 +247,116 @@ const fetchUsersByIds = async (pb: PocketBase, ids: string[]) => {
   return new Map(users.map(user => [user.id, user]))
 }
 
+const normalizeSharedListPermission = (value: unknown): SharedListPermission | null => {
+  const normalized = String(value || '').trim().toLowerCase()
+  if (normalized === 'admin') return 'admin'
+  if (normalized === 'editor' || normalized === 'moderator') return 'editor'
+  if (normalized === 'viewer') return 'viewer'
+  return null
+}
+
+const permissionDefaults = (permission: SharedListPermission) => ({
+  canRead: true,
+  canAddAnime: permission !== 'viewer',
+  canEditAnime: permission !== 'viewer',
+  canDeleteAnime: permission === 'admin',
+  canManageMembers: permission === 'admin'
+})
+
+const getPermissionRecord = (membership?: UserSharedListRecord | null) => {
+  const expanded = membership?.expand?.fk_permission_id
+  if (Array.isArray(expanded)) return expanded[0]
+  return expanded
+}
+
+const inferPermissionFromRecord = (permissionRecord?: PermissionRecord | null) => {
+  const namedPermission = normalizeSharedListPermission(permissionRecord?.name)
+  if (namedPermission) return namedPermission
+
+  if (permissionRecord?.add_user || permissionRecord?.delete_user || permissionRecord?.delete) {
+    return 'admin'
+  }
+
+  if (permissionRecord?.modify || permissionRecord?.suggest_modification) {
+    return 'editor'
+  }
+
+  if (typeof permissionRecord?.read === 'boolean') {
+    return 'viewer'
+  }
+
+  return null
+}
+
+const getPermissionName = (
+  membership?: UserSharedListRecord | null,
+  role: SharedListRole = 'member'
+): SharedListPermission => {
+  if (role === 'owner') return 'admin'
+  const recordPermission = inferPermissionFromRecord(getPermissionRecord(membership))
+  if (recordPermission) return recordPermission
+  const membershipPermission = normalizeSharedListPermission(membership?.permission)
+  if (membershipPermission) return membershipPermission
+  return role === 'owner' ? 'admin' : 'viewer'
+}
+
+const getPermissionCapabilities = (
+  membership?: UserSharedListRecord | null,
+  role: SharedListRole = 'member'
+) => {
+  const permission = getPermissionName(membership, role)
+  const defaults = permissionDefaults(permission)
+  const permissionRecord = getPermissionRecord(membership)
+  const hasMemberManagementFlags = typeof permissionRecord?.add_user === 'boolean' || typeof permissionRecord?.delete_user === 'boolean'
+
+  return {
+    permission,
+    canRead: typeof permissionRecord?.read === 'boolean' ? permissionRecord.read : defaults.canRead,
+    canAddAnime: typeof permissionRecord?.modify === 'boolean' ? permissionRecord.modify : defaults.canAddAnime,
+    canEditAnime: typeof permissionRecord?.modify === 'boolean' ? permissionRecord.modify : defaults.canEditAnime,
+    canDeleteAnime: typeof permissionRecord?.delete === 'boolean' ? permissionRecord.delete : defaults.canDeleteAnime,
+    canManageMembers: hasMemberManagementFlags
+      ? Boolean(permissionRecord?.add_user || permissionRecord?.delete_user)
+      : defaults.canManageMembers
+  }
+}
+
+const permissionFlags = (permission: SharedListPermission) => {
+  if (permission === 'admin') {
+    return {
+      read: true,
+      modify: true,
+      suggest_modification: true,
+      delete: true,
+      add_user: true,
+      delete_user: true,
+      suggest_add_user: true
+    }
+  }
+
+  if (permission === 'editor') {
+    return {
+      read: true,
+      modify: true,
+      suggest_modification: true,
+      delete: false,
+      add_user: false,
+      delete_user: false,
+      suggest_add_user: false
+    }
+  }
+
+  return {
+    read: true,
+    modify: false,
+    suggest_modification: false,
+    delete: false,
+    add_user: false,
+    delete_user: false,
+    suggest_add_user: false
+  }
+}
+
 const buildMember = (
   memberId: string,
   currentUserId: string,
@@ -237,6 +372,7 @@ const buildMember = (
   const name = isCurrentUser
     ? getDisplayName({ ...currentUserProfile, id: currentUserId }, currentUserId)
     : getDisplayName(user, memberId)
+  const capabilities = getPermissionCapabilities(membership, role)
 
   return {
     id: memberId,
@@ -246,12 +382,12 @@ const buildMember = (
     avatar: isCurrentUser ? getAvatar(currentUserProfile) : getAvatar(user),
     color: isCurrentUser ? '#3db4f2' : memberColor(memberId),
     role,
-    permission: membership?.permission || (role === 'owner' ? 'admin' : 'viewer'),
-    canRead: true,
-    canAddAnime: (membership?.permission || (role === 'owner' ? 'admin' : 'viewer')) !== 'viewer',
-    canEditAnime: (membership?.permission || (role === 'owner' ? 'admin' : 'viewer')) !== 'viewer',
-    canDeleteAnime: (membership?.permission || (role === 'owner' ? 'admin' : 'viewer')) === 'admin',
-    canManageMembers: (membership?.permission || (role === 'owner' ? 'admin' : 'viewer')) === 'admin',
+    permission: capabilities.permission,
+    canRead: capabilities.canRead,
+    canAddAnime: capabilities.canAddAnime,
+    canEditAnime: capabilities.canEditAnime,
+    canDeleteAnime: capabilities.canDeleteAnime,
+    canManageMembers: capabilities.canManageMembers,
     joinedAt: membership?.created,
     membershipId: membership?.id,
     isCurrentUser
@@ -314,19 +450,51 @@ export const useSharedLists = () => {
     listId: string,
     userId: string,
     options: {
-      permission?: 'admin' | 'editor' | 'viewer'
-      includePermission?: boolean
+      permissionId?: string
     } = {}
   ) => {
     const payload = new FormData()
     payload.append('fk_user_id', userId)
     payload.append('fk_shared_list_id', listId)
 
-    if (options.includePermission !== false && options.permission) {
-      payload.append('permission', options.permission)
-    }
+    if (options.permissionId) payload.append('fk_permission_id', options.permissionId)
 
     return payload
+  }
+
+  const buildPermissionPayload = (
+    userId: string,
+    grantedByUserId: string,
+    permission: SharedListPermission
+  ) => ({
+    name: permission,
+    fk_user_id: userId,
+    fk_granted_by_user_id: grantedByUserId,
+    ...permissionFlags(permission)
+  })
+
+  const createMembershipRecord = async (
+    listId: string,
+    userId: string,
+    permission: SharedListPermission
+  ) => {
+    const grantedByUserId = requireCurrentUserId()
+    const permissionRecord = await pocketbaseStore.pb.collection('permission').create<PermissionRecord>(
+      buildPermissionPayload(userId, grantedByUserId, permission)
+    )
+
+    try {
+      return await pocketbaseStore.pb.collection('user_shared_list').create<UserSharedListRecord>(
+        buildMembershipPayload(listId, userId, { permissionId: permissionRecord.id })
+      )
+    } catch (error: any) {
+      try {
+        await pocketbaseStore.pb.collection('permission').delete(permissionRecord.id)
+      } catch {
+        // Best effort cleanup if membership creation fails after creating the permission record.
+      }
+      throw error
+    }
   }
 
   const requireCurrentUserId = () => {
@@ -359,7 +527,9 @@ export const useSharedLists = () => {
   }
 
   const getMembershipRecord = async (membershipId: string) => {
-    return await pocketbaseStore.pb.collection('user_shared_list').getOne<UserSharedListRecord>(membershipId)
+    return await pocketbaseStore.pb.collection('user_shared_list').getOne<UserSharedListRecord>(membershipId, {
+      expand: 'fk_permission_id'
+    })
   }
 
   const getAnimeSharedListRecord = async (relationId: string) => {
@@ -370,7 +540,8 @@ export const useSharedLists = () => {
     if (!listId || !userId) return null
 
     const existing = await pocketbaseStore.pb.collection('user_shared_list').getList<UserSharedListRecord>(1, 1, {
-      filter: buildMembershipFilter(listId, userId)
+      filter: buildMembershipFilter(listId, userId),
+      expand: 'fk_permission_id'
     })
 
     return existing.items[0] || null
@@ -413,8 +584,7 @@ export const useSharedLists = () => {
     const access = await assertSharedListAccess(listId)
     if (access.isOwner) return access
 
-    const permission = access.membership?.permission || 'viewer'
-    if (permission === 'viewer') {
+    if (!getPermissionCapabilities(access.membership).canAddAnime) {
       throw new Error('You do not have permission to add anime to this shared list.')
     }
 
@@ -430,35 +600,23 @@ export const useSharedLists = () => {
     try {
       return await pocketbaseStore.pb.collection('user_shared_list').update<UserSharedListRecord>(
         membership.id,
-        buildMembershipPayload(listId, userId, { includePermission: false })
+        buildMembershipPayload(listId, userId)
       )
     } catch {
       return membership
     }
   }
 
-  const ensureMembership = async (listId: string, userId: string) => {
+  const ensureMembership = async (
+    listId: string,
+    userId: string,
+    permission: SharedListPermission = 'viewer'
+  ) => {
     const existing = await findMembership(listId, userId)
     if (existing) return await repairMembershipRecord(existing, listId, userId)
 
     try {
-      const create = async (withPermission: boolean) => {
-        return await pocketbaseStore.pb.collection('user_shared_list').create<UserSharedListRecord>(
-          buildMembershipPayload(listId, userId, {
-            permission: 'viewer',
-            includePermission: withPermission
-          })
-        )
-      }
-
-      try {
-        return await create(true)
-      } catch (error: any) {
-        if (isUnknownFieldError(error)) {
-          return await create(false)
-        }
-        throw error
-      }
+      return await createMembershipRecord(listId, userId, permission)
     } catch (error: any) {
       if (!isUniqueConstraintError(error)) throw error
       const retried = await findMembership(listId, userId)
@@ -466,20 +624,71 @@ export const useSharedLists = () => {
     }
   }
 
-  const updateMembershipPermission = async (membershipId: string, permission: 'admin' | 'editor' | 'viewer') => {
+  const recreateMembershipWithPermission = async (
+    membership: UserSharedListRecord,
+    listId: string,
+    userId: string,
+    permission: SharedListPermission
+  ) => {
+    const previousPermission = getPermissionName(membership)
+    const previousPermissionId = normalizeRelationValue(membership.fk_permission_id)
+
+    await pocketbaseStore.pb.collection('user_shared_list').delete(membership.id)
+
+    try {
+      const recreated = await createMembershipRecord(listId, userId, permission)
+
+      if (previousPermissionId) {
+        try {
+          await pocketbaseStore.pb.collection('permission').delete(previousPermissionId)
+        } catch {
+          // Old permission cleanup is best-effort because older records may not be deletable anymore.
+        }
+      }
+
+      return recreated
+    } catch (error: any) {
+      try {
+        if (previousPermissionId) {
+          await pocketbaseStore.pb.collection('user_shared_list').create<UserSharedListRecord>(
+            buildMembershipPayload(listId, userId, { permissionId: previousPermissionId })
+          )
+        } else {
+          await createMembershipRecord(listId, userId, previousPermission)
+        }
+      } catch {
+        // Best effort rollback if recreating with the new permission fails.
+      }
+      throw error
+    }
+  }
+
+  const updateMembershipPermission = async (membershipId: string, permission: SharedListPermission) => {
     const membership = await getMembershipRecord(membershipId)
     const listId = normalizeRelationValue(membership.fk_shared_list_id)
+    const userId = normalizeRelationValue(membership.fk_user_id)
     if (!listId) {
       throw new Error('This membership record is missing its shared list.')
     }
+    if (!userId) {
+      throw new Error('This membership record is missing its member.')
+    }
 
-    await assertSharedListOwner(listId)
+    const access = await assertSharedListOwner(listId)
+    const permissionId = normalizeRelationValue(membership.fk_permission_id)
+
+    if (!permissionId) {
+      return await recreateMembershipWithPermission(membership, listId, userId, permission)
+    }
 
     try {
-      return await pocketbaseStore.pb.collection('user_shared_list').update<UserSharedListRecord>(membershipId, { permission })
+      return await pocketbaseStore.pb.collection('permission').update<PermissionRecord>(
+        permissionId,
+        buildPermissionPayload(userId, access.userId, permission)
+      )
     } catch (error: any) {
-      if (isUnknownFieldError(error)) {
-        throw new Error('PocketBase user_shared_list still needs a `permission` select field (admin/editor/viewer).')
+      if (isPocketbaseValidationError(error) || isPocketbaseAccessError(error) || isPocketbaseNotFoundError(error)) {
+        return await recreateMembershipWithPermission(membership, listId, userId, permission)
       }
       throw error
     }
@@ -492,7 +701,55 @@ export const useSharedLists = () => {
     const ownerId = getOwnerId(sharedList)
     if (!ownerId || ownerId !== currentUserId.value) return null
 
-    return await ensureMembership(listId, currentUserId.value)
+    return await ensureMembership(listId, currentUserId.value, 'admin')
+  }
+
+  const migrateLegacyMemberships = async (listId: string) => {
+    const access = await assertSharedListOwner(listId)
+    let changed = false
+    const failedMembershipIds: string[] = []
+
+    if (access.ownerId === access.userId && !access.membership) {
+      await ensureMembership(listId, access.userId, 'admin')
+      changed = true
+    }
+
+    const membershipRecords = await pocketbaseStore.pb.collection('user_shared_list').getFullList<UserSharedListRecord>({
+      filter: `fk_shared_list_id="${escapeFilterValue(listId)}"`,
+      sort: '-created',
+      expand: 'fk_permission_id'
+    })
+
+    for (const membership of membershipRecords) {
+      const memberId = normalizeRelationValue(membership.fk_user_id)
+      const permissionId = normalizeRelationValue(membership.fk_permission_id)
+      const permissionRecord = getPermissionRecord(membership)
+
+      if (!memberId) continue
+      if (permissionId && permissionRecord) continue
+
+      const role: SharedListRole = memberId === access.ownerId ? 'owner' : 'member'
+      const permission = getPermissionName(membership, role)
+
+      try {
+        await recreateMembershipWithPermission(membership, listId, memberId, permission)
+        changed = true
+      } catch (error) {
+        failedMembershipIds.push(membership.id)
+        console.warn('Failed to migrate legacy shared-list membership.', {
+          listId,
+          membershipId: membership.id,
+          memberId,
+          permission,
+          error
+        })
+      }
+    }
+
+    return {
+      changed,
+      failedMembershipIds
+    }
   }
 
   const buildAnimeCreateValidationError = async (listId: string, error: any) => {
@@ -536,7 +793,8 @@ export const useSharedLists = () => {
       }),
       pocketbaseStore.pb.collection('user_shared_list').getFullList<UserSharedListRecord>({
         filter: buildUserMembershipFilter(userId),
-        sort: '-updated'
+        sort: '-updated',
+        expand: 'fk_permission_id'
       })
     ])
 
@@ -568,7 +826,8 @@ export const useSharedLists = () => {
     const [membershipRecords, animeRelations] = await Promise.all([
       pocketbaseStore.pb.collection('user_shared_list').getFullList<UserSharedListRecord>({
         filter: buildOrIdFilter(accessibleListIds, 'fk_shared_list_id'),
-        sort: '-updated'
+        sort: '-updated',
+        expand: 'fk_permission_id'
       }),
       pocketbaseStore.pb.collection('anime_shared_list').getFullList<AnimeSharedListRecord>({
         filter: buildOrIdFilter(accessibleListIds, 'fk_shared_list_id'),
@@ -661,7 +920,8 @@ export const useSharedLists = () => {
     const [membershipRecords, animeRelations] = await Promise.all([
       pocketbaseStore.pb.collection('user_shared_list').getFullList<UserSharedListRecord>({
         filter: `fk_shared_list_id="${escapeFilterValue(listId)}"`,
-        sort: '-created'
+        sort: '-created',
+        expand: 'fk_permission_id'
       }),
       pocketbaseStore.pb.collection('anime_shared_list').getFullList<AnimeSharedListRecord>({
         filter: `fk_shared_list_id="${escapeFilterValue(listId)}"`,
@@ -779,7 +1039,7 @@ export const useSharedLists = () => {
       throw error
     }
 
-    await ensureMembership(created.id, userId)
+    await ensureMembership(created.id, userId, 'admin')
 
     return created
   }
@@ -1024,6 +1284,7 @@ export const useSharedLists = () => {
     updateMembershipPermission,
     deleteSharedList,
     ensureOwnerMembership,
+    migrateLegacyMemberships,
     searchUsers
   }
 }

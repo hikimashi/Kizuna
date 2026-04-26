@@ -1343,11 +1343,11 @@
     },
     {
         "id": "pbc_1411910628",
-        "listRule": "id = \"\"",
-        "viewRule": "id = \"\"",
-        "createRule": "id = \"\"",
-        "updateRule": "id = \"\"",
-        "deleteRule": "id = \"\"",
+        "listRule": "fk_granted_by_user_id = @request.auth.id || (@collection.user_shared_list.fk_permission_id ?= id && (                                             \n    @collection.user_shared_list.fk_user_id ?= @request.auth.id ||                                                                                  \n    @collection.user_shared_list.fk_shared_list_id.fk_owner_user_id = @request.auth.id                                                              \n  ))",
+        "viewRule": "fk_granted_by_user_id = @request.auth.id || (@collection.user_shared_list.fk_permission_id ?= id && (                                             \n    @collection.user_shared_list.fk_user_id ?= @request.auth.id ||                                                                                  \n    @collection.user_shared_list.fk_shared_list_id.fk_owner_user_id = @request.auth.id                                                              \n  )) ",
+        "createRule": "@request.auth.id != \"\" && fk_granted_by_user_id = @request.auth.id",
+        "updateRule": "fk_granted_by_user_id = @request.auth.id || (                                                                                                     \n    @collection.user_shared_list.fk_permission_id ?= id &&                                                                                          \n    @collection.user_shared_list.fk_shared_list_id.fk_owner_user_id = @request.auth.id                                                              \n  )  ",
+        "deleteRule": "fk_granted_by_user_id = @request.auth.id || (                                                                                                     \n    @collection.user_shared_list.fk_permission_id ?= id &&                                                                                          \n    @collection.user_shared_list.fk_shared_list_id.fk_owner_user_id = @request.auth.id                                                              \n  ) ",
         "name": "permission",
         "type": "base",
         "fields": [

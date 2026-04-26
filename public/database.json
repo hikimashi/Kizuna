@@ -1075,9 +1075,9 @@
         "id": "pbc_2118266223",
         "listRule": "fk_shared_list_id.fk_owner_user_id = @request.auth.id || (\n    @collection.user_shared_list.fk_shared_list_id ?= fk_shared_list_id &&         \n    @collection.user_shared_list.fk_user_id ?= @request.auth.id\n  )",
         "viewRule": "fk_shared_list_id.fk_owner_user_id = @request.auth.id || (\n    @collection.user_shared_list.fk_shared_list_id ?= fk_shared_list_id &&\n    @collection.user_shared_list.fk_user_id ?= @request.auth.id\n  ) ",
-        "createRule": "fk_shared_list_id.fk_owner_user_id = @request.auth.id",
-        "updateRule": "fk_shared_list_id.fk_owner_user_id = @request.auth.id",
-        "deleteRule": "fk_shared_list_id.fk_owner_user_id = @request.auth.id ",
+        "createRule": "fk_shared_list_id.fk_owner_user_id = @request.auth.id || (\n    @collection.user_shared_list.fk_shared_list_id ?= fk_shared_list_id &&\n    @collection.user_shared_list.fk_user_id ?= @request.auth.id &&\n    @collection.user_shared_list.fk_permission_id.add ?= true\n  )",
+        "updateRule": "fk_shared_list_id.fk_owner_user_id = @request.auth.id || (\n    @collection.user_shared_list.fk_shared_list_id ?= fk_shared_list_id &&\n    @collection.user_shared_list.fk_user_id ?= @request.auth.id &&\n    @collection.user_shared_list.fk_permission_id.modify ?= true\n  )",
+        "deleteRule": "fk_shared_list_id.fk_owner_user_id = @request.auth.id || (\n    @collection.user_shared_list.fk_shared_list_id ?= fk_shared_list_id &&\n    @collection.user_shared_list.fk_user_id ?= @request.auth.id &&\n    @collection.user_shared_list.fk_permission_id.delete ?= true\n  )",
         "name": "anime_shared_list",
         "type": "base",
         "fields": [
@@ -1409,7 +1409,7 @@
             {
                 "hidden": false,
                 "id": "bool2555855207",
-                "name": "read",
+                "name": "add",
                 "presentable": false,
                 "required": false,
                 "system": false,
@@ -1426,8 +1426,8 @@
             },
             {
                 "hidden": false,
-                "id": "bool1641649505",
-                "name": "suggest_modification",
+                "id": "bool974290055",
+                "name": "delete",
                 "presentable": false,
                 "required": false,
                 "system": false,
@@ -1435,8 +1435,8 @@
             },
             {
                 "hidden": false,
-                "id": "bool974290055",
-                "name": "delete",
+                "id": "bool1641649505",
+                "name": "suggest_modification",
                 "presentable": false,
                 "required": false,
                 "system": false,

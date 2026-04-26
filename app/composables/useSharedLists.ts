@@ -35,10 +35,10 @@ type PermissionRecord = {
   name?: SharedListPermission
   fk_user_id?: string | string[]
   fk_granted_by_user_id?: string | string[]
-  read?: boolean
+  add?: boolean
   modify?: boolean
-  suggest_modification?: boolean
   delete?: boolean
+  suggest_modification?: boolean
   add_user?: boolean
   delete_user?: boolean
   suggest_add_user?: boolean
@@ -276,11 +276,11 @@ const inferPermissionFromRecord = (permissionRecord?: PermissionRecord | null) =
     return 'admin'
   }
 
-  if (permissionRecord?.modify || permissionRecord?.suggest_modification) {
+  if (permissionRecord?.add || permissionRecord?.modify || permissionRecord?.suggest_modification) {
     return 'editor'
   }
 
-  if (typeof permissionRecord?.read === 'boolean') {
+  if (typeof permissionRecord?.add === 'boolean') {
     return 'viewer'
   }
 
@@ -296,7 +296,7 @@ const getPermissionName = (
   if (recordPermission) return recordPermission
   const membershipPermission = normalizeSharedListPermission(membership?.permission)
   if (membershipPermission) return membershipPermission
-  return role === 'owner' ? 'admin' : 'viewer'
+  return 'viewer'
 }
 
 const getPermissionCapabilities = (
@@ -310,8 +310,8 @@ const getPermissionCapabilities = (
 
   return {
     permission,
-    canRead: typeof permissionRecord?.read === 'boolean' ? permissionRecord.read : defaults.canRead,
-    canAddAnime: typeof permissionRecord?.modify === 'boolean' ? permissionRecord.modify : defaults.canAddAnime,
+    canRead: defaults.canRead,
+    canAddAnime: typeof permissionRecord?.add === 'boolean' ? permissionRecord.add : defaults.canAddAnime,
     canEditAnime: typeof permissionRecord?.modify === 'boolean' ? permissionRecord.modify : defaults.canEditAnime,
     canDeleteAnime: typeof permissionRecord?.delete === 'boolean' ? permissionRecord.delete : defaults.canDeleteAnime,
     canManageMembers: hasMemberManagementFlags
@@ -323,10 +323,10 @@ const getPermissionCapabilities = (
 const permissionFlags = (permission: SharedListPermission) => {
   if (permission === 'admin') {
     return {
-      read: true,
+      add: true,
       modify: true,
-      suggest_modification: true,
       delete: true,
+      suggest_modification: true,
       add_user: true,
       delete_user: true,
       suggest_add_user: true
@@ -335,10 +335,10 @@ const permissionFlags = (permission: SharedListPermission) => {
 
   if (permission === 'editor') {
     return {
-      read: true,
+      add: true,
       modify: true,
-      suggest_modification: true,
       delete: false,
+      suggest_modification: true,
       add_user: false,
       delete_user: false,
       suggest_add_user: false
@@ -346,10 +346,10 @@ const permissionFlags = (permission: SharedListPermission) => {
   }
 
   return {
-    read: true,
+    add: false,
     modify: false,
-    suggest_modification: false,
     delete: false,
+    suggest_modification: false,
     add_user: false,
     delete_user: false,
     suggest_add_user: false
@@ -776,6 +776,14 @@ export const useSharedLists = () => {
 
     if (ownerId === currentUserId.value) {
       return new Error(`PocketBase rejected anime creation for the owner. ${details || 'Failed to create record.'}`.trim())
+    }
+
+    const permission = getPermissionName(membership)
+    if (permission !== 'viewer') {
+      return new Error(
+        `PocketBase still rejected anime creation for a ${permission} member on this shared list. ` +
+        `${details || 'Check anime_shared_list.createRule and permission.add.'}`
+      )
     }
 
     return new Error(`PocketBase rejected anime creation on this shared list. ${details || 'Failed to create record.'}`.trim())

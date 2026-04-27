@@ -31,7 +31,7 @@
             </button>
 
             <div class="hero-actions">
-              <button class="ghost-btn settings-btn" type="button" @click="openSettings">
+              <button v-if="detail.isOwner || detail.isMember" class="ghost-btn settings-btn" type="button" @click="openSettings">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" width="14" height="14" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317a1.724 1.724 0 0 1 3.35 0 1.724 1.724 0 0 0 2.573 1.066 1.724 1.724 0 0 1 2.455 2.455 1.724 1.724 0 0 0 1.065 2.572 1.724 1.724 0 0 1 0 3.35 1.724 1.724 0 0 0-1.065 2.573 1.724 1.724 0 0 1-2.455 2.455 1.724 1.724 0 0 0-2.573 1.065 1.724 1.724 0 0 1-3.35 0 1.724 1.724 0 0 0-2.572-1.065 1.724 1.724 0 0 1-2.455-2.455 1.724 1.724 0 0 0-1.066-2.573 1.724 1.724 0 0 1 0-3.35 1.724 1.724 0 0 0 1.066-2.572 1.724 1.724 0 0 1 2.455-2.455 1.724 1.724 0 0 0 2.572-1.066Z" />
                   <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
@@ -40,7 +40,7 @@
               </button>
 
               <button
-                v-if="!detail.isOwner"
+                v-if="detail.isMember && !detail.isOwner"
                 class="danger-btn"
                 type="button"
                 :disabled="isLeaving"
@@ -66,14 +66,14 @@
                   {{ privacyLabel(detail.privacy) }}
                 </span>
                 <span>{{ createdLabel }}</span>
-                <span>{{ detail.memberCount }} member<span v-if="detail.memberCount > 1">s</span></span>
-                <span>{{ detail.animeCount }} anime</span>
+                <span>{{ detailMemberMetaText }}</span>
+                <span>{{ detailAnimeMetaText }}</span>
                 <span>{{ detail.updatedLabel }}</span>
-                <span class="role-accent">{{ detail.isOwner ? 'Owner' : 'Member' }}</span>
+                <span class="role-accent">{{ detailRoleLabel }}</span>
               </div>
 
               <p class="group-description">
-                Created by {{ detail.ownerName }}. {{ detail.animeCount }} anime currently in the shared list.
+                {{ detailDescriptionText }}
               </p>
 
               <div class="hero-members">
@@ -152,15 +152,15 @@
 
                 <div class="sidebar-stats">
                   <div class="stat-chip">
-                    <strong>{{ detail.animeCount }}</strong>
+                    <strong>{{ detail.animeVisibilityLimited ? 'Hidden' : detail.animeCount }}</strong>
                     <span>Anime</span>
                   </div>
                   <div class="stat-chip">
-                    <strong>{{ detail.memberCount }}</strong>
+                    <strong>{{ detail.membersVisibilityLimited ? 'Hidden' : detail.memberCount }}</strong>
                     <span>Members</span>
                   </div>
                   <div class="stat-chip">
-                    <strong>{{ visibleAnimeCount }}</strong>
+                    <strong>{{ detail.animeVisibilityLimited ? 'Hidden' : visibleAnimeCount }}</strong>
                     <span>Visible</span>
                   </div>
                 </div>
@@ -343,9 +343,9 @@
               </section>
 
               <div v-if="!visibleAnimeSections.length" class="empty-state">
-                <div class="empty-state-title">No anime found for this filter.</div>
+                <div class="empty-state-title">{{ detail.animeVisibilityLimited ? 'Anime entries are hidden.' : 'No anime found for this filter.' }}</div>
                 <div class="empty-state-text">
-                  {{ canManageAnime ? 'Try another title or use Add anime.' : 'You can browse this shared list, but you cannot edit its anime entries.' }}
+                  {{ detail.animeVisibilityLimited ? 'This list is visible, but its anime entries are not exposed to non-members yet.' : canManageAnime ? 'Try another title or use Add anime.' : 'You can browse this shared list, but you cannot edit its anime entries.' }}
                 </div>
               </div>
 
@@ -614,12 +614,12 @@
                 </div>
                 <div class="info-row">
                   <span>Anime count</span>
-                  <strong>{{ detail.animeCount }}</strong>
+                  <strong>{{ detail.animeVisibilityLimited ? 'Hidden' : detail.animeCount }}</strong>
                 </div>
               </div>
             </section>
 
-            <section class="drawer-card danger-card">
+            <section v-if="detail.isMember" class="drawer-card danger-card">
               <div class="drawer-card-head">
                 <div>
                   <h3>Leave shared list</h3>
@@ -944,6 +944,29 @@ const visibleAnimeCount = computed(() => visibleAnimeSections.value.reduce((sum,
 const selectedAnimeEntry = computed(() =>
   detail.value?.animeEntries.find(entry => entry.relationId === selectedAnimeRelationId.value) || null
 )
+const detailRoleLabel = computed(() => {
+  if (!detail.value) return ''
+  if (detail.value.isOwner) return 'Owner'
+  if (detail.value.isMember) return 'Member'
+  return 'Viewer'
+})
+const detailMemberMetaText = computed(() => {
+  if (!detail.value) return '0 members'
+  if (detail.value.membersVisibilityLimited) return 'Members hidden'
+  return `${detail.value.memberCount} member${detail.value.memberCount > 1 ? 's' : ''}`
+})
+const detailAnimeMetaText = computed(() => {
+  if (!detail.value) return '0 anime'
+  if (detail.value.animeVisibilityLimited) return 'Anime hidden'
+  return `${detail.value.animeCount} anime`
+})
+const detailDescriptionText = computed(() => {
+  if (!detail.value) return ''
+  if (detail.value.animeVisibilityLimited) {
+    return `Created by ${detail.value.ownerName}. Anime entries are hidden for this visibility level.`
+  }
+  return `Created by ${detail.value.ownerName}. ${detail.value.animeCount} anime currently in the shared list.`
+})
 
 const selectedAnimeMedia = computed(() => {
   const mediaId = Number(selectedAnimeEntry.value?.mediaId || 0)
@@ -1063,7 +1086,7 @@ const loadPage = async () => {
 const privacyLabel = (privacy: SharedListPrivacy) => privacy === 'private' ? 'Private' : privacy === 'friends' ? 'Friends Only' : 'Public'
 
 const openSettings = () => {
-  if (!detail.value) return
+  if (!detail.value || (!detail.value.isOwner && !detail.value.isMember)) return
   syncSettingsDraft(detail.value)
   isSettingsOpen.value = true
 }

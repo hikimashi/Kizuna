@@ -32,9 +32,8 @@ export default defineNuxtConfig({
   app: {
     head: {
       link: [
-        { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png' },
-        { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16x16.png' },
-        { rel: 'shortcut icon', href: '/favicon.ico' },
+        { rel: 'icon', type: 'image/webp', href: '/img/logo.webp?v=fox-logo' },
+        { rel: 'shortcut icon', type: 'image/webp', href: '/img/logo.webp?v=fox-logo' },
       ],
     },
   },

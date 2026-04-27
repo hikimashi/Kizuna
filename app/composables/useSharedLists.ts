@@ -231,6 +231,10 @@ const pocketbaseErrorDetails = (error: any) => {
     .join(' | ')
 }
 
+const noAutoCancel = {
+  requestKey: null as null
+}
+
 const sharedListMediaFieldError = () => new Error(
   'PocketBase shared_list still needs `image` and `banner` file fields.'
 )
@@ -240,7 +244,8 @@ const fetchUsersByIds = async (pb: PocketBaseClient, ids: string[]) => {
   if (!uniqueIds.length) return new Map<string, UserRecord>()
 
   const users = await pb.collection('user').getFullList<UserRecord>({
-    filter: buildOrIdFilter(uniqueIds)
+    filter: buildOrIdFilter(uniqueIds),
+    ...noAutoCancel
   })
 
   return new Map(users.map(user => [user.id, user]))
@@ -522,17 +527,22 @@ export const useSharedLists = () => {
   }
 
   const getSharedListRecord = async (listId: string) => {
-    return await pocketbaseStore.pb.collection('shared_list').getOne<SharedListRecord>(listId)
+    return await pocketbaseStore.pb.collection('shared_list').getOne<SharedListRecord>(listId, {
+      ...noAutoCancel
+    })
   }
 
   const getMembershipRecord = async (membershipId: string) => {
     return await pocketbaseStore.pb.collection('user_shared_list').getOne<UserSharedListRecord>(membershipId, {
-      expand: 'fk_permission_id'
+      expand: 'fk_permission_id',
+      ...noAutoCancel
     })
   }
 
   const getAnimeSharedListRecord = async (relationId: string) => {
-    return await pocketbaseStore.pb.collection('anime_shared_list').getOne<AnimeSharedListRecord>(relationId)
+    return await pocketbaseStore.pb.collection('anime_shared_list').getOne<AnimeSharedListRecord>(relationId, {
+      ...noAutoCancel
+    })
   }
 
   const findMembership = async (listId: string, userId: string) => {
@@ -540,7 +550,8 @@ export const useSharedLists = () => {
 
     const existing = await pocketbaseStore.pb.collection('user_shared_list').getList<UserSharedListRecord>(1, 1, {
       filter: buildMembershipFilter(listId, userId),
-      expand: 'fk_permission_id'
+      expand: 'fk_permission_id',
+      ...noAutoCancel
     })
 
     return existing.items[0] || null
@@ -749,7 +760,8 @@ export const useSharedLists = () => {
     const membershipRecords = await pocketbaseStore.pb.collection('user_shared_list').getFullList<UserSharedListRecord>({
       filter: `fk_shared_list_id="${escapeFilterValue(listId)}"`,
       sort: '-created',
-      expand: 'fk_permission_id'
+      expand: 'fk_permission_id',
+      ...noAutoCancel
     })
 
     for (const membership of membershipRecords) {
@@ -829,12 +841,14 @@ export const useSharedLists = () => {
     const [ownedListRecords, ownMembershipRecords] = await Promise.all([
       pocketbaseStore.pb.collection('shared_list').getFullList<SharedListRecord>({
         filter: `fk_owner_user_id="${escapeFilterValue(userId)}"`,
-        sort: '-updated'
+        sort: '-updated',
+        ...noAutoCancel
       }),
       pocketbaseStore.pb.collection('user_shared_list').getFullList<UserSharedListRecord>({
         filter: buildUserMembershipFilter(userId),
         sort: '-updated',
-        expand: 'fk_permission_id'
+        expand: 'fk_permission_id',
+        ...noAutoCancel
       })
     ])
 
@@ -848,7 +862,8 @@ export const useSharedLists = () => {
     const joinedListRecords = joinedListIds.length
       ? await pocketbaseStore.pb.collection('shared_list').getFullList<SharedListRecord>({
           filter: buildOrIdFilter(joinedListIds),
-          sort: '-updated'
+          sort: '-updated',
+          ...noAutoCancel
         })
       : []
 
@@ -867,11 +882,13 @@ export const useSharedLists = () => {
       pocketbaseStore.pb.collection('user_shared_list').getFullList<UserSharedListRecord>({
         filter: buildOrIdFilter(accessibleListIds, 'fk_shared_list_id'),
         sort: '-updated',
-        expand: 'fk_permission_id'
+        expand: 'fk_permission_id',
+        ...noAutoCancel
       }),
       pocketbaseStore.pb.collection('anime_shared_list').getFullList<AnimeSharedListRecord>({
         filter: buildOrIdFilter(accessibleListIds, 'fk_shared_list_id'),
-        sort: '-updated'
+        sort: '-updated',
+        ...noAutoCancel
       })
     ])
 
@@ -949,7 +966,9 @@ export const useSharedLists = () => {
 
   const loadDetail = async (listId: string) => {
     const userId = requireCurrentUserId()
-    const record = await pocketbaseStore.pb.collection('shared_list').getOne<SharedListRecord>(listId)
+    const record = await pocketbaseStore.pb.collection('shared_list').getOne<SharedListRecord>(listId, {
+      ...noAutoCancel
+    })
     const ownerId = getOwnerId(record)
     const ownMembership = await findMembership(listId, userId)
 
@@ -961,11 +980,13 @@ export const useSharedLists = () => {
       pocketbaseStore.pb.collection('user_shared_list').getFullList<UserSharedListRecord>({
         filter: `fk_shared_list_id="${escapeFilterValue(listId)}"`,
         sort: '-created',
-        expand: 'fk_permission_id'
+        expand: 'fk_permission_id',
+        ...noAutoCancel
       }),
       pocketbaseStore.pb.collection('anime_shared_list').getFullList<AnimeSharedListRecord>({
         filter: `fk_shared_list_id="${escapeFilterValue(listId)}"`,
-        sort: '-created'
+        sort: '-created',
+        ...noAutoCancel
       })
     ])
 
@@ -981,7 +1002,8 @@ export const useSharedLists = () => {
       fetchUsersByIds(pocketbaseStore.pb, userIds),
       animeIds.length
         ? pocketbaseStore.pb.collection('anime').getFullList<AnimeRecord>({
-            filter: buildOrIdFilter(animeIds)
+            filter: buildOrIdFilter(animeIds),
+            ...noAutoCancel
           }).then(records => new Map(records.map(item => [item.id, item])))
         : Promise.resolve(new Map<string, AnimeRecord>())
     ])
@@ -1141,10 +1163,12 @@ export const useSharedLists = () => {
 
   const [memberships, animeRelations] = await Promise.all([
     pocketbaseStore.pb.collection('user_shared_list').getFullList<UserSharedListRecord>({
-      filter: `fk_shared_list_id="${escapeFilterValue(listId)}"`
+      filter: `fk_shared_list_id="${escapeFilterValue(listId)}"`,
+      ...noAutoCancel
     }),
     pocketbaseStore.pb.collection('anime_shared_list').getFullList<AnimeSharedListRecord>({
-      filter: `fk_shared_list_id="${escapeFilterValue(listId)}"`
+      filter: `fk_shared_list_id="${escapeFilterValue(listId)}"`,
+      ...noAutoCancel
     })
   ])
 
@@ -1176,7 +1200,8 @@ export const useSharedLists = () => {
     }
 
     const existing = await pocketbaseStore.pb.collection('anime').getList<AnimeRecord>(1, 1, {
-      filter: `anilist_media_id=${mediaId}`
+      filter: `anilist_media_id=${mediaId}`,
+      ...noAutoCancel
     })
 
     const current = existing.items[0]
@@ -1192,7 +1217,8 @@ export const useSharedLists = () => {
       if (!isUniqueConstraintError(error)) throw error
 
       const retry = await pocketbaseStore.pb.collection('anime').getList<AnimeRecord>(1, 1, {
-        filter: `anilist_media_id=${mediaId}`
+        filter: `anilist_media_id=${mediaId}`,
+        ...noAutoCancel
       })
       const retried = retry.items[0]
       if (retried) return retried
@@ -1215,7 +1241,8 @@ export const useSharedLists = () => {
     const animeRecord = await ensureAnimeRecord(input)
 
     const existingRelation = await pocketbaseStore.pb.collection('anime_shared_list').getList<AnimeSharedListRecord>(1, 1, {
-      filter: `fk_shared_list_id="${escapeFilterValue(listId)}" && fk_anime_id="${escapeFilterValue(animeRecord.id)}"`
+      filter: `fk_shared_list_id="${escapeFilterValue(listId)}" && fk_anime_id="${escapeFilterValue(animeRecord.id)}"`,
+      ...noAutoCancel
     })
 
     if (existingRelation.items[0]) {
@@ -1324,7 +1351,8 @@ export const useSharedLists = () => {
 
     const result = await pocketbaseStore.pb.collection('user').getList<UserRecord>(1, 8, {
       filter,
-      sort: 'anilist_username'
+      sort: 'anilist_username',
+      ...noAutoCancel
     })
 
     return result.items.map(user => ({

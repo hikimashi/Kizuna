@@ -124,12 +124,13 @@ export type SharedListSummary = {
   imageUrl?: string
   bannerUrl?: string
   members: SharedListMember[]
+  membersVisibilityLimited: boolean
+  animeVisibilityLimited: boolean
 }
 
 export type SharedListDetail = SharedListSummary & {
   ownMembershipId?: string
   canManageMembers: boolean
-  membersVisibilityLimited: boolean
   animeEntries: SharedListAnimeEntry[]
 }
 
@@ -526,6 +527,121 @@ export const useSharedLists = () => {
     return `fk_shared_list_id="${safeListId}" && ${buildUserMembershipFilter(userId)}`
   }
 
+  const buildTargetParticipationFilter = (userId: string) => {
+    const safeUserId = escapeFilterValue(userId)
+    return `(fk_owner_user_id="${safeUserId}" || user_shared_list_via_fk_shared_list_id.fk_user_id ?= "${safeUserId}")`
+  }
+
+  const loadSummaryRecords = async (
+    records: SharedListRecord[],
+    viewerUserId = String(currentUserId.value || '')
+  ) => {
+    const listRecords = Array.from(
+      new Map(
+        records
+          .filter(record => record.id)
+          .map(record => [record.id, record] as const)
+      ).values()
+    )
+
+    if (!listRecords.length) return []
+
+    const accessibleListIds = listRecords.map(record => record.id)
+    const [membershipResult, animeRelationsResult] = await Promise.allSettled([
+      pocketbaseStore.pb.collection('user_shared_list').getFullList<UserSharedListRecord>({
+        filter: buildOrIdFilter(accessibleListIds, 'fk_shared_list_id'),
+        sort: '-updated',
+        expand: 'fk_permission_id',
+        ...noAutoCancel
+      }),
+      pocketbaseStore.pb.collection('anime_shared_list').getFullList<AnimeSharedListRecord>({
+        filter: buildOrIdFilter(accessibleListIds, 'fk_shared_list_id'),
+        sort: '-updated',
+        ...noAutoCancel
+      })
+    ])
+
+    const membershipRecords = membershipResult.status === 'fulfilled' ? membershipResult.value : []
+    const animeRelations = animeRelationsResult.status === 'fulfilled' ? animeRelationsResult.value : []
+
+    const membershipsByList = new Map<string, UserSharedListRecord[]>()
+    for (const membership of membershipRecords) {
+      const listId = normalizeRelationValue(membership.fk_shared_list_id)
+      if (!listId) continue
+      const current = membershipsByList.get(listId) ?? []
+      current.push(membership)
+      membershipsByList.set(listId, current)
+    }
+
+    const animeCountByList = new Map<string, number>()
+    for (const relation of animeRelations) {
+      const listId = normalizeRelationValue(relation.fk_shared_list_id)
+      if (!listId) continue
+      animeCountByList.set(listId, Number(animeCountByList.get(listId) || 0) + 1)
+    }
+
+    const visibleUserIds = new Set<string>()
+    for (const record of listRecords) {
+      const ownerId = getOwnerId(record)
+      if (ownerId) visibleUserIds.add(ownerId)
+    }
+    for (const membership of membershipRecords) {
+      for (const memberId of normalizeRelationValues(membership.fk_user_id)) {
+        visibleUserIds.add(memberId)
+      }
+    }
+
+    const userMap = await fetchUsersByIds(pocketbaseStore.pb, Array.from(visibleUserIds))
+
+    return listRecords.map((record) => {
+      const ownerId = getOwnerId(record)
+      const memberships = membershipsByList.get(record.id) ?? []
+      const ownMembership = viewerUserId
+        ? memberships.find(membership => membershipHasUser(membership, viewerUserId))
+        : undefined
+      const isOwner = Boolean(viewerUserId) && ownerId === viewerUserId
+      const isMember = isOwner || Boolean(ownMembership)
+      const memberIds = Array.from(new Set([
+        ownerId,
+        ...memberships.flatMap(membership => normalizeRelationValues(membership.fk_user_id))
+      ].filter(Boolean)))
+
+      const ownerUser = isOwner
+        ? ({ id: ownerId, ...currentUserProfile.value } as UserRecord)
+        : userMap.get(ownerId)
+      const ownerName = isOwner
+        ? getDisplayName(currentUserProfile.value, ownerId)
+        : getDisplayName(ownerUser, ownerId)
+
+      const members = memberIds.slice(0, 5).map((memberId) => {
+        const membership = memberships.find(item => membershipHasUser(item, memberId))
+        const role: SharedListRole = memberId === ownerId ? 'owner' : 'member'
+        return buildMember(memberId, viewerUserId, currentUserProfile.value, userMap, membership, role)
+      })
+
+      return {
+        id: record.id,
+        title: String(record.name || 'Untitled shared list'),
+        privacy: (record.privacy_level || 'friends') as SharedListPrivacy,
+        ownerId,
+        ownerName,
+        ownerAvatar: isOwner ? getAvatar(currentUserProfile.value) : getAvatar(ownerUser),
+        createdAt: record.created,
+        updatedAt: record.updated,
+        updatedLabel: formatRelativeDate(record.updated),
+        isOwner,
+        isMember,
+        memberCount: Math.max(memberIds.length, ownerId ? 1 : 0),
+        animeCount: Number(animeCountByList.get(record.id) || 0),
+        imageUrl: sharedListFileUrl(record, record.image),
+        bannerUrl: sharedListFileUrl(record, record.banner),
+        members,
+        membersVisibilityLimited: !isMember,
+        animeVisibilityLimited: !isMember
+      } satisfies SharedListSummary
+    })
+  }
+
   const getSharedListRecord = async (listId: string) => {
     return await pocketbaseStore.pb.collection('shared_list').getOne<SharedListRecord>(listId, {
       ...noAutoCancel
@@ -867,101 +983,57 @@ export const useSharedLists = () => {
         })
       : []
 
-    const listRecords = Array.from(
-      new Map(
-        [...ownedListRecords, ...joinedListRecords]
-          .filter(record => record.id)
-          .map(record => [record.id, record] as const)
-      ).values()
+    return await loadSummaryRecords(
+      [...ownedListRecords, ...joinedListRecords],
+      userId
     )
+  }
 
-    if (!listRecords.length) return []
+  const loadProfileSummaries = async (input: {
+    targetUserId: string
+    viewerIsFriend?: boolean
+  }) => {
+    const viewerUserId = requireCurrentUserId()
+    const targetUserId = String(input.targetUserId || '').trim()
+    if (!targetUserId) return []
 
-    const accessibleListIds = listRecords.map(record => record.id)
-    const [membershipRecords, animeRelations] = await Promise.all([
-      pocketbaseStore.pb.collection('user_shared_list').getFullList<UserSharedListRecord>({
-        filter: buildOrIdFilter(accessibleListIds, 'fk_shared_list_id'),
-        sort: '-updated',
-        expand: 'fk_permission_id',
-        ...noAutoCancel
-      }),
-      pocketbaseStore.pb.collection('anime_shared_list').getFullList<AnimeSharedListRecord>({
-        filter: buildOrIdFilter(accessibleListIds, 'fk_shared_list_id'),
-        sort: '-updated',
-        ...noAutoCancel
-      })
+    const visibleFromSession = await loadSummaries()
+    const overlappingLists = visibleFromSession.filter(list =>
+      list.ownerId === targetUserId || list.members.some(member => member.id === targetUserId)
+    )
+    const overlapIds = new Set(overlappingLists.map(list => list.id))
+
+    const publicRecordsPromise = pocketbaseStore.pb.collection('shared_list').getFullList<SharedListRecord>({
+      filter: `privacy_level="public" && ${buildTargetParticipationFilter(targetUserId)}`,
+      sort: '-updated',
+      ...noAutoCancel
+    })
+
+    const friendRecordsPromise = input.viewerIsFriend
+      ? pocketbaseStore.pb.collection('shared_list').getFullList<SharedListRecord>({
+          filter: `privacy_level="friends" && ${buildTargetParticipationFilter(targetUserId)}`,
+          sort: '-updated',
+          ...noAutoCancel
+        }).catch((error: any) => {
+          if (isPocketbaseAccessError(error) || isPocketbaseNotFoundError(error)) {
+            return []
+          }
+          throw error
+        })
+      : Promise.resolve([] as SharedListRecord[])
+
+    const [publicRecords, friendRecords] = await Promise.all([
+      publicRecordsPromise,
+      friendRecordsPromise
     ])
 
-    const membershipsByList = new Map<string, UserSharedListRecord[]>()
-    for (const membership of membershipRecords) {
-      const listId = normalizeRelationValue(membership.fk_shared_list_id)
-      if (!listId) continue
-      const current = membershipsByList.get(listId) ?? []
-      current.push(membership)
-      membershipsByList.set(listId, current)
-    }
+    const supplementalSummaries = await loadSummaryRecords(
+      [...publicRecords, ...friendRecords].filter(record => !overlapIds.has(record.id)),
+      viewerUserId
+    )
 
-    const animeCountByList = new Map<string, number>()
-    for (const relation of animeRelations) {
-      const listId = normalizeRelationValue(relation.fk_shared_list_id)
-      if (!listId) continue
-      animeCountByList.set(listId, Number(animeCountByList.get(listId) || 0) + 1)
-    }
-
-    const visibleUserIds = new Set<string>()
-    for (const record of listRecords) {
-      const ownerId = getOwnerId(record)
-      if (ownerId) visibleUserIds.add(ownerId)
-    }
-    for (const membership of membershipRecords) {
-      for (const memberId of normalizeRelationValues(membership.fk_user_id)) {
-        visibleUserIds.add(memberId)
-      }
-    }
-
-    const userMap = await fetchUsersByIds(pocketbaseStore.pb, Array.from(visibleUserIds))
-
-    return listRecords.map((record) => {
-      const ownerId = getOwnerId(record)
-      const memberships = membershipsByList.get(record.id) ?? []
-      const ownMembership = memberships.find(membership => membershipHasUser(membership, userId))
-      const memberIds = Array.from(new Set([
-        ownerId,
-        ...memberships.flatMap(membership => normalizeRelationValues(membership.fk_user_id))
-      ].filter(Boolean)))
-
-      const ownerUser = ownerId === userId
-        ? ({ id: ownerId, ...currentUserProfile.value } as UserRecord)
-        : userMap.get(ownerId)
-      const ownerName = ownerId === userId
-        ? getDisplayName(currentUserProfile.value, ownerId)
-        : getDisplayName(ownerUser, ownerId)
-
-      const members = memberIds.slice(0, 5).map((memberId) => {
-        const membership = memberships.find(item => membershipHasUser(item, memberId))
-        const role: SharedListRole = memberId === ownerId ? 'owner' : 'member'
-        return buildMember(memberId, userId, currentUserProfile.value, userMap, membership, role)
-      })
-
-      return {
-        id: record.id,
-        title: String(record.name || 'Untitled shared list'),
-        privacy: (record.privacy_level || 'friends') as SharedListPrivacy,
-        ownerId,
-        ownerName,
-        ownerAvatar: ownerId === userId ? getAvatar(currentUserProfile.value) : getAvatar(ownerUser),
-        createdAt: record.created,
-        updatedAt: record.updated,
-        updatedLabel: formatRelativeDate(record.updated),
-        isOwner: ownerId === userId,
-        isMember: ownerId === userId || Boolean(ownMembership),
-        memberCount: Math.max(memberIds.length, ownerId ? 1 : 0),
-        animeCount: Number(animeCountByList.get(record.id) || 0),
-        imageUrl: sharedListFileUrl(record, record.image),
-        bannerUrl: sharedListFileUrl(record, record.banner),
-        members
-      } satisfies SharedListSummary
-    })
+    return [...overlappingLists, ...supplementalSummaries]
+      .sort((a, b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime())
   }
 
   const loadDetail = async (listId: string) => {
@@ -971,12 +1043,10 @@ export const useSharedLists = () => {
     })
     const ownerId = getOwnerId(record)
     const ownMembership = await findMembership(listId, userId)
+    const isOwner = ownerId === userId
+    const isMember = isOwner || Boolean(ownMembership)
 
-    if (ownerId !== userId && !ownMembership) {
-      throw new Error('You do not have access to this shared list.')
-    }
-
-    const [membershipRecords, animeRelations] = await Promise.all([
+    const [membershipResult, animeRelationsResult] = await Promise.allSettled([
       pocketbaseStore.pb.collection('user_shared_list').getFullList<UserSharedListRecord>({
         filter: `fk_shared_list_id="${escapeFilterValue(listId)}"`,
         sort: '-created',
@@ -989,6 +1059,9 @@ export const useSharedLists = () => {
         ...noAutoCancel
       })
     ])
+
+    const membershipRecords = membershipResult.status === 'fulfilled' ? membershipResult.value : []
+    const animeRelations = animeRelationsResult.status === 'fulfilled' ? animeRelationsResult.value : []
 
     const memberIds = Array.from(new Set([
       ownerId,
@@ -1054,16 +1127,17 @@ export const useSharedLists = () => {
       createdAt: record.created,
       updatedAt: record.updated,
       updatedLabel: formatRelativeDate(record.updated),
-      isOwner: ownerId === userId,
-      isMember: ownerId === userId || Boolean(ownMembership),
+      isOwner,
+      isMember,
       memberCount: members.length,
       animeCount: animeEntries.length,
       imageUrl: sharedListFileUrl(record, record.image),
       bannerUrl: sharedListFileUrl(record, record.banner),
       members,
       ownMembershipId: ownMembership?.id,
-      canManageMembers: ownerId === userId || getPermissionCapabilities(ownMembership).canManageMembers,
-      membersVisibilityLimited: !(ownerId === userId || getPermissionCapabilities(ownMembership).canManageMembers),
+      canManageMembers: isOwner || (isMember && getPermissionCapabilities(ownMembership).canManageMembers),
+      membersVisibilityLimited: !isMember,
+      animeVisibilityLimited: !isMember,
       animeEntries
     } satisfies SharedListDetail
   }
@@ -1351,8 +1425,7 @@ export const useSharedLists = () => {
 
     const result = await pocketbaseStore.pb.collection('user').getList<UserRecord>(1, 8, {
       filter,
-      sort: 'anilist_username',
-      ...noAutoCancel
+      sort: 'anilist_username'
     })
 
     return result.items.map(user => ({
@@ -1369,6 +1442,7 @@ export const useSharedLists = () => {
     currentUserProfile,
     formatDateLabel,
     loadSummaries,
+    loadProfileSummaries,
     loadDetail,
     createSharedList,
     updateSharedList,

@@ -25,6 +25,17 @@ export type SocialUser = {
   avatarColor: string
 }
 
+type PocketbaseUserRecord = {
+  id: string
+  anilist_user_id?: number | string
+}
+
+type UserFriendRecord = {
+  id: string
+  fk_user_id?: string | string[]
+  fk_friend_user_id?: string | string[]
+}
+
 const followingQuery = `
 query ($userId: Int!, $page: Int, $perPage: Int) {
   Page(page: $page, perPage: $perPage) {
@@ -84,6 +95,8 @@ const formatJoined = (timestamp?: number) => {
 }
 
 const hashColor = (id: number) => palette[Math.abs(id) % palette.length] ?? palette[0] ?? '#4F378A'
+const normalizeRelationValue = (value?: string | string[]) => Array.isArray(value) ? String(value[0] || '') : String(value || '')
+const escapeFilterValue = (value: string) => value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
 
 const mapUser = (user: AniListUserNode): SocialUser => ({
   id: Number(user.id),
@@ -115,6 +128,67 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
   const friendUsers = ref<SocialUser[]>([])
   const followPendingIds = ref<number[]>([])
   const loadedForKey = ref('')
+
+  const syncUserFriends = async (mutuals: SocialUser[]) => {
+    const currentPocketbaseUserId = String(authRecord.value.id || '')
+    if (!currentPocketbaseUserId) return
+
+    const mutualAniListIds = Array.from(new Set(
+      mutuals
+        .map(user => Number(user.id || 0))
+        .filter(id => Number.isFinite(id) && id > 0)
+    ))
+
+    const desiredPocketbaseFriendIds = new Set<string>()
+    const chunkSize = 40
+
+    for (let start = 0; start < mutualAniListIds.length; start += chunkSize) {
+      const chunk = mutualAniListIds.slice(start, start + chunkSize)
+      if (!chunk.length) continue
+
+      const filter = chunk.map(id => `anilist_user_id=${id}`).join(' || ')
+      const users = await pocketbaseStore.pb.collection('user').getFullList<PocketbaseUserRecord>({
+        filter,
+        requestKey: null
+      })
+
+      for (const user of users) {
+        const userId = String(user.id || '')
+        if (userId && userId !== currentPocketbaseUserId) {
+          desiredPocketbaseFriendIds.add(userId)
+        }
+      }
+    }
+
+    const existingRelations = await pocketbaseStore.pb.collection('user_friend').getFullList<UserFriendRecord>({
+      filter: `fk_user_id="${escapeFilterValue(currentPocketbaseUserId)}"`,
+      requestKey: null
+    })
+
+    const existingByFriendId = new Map<string, UserFriendRecord>()
+    for (const relation of existingRelations) {
+      const friendId = normalizeRelationValue(relation.fk_friend_user_id)
+      if (friendId) existingByFriendId.set(friendId, relation)
+    }
+
+    const deleteTasks = existingRelations
+      .filter((relation) => {
+        const friendId = normalizeRelationValue(relation.fk_friend_user_id)
+        return Boolean(friendId) && !desiredPocketbaseFriendIds.has(friendId)
+      })
+      .map(relation => pocketbaseStore.pb.collection('user_friend').delete(relation.id, { requestKey: null }))
+
+    const createTasks = Array.from(desiredPocketbaseFriendIds)
+      .filter(friendId => !existingByFriendId.has(friendId))
+      .map(friendId => pocketbaseStore.pb.collection('user_friend').create({
+        fk_user_id: currentPocketbaseUserId,
+        fk_friend_user_id: friendId
+      }, { requestKey: null }))
+
+    if (deleteTasks.length || createTasks.length) {
+      await Promise.all([...deleteTasks, ...createTasks])
+    }
+  }
 
   const reset = (keepError = false) => {
     followingUsers.value = []
@@ -244,6 +318,13 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
         if (user.isFriend) friendMap.set(user.id, user)
       }
       friendUsers.value = Array.from(friendMap.values())
+
+      try {
+        await syncUserFriends(friendUsers.value)
+      } catch (error) {
+        console.warn('[anilistSocial] user_friend sync failed', error)
+      }
+
       loadedForKey.value = userKey.value
     } catch (error: any) {
       console.error('Failed to load AniList social data:', error)

@@ -310,7 +310,7 @@
             <div>
               <div class="friend-section-kicker">PocketBase Shared Lists</div>
               <h2 class="friend-section-title">{{ friendName || 'Friend' }} Shared Lists</h2>
-              <p class="friend-section-copy">Lists involving this user that are also visible from your current session.</p>
+              <p class="friend-section-copy">Public lists are visible to everyone, friends-only lists to friends, and private lists only to members.</p>
             </div>
             <div class="friend-stat-row">
               <div class="friend-stat-chip">
@@ -330,7 +330,7 @@
           </div>
 
           <div v-else-if="targetSharedLists.length === 0" class="empty-state">
-            No shared lists in common are visible for this profile yet.
+            No shared lists are visible for this profile right now.
           </div>
 
           <div v-else class="friend-shared-grid">
@@ -352,9 +352,9 @@
                     <div class="friend-shared-title">{{ list.title }}</div>
                   </div>
                   <div class="friend-shared-meta">Owned by {{ list.ownerName }}</div>
-                  <div class="friend-shared-desc">{{ list.animeCount }} anime currently in this shared list.</div>
+                  <div class="friend-shared-desc">{{ sharedListDescription(list) }}</div>
                   <div class="friend-shared-stats">
-                    <span>{{ list.memberCount }} members</span>
+                    <span>{{ sharedListMembersLabel(list) }}</span>
                     <span>{{ list.updatedLabel }}</span>
                   </div>
                   <div class="friend-shared-members">
@@ -370,7 +370,7 @@
                         <span v-else>{{ member.initials }}</span>
                       </div>
                     </div>
-                    <span v-if="list.memberCount > 4" class="friend-shared-more">+{{ list.memberCount - 4 }}</span>
+                    <span v-if="!list.membersVisibilityLimited && list.memberCount > 4" class="friend-shared-more">+{{ list.memberCount - 4 }}</span>
                   </div>
                 </div>
               </button>
@@ -446,10 +446,6 @@ type AniListUserNode = {
 type PocketbaseUserRecord = {
   id: string
   anilist_user_id?: string | number
-}
-
-type UserSharedListLookupRecord = {
-  fk_shared_list_id?: string | string[]
 }
 
 const profileQuery = `
@@ -587,7 +583,7 @@ const pocketbaseStore = usePocketbaseStore()
 const anilistGraphql = useAnilistGraphql()
 const socialStore = useAnilistSocialStore()
 const sharedListsStore = useSharedLists()
-const { followingUsers, followPendingIds } = storeToRefs(socialStore)
+const { followingUsers, friendUsers, followPendingIds } = storeToRefs(socialStore)
 
 const favoriteTab = ref<FavoriteTab>('anime')
 
@@ -637,6 +633,7 @@ const currentAniListUserId = computed(() => Number(authRecord.value.anilist_user
 const currentPocketbaseUserId = computed(() => String(authRecord.value.id || ''))
 const friendUserId = computed(() => Number(route.params.id ?? 0))
 const isOwnProfile = computed(() => currentAniListUserId.value > 0 && currentAniListUserId.value === friendUserId.value)
+const isTargetFriend = computed(() => friendUsers.value.some(user => user.id === friendUserId.value))
 const showFollowButton = computed(() => Boolean(token.value) && friendUserId.value > 0 && !isOwnProfile.value)
 const isFollowingFriend = computed(() => followingUsers.value.some(user => user.id === friendUserId.value))
 const isFollowBusy = computed(() => followPendingIds.value.includes(friendUserId.value))
@@ -880,9 +877,6 @@ const isViewerFollowing = (userId: number) => followingUsers.value.some(user => 
 const isViewerFollowBusy = (userId: number) => followPendingIds.value.includes(userId)
 const canToggleFollowUser = (userId: number) => Boolean(token.value) && userId > 0 && userId !== currentAniListUserId.value
 
-const escapeFilterValue = (value: string) => value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
-const normalizeRelationValue = (value?: string | string[]) => Array.isArray(value) ? String(value[0] || '') : String(value || '')
-
 const memberAvatarStyle = (member: Pick<SharedListMember, 'avatar' | 'color'>) =>
   member.avatar ? undefined : { background: member.color }
 
@@ -898,6 +892,14 @@ const privacyChipClass = (privacy: SharedListSummary['privacy']) => ({
 const sharedListBannerSrc = (list: SharedListSummary) => String(list.bannerUrl || '').trim() || DEFAULT_SHARED_LIST_BANNER
 const sharedListImageSrc = (list: SharedListSummary) => String(list.imageUrl || '').trim() || DEFAULT_SHARED_LIST_IMAGE
 const targetSharedListRole = (list: SharedListSummary) => list.ownerId === targetPocketbaseUserId.value ? 'Owner' : 'Member'
+const sharedListDescription = (list: SharedListSummary) =>
+  list.animeVisibilityLimited
+    ? 'Anime entries are hidden for this visibility level.'
+    : `${list.animeCount} anime currently in this shared list.`
+const sharedListMembersLabel = (list: SharedListSummary) =>
+  list.membersVisibilityLimited
+    ? 'Members hidden'
+    : `${list.memberCount} member${list.memberCount > 1 ? 's' : ''}`
 const profileTabRoute = (tab: FriendPageTab) => ({
   path: `/social/user/${friendUserId.value}`,
   query: tab === 'anime-list' ? {} : { tab }
@@ -1146,31 +1148,13 @@ const loadTargetSharedLists = async (force = false) => {
       return
     }
 
-    const targetUserFilter = `(fk_user_id ?= "${escapeFilterValue(targetUserRecordId)}" || fk_user_id="${escapeFilterValue(targetUserRecordId)}")`
-    const [summariesResult, membershipResult] = await Promise.allSettled([
-      sharedListsStore.loadSummaries(),
-      pocketbaseStore.pb.collection('user_shared_list').getFullList<UserSharedListLookupRecord>({
-        filter: targetUserFilter,
-        requestKey: null
-      })
-    ])
+    const summaries = await sharedListsStore.loadProfileSummaries({
+      targetUserId: targetUserRecordId,
+      viewerIsFriend: isTargetFriend.value
+    })
     if (requestedUserId !== friendUserId.value) return
 
-    if (summariesResult.status === 'rejected') {
-      throw summariesResult.reason
-    }
-
-    const targetMembershipListIds = membershipResult.status === 'fulfilled'
-      ? new Set(
-          membershipResult.value
-            .map(record => normalizeRelationValue(record.fk_shared_list_id))
-            .filter(Boolean)
-        )
-      : new Set<string>()
-
-    targetSharedLists.value = summariesResult.value
-      .filter((list) => list.ownerId === targetUserRecordId || targetMembershipListIds.has(list.id))
-      .sort((a, b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')))
+    targetSharedLists.value = summaries
     sharedListsLoaded.value = true
   } catch (error: any) {
     if (requestedUserId !== friendUserId.value) return
@@ -1231,6 +1215,12 @@ const toggleViewerFollow = async (targetId: number) => {
 
 watch(activeTab, () => {
   void ensureActiveTabData()
+})
+
+watch(isTargetFriend, (next, previous) => {
+  if (next === previous || activeTab.value !== 'shared-lists') return
+  sharedListsLoaded.value = false
+  void loadTargetSharedLists(true)
 })
 
 watch(friendUserId, async () => {

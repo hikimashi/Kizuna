@@ -128,6 +128,15 @@
                   </div>
                 </NuxtLink>
               </div>
+              <div v-else-if="dashboardListSearch.length" class="dashboard-empty-state dashboard-empty-state-action">
+                <div class="dashboard-empty-copy">
+                  <span>No shared list found.</span>
+                  <span>Create one with this search instead.</span>
+                </div>
+                <NuxtLink class="dashboard-empty-btn" :to="`/sharedLists?create=1&name=${encodeURIComponent(dashboardListSearch)}`">
+                  Create new shared list
+                </NuxtLink>
+              </div>
               <div v-else class="dashboard-empty-state">
                 No shared list found.
               </div>
@@ -179,6 +188,59 @@
                   </div>
                   <span class="friend-name">{{ friend.username }}</span>
                 </button>
+              </div>
+              <div
+                v-else-if="dashboardFriendSearch.length >= 2 && dashboardFriendSearchResults.length"
+                class="dashboard-search-results"
+              >
+                <div
+                  v-for="user in dashboardFriendSearchResults"
+                  :key="user.id"
+                  class="follow-result-card"
+                  role="button"
+                  tabindex="0"
+                  @click="openDashboardUserFromSearch(user)"
+                  @keydown.enter.prevent="openDashboardUserFromSearch(user)"
+                  @keydown.space.prevent="openDashboardUserFromSearch(user)"
+                >
+                  <div class="follow-result-main">
+                    <div class="follow-result-avatar" :style="user.avatar ? undefined : { background: user.color }">
+                      <img v-if="user.avatar" :src="user.avatar" :alt="user.name">
+                      <span v-else>{{ user.initials }}</span>
+                    </div>
+                    <div class="follow-result-copy">
+                      <div class="follow-result-name">{{ user.name }}</div>
+                      <div class="follow-result-subtitle">
+                        {{ `AniList #${user.anilistUserId} · ${user.animeCount} anime · score ${user.meanScore || '-'}` }}
+                      </div>
+                      <div class="follow-result-badges">
+                        <span v-if="isFollowBusy(user.anilistUserId)" class="follow-badge">Updating...</span>
+                        <span v-if="user.alreadyFriend" class="follow-badge follow-badge-friend">Already friend</span>
+                        <span v-else-if="user.inKizuna" class="follow-badge follow-badge-kizuna">On Kizuna</span>
+                        <span v-else class="follow-badge">AniList only</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="follow-result-actions">
+                    <button
+                      class="follow-action-btn follow-action-primary"
+                      type="button"
+                      :disabled="!user.anilistUserId || user.alreadyFriend || isFollowBusy(user.anilistUserId)"
+                      @click.stop="followUserFromDashboardSearch(user)"
+                    >
+                      {{ isFollowBusy(user.anilistUserId) ? 'Updating...' : user.alreadyFriend ? 'Friend added' : 'Follow' }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div v-else-if="dashboardFriendSearch.length >= 2 && isSearchingDashboardFriends" class="dashboard-empty-state">
+                Searching AniList users...
+              </div>
+              <div v-else-if="dashboardFriendSearch.length >= 2 && dashboardFriendSearchError" class="dashboard-empty-state dashboard-error-state">
+                {{ dashboardFriendSearchError }}
+              </div>
+              <div v-else-if="dashboardFriendSearch.length >= 2" class="dashboard-empty-state">
+                No matching AniList or Kizuna user found.
               </div>
               <div v-else class="dashboard-empty-state">
                 No mutual friends yet.
@@ -311,6 +373,21 @@ const dashboardFriendSearch = ref('')
 const dashboardLists = ref<SharedListSummary[]>([])
 const dashboardListsLoading = ref(false)
 const dashboardListsError = ref('')
+const isSearchingDashboardFriends = ref(false)
+const dashboardFriendSearchError = ref('')
+const dashboardFriendSearchResults = ref<Array<{
+  id: number
+  name: string
+  avatar?: string
+  initials: string
+  color: string
+  anilistUserId: number
+  animeCount: number
+  meanScore: number
+  inKizuna: boolean
+  pocketbaseUserId?: string
+  alreadyFriend: boolean
+}>>([])
 const isFollowModalOpen = ref(false)
 const followSearchQuery = ref('')
 const isSearchingUsers = ref(false)
@@ -329,6 +406,7 @@ const followSearchResults = ref<Array<{
   alreadyFriend: boolean
 }>>([])
 let followSearchTimer: ReturnType<typeof setTimeout> | null = null
+let dashboardFriendSearchTimer: ReturnType<typeof setTimeout> | null = null
 const viewportHeight = ref(900)
 const friendsPanelRef = ref<HTMLElement | null>(null)
 const friendsHeaderRef = ref<HTMLElement | null>(null)
@@ -501,6 +579,20 @@ type AniListSearchUser = {
   } | null
 }
 
+type SearchResultUser = {
+  id: number
+  name: string
+  avatar?: string
+  initials: string
+  color: string
+  anilistUserId: number
+  animeCount: number
+  meanScore: number
+  inKizuna: boolean
+  pocketbaseUserId?: string
+  alreadyFriend: boolean
+}
+
 const buildHue = (value: string) => {
   return Array.from(value).reduce((sum, char) => sum + char.charCodeAt(0), 0) % 360
 }
@@ -521,6 +613,53 @@ const fetchPocketBaseMatches = async (anilistIds: number[]) => {
   )
 }
 
+const normalizeAniListSearchResults = async (users: AniListSearchUser[]): Promise<SearchResultUser[]> => {
+  const filteredUsers = users.filter((user: AniListSearchUser) => Number(user?.id || 0) !== Number(authRecord.value?.anilist_user_id || 0))
+  const pocketbaseMatches = await fetchPocketBaseMatches(filteredUsers.map((user: AniListSearchUser) => Number(user?.id || 0)))
+
+  return filteredUsers
+    .map((user: AniListSearchUser) => {
+      const anilistUserId = Number(user?.id || 0)
+      const name = String(user?.name || 'Unknown user')
+      const avatar = String(user?.avatar?.large || user?.avatar?.medium || '')
+      const localUser = pocketbaseMatches.get(anilistUserId)
+      const hue = buildHue(name)
+      return {
+        id: anilistUserId,
+        name,
+        avatar: avatar || undefined,
+        initials: friendInitials(name),
+        color: `hsl(${hue} 72% 52%)`,
+        anilistUserId,
+        animeCount: Number(user?.statistics?.anime?.count || 0),
+        meanScore: Number(user?.statistics?.anime?.meanScore || 0),
+        inKizuna: Boolean(localUser?.id && String(localUser.id) !== currentUserId.value),
+        pocketbaseUserId: localUser?.id ? String(localUser.id) : undefined,
+        alreadyFriend: friendIds.value.has(anilistUserId)
+      }
+    })
+    .filter(user => user.anilistUserId > 0)
+}
+
+const requestAniListUserSearch = async (search: string, perPage = 8) => {
+  const payload = await anilistGraphql.request<any>(searchAniListUsersQuery, {
+    search: search.trim(),
+    page: 1,
+    perPage
+  }, {
+    cacheTtlMs: 30_000
+  })
+  const errorMessage = Array.isArray(payload?.errors)
+    ? payload.errors.map((error: any) => String(error?.message || '')).filter(Boolean).join(' | ')
+    : ''
+  if (errorMessage) {
+    throw new Error(errorMessage)
+  }
+
+  const rawUsers: AniListSearchUser[] = Array.isArray(payload?.data?.Page?.users) ? payload.data.Page.users : []
+  return normalizeAniListSearchResults(rawUsers)
+}
+
 const handleFollowSearch = () => {
   if (followSearchTimer) clearTimeout(followSearchTimer)
 
@@ -536,46 +675,7 @@ const handleFollowSearch = () => {
     followSearchError.value = ''
 
     try {
-      const payload = await anilistGraphql.request<any>(searchAniListUsersQuery, {
-        search: followSearchQuery.value.trim(),
-        page: 1,
-        perPage: 8
-      }, {
-        cacheTtlMs: 30_000
-      })
-      const errorMessage = Array.isArray(payload?.errors)
-        ? payload.errors.map((error: any) => String(error?.message || '')).filter(Boolean).join(' | ')
-        : ''
-      if (errorMessage) {
-        throw new Error(errorMessage)
-      }
-
-      const rawUsers: AniListSearchUser[] = Array.isArray(payload?.data?.Page?.users) ? payload.data.Page.users : []
-      const filteredUsers = rawUsers.filter((user: AniListSearchUser) => Number(user?.id || 0) !== Number(authRecord.value?.anilist_user_id || 0))
-      const pocketbaseMatches = await fetchPocketBaseMatches(filteredUsers.map((user: AniListSearchUser) => Number(user?.id || 0)))
-
-      followSearchResults.value = filteredUsers
-        .map((user: AniListSearchUser) => {
-          const anilistUserId = Number(user?.id || 0)
-          const name = String(user?.name || 'Unknown user')
-          const avatar = String(user?.avatar?.large || user?.avatar?.medium || '')
-          const localUser = pocketbaseMatches.get(anilistUserId)
-          const hue = buildHue(name)
-          return {
-            id: anilistUserId,
-            name,
-            avatar: avatar || undefined,
-            initials: friendInitials(name),
-            color: `hsl(${hue} 72% 52%)`,
-            anilistUserId,
-            animeCount: Number(user?.statistics?.anime?.count || 0),
-            meanScore: Number(user?.statistics?.anime?.meanScore || 0),
-            inKizuna: Boolean(localUser?.id && String(localUser.id) !== currentUserId.value),
-            pocketbaseUserId: localUser?.id ? String(localUser.id) : undefined,
-            alreadyFriend: friendIds.value.has(anilistUserId)
-          }
-        })
-        .filter(user => user.anilistUserId > 0)
+      followSearchResults.value = await requestAniListUserSearch(followSearchQuery.value, 8)
     } catch {
       followSearchError.value = 'Unable to search AniList users right now.'
       followSearchResults.value = []
@@ -585,9 +685,48 @@ const handleFollowSearch = () => {
   }, 220)
 }
 
+const handleDashboardFriendSearch = () => {
+  if (dashboardFriendSearchTimer) clearTimeout(dashboardFriendSearchTimer)
+
+  if (dashboardFriendSearch.value.trim().length < 2) {
+    dashboardFriendSearchError.value = ''
+    dashboardFriendSearchResults.value = []
+    isSearchingDashboardFriends.value = false
+    return
+  }
+
+  dashboardFriendSearchTimer = setTimeout(async () => {
+    isSearchingDashboardFriends.value = true
+    dashboardFriendSearchError.value = ''
+
+    try {
+      const localMatches = socialStore.friendUsers
+        .filter(friend => friend.isFollower && friend.following)
+        .filter(friend => friend.username.toLowerCase().includes(dashboardFriendSearch.value.trim().toLowerCase()))
+
+      if (localMatches.length) {
+        dashboardFriendSearchResults.value = []
+        return
+      }
+
+      dashboardFriendSearchResults.value = await requestAniListUserSearch(dashboardFriendSearch.value, 6)
+    } catch {
+      dashboardFriendSearchError.value = 'Unable to search AniList users right now.'
+      dashboardFriendSearchResults.value = []
+    } finally {
+      isSearchingDashboardFriends.value = false
+    }
+  }, 220)
+}
+
 const openUserFromSearch = (user: { anilistUserId: number }) => {
   if (!user.anilistUserId) return
   closeFollowModal()
+  navigateTo(`/social/user/${user.anilistUserId}`)
+}
+
+const openDashboardUserFromSearch = (user: { anilistUserId: number }) => {
+  if (!user.anilistUserId) return
   navigateTo(`/social/user/${user.anilistUserId}`)
 }
 
@@ -608,6 +747,24 @@ const followUserFromSearch = async (user: { anilistUserId: number }) => {
     )
   } catch (error: any) {
     followSearchError.value = error?.message || 'Unable to update AniList follow right now.'
+  }
+}
+
+const followUserFromDashboardSearch = async (user: { anilistUserId: number }) => {
+  if (!user.anilistUserId) return
+  if (isFollowBusy(user.anilistUserId)) return
+
+  dashboardFriendSearchError.value = ''
+
+  try {
+    await socialStore.toggleFollowUser(user.anilistUserId)
+    dashboardFriendSearchResults.value = dashboardFriendSearchResults.value.map((entry) =>
+      entry.anilistUserId === user.anilistUserId
+        ? { ...entry, alreadyFriend: true, inKizuna: true }
+        : entry
+    )
+  } catch (error: any) {
+    dashboardFriendSearchError.value = error?.message || 'Unable to update AniList follow right now.'
   }
 }
 
@@ -723,6 +880,7 @@ onUnmounted(() => {
   observer?.disconnect()
   friendsPanelObserver?.disconnect()
   if (followSearchTimer) clearTimeout(followSearchTimer)
+  if (dashboardFriendSearchTimer) clearTimeout(dashboardFriendSearchTimer)
   window.removeEventListener('resize', syncViewportHeight)
 })
 
@@ -745,6 +903,10 @@ watch(
     })
   }
 )
+
+watch(dashboardFriendSearch, () => {
+  handleDashboardFriendSearch()
+})
 </script>
 
 <style scoped src="~/assets/css/pages/index.css"></style>
@@ -765,6 +927,36 @@ watch(
 
 .dashboard-error-state {
   color: #fda4af;
+}
+
+.dashboard-empty-state-action {
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dashboard-empty-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dashboard-empty-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--cyan), #5ac4ff);
+  color: var(--navy);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.dashboard-search-results {
+  display: grid;
+  gap: 12px;
 }
 
 .list-item-copy {

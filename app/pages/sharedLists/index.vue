@@ -288,6 +288,7 @@ const {
 } = useSharedLists()
 
 const searchTerm = ref('')
+const route = useRoute()
 const activeFilter = ref<FilterKey>('all')
 const sortBy = ref<SortKey>('recent')
 const isLoading = ref(true)
@@ -403,6 +404,15 @@ const toggleCreatePanel = () => {
   if (!createPanelOpen.value) resetCreateForm()
 }
 
+const openCreatePanelFromRoute = () => {
+  const wantsCreate = route.query.create === '1'
+  if (!wantsCreate) return
+  createPanelOpen.value = true
+  if (typeof route.query.name === 'string' && route.query.name.trim()) {
+    draftName.value = route.query.name.trim().slice(0, 20)
+  }
+}
+
 const handleDraftGroupImageChange = (event: Event) => {
   const input = event.target as HTMLInputElement | null
   const file = input?.files?.[0] || null
@@ -486,6 +496,10 @@ const handleCreate = async () => {
 
 watch(currentUserId, () => {
   loadPage()
+}, { immediate: true })
+
+watch(() => route.query, () => {
+  openCreatePanelFromRoute()
 }, { immediate: true })
 
 onBeforeUnmount(() => {

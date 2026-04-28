@@ -3,16 +3,16 @@
     <userHeaderTabs :tabs="profileTabs" />
 
     <div class="shared-list-shell">
-      <nav class="shared-breadcrumb" aria-label="Breadcrumb">
-        <NuxtLink to="/profilePage">Profile</NuxtLink>
+      <nav class="shared-breadcrumb" aria-label="Fil d'ariane">
+        <NuxtLink to="/profilePage">Profil</NuxtLink>
         <span>/</span>
-        <NuxtLink to="/sharedLists">Shared Lists</NuxtLink>
+        <NuxtLink to="/sharedLists">Listes partagees</NuxtLink>
         <span>/</span>
-        <span>{{ detail?.title || 'Shared list' }}</span>
+        <span>{{ detail?.title || 'Liste partagee' }}</span>
       </nav>
 
       <div v-if="isLoading" class="status-card">
-        Loading shared list...
+        Chargement de la liste partagee...
       </div>
 
       <div v-else-if="loadError" class="status-card error">
@@ -27,7 +27,7 @@
           <div class="hero-top">
             <button class="back-btn" type="button" @click="navigateTo('/sharedLists')">
               <span aria-hidden="true">&lt;</span>
-              Back to Shared Lists
+              Retour aux listes partagees
             </button>
 
             <div class="hero-actions">
@@ -36,7 +36,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317a1.724 1.724 0 0 1 3.35 0 1.724 1.724 0 0 0 2.573 1.066 1.724 1.724 0 0 1 2.455 2.455 1.724 1.724 0 0 0 1.065 2.572 1.724 1.724 0 0 1 0 3.35 1.724 1.724 0 0 0-1.065 2.573 1.724 1.724 0 0 1-2.455 2.455 1.724 1.724 0 0 0-2.573 1.065 1.724 1.724 0 0 1-3.35 0 1.724 1.724 0 0 0-2.572-1.065 1.724 1.724 0 0 1-2.455-2.455 1.724 1.724 0 0 0-1.066-2.573 1.724 1.724 0 0 1 0-3.35 1.724 1.724 0 0 0 1.066-2.572 1.724 1.724 0 0 1 2.455-2.455 1.724 1.724 0 0 0 2.572-1.066Z" />
                   <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                 </svg>
-                Settings
+                Parametres
               </button>
 
               <button
@@ -46,7 +46,7 @@
                 :disabled="isLeaving"
                 @click="leaveGroup"
               >
-                {{ isLeaving ? 'Leaving...' : 'Leave shared list' }}
+                {{ isLeaving ? 'Sortie...' : 'Quitter la liste partagee' }}
               </button>
             </div>
           </div>
@@ -120,11 +120,11 @@
                     <circle cx="11" cy="11" r="8" />
                     <path d="m21 21-4.35-4.35" />
                   </svg>
-                  <input v-model.trim="animeQuery" type="text" placeholder="Filter anime">
+                  <input v-model.trim="animeQuery" type="text" placeholder="Filtrer les animes">
                 </label>
 
                 <div>
-                  <div class="sidebar-section">Lists</div>
+                  <div class="sidebar-section">Listes</div>
                   <div class="list-links">
                     <button
                       v-for="item in animeFilterItems"
@@ -141,27 +141,27 @@
                 </div>
 
                 <div>
-                  <div class="sidebar-section">Sort</div>
+                  <div class="sidebar-section">Tri</div>
                   <select v-model="animeSortBy" class="sort-select">
-                    <option value="title">Title</option>
-                    <option value="score">Score</option>
-                    <option value="progress">Progress</option>
-                    <option value="updatedAt">Last updated</option>
+                    <option value="title">Titre</option>
+                    <option value="score">Note</option>
+                    <option value="progress">Progression</option>
+                    <option value="updatedAt">Derniere mise a jour</option>
                   </select>
                 </div>
 
                 <div class="sidebar-stats">
                   <div class="stat-chip">
-                    <strong>{{ detail.animeVisibilityLimited ? 'Hidden' : detail.animeCount }}</strong>
+                    <strong>{{ detail.animeVisibilityLimited ? 'Cache' : detail.animeCount }}</strong>
                     <span>Anime</span>
                   </div>
                   <div class="stat-chip">
-                    <strong>{{ detail.membersVisibilityLimited ? 'Hidden' : detail.memberCount }}</strong>
-                    <span>Members</span>
+                    <strong>{{ detail.membersVisibilityLimited ? 'Cache' : detail.memberCount }}</strong>
+                    <span>Membres</span>
                   </div>
                   <div class="stat-chip">
-                    <strong>{{ detail.animeVisibilityLimited ? 'Hidden' : visibleAnimeCount }}</strong>
-                    <span>Visible</span>
+                    <strong>{{ detail.animeVisibilityLimited ? 'Cache' : visibleAnimeCount }}</strong>
+                    <span>Visibles</span>
                   </div>
                 </div>
 
@@ -171,7 +171,7 @@
                   type="button"
                   @click="isAnimePickerOpen = !isAnimePickerOpen"
                 >
-                  {{ isAnimePickerOpen ? 'Close add panel' : 'Add anime' }}
+                  {{ isAnimePickerOpen ? 'Fermer le panneau d\'ajout' : 'Ajouter un anime' }}
                 </button>
               </aside>
             </div>
@@ -184,7 +184,7 @@
                 <button class="view-btn" :class="{ active: viewMode === 'list' }" type="button" title="List" @click="viewMode = 'list'">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M9 6h13M9 12h13M9 18h13M4 6h.01M4 12h.01M4 18h.01" /></svg>
                 </button>
-                <button class="view-btn" :class="{ active: viewMode === 'compact' }" type="button" title="Compact" @click="viewMode = 'compact'">
+                <button class="view-btn" :class="{ active: viewMode === 'compact' }" type="button" title="Compacte" @click="viewMode = 'compact'">
                   <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M3 5h18v2H3zm0 6h18v2H3zm0 6h18v2H3z" /></svg>
                 </button>
               </div>
@@ -192,14 +192,14 @@
               <div v-if="canAddAnime && isAnimePickerOpen" class="panel-card add-anime-panel">
                 <div class="panel-head">
                   <div>
-                    <h2 class="panel-title">Add anime</h2>
-                    <p class="panel-copy">Search AniList and add a title directly to this shared list.</p>
+                    <h2 class="panel-title">Ajouter un anime</h2>
+                    <p class="panel-copy">Recherchez sur AniList et ajoutez un titre directement a cette liste partagee.</p>
                   </div>
                 </div>
 
                 <div class="add-state-row">
                   <label class="add-state-field">
-                    <span>Status</span>
+                    <span>Statut</span>
                     <select v-model="draftAddStatus" class="editor-input">
                       <option v-for="status in STATUS_ORDER" :key="status" :value="status">
                         {{ STATUS_LABELS[status] }}
@@ -208,12 +208,12 @@
                   </label>
 
                   <label class="add-state-field">
-                    <span>Progress</span>
+                    <span>Progression</span>
                     <input v-model="draftAddProgress" class="editor-input" type="number" min="0" inputmode="numeric" />
                   </label>
 
                   <label class="add-state-field">
-                    <span>Score</span>
+                    <span>Note</span>
                     <input v-model="draftAddScore" class="editor-input" type="number" min="0" max="100" step="0.1" inputmode="decimal" />
                   </label>
                 </div>
@@ -222,12 +222,12 @@
                   v-model.trim="animeSearchTerm"
                   type="text"
                   class="search-box full"
-                  placeholder="Search AniList anime"
+                  placeholder="Rechercher un anime AniList"
                   @input="handleAnimeSearchInput"
                 />
 
-                <div v-if="isSearchingAnime" class="search-status">Searching AniList...</div>
-                <div v-else-if="animeSearchTerm.length >= 2 && !animeResults.length" class="search-status">No anime found.</div>
+                <div v-if="isSearchingAnime" class="search-status">Recherche AniList...</div>
+                <div v-else-if="animeSearchTerm.length >= 2 && !animeResults.length" class="search-status">Aucun anime trouve.</div>
 
                 <div v-if="animeResults.length" class="anime-search-results">
                   <article
@@ -256,7 +256,7 @@
                       :disabled="item.alreadyAdded || pendingAnimeMediaId === String(item.mediaId)"
                       @click="addAnime(item)"
                     >
-                      {{ item.alreadyAdded ? 'Added' : pendingAnimeMediaId === String(item.mediaId) ? 'Adding...' : 'Add' }}
+                      {{ item.alreadyAdded ? 'Ajoute' : pendingAnimeMediaId === String(item.mediaId) ? 'Ajout...' : 'Ajouter' }}
                     </button>
                   </article>
                 </div>
@@ -278,17 +278,17 @@
                     </div>
                   </div>
                   <div class="editor-panel-copy">
-                    <div class="editor-panel-label">Edit shared entry</div>
+                    <div class="editor-panel-label">Modifier l'entree partagee</div>
                     <div class="editor-panel-title">{{ selectedAnimeEntry.title }}</div>
                     <div class="editor-panel-subtitle">
-                      Progress {{ editAnimeProgress || '0' }} / {{ selectedAnimeEpisodes ?? '?' }}
+                      Progression {{ editAnimeProgress || '0' }} / {{ selectedAnimeEpisodes ?? '?' }}
                     </div>
                   </div>
                 </div>
 
                 <div class="editor-panel-fields">
                   <label class="editor-field">
-                    <span>Status</span>
+                    <span>Statut</span>
                     <select v-model="editAnimeStatus" class="editor-input">
                       <option v-for="status in STATUS_ORDER" :key="status" :value="status">
                         {{ STATUS_LABELS[status] }}
@@ -297,7 +297,7 @@
                   </label>
 
                   <label class="editor-field">
-                    <span>Progress</span>
+                    <span>Progression</span>
                     <input
                       v-model="editAnimeProgress"
                       class="editor-input"
@@ -309,7 +309,7 @@
                   </label>
 
                   <label class="editor-field">
-                    <span>Score</span>
+                    <span>Note</span>
                     <input
                       v-model="editAnimeScore"
                       class="editor-input"
@@ -317,7 +317,7 @@
                       min="0"
                       max="100"
                       step="0.1"
-                      placeholder="No score"
+                      placeholder="Pas de note"
                       inputmode="decimal"
                     >
                   </label>
@@ -325,7 +325,7 @@
 
                 <div class="editor-panel-actions">
                   <button class="editor-btn editor-btn-muted" type="button" @click="closeAnimeEditor">
-                    Cancel
+                    Annuler
                   </button>
                   <button
                     v-if="canDeleteAnime"
@@ -334,18 +334,18 @@
                     :disabled="isDeletingAnime"
                     @click="deleteAnimeEntry"
                   >
-                    {{ isDeletingAnime ? 'Deleting...' : 'Delete' }}
+                    {{ isDeletingAnime ? 'Suppression...' : 'Supprimer' }}
                   </button>
                   <button class="editor-btn editor-btn-primary" type="button" :disabled="isSavingAnime" @click="saveAnimeEntry">
-                    {{ isSavingAnime ? 'Saving...' : 'Save changes' }}
+                    {{ isSavingAnime ? 'Enregistrement...' : 'Enregistrer les modifications' }}
                   </button>
                 </div>
               </section>
 
               <div v-if="!visibleAnimeSections.length" class="empty-state">
-                <div class="empty-state-title">{{ detail.animeVisibilityLimited ? 'Anime entries are hidden.' : 'No anime found for this filter.' }}</div>
+                <div class="empty-state-title">{{ detail.animeVisibilityLimited ? 'Les entrees anime sont masquees.' : 'Aucun anime trouve pour ce filtre.' }}</div>
                 <div class="empty-state-text">
-                  {{ detail.animeVisibilityLimited ? 'This list is visible, but its anime entries are not exposed to non-members yet.' : canManageAnime ? 'Try another title or use Add anime.' : 'You can browse this shared list, but you cannot edit its anime entries.' }}
+                  {{ detail.animeVisibilityLimited ? 'Cette liste est visible, mais ses entrees anime ne sont pas encore exposees aux non-membres.' : canManageAnime ? 'Essayez un autre titre ou utilisez Ajouter un anime.' : 'Vous pouvez parcourir cette liste partagee, mais vous ne pouvez pas modifier ses entrees anime.' }}
                 </div>
               </div>
 
@@ -394,7 +394,7 @@
 
         <section v-else class="content-section">
           <div v-if="detail.membersVisibilityLimited" class="status-card limited-note">
-            PocketBase still restricts the full roster for non-owners. You may see a partial list here.
+            PocketBase limite encore la liste complete des membres pour les non-proprietaires. Vous pouvez voir une liste partielle ici.
           </div>
 
           <div class="members-grid">
@@ -407,15 +407,15 @@
               <div class="member-info">
                 <div class="member-name">
                   {{ member.name }}
-                  <span v-if="member.isCurrentUser" class="member-self">(you)</span>
+                  <span v-if="member.isCurrentUser" class="member-self">(vous)</span>
                 </div>
                 <div class="member-role">
-                  Joined {{ member.joinedAt ? formatDateLabel(member.joinedAt) : 'recently' }}
+                  Rejoint {{ member.joinedAt ? formatDateLabel(member.joinedAt) : 'recemment' }}
                 </div>
               </div>
 
               <div class="member-badge" :class="{ owner: member.role === 'owner' }">
-                {{ member.role === 'owner' ? 'Owner' : 'Member' }}
+                {{ member.role === 'owner' ? 'Proprietaire' : 'Membre' }}
               </div>
 
               <button
@@ -425,7 +425,7 @@
                 :disabled="pendingMembershipActionId === member.membershipId"
                 @click="removeMember(member.membershipId)"
               >
-                {{ pendingMembershipActionId === member.membershipId ? 'Removing...' : 'Remove' }}
+                {{ pendingMembershipActionId === member.membershipId ? 'Retrait...' : 'Retirer' }}
               </button>
             </article>
           </div>
@@ -437,10 +437,10 @@
       <aside class="settings-drawer">
         <div class="settings-drawer-head">
           <div>
-            <div class="settings-kicker">Shared List Settings</div>
+            <div class="settings-kicker">Parametres de la liste partagee</div>
             <h2>{{ detail.title }}</h2>
           </div>
-          <button class="icon-close" type="button" aria-label="Close settings" @click="closeSettings">x</button>
+          <button class="icon-close" type="button" aria-label="Fermer les parametres" @click="closeSettings">x</button>
         </div>
 
         <div class="settings-drawer-body">
@@ -450,55 +450,55 @@
             <section class="drawer-card">
               <div class="drawer-card-head">
                 <div>
-                  <h3>Appearance</h3>
-                  <p>Update the title, privacy, list image and banner. These values are saved on the `shared_list` collection.</p>
+                  <h3>Apparence</h3>
+                  <p>Modifiez le titre, la confidentialite, l'image de liste et la banniere. Ces valeurs sont enregistrees dans la collection `shared_list`.</p>
                 </div>
               </div>
 
               <div class="settings-field-grid">
                 <label class="settings-field">
-                  <span>Name</span>
+                  <span>Nom</span>
                   <input v-model.trim="settingsName" class="settings-input" type="text" maxlength="20" />
                 </label>
 
                 <label class="settings-field">
-                  <span>Privacy</span>
+                  <span>Confidentialite</span>
                   <select v-model="settingsPrivacy" class="settings-input">
-                    <option value="friends">Friends only</option>
-                    <option value="private">Private</option>
-                    <option value="public">Public</option>
+                    <option value="friends">Amis uniquement</option>
+                    <option value="private">Privee</option>
+                    <option value="public">Publique</option>
                   </select>
                 </label>
               </div>
 
               <div class="settings-media-grid">
                 <label class="settings-media-field">
-                  <span>List image</span>
+                  <span>Image de la liste</span>
                   <div class="settings-media-preview settings-media-square" :style="settingsGroupImageDisplay ? undefined : { background: coverGradient }">
-                    <img v-if="settingsGroupImageDisplay" :src="settingsGroupImageDisplay" alt="List image preview" />
-                    <img v-else :src="DEFAULT_SHARED_LIST_IMAGE" alt="Default list image" />
+                    <img v-if="settingsGroupImageDisplay" :src="settingsGroupImageDisplay" alt="Apercu de l'image de liste" />
+                    <img v-else :src="DEFAULT_SHARED_LIST_IMAGE" alt="Image de liste par defaut" />
                   </div>
                   <input class="media-input" type="file" accept="image/*" @change="handleSettingsGroupImageChange" />
-                  <small>{{ settingsGroupImageFile?.name || 'Saved in PocketBase as `image`.' }}</small>
+                  <small>{{ settingsGroupImageFile?.name || 'Enregistree dans PocketBase comme `image`.' }}</small>
                 </label>
 
                 <label class="settings-media-field">
-                  <span>Banner</span>
+                  <span>Banniere</span>
                   <div class="settings-media-preview settings-media-banner" :style="heroBackgroundStyle">
-                    <img v-if="settingsBannerDisplay" :src="settingsBannerDisplay" alt="Banner preview" />
-                    <span v-else>Banner preview</span>
+                    <img v-if="settingsBannerDisplay" :src="settingsBannerDisplay" alt="Apercu de la banniere" />
+                    <span v-else>Apercu de la banniere</span>
                   </div>
                   <input class="media-input" type="file" accept="image/*" @change="handleSettingsBannerChange" />
-                  <small>{{ settingsBannerImageFile?.name || 'Saved in PocketBase as `banner`.' }}</small>
+                  <small>{{ settingsBannerImageFile?.name || 'Enregistree dans PocketBase comme `banner`.' }}</small>
                 </label>
               </div>
 
               <div class="drawer-actions">
                 <button class="drawer-btn drawer-btn-muted" type="button" @click="closeSettings">
-                  Cancel
+                  Annuler
                 </button>
                 <button class="drawer-btn drawer-btn-primary" type="button" :disabled="isSavingSettings || !hasSettingsChanges" @click="saveSettings">
-                  {{ isSavingSettings ? 'Saving...' : 'Save changes' }}
+                  {{ isSavingSettings ? 'Enregistrement...' : 'Enregistrer les modifications' }}
                 </button>
               </div>
             </section>
@@ -506,8 +506,8 @@
             <section class="drawer-card">
               <div class="drawer-card-head">
                 <div>
-                  <h3>Members</h3>
-                  <p>Add or remove members. Membership is persisted in `user_shared_list`.</p>
+                  <h3>Membres</h3>
+                  <p>Ajoutez ou retirez des membres. L'appartenance est stockee dans `user_shared_list`.</p>
                 </div>
               </div>
 
@@ -516,12 +516,12 @@
                   v-model.trim="memberQuery"
                   type="text"
                   class="search-box full"
-                  placeholder="Search AniList username"
+                  placeholder="Rechercher un pseudo AniList"
                   @input="handleSearchInput"
                 />
 
-                <div v-if="isSearchingUsers" class="search-status">Searching users...</div>
-                <div v-else-if="memberQuery.length >= 2 && !userResults.length" class="search-status">No matching user found.</div>
+                <div v-if="isSearchingUsers" class="search-status">Recherche des utilisateurs...</div>
+                <div v-else-if="memberQuery.length >= 2 && !userResults.length" class="search-status">Aucun utilisateur correspondant.</div>
 
                 <div v-if="userResults.length" class="search-results">
                   <button
@@ -537,7 +537,7 @@
                       <span v-else>{{ user.initials }}</span>
                     </span>
                     <span class="search-name">{{ user.name }}</span>
-                    <span class="search-action">{{ pendingAddUserId === user.id ? 'Adding...' : 'Add' }}</span>
+                    <span class="search-action">{{ pendingAddUserId === user.id ? 'Ajout...' : 'Ajouter' }}</span>
                   </button>
                 </div>
               </div>
@@ -550,7 +550,7 @@
                   </div>
                   <div class="drawer-member-copy">
                     <strong>{{ member.name }}</strong>
-                    <span>{{ member.role === 'owner' ? 'Owner' : 'Member' }}</span>
+                    <span>{{ member.role === 'owner' ? 'Proprietaire' : 'Membre' }}</span>
                   </div>
                   <select
                     v-if="member.role !== 'owner' && member.membershipId && !member.isCurrentUser"
@@ -570,7 +570,7 @@
                     :disabled="pendingMembershipActionId === member.membershipId"
                     @click="removeMember(member.membershipId)"
                   >
-                    {{ pendingMembershipActionId === member.membershipId ? 'Removing...' : 'Remove' }}
+                    {{ pendingMembershipActionId === member.membershipId ? 'Retrait...' : 'Retirer' }}
                   </button>
                 </article>
               </div>
@@ -579,13 +579,13 @@
             <section v-if="detail.isOwner" class="drawer-card danger-card">
               <div class="drawer-card-head">
                 <div>
-                  <h3>Danger Zone</h3>
-                  <p>Delete the shared list and all associated access for members.</p>
+                  <h3>Zone de danger</h3>
+                  <p>Supprimez la liste partagee et tous les acces associes pour les membres.</p>
                 </div>
               </div>
 
               <button class="drawer-btn drawer-btn-danger" type="button" :disabled="isDeleting" @click="deleteGroup">
-                {{ isDeleting ? 'Deleting...' : 'Delete shared list' }}
+                {{ isDeleting ? 'Suppression...' : 'Supprimer la liste partagee' }}
               </button>
             </section>
           </template>
@@ -594,27 +594,27 @@
             <section class="drawer-card">
               <div class="drawer-card-head">
                 <div>
-                  <h3>Shared List Info</h3>
-                  <p>Members can view the shared list configuration here.</p>
+                  <h3>Informations de la liste partagee</h3>
+                  <p>Les membres peuvent consulter ici la configuration de la liste partagee.</p>
                 </div>
               </div>
 
               <div class="info-list">
                 <div class="info-row">
-                  <span>Created</span>
+                  <span>Creee</span>
                   <strong>{{ formatDateLabel(detail.createdAt) }}</strong>
                 </div>
                 <div class="info-row">
-                  <span>Privacy</span>
+                  <span>Confidentialite</span>
                   <strong>{{ privacyLabel(detail.privacy) }}</strong>
                 </div>
                 <div class="info-row">
-                  <span>Owner</span>
+                  <span>Proprietaire</span>
                   <strong>{{ detail.ownerName }}</strong>
                 </div>
                 <div class="info-row">
-                  <span>Anime count</span>
-                  <strong>{{ detail.animeVisibilityLimited ? 'Hidden' : detail.animeCount }}</strong>
+                  <span>Nombre d'animes</span>
+                  <strong>{{ detail.animeVisibilityLimited ? 'Cache' : detail.animeCount }}</strong>
                 </div>
               </div>
             </section>
@@ -696,12 +696,12 @@ type SharedAnimeMedia = {
 type SearchableUser = { id: string; name: string; avatar?: string; initials: string; color: string }
 
 const STATUS_LABELS: Record<SharedListAnimeStatus, string> = {
-  PLANNING: 'Plan to watch',
-  CURRENT: 'Watching',
-  PAUSED: 'Paused',
-  DROPPED: 'Dropped',
-  REPEATING: 'Rewatching',
-  COMPLETED: 'Completed'
+  PLANNING: 'A voir',
+  CURRENT: 'En cours',
+  PAUSED: 'En pause',
+  DROPPED: 'Abandonne',
+  REPEATING: 'Revisionnage',
+  COMPLETED: 'Termine'
 }
 
 const STATUS_ORDER: SharedListAnimeStatus[] = ['PLANNING', 'CURRENT', 'PAUSED', 'DROPPED', 'REPEATING', 'COMPLETED']
@@ -709,10 +709,10 @@ const STATUS_ORDER: SharedListAnimeStatus[] = ['PLANNING', 'CURRENT', 'PAUSED', 
 const route = useRoute()
 const anilistGraphql = useAnilistGraphql()
 const profileTabs = [
-  { key: 'anime-list', label: 'Anime List', to: '/animeList' },
-  { key: 'favorites', label: 'Favorites', to: '/favorites' },
-  { key: 'friends', label: 'Friends', to: '/friends' },
-  { key: 'shared-lists', label: 'Shared Lists', to: '/sharedLists', active: true }
+  { key: 'anime-list', label: 'Liste d\'animes', to: '/animeList' },
+  { key: 'favorites', label: 'Favoris', to: '/favorites' },
+  { key: 'friends', label: 'Amis', to: '/friends' },
+  { key: 'shared-lists', label: 'Listes partagees', to: '/sharedLists', active: true }
 ]
 
 const {
@@ -789,11 +789,11 @@ const canAddAnime = computed(() => {
   return Boolean(currentMember.value?.canAddAnime)
 })
 const existingAnimeIds = computed(() => new Set((detail.value?.animeEntries || []).map(entry => Number(entry.mediaId || 0)).filter(Boolean)))
-const createdLabel = computed(() => detail.value?.createdAt ? `Created ${formatDateLabel(detail.value.createdAt)}` : 'Created recently')
+const createdLabel = computed(() => detail.value?.createdAt ? `Creee ${formatDateLabel(detail.value.createdAt)}` : 'Creee recemment')
 
 const tabs = [
-  { key: 'anime' as DetailTab, label: 'Anime List' },
-  { key: 'members' as DetailTab, label: 'Members' }
+  { key: 'anime' as DetailTab, label: 'Liste d\'animes' },
+  { key: 'members' as DetailTab, label: 'Membres' }
 ]
 
 const coverGradient = computed(() => {
@@ -897,7 +897,7 @@ const rawAnimeSections = computed<Record<SharedListAnimeStatus, SharedListAnimeE
 const animeFilterItems = computed(() => {
   const allCount = STATUS_ORDER.reduce((sum, key) => sum + rawAnimeSections.value[key].length, 0)
   return [
-    { key: 'ALL' as AnimeFilterKey, label: 'All', count: allCount },
+    { key: 'ALL' as AnimeFilterKey, label: 'Tout', count: allCount },
     ...STATUS_ORDER.map((key) => ({
       key: key as AnimeFilterKey,
       label: STATUS_LABELS[key],
@@ -946,26 +946,26 @@ const selectedAnimeEntry = computed(() =>
 )
 const detailRoleLabel = computed(() => {
   if (!detail.value) return ''
-  if (detail.value.isOwner) return 'Owner'
-  if (detail.value.isMember) return 'Member'
-  return 'Viewer'
+  if (detail.value.isOwner) return 'Proprietaire'
+  if (detail.value.isMember) return 'Membre'
+  return 'Visiteur'
 })
 const detailMemberMetaText = computed(() => {
-  if (!detail.value) return '0 members'
-  if (detail.value.membersVisibilityLimited) return 'Members hidden'
-  return `${detail.value.memberCount} member${detail.value.memberCount > 1 ? 's' : ''}`
+  if (!detail.value) return '0 membre'
+  if (detail.value.membersVisibilityLimited) return 'Membres masques'
+  return `${detail.value.memberCount} membre${detail.value.memberCount > 1 ? 's' : ''}`
 })
 const detailAnimeMetaText = computed(() => {
   if (!detail.value) return '0 anime'
-  if (detail.value.animeVisibilityLimited) return 'Anime hidden'
+  if (detail.value.animeVisibilityLimited) return 'Anime masques'
   return `${detail.value.animeCount} anime`
 })
 const detailDescriptionText = computed(() => {
   if (!detail.value) return ''
   if (detail.value.animeVisibilityLimited) {
-    return `Created by ${detail.value.ownerName}. Anime entries are hidden for this visibility level.`
+    return `Creee par ${detail.value.ownerName}. Les entrees anime sont masquees pour ce niveau de visibilite.`
   }
-  return `Created by ${detail.value.ownerName}. ${detail.value.animeCount} anime currently in the shared list.`
+  return `Creee par ${detail.value.ownerName}. ${detail.value.animeCount} anime actuellement dans la liste partagee.`
 })
 
 const selectedAnimeMedia = computed(() => {
@@ -1054,7 +1054,7 @@ const loadPage = async () => {
         result = await loadDetail(listId.value)
       }
       if (migration.failedMembershipIds.length) {
-        actionError.value = 'Some legacy member permissions could not be migrated automatically.'
+        actionError.value = 'Certaines anciennes permissions de membres n\'ont pas pu etre migrees automatiquement.'
       }
     }
 
@@ -1077,13 +1077,13 @@ const loadPage = async () => {
   } catch (error: any) {
     detail.value = null
     animeMediaMap.value = {}
-    loadError.value = error?.message || 'Unable to load this shared list.'
+    loadError.value = error?.message || 'Impossible de charger cette liste partagee.'
   } finally {
     isLoading.value = false
   }
 }
 
-const privacyLabel = (privacy: SharedListPrivacy) => privacy === 'private' ? 'Private' : privacy === 'friends' ? 'Friends Only' : 'Public'
+const privacyLabel = (privacy: SharedListPrivacy) => privacy === 'private' ? 'Privee' : privacy === 'friends' ? 'Amis uniquement' : 'Publique'
 
 const openSettings = () => {
   if (!detail.value || (!detail.value.isOwner && !detail.value.isMember)) return
@@ -1119,7 +1119,7 @@ const handleSettingsBannerChange = (event: Event) => {
 const saveSettings = async () => {
   if (!detail.value || (!detail.value.isOwner && !detail.value.canManageMembers)) return
   if (!settingsName.value.trim()) {
-    actionError.value = 'List name is required.'
+    actionError.value = 'Le nom de la liste est obligatoire.'
     return
   }
 
@@ -1136,7 +1136,7 @@ const saveSettings = async () => {
     await loadPage()
     closeSettings()
   } catch (error: any) {
-    actionError.value = error?.message || 'Unable to update this shared list.'
+    actionError.value = error?.message || 'Impossible de mettre a jour cette liste partagee.'
   } finally {
     isSavingSettings.value = false
   }
@@ -1176,7 +1176,7 @@ const handleSearchInput = () => {
 const addMember = async (userId: string) => {
   if (!detail.value) return
   if (!detail.value.canManageMembers) {
-    actionError.value = 'You do not have permission to add members to this shared list.'
+    actionError.value = 'Vous n\'avez pas la permission d\'ajouter des membres a cette liste partagee.'
     return
   }
 
@@ -1189,7 +1189,7 @@ const addMember = async (userId: string) => {
     userResults.value = []
     await loadPage()
   } catch (error: any) {
-    actionError.value = error?.message || 'Unable to add this member.'
+    actionError.value = error?.message || 'Impossible d\'ajouter ce membre.'
   } finally {
     pendingAddUserId.value = ''
   }
@@ -1243,7 +1243,7 @@ const searchAnime = async (query: string) => {
   )
 
   if (response?.errors?.length) {
-    throw new Error(response.errors[0]?.message || 'Unable to search AniList.')
+    throw new Error(response.errors[0]?.message || 'Impossible de rechercher sur AniList.')
   }
 
   const items = Array.isArray(response?.data?.Page?.media) ? response.data.Page.media : []
@@ -1280,7 +1280,7 @@ const handleAnimeSearchInput = () => {
       animeResults.value = await searchAnime(animeSearchTerm.value)
     } catch (error: any) {
       animeResults.value = []
-      actionError.value = error?.message || 'Unable to search AniList.'
+      actionError.value = error?.message || 'Impossible de rechercher sur AniList.'
     } finally {
       isSearchingAnime.value = false
     }
@@ -1290,7 +1290,7 @@ const handleAnimeSearchInput = () => {
 const addAnime = async (item: AnimeSearchResult) => {
   if (!detail.value) return
   if (!canAddAnime.value) {
-    actionError.value = 'You do not have permission to add anime to this shared list.'
+    actionError.value = 'Vous n\'avez pas la permission d\'ajouter des animes a cette liste partagee.'
     return
   }
 
@@ -1318,7 +1318,7 @@ const addAnime = async (item: AnimeSearchResult) => {
     isAnimePickerOpen.value = false
     await loadPage()
   } catch (error: any) {
-    actionError.value = error?.message || 'Unable to add this anime.'
+    actionError.value = error?.message || 'Impossible d\'ajouter cet anime.'
   } finally {
     pendingAnimeMediaId.value = ''
   }
@@ -1365,7 +1365,7 @@ const closeAnimeEditor = () => {
 const saveAnimeEntry = async () => {
   if (!selectedAnimeEntry.value) return
   if (!canManageAnime.value) {
-    actionError.value = 'You do not have permission to edit anime entries in this shared list.'
+    actionError.value = 'Vous n\'avez pas la permission de modifier les entrees anime de cette liste partagee.'
     return
   }
 
@@ -1387,7 +1387,7 @@ const saveAnimeEntry = async () => {
     await loadPage()
     closeAnimeEditor()
   } catch (error: any) {
-    actionError.value = error?.message || 'Unable to update this anime entry.'
+    actionError.value = error?.message || 'Impossible de mettre a jour cette entree anime.'
   } finally {
     isSavingAnime.value = false
   }
@@ -1408,10 +1408,10 @@ watch(draftAddStatus, () => {
 const deleteAnimeEntry = async () => {
   if (!selectedAnimeEntry.value) return
   if (!canDeleteAnime.value) {
-    actionError.value = 'You do not have permission to remove anime from this shared list.'
+    actionError.value = 'Vous n\'avez pas la permission de retirer des animes de cette liste partagee.'
     return
   }
-  if (typeof window !== 'undefined' && !window.confirm(`Delete "${selectedAnimeEntry.value.title}" from this shared list?`)) {
+  if (typeof window !== 'undefined' && !window.confirm(`Supprimer "${selectedAnimeEntry.value.title}" de cette liste partagee ?`)) {
     return
   }
 
@@ -1423,7 +1423,7 @@ const deleteAnimeEntry = async () => {
     await loadPage()
     closeAnimeEditor()
   } catch (error: any) {
-    actionError.value = error?.message || 'Unable to delete this anime entry.'
+    actionError.value = error?.message || 'Impossible de supprimer cette entree anime.'
   } finally {
     isDeletingAnime.value = false
   }
@@ -1431,7 +1431,7 @@ const deleteAnimeEntry = async () => {
 
 const removeMember = async (membershipId: string) => {
   if (!detail.value?.canManageMembers) {
-    actionError.value = 'You do not have permission to remove members from this shared list.'
+    actionError.value = 'Vous n\'avez pas la permission de retirer des membres de cette liste partagee.'
     return
   }
 
@@ -1442,7 +1442,7 @@ const removeMember = async (membershipId: string) => {
     await removeMembership(membershipId)
     await loadPage()
   } catch (error: any) {
-    actionError.value = error?.message || 'Unable to remove this member.'
+    actionError.value = error?.message || 'Impossible de retirer ce membre.'
   } finally {
     pendingMembershipActionId.value = ''
   }
@@ -1454,7 +1454,7 @@ const updateMemberPermission = async (membershipId: string, permissionRaw: strin
     : 'viewer'
 
   if (!detail.value?.canManageMembers) {
-    actionError.value = 'You do not have permission to update member roles in this shared list.'
+    actionError.value = 'Vous n\'avez pas la permission de modifier les roles des membres de cette liste partagee.'
     return
   }
 
@@ -1465,7 +1465,7 @@ const updateMemberPermission = async (membershipId: string, permissionRaw: strin
     await updateMembershipPermission(membershipId, permission)
     await loadPage()
   } catch (error: any) {
-    actionError.value = error?.message || 'Unable to update member permissions.'
+    actionError.value = error?.message || 'Impossible de mettre a jour les permissions du membre.'
   } finally {
     pendingMembershipActionId.value = ''
   }
@@ -1473,7 +1473,7 @@ const updateMemberPermission = async (membershipId: string, permissionRaw: strin
 
 const leaveGroup = async () => {
   if (!detail.value?.ownMembershipId) {
-    actionError.value = 'Your membership record could not be found.'
+    actionError.value = 'Votre fiche d\'appartenance est introuvable.'
     return
   }
 
@@ -1485,7 +1485,7 @@ const leaveGroup = async () => {
     closeSettings()
     await navigateTo('/sharedLists')
   } catch (error: any) {
-    actionError.value = error?.message || 'Unable to leave this shared list.'
+    actionError.value = error?.message || 'Impossible de quitter cette liste partagee.'
   } finally {
     isLeaving.value = false
   }
@@ -1493,7 +1493,7 @@ const leaveGroup = async () => {
 
 const deleteGroup = async () => {
   if (!detail.value) return
-  if (typeof window !== 'undefined' && !window.confirm(`Delete "${detail.value.title}"? This cannot be undone.`)) {
+  if (typeof window !== 'undefined' && !window.confirm(`Supprimer "${detail.value.title}" ? Cette action est irreversible.`)) {
     return
   }
 
@@ -1505,7 +1505,7 @@ const deleteGroup = async () => {
     closeSettings()
     await navigateTo('/sharedLists')
   } catch (error: any) {
-    actionError.value = error?.message || 'Unable to delete this shared list.'
+    actionError.value = error?.message || 'Impossible de supprimer cette liste partagee.'
   } finally {
     isDeleting.value = false
   }

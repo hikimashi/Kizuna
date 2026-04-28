@@ -18,21 +18,21 @@ const props = withDefaults(defineProps<{
 })
 
 const animeTitle = (anime: CardAnime) =>
-  anime.title?.romaji || anime.title?.english || 'Unknown title'
+  anime.title?.romaji || anime.title?.english || 'Titre inconnu'
 
 const formatLabel = (format?: string | null) => {
   if (!format) return 'Anime'
-  if (format === 'TV_SHORT') return 'TV Short'
+  if (format === 'TV_SHORT') return 'TV court'
   return format.replaceAll('_', ' ')
 }
 
 const formatScore = (score?: number | null) => {
-  if (!score) return 'N/A'
+  if (!score) return 'N/D'
   return score % 1 === 0 ? String(score) : score.toFixed(1)
 }
 
 const episodesLabel = (episodes?: number | null) => {
-  if (!episodes) return 'Unknown eps'
+  if (!episodes) return 'Episodes inconnus'
   return `${episodes} eps`
 }
 

@@ -20,7 +20,7 @@ export const useUserStore = defineStore('userStore', () => {
       await pocketbase.pb.collection('user').update(userData.value!.id, newData);
       return true;
     } catch (error: any) {
-      throw new Error(error?.message || 'Failed to update user data. Please try again.');
+      throw new Error(error?.message || 'Echec de la mise a jour des donnees utilisateur. Reessayez.');
     }
   };
 

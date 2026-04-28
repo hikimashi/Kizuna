@@ -5,8 +5,8 @@
     <main class="page-shell">
       <section class="top-bar">
         <div>
-          <h1 class="page-title">Shared Lists</h1>
-          <p class="page-subtitle">Create anime lists, set a banner and list image, then manage members from the list itself.</p>
+          <h1 class="page-title">Listes partagees</h1>
+          <p class="page-subtitle">Creez des listes d'animes, choisissez une banniere et une image, puis gerez les membres depuis la liste.</p>
         </div>
 
         <div class="top-actions">
@@ -15,14 +15,14 @@
               <circle cx="11" cy="11" r="8" />
               <path d="m21 21-4.35-4.35" />
             </svg>
-            <input v-model.trim="searchTerm" type="text" placeholder="Search a list" />
+            <input v-model.trim="searchTerm" type="text" placeholder="Rechercher une liste" />
           </label>
 
           <button class="btn-new" type="button" @click="toggleCreatePanel">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12" aria-hidden="true">
               <path stroke-linecap="round" d="M12 5v14M5 12h14" />
             </svg>
-            New List
+            Nouvelle liste
           </button>
         </div>
       </section>
@@ -30,57 +30,57 @@
       <section v-if="createPanelOpen" class="create-panel">
         <div class="create-head">
           <div>
-            <h2>Create a shared list</h2>
-            <p>Create the list, define its visuals, then add members immediately.</p>
+            <h2>Creer une liste partagee</h2>
+            <p>Creez la liste, definissez son apparence, puis ajoutez des membres immediatement.</p>
           </div>
-          <button class="icon-close" type="button" aria-label="Close" @click="toggleCreatePanel">x</button>
+          <button class="icon-close" type="button" aria-label="Fermer" @click="toggleCreatePanel">x</button>
         </div>
 
         <div class="create-grid">
           <label class="field">
-            <span>Name</span>
-            <input v-model.trim="draftName" type="text" maxlength="20" placeholder="Weekend watchlist" />
+            <span>Nom</span>
+            <input v-model.trim="draftName" type="text" maxlength="20" placeholder="Liste du week-end" />
           </label>
 
           <label class="field">
-            <span>Privacy</span>
+            <span>Confidentialite</span>
             <select v-model="draftPrivacy">
-              <option value="friends">Friends only</option>
-              <option value="private">Private</option>
-              <option value="public">Public</option>
+              <option value="friends">Amis uniquement</option>
+              <option value="private">Privee</option>
+              <option value="public">Publique</option>
             </select>
           </label>
         </div>
 
         <div class="media-grid">
           <label class="media-field">
-            <span>List image</span>
+            <span>Image de la liste</span>
             <div class="media-preview media-preview-square">
-              <img v-if="draftGroupImagePreview" :src="draftGroupImagePreview" alt="List image preview" />
-              <img v-else :src="DEFAULT_SHARED_LIST_IMAGE" alt="Default list image" />
+              <img v-if="draftGroupImagePreview" :src="draftGroupImagePreview" alt="Apercu de l'image de liste" />
+              <img v-else :src="DEFAULT_SHARED_LIST_IMAGE" alt="Image de liste par defaut" />
             </div>
             <input class="media-input" type="file" accept="image/*" @change="handleDraftGroupImageChange" />
-            <small>{{ draftGroupImageFile?.name || 'Single image file stored in PocketBase.' }}</small>
+            <small>{{ draftGroupImageFile?.name || 'Image unique stockee dans PocketBase.' }}</small>
           </label>
 
           <label class="media-field">
-            <span>Banner</span>
+            <span>Banniere</span>
             <div class="media-preview media-preview-banner" :style="{ background: stripForPrivacy(draftPrivacy, true) }">
-              <img v-if="draftBannerPreview" :src="draftBannerPreview" alt="Banner preview" />
-              <span v-else>Banner preview</span>
+              <img v-if="draftBannerPreview" :src="draftBannerPreview" alt="Apercu de la banniere" />
+              <span v-else>Apercu de la banniere</span>
             </div>
             <input class="media-input" type="file" accept="image/*" @change="handleDraftBannerChange" />
-            <small>{{ draftBannerImageFile?.name || 'Wide banner image stored in PocketBase.' }}</small>
+            <small>{{ draftBannerImageFile?.name || 'Image de banniere large stockee dans PocketBase.' }}</small>
           </label>
         </div>
 
         <div class="member-picker">
           <label class="field">
-            <span>Add users now</span>
+            <span>Ajouter des utilisateurs maintenant</span>
             <input
               v-model.trim="draftMemberQuery"
               type="text"
-              placeholder="Search username or AniList username"
+              placeholder="Rechercher un pseudo ou un pseudo AniList"
               @input="handleCreateMemberSearch"
             />
           </label>
@@ -100,8 +100,8 @@
             </div>
           </div>
 
-          <div v-if="isSearchingMembers" class="search-note">Searching users...</div>
-          <div v-else-if="draftMemberQuery.length >= 2 && !draftMemberResults.length" class="search-note">No matching user found.</div>
+          <div v-if="isSearchingMembers" class="search-note">Recherche des utilisateurs...</div>
+          <div v-else-if="draftMemberQuery.length >= 2 && !draftMemberResults.length" class="search-note">Aucun utilisateur correspondant.</div>
 
           <div v-if="draftMemberResults.length" class="draft-results">
             <button
@@ -116,7 +116,7 @@
                 <span v-else>{{ user.initials }}</span>
               </span>
               <span class="draft-result-name">{{ user.name }}</span>
-              <span class="draft-result-action">Add</span>
+              <span class="draft-result-action">Ajouter</span>
             </button>
           </div>
         </div>
@@ -124,14 +124,14 @@
         <div v-if="actionError" class="status-card error">{{ actionError }}</div>
 
         <div class="create-actions">
-          <button class="btn-secondary" type="button" @click="resetCreateForm">Reset</button>
+          <button class="btn-secondary" type="button" @click="resetCreateForm">Reinitialiser</button>
           <button class="btn-new" type="button" :disabled="isSubmitting || !draftName" @click="handleCreate">
-            {{ isSubmitting ? 'Creating...' : 'Create list' }}
+            {{ isSubmitting ? 'Creation...' : 'Creer la liste' }}
           </button>
         </div>
       </section>
 
-      <section class="filter-row" aria-label="Shared list filters">
+      <section class="filter-row" aria-label="Filtres des listes partagees">
         <button
           v-for="filter in filters"
           :key="filter.key"
@@ -145,17 +145,17 @@
 
         <div class="filter-sep"></div>
 
-        <span class="sort-label">Sort by</span>
+        <span class="sort-label">Trier par</span>
         <select v-model="sortBy" class="sort-select">
-          <option value="recent">Recent</option>
-          <option value="title">Name A-Z</option>
-          <option value="animeCount">Anime count</option>
-          <option value="members">Members</option>
+          <option value="recent">Recentes</option>
+          <option value="title">Nom A-Z</option>
+          <option value="animeCount">Nombre d'animes</option>
+          <option value="members">Membres</option>
         </select>
       </section>
 
       <div v-if="isLoading" class="status-card">
-        Loading shared lists...
+        Chargement des listes partagees...
       </div>
 
       <div v-else-if="loadError" class="status-card error">
@@ -172,7 +172,7 @@
             class="list-card"
           >
             <div class="card-banner" :style="{ background: stripForPrivacy(list.privacy, list.isOwner) }">
-              <img :src="bannerSrcFor(list)" :alt="`${list.title} banner`" />
+              <img :src="bannerSrcFor(list)" :alt="`Banniere ${list.title}`" />
               <div class="card-banner-overlay"></div>
               <div class="card-banner-top">
                 <div class="privacy-chip" :class="privacyChipClass(list.privacy)">
@@ -180,7 +180,7 @@
                   {{ privacyLabel(list.privacy) }}
                 </div>
                 <div class="role-chip" :class="list.isOwner ? 'owner' : 'member'">
-                  {{ list.isOwner ? 'Owner' : 'Member' }}
+                  {{ list.isOwner ? 'Proprietaire' : 'Membre' }}
                 </div>
               </div>
             </div>
@@ -201,12 +201,12 @@
                 <div class="card-top">
                   <div class="card-title-wrap">
                     <div class="card-title">{{ list.title }}</div>
-                    <div class="card-created">Created {{ formatDateLabel(list.createdAt) }}</div>
+                    <div class="card-created">Creee {{ formatDateLabel(list.createdAt) }}</div>
                   </div>
                 </div>
 
                 <div class="card-desc">
-                  Owned by {{ list.ownerName }}. {{ list.animeCount }} anime currently in the shared list.
+                  Propriete de {{ list.ownerName }}. {{ list.animeCount }} anime actuellement dans la liste partagee.
                 </div>
 
                 <div class="card-meta">
@@ -241,7 +241,7 @@
                       </div>
                       <span v-if="list.memberCount > 4" class="mini-more">+{{ list.memberCount - 4 }}</span>
                     </div>
-                    {{ list.memberCount }} members
+                    {{ list.memberCount }} membres
                   </div>
                 </div>
               </div>
@@ -254,8 +254,8 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32" aria-hidden="true">
           <path stroke-linecap="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0 1 18 0z" />
         </svg>
-        <div class="empty-title">No shared lists match your filters.</div>
-        <div class="empty-sub">Create a new list or refine your search.</div>
+        <div class="empty-title">Aucune liste partagee ne correspond a vos filtres.</div>
+        <div class="empty-sub">Creez une nouvelle liste ou affinez votre recherche.</div>
       </button>
     </main>
   </div>
@@ -272,10 +272,10 @@ type SortKey = 'recent' | 'title' | 'animeCount' | 'members'
 type SearchableUser = { id: string; name: string; avatar?: string; initials: string; color: string }
 
 const profileTabs = [
-  { key: 'anime-list', label: 'Anime List', to: '/animeList' },
-  { key: 'favorites', label: 'Favorites', to: '/favorites' },
-  { key: 'friends', label: 'Friends', to: '/friends' },
-  { key: 'shared-lists', label: 'Shared Lists', to: '/sharedLists', active: true }
+  { key: 'anime-list', label: 'Liste anime', to: '/animeList' },
+  { key: 'favorites', label: 'Favoris', to: '/favorites' },
+  { key: 'friends', label: 'Amis', to: '/friends' },
+  { key: 'shared-lists', label: 'Listes partagees', to: '/sharedLists', active: true }
 ]
 
 const {
@@ -337,14 +337,14 @@ const visibleLists = computed(() => {
 })
 
 const sections = computed(() => [
-  { key: 'owned', label: 'My lists', items: visibleLists.value.filter(list => list.isOwner) },
-  { key: 'joined', label: 'Joined lists', items: visibleLists.value.filter(list => !list.isOwner) }
+  { key: 'owned', label: 'Mes listes', items: visibleLists.value.filter(list => list.isOwner) },
+  { key: 'joined', label: 'Listes rejointes', items: visibleLists.value.filter(list => !list.isOwner) }
 ])
 
 const filters = computed(() => [
-  { key: 'all' as FilterKey, label: 'All', count: lists.value.length },
-  { key: 'owned' as FilterKey, label: 'My lists', count: lists.value.filter(list => list.isOwner).length },
-  { key: 'joined' as FilterKey, label: 'Joined lists', count: lists.value.filter(list => !list.isOwner).length }
+  { key: 'all' as FilterKey, label: 'Toutes', count: lists.value.length },
+  { key: 'owned' as FilterKey, label: 'Mes listes', count: lists.value.filter(list => list.isOwner).length },
+  { key: 'joined' as FilterKey, label: 'Listes rejointes', count: lists.value.filter(list => !list.isOwner).length }
 ])
 
 const stripForPrivacy = (privacy: SharedListPrivacy, owned: boolean) => {
@@ -353,7 +353,7 @@ const stripForPrivacy = (privacy: SharedListPrivacy, owned: boolean) => {
   return owned ? 'linear-gradient(135deg,#3db4f2,#1dd3b0)' : 'linear-gradient(135deg,#f77f00,#ffbe0b)'
 }
 
-const privacyLabel = (privacy: SharedListPrivacy) => privacy === 'private' ? 'Private' : privacy === 'friends' ? 'Friends Only' : 'Public'
+const privacyLabel = (privacy: SharedListPrivacy) => privacy === 'private' ? 'Privee' : privacy === 'friends' ? 'Amis uniquement' : 'Publique'
 const privacyChipClass = (privacy: SharedListPrivacy) => ({ 'pc-private': privacy === 'private', 'pc-friends': privacy === 'friends', 'pc-public': privacy === 'public' })
 const emojiFromTitle = (title: string) => title.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 3) || 'SL'
 const openList = (id: string) => navigateTo(`/sharedLists/${id}`)
@@ -377,7 +377,7 @@ const loadPage = async () => {
   try {
     lists.value = await loadSummaries()
   } catch (error: any) {
-    loadError.value = error?.message || 'Unable to load shared lists.'
+    loadError.value = error?.message || 'Impossible de charger les listes partagees.'
     lists.value = []
   } finally {
     isLoading.value = false
@@ -478,7 +478,7 @@ const handleCreate = async () => {
     await loadPage()
     await navigateTo(`/sharedLists/${created.id}`)
   } catch (error: any) {
-    actionError.value = error?.message || 'Unable to create shared list.'
+    actionError.value = error?.message || 'Impossible de creer la liste partagee.'
   } finally {
     isSubmitting.value = false
   }

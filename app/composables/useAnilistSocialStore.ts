@@ -89,9 +89,9 @@ mutation ($userId: Int) {
 const palette = ['#4F378A', '#9256F3', '#F77F00', '#06D6A0', '#D62828', '#4361EE', '#FF6B9D', '#FFBE0B', '#6A0572', '#1DD3B0']
 
 const formatJoined = (timestamp?: number) => {
-  if (!timestamp) return 'Unknown'
+  if (!timestamp) return 'Inconnu'
   const date = new Date(timestamp * 1000)
-  return new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' }).format(date)
+  return new Intl.DateTimeFormat('fr-FR', { month: 'short', year: 'numeric' }).format(date)
 }
 
 const hashColor = (id: number) => palette[Math.abs(id) % palette.length] ?? palette[0] ?? '#4F378A'
@@ -100,7 +100,7 @@ const escapeFilterValue = (value: string) => value.replace(/\\/g, '\\\\').replac
 
 const mapUser = (user: AniListUserNode): SocialUser => ({
   id: Number(user.id),
-  username: user.name || 'Unknown',
+  username: user.name || 'Inconnu',
   joined: formatJoined(user.createdAt),
   animeCount: Number(user.statistics?.anime?.count ?? 0),
   score: Number(user.statistics?.anime?.meanScore ?? 0),
@@ -244,7 +244,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
       if (!errorMessage) return response
     }
 
-    throw new Error(errorMessage || 'AniList GraphQL error')
+    throw new Error(errorMessage || 'Erreur GraphQL AniList')
   }
 
   const isFollowPending = (userId: number) => followPendingIds.value.includes(Number(userId))
@@ -291,7 +291,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
 
       if (followingResult.status === 'rejected' && followersResult.status === 'rejected') {
         const details = [followingResult.reason?.message, followersResult.reason?.message].filter(Boolean).join(' | ')
-        throw new Error(details || 'AniList social data unavailable.')
+        throw new Error(details || 'Les donnees sociales AniList sont indisponibles.')
       }
 
       const followersIds = new Set(followersRaw.map(user => Number(user.id)))
@@ -327,9 +327,9 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
 
       loadedForKey.value = userKey.value
     } catch (error: any) {
-      console.error('Failed to load AniList social data:', error)
+      console.error('Echec du chargement des donnees sociales AniList :', error)
       const message = error?.data?.errors?.[0]?.message || error?.message
-      loadError.value = message || 'Failed to load AniList social data.'
+      loadError.value = message || 'Impossible de charger les donnees sociales AniList.'
       reset(true)
     } finally {
       isLoading.value = false
@@ -339,13 +339,13 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
   const toggleFollowUser = async (targetUserId: number) => {
     const userId = Number(targetUserId || 0)
     if (!Number.isFinite(userId) || userId <= 0) {
-      throw new Error('Invalid AniList user.')
+      throw new Error('Utilisateur AniList invalide.')
     }
     if (!anilistUserId.value || !token.value) {
-      throw new Error('AniList account is not linked.')
+      throw new Error('Le compte AniList n\'est pas lie.')
     }
     if (userId === anilistUserId.value) {
-      throw new Error('You cannot follow your own AniList account.')
+      throw new Error('Vous ne pouvez pas suivre votre propre compte AniList.')
     }
     if (isFollowPending(userId)) return
 
@@ -370,7 +370,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
 
       await loadSocial(true)
     } catch (error: any) {
-      const message = error?.data?.errors?.[0]?.message || error?.message || 'Failed to update AniList follow.'
+      const message = error?.data?.errors?.[0]?.message || error?.message || 'Impossible de mettre a jour le suivi AniList.'
       loadError.value = message
       throw new Error(message)
     } finally {

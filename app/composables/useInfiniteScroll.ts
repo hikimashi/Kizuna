@@ -1,43 +1,43 @@
 import { ref, onMounted, onUnmounted, type Ref } from 'vue'
 
 export interface UseInfiniteScrollOptions {
-  /** Distance from bottom (in pixels) to trigger load more */
+  /** Distance depuis le bas (en pixels) pour declencher le chargement */
   threshold?: number
-  /** Initial page number */
+  /** Numero de page initial */
   initialPage?: number
-  /** Items per page */
+  /** Nombre d'elements par page */
   perPage?: number
-  /** Whether to start loading immediately on mount */
+  /** Indique s'il faut charger immediatement au montage */
   immediate?: boolean
 }
 
 export interface UseInfiniteScrollReturn<T> {
-  /** Array of loaded items */
+  /** Tableau des elements charges */
   items: Ref<T[]>
-  /** Current page number */
+  /** Numero de page courant */
   currentPage: Ref<number>
-  /** Whether currently loading */
+  /** Indique si un chargement est en cours */
   loading: Ref<boolean>
-  /** Whether all items have been loaded */
+  /** Indique si tous les elements ont ete charges */
   hasMore: Ref<boolean>
-  /** Reference to the sentinel element */
+  /** Reference vers l'element sentinelle */
   sentinelRef: Ref<HTMLElement | null>
-  /** Load more items (can be called manually) */
+  /** Charge plus d'elements (peut etre appele manuellement) */
   loadMore: () => Promise<void>
-  /** Reset and reload from beginning */
+  /** Reinitialise puis recharge depuis le debut */
   reset: () => Promise<void>
-  /** Set items data directly */
+  /** Definit directement les elements */
   setItems: (items: T[]) => void
-  /** Set hasMore state */
+  /** Definit l'etat hasMore */
   setHasMore: (hasMore: boolean) => void
 }
 
 /**
- * Composable for implementing infinite scroll with sentinel pattern
- * Similar to AniList's lazy loading behavior
+ * Composable pour implementer un scroll infini avec sentinelle
+ * Proche du comportement de chargement progressif d'AniList
  *
- * @param loadFn - Async function to load items for a given page
- * @param options - Configuration options
+ * @param loadFn - Fonction asynchrone qui charge les elements d'une page
+ * @param options - Options de configuration
  *
  * @example
  * ```ts
@@ -57,8 +57,8 @@ export interface UseInfiniteScrollReturn<T> {
  *     <div v-for="item in items" :key="item.id">
  *       {{ item.title }}
  *     </div>
- *     <div v-if="loading" class="loading-spinner">Loading...</div>
- *     <div v-if="!hasMore" class="end-message">End of list</div>
+ *     <div v-if="loading" class="loading-spinner">Chargement...</div>
+ *     <div v-if="!hasMore" class="end-message">Fin de liste</div>
  *     <div ref="sentinelRef" style="height: 1px"></div>
  *   </div>
  * </template>
@@ -98,7 +98,7 @@ export function useInfiniteScroll<T>(
       items.value = [...items.value, ...newItems]
       currentPage.value++
     } catch (error) {
-      console.error('Error loading more items:', error)
+      console.error('Erreur lors du chargement de nouveaux elements :', error)
       hasMore.value = false
     } finally {
       loading.value = false
@@ -110,14 +110,14 @@ export function useInfiniteScroll<T>(
     currentPage.value = initialPage
     hasMore.value = true
     
-    // Disconnect old observer
+    // Coupe l'ancien observer
     if (observer) {
       observer.disconnect()
     }
     
     await loadMore()
     
-    // Re-setup observer after reset
+    // Reconfigure l'observer apres la reinitialisation
     setTimeout(() => {
       setupObserver()
     }, 0)
@@ -156,7 +156,7 @@ export function useInfiniteScroll<T>(
     if (immediate) {
       loadMore()
     }
-    // Setup observer after initial render
+    // Configure l'observer apres le rendu initial
     setTimeout(() => {
       setupObserver()
     }, 0)

@@ -2,7 +2,7 @@
   <div class="settings-page">
     <div class="page">
       <aside class="sidebar">
-        <div class="sidebar-section">Profile</div>
+        <div class="sidebar-section">Profil</div>
         <button class="sidebar-link" :class="{ active: activeSection === 'anilist' }" type="button" @click="scrollToSection('anilist')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15">
             <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
@@ -10,26 +10,26 @@
           AniList
         </button>
 
-        <div class="sidebar-section">Account</div>
+        <div class="sidebar-section">Compte</div>
         <button class="sidebar-link" :class="{ active: activeSection === 'profile' }" type="button" @click="scrollToSection('profile')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" />
           </svg>
-          Profile
+          Profil
         </button>
         <button class="sidebar-link" :class="{ active: activeSection === 'security' }" type="button" @click="scrollToSection('security')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15">
             <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
           </svg>
-          Security
+          Securite
         </button>
 
-        <div class="sidebar-section">App</div>
+        <div class="sidebar-section">Application</div>
         <button class="sidebar-link" :class="{ active: activeSection === 'appearance' }" type="button" @click="scrollToSection('appearance')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636" />
           </svg>
-          Appearance
+          Apparence
         </button>
       </aside>
 
@@ -38,14 +38,14 @@
           <section id="section-anilist" ref="anilistSectionRef" class="settings-section">
             <div class="section-header">
               <div class="section-title">AniList</div>
-              <div class="section-subtitle">Linked AniList profile settings</div>
+              <div class="section-subtitle">Parametres du profil AniList lie</div>
             </div>
             <section class="card">
-              <div class="card-header"><span class="card-title">Profile Info</span></div>
+              <div class="card-header"><span class="card-title">Informations du profil</span></div>
               <div class="card-body anilist-card-body">
                 <div class="fields-grid">
                   <div class="field">
-                    <span class="field-label">Username</span>
+                    <span class="field-label">Nom d'utilisateur</span>
                     <div class="field-value">{{ username || '-' }}</div>
                   </div>
                   <div class="field">
@@ -54,7 +54,7 @@
                   </div>
                 </div>
                 <div class="readonly-note">
-                  <span>Avatar and banner are read-only. Change them on AniList, then refresh.</span>
+                  <span>L'avatar et la banniere sont en lecture seule. Modifiez-les sur AniList puis actualisez.</span>
                   <a class="anilist-settings-link" href="https://anilist.co/settings" target="_blank" rel="noopener noreferrer">
                     <svg viewBox="0 0 100 100" width="14" height="14" aria-hidden="true">
                       <circle cx="50" cy="50" r="50" fill="currentColor" />
@@ -62,22 +62,22 @@
                       <rect x="45" y="20" width="16" height="60" fill="#0B1622" />
                       <rect x="64" y="35" width="16" height="45" fill="#0B1622" />
                     </svg>
-                    AniList settings
+                    Parametres AniList
                   </a>
                 </div>
                 <div class="profile-hero">
                   <div class="profile-avatar-col">
                     <div class="profile-avatar-label">Avatar</div>
                     <div class="profile-avatar-img">
-                      <img v-if="avatarSrc" :src="avatarSrc" alt="AniList avatar" />
-                      <div v-else class="profile-banner-placeholder">No avatar</div>
+                      <img v-if="avatarSrc" :src="avatarSrc" alt="Avatar AniList" />
+                      <div v-else class="profile-banner-placeholder">Aucun avatar</div>
                     </div>
                   </div>
                   <div class="profile-banner-col">
-                    <div class="profile-banner-label">Banner</div>
+                    <div class="profile-banner-label">Banniere</div>
                     <div class="profile-banner-img">
-                      <img v-if="bannerSrc" :src="bannerSrc" alt="AniList banner" />
-                      <div v-else class="profile-banner-placeholder">No banner set on AniList</div>
+                      <img v-if="bannerSrc" :src="bannerSrc" alt="Banniere AniList" />
+                      <div v-else class="profile-banner-placeholder">Aucune banniere definie sur AniList</div>
                     </div>
                   </div>
                 </div>
@@ -85,28 +85,28 @@
             </section>
             <div class="btn-row">
               <button class="btn-refresh" :disabled="isRefreshing" @click="refreshAnilistData">
-                {{ isRefreshing ? 'Refreshing...' : 'Refresh from AniList' }}
+                {{ isRefreshing ? 'Actualisation...' : 'Actualiser depuis AniList' }}
               </button>
               <button class="btn-danger" :disabled="isUnlinking" @click="unlinkAniList">
-                {{ isUnlinking ? 'Unlinking...' : 'Unlink AniList' }}
+                {{ isUnlinking ? 'Deliaison...' : 'Delier AniList' }}
               </button>
             </div>
           </section>
 
           <section id="section-profile" ref="profileSectionRef" class="settings-section">
             <div class="section-header">
-              <div class="section-title">Profile</div>
-              <div class="section-subtitle">Your account profile information</div>
+              <div class="section-title">Profil</div>
+              <div class="section-subtitle">Informations de votre compte</div>
             </div>
             <section class="card">
-              <div class="card-header"><span class="card-title">Profile Details</span></div>
+              <div class="card-header"><span class="card-title">Details du profil</span></div>
               <div class="card-body">
                 <div class="fields-grid">
                   <div class="field"><span class="field-label">Email</span><div class="field-value">{{ emailDisplay }}</div></div>
-                  <div class="field"><span class="field-label">Joined</span><div class="field-value">{{ joinedDisplay }}</div></div>
-                  <div class="field"><span class="field-label">AniList Username</span><div class="field-value">{{ username || '-' }}</div></div>
+                  <div class="field"><span class="field-label">Inscription</span><div class="field-value">{{ joinedDisplay }}</div></div>
+                  <div class="field"><span class="field-label">Nom d'utilisateur AniList</span><div class="field-value">{{ username || '-' }}</div></div>
                   <div class="field"><span class="field-label">AniList ID</span><div class="field-value">{{ anilistId || '-' }}</div></div>
-                  <div class="field"><span class="field-label">AniList Token Expires</span><div class="field-value">{{ anilistTokenExpiryDisplay }}</div></div>
+                  <div class="field"><span class="field-label">Expiration du token AniList</span><div class="field-value">{{ anilistTokenExpiryDisplay }}</div></div>
                 </div>
               </div>
             </section>
@@ -114,52 +114,52 @@
 
           <section id="section-security" ref="securitySectionRef" class="settings-section">
             <div class="section-header">
-              <div class="section-title">Security</div>
-              <div class="section-subtitle">Password and account safety</div>
+              <div class="section-title">Securite</div>
+              <div class="section-subtitle">Mot de passe et securite du compte</div>
             </div>
 
             <section class="card">
-              <div class="card-header"><span class="card-title">Account</span></div>
+              <div class="card-header"><span class="card-title">Compte</span></div>
               <div class="card-body">
                 <div class="account-field">
                   <div class="account-field-info">
-                    <div class="account-field-name">Email address</div>
+                    <div class="account-field-name">Adresse e-mail</div>
                     <div class="account-field-desc">{{ emailDisplay }}</div>
                   </div>
                   <button class="btn-edit" type="button" @click="toggleEmailChange">
-                    {{ showEmailChange ? 'Cancel' : 'Change' }}
+                    {{ showEmailChange ? 'Annuler' : 'Modifier' }}
                   </button>
                 </div>
                 <div v-if="showEmailChange" class="account-action">
-                  <label class="field-label" for="new-email">New email</label>
+                  <label class="field-label" for="new-email">Nouvel e-mail</label>
                   <input id="new-email" v-model="pendingEmail" class="action-input" type="email" placeholder="name@example.com" />
                   <div class="action-buttons">
                     <button class="btn-edit" :disabled="isChangingEmail" type="button" @click="submitEmailChange">
-                      {{ isChangingEmail ? 'Sending...' : 'Send Confirmation' }}
+                      {{ isChangingEmail ? 'Envoi...' : 'Envoyer la confirmation' }}
                     </button>
                   </div>
                 </div>
 
                 <div class="account-field">
                   <div class="account-field-info">
-                    <div class="account-field-name">Password</div>
-                    <div class="account-field-desc">Change your password directly.</div>
+                    <div class="account-field-name">Mot de passe</div>
+                    <div class="account-field-desc">Modifiez directement votre mot de passe.</div>
                   </div>
                   <button class="btn-edit" type="button" @click="togglePasswordReset">
-                    {{ showPasswordReset ? 'Cancel' : 'Change' }}
+                    {{ showPasswordReset ? 'Annuler' : 'Modifier' }}
                   </button>
                 </div>
                 <div v-if="showPasswordReset" class="account-action">
-                  <label class="field-label" for="current-password">Current password</label>
+                  <label class="field-label" for="current-password">Mot de passe actuel</label>
                   <input id="current-password" v-model="currentPassword" class="action-input" type="password" />
-                  <label class="field-label" for="next-password">New password</label>
+                  <label class="field-label" for="next-password">Nouveau mot de passe</label>
                   <input id="next-password" v-model="newPassword" class="action-input" type="password" />
-                  <label class="field-label" for="confirm-password">Confirm password</label>
+                  <label class="field-label" for="confirm-password">Confirmer le mot de passe</label>
                   <input id="confirm-password" v-model="confirmPassword" class="action-input" type="password" />
                   <p v-if="passwordChangeError" class="security-error">{{ passwordChangeError }}</p>
                   <div class="action-buttons">
                     <button class="btn-edit" :disabled="isUpdatingPassword" type="button" @click="updatePasswordDirectly">
-                      {{ isUpdatingPassword ? 'Updating...' : 'Update Password' }}
+                      {{ isUpdatingPassword ? 'Mise a jour...' : 'Mettre a jour le mot de passe' }}
                     </button>
                   </div>
                 </div>
@@ -167,15 +167,15 @@
             </section>
 
             <section class="danger-card">
-              <div class="card-header"><span class="card-title">Danger Zone</span></div>
+              <div class="card-header"><span class="card-title">Zone dangereuse</span></div>
               <div class="card-body">
                 <div class="account-field danger-row">
                   <div class="account-field-info">
-                    <div class="account-field-name">Delete account</div>
-                    <div class="account-field-desc">Permanently delete your account. This cannot be undone.</div>
+                    <div class="account-field-name">Supprimer le compte</div>
+                    <div class="account-field-desc">Supprime definitivement votre compte. Cette action est irreversible.</div>
                   </div>
                   <button class="btn-danger" :disabled="isDeleting" @click="deleteAccount">
-                    {{ isDeleting ? 'Deleting...' : 'Delete' }}
+                    {{ isDeleting ? 'Suppression...' : 'Supprimer' }}
                   </button>
                 </div>
               </div>
@@ -184,20 +184,20 @@
 
           <section id="section-appearance" ref="appearanceSectionRef" class="settings-section">
             <div class="section-header">
-              <div class="section-title">Appearance</div>
-              <div class="section-subtitle">Theme and visual preferences</div>
+              <div class="section-title">Apparence</div>
+              <div class="section-subtitle">Theme et preferences visuelles</div>
             </div>
             <section class="card">
-              <div class="card-header"><span class="card-title">Theme Color</span></div>
+              <div class="card-header"><span class="card-title">Couleur du theme</span></div>
               <div class="card-body">
                 <div class="theme-controls">
-                  <button class="theme-chip" :class="{ active: selectedTheme === 'forest' }" @click="previewTheme('forest')">Forest</button>
-                  <button class="theme-chip" :class="{ active: selectedTheme === 'winter' }" @click="previewTheme('winter')">Winter</button>
+                  <button class="theme-chip" :class="{ active: selectedTheme === 'forest' }" @click="previewTheme('forest')">Foret</button>
+                  <button class="theme-chip" :class="{ active: selectedTheme === 'winter' }" @click="previewTheme('winter')">Hiver</button>
                   <button class="btn-edit" :disabled="isSavingTheme" @click="saveTheme">
-                    {{ isSavingTheme ? 'Saving...' : 'Save' }}
+                    {{ isSavingTheme ? 'Enregistrement...' : 'Enregistrer' }}
                   </button>
                 </div>
-                <p class="account-field-desc" style="margin-top: 10px;">Theme is previewed instantly; click Save to persist.</p>
+                <p class="account-field-desc" style="margin-top: 10px;">Le theme est previsualise instantanement ; cliquez sur Enregistrer pour le conserver.</p>
               </div>
             </section>
           </section>
@@ -259,13 +259,13 @@ const joinedDisplay = computed(() => formatDate(authRecord.value.created))
 const anilistTokenExpiryDisplay = computed(() => {
   if (!authRecord.value.anilist_token) return '-'
   if (authRecord.value.anilist_token_expires_at) return formatDateShort(authRecord.value.anilist_token_expires_at)
-  return 'Unavailable (not stored)'
+  return 'Indisponible (non stocke)'
 })
 const passwordChangeError = computed(() => {
   if (!currentPassword.value && !newPassword.value && !confirmPassword.value) return ''
-  if (!currentPassword.value || !newPassword.value || !confirmPassword.value) return 'All fields are required.'
-  if (newPassword.value.length < 8) return 'New password must be at least 8 characters.'
-  if (newPassword.value !== confirmPassword.value) return 'Passwords do not match.'
+  if (!currentPassword.value || !newPassword.value || !confirmPassword.value) return 'Tous les champs sont obligatoires.'
+  if (newPassword.value.length < 8) return 'Le nouveau mot de passe doit contenir au moins 8 caracteres.'
+  if (newPassword.value !== confirmPassword.value) return 'Les mots de passe ne correspondent pas.'
   return ''
 })
 
@@ -273,7 +273,7 @@ function formatDateTime(value: unknown): string {
   if (!value) return '-'
   const date = new Date(String(value))
   if (Number.isNaN(date.getTime())) return '-'
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat('fr-FR', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -286,7 +286,7 @@ function formatDate(value: unknown): string {
   if (!value) return '-'
   const date = new Date(String(value))
   if (Number.isNaN(date.getTime())) return '-'
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat('fr-FR', {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
@@ -362,13 +362,13 @@ const refreshAnilistData = async () => {
 
 const unlinkAniList = async () => {
   if (isUnlinking.value) return
-  const ok = await alertStore.openAlert({ type: 'warning', message: 'Unlink AniList account from Kizuna?' })
+  const ok = await alertStore.openAlert({ type: 'warning', message: 'Delier le compte AniList de Kizuna ?' })
   if (!ok) return
 
   isUnlinking.value = true
   try {
     const userId = pocketbaseStore.pb.authStore.model?.id
-    if (!userId) throw new Error('Not authenticated')
+    if (!userId) throw new Error('Non authentifie.')
 
     await pocketbaseStore.pb.collection('user').update(userId, {
       anilist_user_id: null,
@@ -381,10 +381,10 @@ const unlinkAniList = async () => {
     })
 
     await myAuthStore.authRefresh()
-    toastStore.openToast({ type: 'success', message: 'AniList unlinked.' })
+    toastStore.openToast({ type: 'success', message: 'AniList a ete delie.' })
     await navigateTo('/')
   } catch (error: any) {
-    toastStore.openToast({ type: 'error', message: error?.message || 'Unable to unlink AniList.' })
+    toastStore.openToast({ type: 'error', message: error?.message || 'Impossible de delier AniList.' })
   } finally {
     isUnlinking.value = false
   }
@@ -395,14 +395,14 @@ const saveTheme = async () => {
   isSavingTheme.value = true
   try {
     const userId = pocketbaseStore.pb.authStore.model?.id
-    if (!userId) throw new Error('Not authenticated')
+    if (!userId) throw new Error('Non authentifie.')
 
     await pocketbaseStore.pb.collection('user').update(userId, { theme: selectedTheme.value })
     await myAuthStore.authRefresh()
     themeStore.setThemeByName(selectedTheme.value)
-    toastStore.openToast({ type: 'success', message: 'Theme saved.' })
+    toastStore.openToast({ type: 'success', message: 'Theme enregistre.' })
   } catch (error: any) {
-    toastStore.openToast({ type: 'error', message: error?.message || 'Unable to save theme.' })
+    toastStore.openToast({ type: 'error', message: error?.message || "Impossible d'enregistrer le theme." })
   } finally {
     isSavingTheme.value = false
   }
@@ -416,17 +416,17 @@ const toggleEmailChange = () => {
 const submitEmailChange = async () => {
   const nextEmail = pendingEmail.value.trim()
   if (!nextEmail) {
-    toastStore.openToast({ type: 'error', message: 'Please enter a valid email.' })
+    toastStore.openToast({ type: 'error', message: 'Veuillez saisir une adresse e-mail valide.' })
     return
   }
 
   isChangingEmail.value = true
   try {
     await myAuthStore.emailChange(nextEmail)
-    toastStore.openToast({ type: 'success', message: 'Confirmation email sent for address change.' })
+    toastStore.openToast({ type: 'success', message: "E-mail de confirmation envoye pour le changement d'adresse." })
     showEmailChange.value = false
   } catch (error: any) {
-    toastStore.openToast({ type: 'error', message: error?.message || 'Unable to request email change.' })
+    toastStore.openToast({ type: 'error', message: error?.message || "Impossible de demander le changement d'adresse e-mail." })
   } finally {
     isChangingEmail.value = false
   }
@@ -450,7 +450,7 @@ const updatePasswordDirectly = async () => {
   isUpdatingPassword.value = true
   try {
     const userId = pocketbaseStore.pb.authStore.model?.id
-    if (!userId) throw new Error('Not authenticated')
+    if (!userId) throw new Error('Non authentifie.')
 
     await pocketbaseStore.pb.collection('user').update(userId, {
       oldPassword: currentPassword.value,
@@ -459,13 +459,13 @@ const updatePasswordDirectly = async () => {
     })
 
     await myAuthStore.authRefresh()
-    toastStore.openToast({ type: 'success', message: 'Password updated.' })
+    toastStore.openToast({ type: 'success', message: 'Mot de passe mis a jour.' })
     currentPassword.value = ''
     newPassword.value = ''
     confirmPassword.value = ''
     showPasswordReset.value = false
   } catch (error: any) {
-    toastStore.openToast({ type: 'error', message: error?.message || 'Unable to update password.' })
+    toastStore.openToast({ type: 'error', message: error?.message || 'Impossible de mettre a jour le mot de passe.' })
   } finally {
     isUpdatingPassword.value = false
   }
@@ -475,7 +475,7 @@ const deleteAccount = async () => {
   if (isDeleting.value) return
   const ok = await alertStore.openAlert({
     type: 'error',
-    message: 'Delete your account permanently? This action is irreversible.'
+    message: 'Supprimer votre compte definitivement ? Cette action est irreversible.'
   })
   if (!ok) return
 
@@ -483,10 +483,10 @@ const deleteAccount = async () => {
   try {
     await myAuthStore.deleteAccount()
     await myAuthStore.logout()
-    toastStore.openToast({ type: 'success', message: 'Account deleted.' })
+    toastStore.openToast({ type: 'success', message: 'Compte supprime.' })
     await navigateTo('/')
   } catch (error: any) {
-    toastStore.openToast({ type: 'error', message: error?.message || 'Unable to delete account.' })
+    toastStore.openToast({ type: 'error', message: error?.message || 'Impossible de supprimer le compte.' })
   } finally {
     isDeleting.value = false
   }

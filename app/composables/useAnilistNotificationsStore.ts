@@ -345,7 +345,7 @@ const getCover = (media?: NotificationMediaPreview) =>
   media?.coverImage?.large || media?.coverImage?.medium || undefined
 
 const getMediaTitle = (media?: NotificationMediaPreview) =>
-  String(media?.title?.userPreferred || 'Untitled media')
+  String(media?.title?.userPreferred || 'Media sans titre')
 
 const normalizeNotification = (node: RawNotificationNode): AniListNotificationItem | null => {
   const id = Number(node?.id || 0)
@@ -354,7 +354,7 @@ const normalizeNotification = (node: RawNotificationNode): AniListNotificationIt
   const actor = node?.user?.id
     ? {
         id: Number(node.user.id),
-        name: String(node.user.name || 'Unknown user'),
+        name: String(node.user.name || 'Utilisateur inconnu'),
         avatar: getAvatar(node.user)
       }
     : undefined
@@ -370,7 +370,7 @@ const normalizeNotification = (node: RawNotificationNode): AniListNotificationIt
   const thread = node?.thread?.id
     ? {
         id: Number(node.thread.id),
-        title: String(node.thread.title || 'Forum thread')
+        title: String(node.thread.title || 'Discussion du forum')
       }
     : undefined
 
@@ -531,7 +531,7 @@ export const useAnilistNotificationsStore = defineStore('anilistNotifications', 
       }
     } catch (error: any) {
       console.error('[notifications] load failed', error)
-      loadError.value = error?.message || 'Failed to load AniList notifications.'
+      loadError.value = error?.message || 'Impossible de charger les notifications AniList.'
       if (isFirstPage) {
         items.value = []
         hasNextPage.value = false

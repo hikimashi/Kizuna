@@ -115,7 +115,7 @@ withDefaults(defineProps<{
   }
 }
 
-/* Responsive */
+/* Adaptation mobile */
 @media (max-width: 768px) {
   .skeleton-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));

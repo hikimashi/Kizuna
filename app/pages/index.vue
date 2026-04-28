@@ -89,7 +89,12 @@
         <div class="dashboard-container">
           <div class="dashboard-grid">
             <div class="dashboard-panel">
-              <h2 class="panel-title">Shared lists</h2>
+              <div class="panel-header panel-header-spread">
+                <h2 class="panel-title">Shared lists</h2>
+                <NuxtLink class="panel-link-btn" to="/sharedLists">
+                  View all
+                </NuxtLink>
+              </div>
               <div class="search-bar">
                 <svg class="hamburger-icon" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/>
@@ -128,14 +133,30 @@
               </div>
             </div>
 
-            <div class="dashboard-panel">
-              <div class="panel-header">
+            <div ref="friendsPanelRef" class="dashboard-panel">
+              <div ref="friendsHeaderRef" class="panel-header">
                 <h2 class="panel-title">Friends</h2>
-                <button class="add-friend-btn" type="button" @click="openFollowModal">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 5v14M5 12h14"/>
-                  </svg>
-                </button>
+                <div class="panel-header-actions">
+                  <NuxtLink class="panel-link-btn" to="/friends">
+                    View all
+                  </NuxtLink>
+                  <button class="add-friend-btn" type="button" @click="openFollowModal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div ref="friendsSearchRef" class="search-bar">
+                <svg class="hamburger-icon" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/>
+                </svg>
+                <input v-model.trim="dashboardFriendSearch" type="text" placeholder="Search a friend" />
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/>
+                  <path d="M21 21l-4.35-4.35"/>
+                </svg>
               </div>
 
               <div v-if="friendsLoading" class="dashboard-empty-state">
@@ -144,9 +165,9 @@
               <div v-else-if="friendsError" class="dashboard-empty-state dashboard-error-state">
                 {{ friendsError }}
               </div>
-              <div v-else-if="dashboardFriends.length" class="friends-grid">
+              <div v-else-if="filteredDashboardFriends.length" ref="friendsGridRef" class="friends-grid">
                 <button
-                  v-for="friend in dashboardFriends"
+                  v-for="friend in filteredDashboardFriends"
                   :key="friend.id"
                   class="friend-card"
                   type="button"
@@ -286,6 +307,7 @@ const socialStore = useAnilistSocialStore()
 
 const featuresSection = ref<HTMLElement | null>(null)
 const dashboardListSearch = ref('')
+const dashboardFriendSearch = ref('')
 const dashboardLists = ref<SharedListSummary[]>([])
 const dashboardListsLoading = ref(false)
 const dashboardListsError = ref('')
@@ -307,6 +329,12 @@ const followSearchResults = ref<Array<{
   alreadyFriend: boolean
 }>>([])
 let followSearchTimer: ReturnType<typeof setTimeout> | null = null
+const viewportHeight = ref(900)
+const friendsPanelRef = ref<HTMLElement | null>(null)
+const friendsHeaderRef = ref<HTMLElement | null>(null)
+const friendsSearchRef = ref<HTMLElement | null>(null)
+const friendsGridRef = ref<HTMLElement | null>(null)
+const dashboardFriendLimit = ref(8)
 
 const authRecord = computed(() => {
   const authRefOrRecord = pocketbaseStore.authRecord as any
@@ -318,15 +346,32 @@ const currentUserId = computed(() => String(authRecord.value.id ?? ''))
 const isAniListLinked = computed(() => Boolean(authRecord.value?.anilist_user_id && authRecord.value?.anilist_token))
 const friendsLoading = computed(() => socialStore.isLoading)
 const friendsError = computed(() => socialStore.loadError)
-const dashboardFriends = computed<SocialUser[]>(() => socialStore.friendUsers.slice(0, 8))
 const friendIds = computed(() => new Set(socialStore.friendUsers.map(friend => Number(friend.id))))
 const pendingFollowIds = computed(() => new Set((socialStore.followPendingIds ?? []).map(id => Number(id))))
+
+const dashboardListLimit = computed(() => {
+  if (viewportHeight.value < 700) return 3
+  if (viewportHeight.value < 820) return 4
+  if (viewportHeight.value < 980) return 5
+  return 6
+})
 
 const filteredDashboardLists = computed(() => {
   const needle = dashboardListSearch.value.toLowerCase()
   const source = dashboardLists.value.slice(0, 12)
-  if (!needle) return source.slice(0, 8)
-  return source.filter((list) => `${list.title} ${list.ownerName}`.toLowerCase().includes(needle)).slice(0, 8)
+  if (!needle) return source.slice(0, dashboardListLimit.value)
+  return source
+    .filter((list) => `${list.title} ${list.ownerName}`.toLowerCase().includes(needle))
+    .slice(0, dashboardListLimit.value)
+})
+
+const filteredDashboardFriends = computed<SocialUser[]>(() => {
+  const needle = dashboardFriendSearch.value.toLowerCase()
+  const source = socialStore.friendUsers.filter(friend => friend.isFollower && friend.following)
+  if (!needle) return source.slice(0, dashboardFriendLimit.value)
+  return source
+    .filter((friend) => friend.username.toLowerCase().includes(needle))
+    .slice(0, dashboardFriendLimit.value)
 })
 
 const DEFAULT_SHARED_LIST_BANNER = '/img/banner.webp'
@@ -593,8 +638,62 @@ const loadDashboardSocial = async () => {
 }
 
 let observer: IntersectionObserver | null = null
+let friendsPanelObserver: ResizeObserver | null = null
+const syncViewportHeight = () => {
+  if (typeof window === 'undefined') return
+  viewportHeight.value = window.innerHeight
+}
+
+const measureDashboardFriendLimit = () => {
+  if (typeof window === 'undefined') return
+
+  const panel = friendsPanelRef.value
+  if (!panel) {
+    dashboardFriendLimit.value = viewportHeight.value < 700 ? 3 : 8
+    return
+  }
+
+  const panelStyles = window.getComputedStyle(panel)
+  const paddingTop = Number.parseFloat(panelStyles.paddingTop || '0')
+  const paddingBottom = Number.parseFloat(panelStyles.paddingBottom || '0')
+  const contentHeight = panel.clientHeight - paddingTop - paddingBottom
+  const headerHeight = friendsHeaderRef.value?.offsetHeight ?? 0
+  const searchHeight = friendsSearchRef.value?.offsetHeight ?? 0
+  const headerStyles = friendsHeaderRef.value ? window.getComputedStyle(friendsHeaderRef.value) : null
+  const searchStyles = friendsSearchRef.value ? window.getComputedStyle(friendsSearchRef.value) : null
+  const spacingBelowHeader = Number.parseFloat(headerStyles?.marginBottom || '0')
+  const spacingBelowSearch = Number.parseFloat(searchStyles?.marginBottom || '0')
+  const availableHeight = Math.max(
+    0,
+    contentHeight - headerHeight - searchHeight - spacingBelowHeader - spacingBelowSearch
+  )
+
+  const grid = friendsGridRef.value
+  const gridStyles = grid ? window.getComputedStyle(grid) : null
+  const columns = gridStyles
+    ? gridStyles.gridTemplateColumns.split(' ').filter(Boolean).length
+    : panel.clientWidth < 420 ? 1 : panel.clientWidth < 768 ? 2 : 3
+  const rowGap = gridStyles ? Number.parseFloat(gridStyles.rowGap || gridStyles.gap || '16') : 16
+  const firstCard = grid?.querySelector<HTMLElement>('.friend-card')
+  const cardHeight = firstCard?.offsetHeight ?? 94
+  const rows = Math.max(1, Math.floor((availableHeight + rowGap) / (cardHeight + rowGap)))
+  const maxCards = Math.max(columns, columns * rows)
+
+  dashboardFriendLimit.value = maxCards
+}
 
 onMounted(() => {
+  syncViewportHeight()
+  window.addEventListener('resize', syncViewportHeight)
+  nextTick(() => {
+    measureDashboardFriendLimit()
+    if (typeof ResizeObserver !== 'undefined' && friendsPanelRef.value) {
+      friendsPanelObserver = new ResizeObserver(() => {
+        measureDashboardFriendLimit()
+      })
+      friendsPanelObserver.observe(friendsPanelRef.value)
+    }
+  })
   nextTick(() => {
     observer = new IntersectionObserver(
       (entries) => {
@@ -622,7 +721,9 @@ onMounted(() => {
 
 onUnmounted(() => {
   observer?.disconnect()
+  friendsPanelObserver?.disconnect()
   if (followSearchTimer) clearTimeout(followSearchTimer)
+  window.removeEventListener('resize', syncViewportHeight)
 })
 
 watch(isAniListLinked, async (linked) => {
@@ -635,6 +736,15 @@ watch(isAniListLinked, async (linked) => {
 
   await Promise.all([loadDashboardLists(), loadDashboardSocial()])
 }, { immediate: true })
+
+watch(
+  () => [socialStore.friendUsers.length, dashboardFriendSearch.value, viewportHeight.value],
+  () => {
+    nextTick(() => {
+      measureDashboardFriendLimit()
+    })
+  }
+)
 </script>
 
 <style scoped src="~/assets/css/pages/index.css"></style>

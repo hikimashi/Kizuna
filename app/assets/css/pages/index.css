@@ -476,6 +476,38 @@
   margin-bottom: 16px;
 }
 
+.panel-header .panel-title,
+.panel-header-spread .panel-title {
+  margin-bottom: 0;
+}
+
+.panel-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.panel-link-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--soft-bg);
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 600;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.panel-link-btn:hover {
+  background: var(--soft-bg-hover);
+  border-color: var(--hover-border);
+}
+
 .add-friend-btn {
   width: 32px;
   height: 32px;
@@ -620,7 +652,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
   gap: 10px;
+  min-height: 94px;
 }
 
 .friend-avatar {
@@ -819,6 +853,20 @@
 
   .dashboard-panel {
     padding: 16px;
+  }
+
+  .panel-header,
+  .panel-header-actions {
+    flex-wrap: wrap;
+  }
+
+  .panel-header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .panel-link-btn {
+    flex: 1;
   }
 
   .list-item {

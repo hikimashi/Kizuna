@@ -1,10 +1,10 @@
 <template>
     <!-- Background overlay -->
-    <div v-if="open" class="fixed inset-0 bg-base-100/50 backdrop-blur-[4px] z-40" @click="handleClose" />
+    <div v-if="open" class="create-drawer-overlay fixed inset-0 bg-base-100/50 backdrop-blur-[4px] z-40" @click="handleClose" />
 
      <!-- DrawerCreateUser panel -->
      <div
-         class="fixed top-0 right-0 h-[100dvh] w-full sm:max-w-[420px] bg-base-100 shadow-2xl z-50 transform transition-transform duration-500 ease-in-out"
+         class="create-drawer-panel fixed top-0 right-0 h-[100dvh] w-full sm:max-w-[420px] bg-base-100 shadow-2xl z-50 transform transition-transform duration-500 ease-in-out"
          :class="open ? 'translate-x-0' : 'translate-x-full'">
          <div class="bg-base-200 px-3 sm:px-4 pt-16 sm:pt-20 pb-6 w-full h-full overflow-y-auto overscroll-contain">
              <button class="absolute top-3 right-3 sm:top-4 sm:right-4 btn btn-outline btn-error btn-sm" @click="handleClose">
@@ -194,3 +194,12 @@ const passwordMisMatch = () => {
 };
 </script>
 
+<style scoped>
+.create-drawer-overlay {
+  z-index: 180;
+}
+
+.create-drawer-panel {
+  z-index: 190;
+}
+</style>

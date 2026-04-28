@@ -845,7 +845,28 @@ onBeforeUnmount(() => {
 
 /* Theme Toggle */
 .theme-toggle {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
   margin-left: 9px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.18s ease, transform 0.18s ease;
+}
+
+.theme-toggle:hover {
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.theme-toggle input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .theme-toggle-before-avatar {
@@ -855,8 +876,23 @@ onBeforeUnmount(() => {
 }
 
 .theme-toggle svg {
+  grid-area: 1 / 1;
   width: 22px;
   height: 22px;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.theme-toggle input:not(:checked) ~ .swap-off,
+.theme-toggle input:checked ~ .swap-on {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+
+.theme-toggle input:not(:checked) ~ .swap-on,
+.theme-toggle input:checked ~ .swap-off {
+  opacity: 0;
+  transform: rotate(-45deg) scale(0.72);
+  pointer-events: none;
 }
 
 /* Dropdown */

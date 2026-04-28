@@ -148,6 +148,7 @@ const normalizeRelationValues = (value?: string | string[]) => {
 const escapeFilterValue = (value: string) => value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
 
 const buildOrIdFilter = (ids: string[], field = 'id') => ids.map(id => `${field}="${escapeFilterValue(id)}"`).join(' || ')
+const sharedListContentIsPubliclyReadable = (privacy?: SharedListPrivacy) => privacy === 'public' || privacy === 'friends'
 const isUniqueConstraintError = (error: any) => {
   const message = String(error?.message || '').toLowerCase()
   return message.includes('unique') || message.includes('duplicate') || message.includes('already exists')
@@ -595,6 +596,7 @@ export const useSharedLists = () => {
 
     return listRecords.map((record) => {
       const ownerId = getOwnerId(record)
+      const privacy = (record.privacy_level || 'friends') as SharedListPrivacy
       const memberships = membershipsByList.get(record.id) ?? []
       const ownMembership = viewerUserId
         ? memberships.find(membership => membershipHasUser(membership, viewerUserId))
@@ -622,7 +624,7 @@ export const useSharedLists = () => {
       return {
         id: record.id,
         title: String(record.name || 'Untitled shared list'),
-        privacy: (record.privacy_level || 'friends') as SharedListPrivacy,
+        privacy,
         ownerId,
         ownerName,
         ownerAvatar: isOwner ? getAvatar(currentUserProfile.value) : getAvatar(ownerUser),
@@ -636,8 +638,8 @@ export const useSharedLists = () => {
         imageUrl: sharedListFileUrl(record, record.image),
         bannerUrl: sharedListFileUrl(record, record.banner),
         members,
-        membersVisibilityLimited: !isMember,
-        animeVisibilityLimited: !isMember
+        membersVisibilityLimited: !isMember && !sharedListContentIsPubliclyReadable(privacy),
+        animeVisibilityLimited: !isMember && !sharedListContentIsPubliclyReadable(privacy)
       } satisfies SharedListSummary
     })
   }
@@ -1096,6 +1098,7 @@ export const useSharedLists = () => {
     const ownerUser = ownerId === userId
       ? ({ id: ownerId, ...currentUserProfile.value } as UserRecord)
       : userMap.get(ownerId)
+    const privacy = (record.privacy_level || 'friends') as SharedListPrivacy
 
     const animeEntries = animeRelations.map((relation) => {
       const animeId = normalizeRelationValue(relation.fk_anime_id)
@@ -1118,7 +1121,7 @@ export const useSharedLists = () => {
     return {
       id: record.id,
       title: String(record.name || 'Untitled shared list'),
-      privacy: (record.privacy_level || 'friends') as SharedListPrivacy,
+      privacy,
       ownerId,
       ownerName: ownerId === userId
         ? getDisplayName(currentUserProfile.value, ownerId)
@@ -1136,8 +1139,8 @@ export const useSharedLists = () => {
       members,
       ownMembershipId: ownMembership?.id,
       canManageMembers: isOwner || (isMember && getPermissionCapabilities(ownMembership).canManageMembers),
-      membersVisibilityLimited: !isMember,
-      animeVisibilityLimited: !isMember,
+      membersVisibilityLimited: !isMember && !sharedListContentIsPubliclyReadable(privacy),
+      animeVisibilityLimited: !isMember && !sharedListContentIsPubliclyReadable(privacy),
       animeEntries
     } satisfies SharedListDetail
   }

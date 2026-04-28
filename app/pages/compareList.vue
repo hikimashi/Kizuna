@@ -23,11 +23,11 @@
 
     <div class="sub-tabs-bar">
       <div class="sub-tabs">
-        <NuxtLink class="sub-tab" :to="`/social/user/${$route.params.id}`">Anime List</NuxtLink>
-        <NuxtLink class="sub-tab active" :to="`/social/compare/${$route.params.id}`">Compare List</NuxtLink>
-        <button class="sub-tab" type="button" disabled>Favorites</button>
-        <button class="sub-tab" type="button" disabled>Friends</button>
-        <button class="sub-tab" type="button" disabled>Shared Lists</button>
+        <NuxtLink class="sub-tab" :to="profileTabRoute('anime-list')">Anime List</NuxtLink>
+        <NuxtLink class="sub-tab active" :to="`/social/compare/${friendUserId}`">Compare List</NuxtLink>
+        <NuxtLink class="sub-tab" :to="profileTabRoute('favorites')">Favorites</NuxtLink>
+        <NuxtLink class="sub-tab" :to="profileTabRoute('friends')">Friends</NuxtLink>
+        <NuxtLink class="sub-tab" :to="profileTabRoute('shared-lists')">Shared Lists</NuxtLink>
       </div>
     </div>
 
@@ -281,6 +281,11 @@ type CompareEntry = {
 
 const selfEntries = ref<CompareEntry[]>([])
 const friendEntries = ref<CompareEntry[]>([])
+
+const profileTabRoute = (tab: 'anime-list' | 'favorites' | 'friends' | 'shared-lists') => ({
+  path: `/social/user/${friendUserId.value}`,
+  query: tab === 'anime-list' ? {} : { tab }
+})
 
 const formatScore = (score: number) => {
   if (!score) return '-'

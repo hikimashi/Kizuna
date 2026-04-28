@@ -628,12 +628,17 @@
   }
 }
 
-[data-theme="winter"] .friend-section-panel,
 [data-theme="winter"] .friend-favorite-link,
 [data-theme="winter"] .friend-user-card,
 [data-theme="winter"] .friend-shared-card {
   background: rgba(255, 255, 255, 0.92);
   border-color: rgba(15, 23, 36, 0.08);
+  box-shadow: none;
+}
+
+[data-theme="winter"] .friend-section-panel {
+  background: transparent;
+  border-color: transparent;
   box-shadow: none;
 }
 

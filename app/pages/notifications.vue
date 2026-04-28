@@ -4,25 +4,25 @@
       <aside class="sidebar">
         <div class="sidebar-heading">Notifications</div>
         <p class="sidebar-copy">
-          Latest AniList updates for your account.
+          Dernieres mises a jour AniList pour votre compte.
         </p>
 
         <div class="sidebar-card">
-          <span class="sidebar-card-label">Unread</span>
+          <span class="sidebar-card-label">Non lues</span>
           <span class="sidebar-card-value">{{ unreadCount }}</span>
         </div>
 
         <div class="sidebar-card">
-          <span class="sidebar-card-label">Loaded</span>
+          <span class="sidebar-card-label">Chargees</span>
           <span class="sidebar-card-value">{{ items.length }}</span>
         </div>
 
         <button class="sidebar-action" type="button" :disabled="isLoading" @click="refreshNotifications">
-          {{ isLoading ? 'Refreshing...' : 'Refresh notifications' }}
+          {{ isLoading ? 'Actualisation...' : 'Actualiser les notifications' }}
         </button>
 
         <NuxtLink class="sidebar-link" to="/settings">
-          Open settings
+          Ouvrir les parametres
         </NuxtLink>
       </aside>
 
@@ -31,7 +31,7 @@
           <div>
             <div class="page-title">Notifications</div>
             <p class="page-subtitle">
-              Opening this page clears the unread AniList counter.
+              Ouvrir cette page remet a zero le compteur AniList non lu.
             </p>
           </div>
         </div>
@@ -41,7 +41,7 @@
         </div>
 
         <div v-if="!isAniListLinked" class="state-card">
-          Link your AniList account to load notifications.
+          Liez votre compte AniList pour charger les notifications.
         </div>
 
         <div v-else-if="isLoading && !items.length" class="notification-list">
@@ -99,14 +99,14 @@
             :disabled="isLoading"
             @click="notificationStore.loadMore()"
           >
-            {{ isLoading ? 'Loading...' : 'Load more' }}
+            {{ isLoading ? 'Chargement...' : 'Charger plus' }}
           </button>
         </div>
 
         <div v-else-if="!isLoading" class="state-card empty-card">
-          <div class="empty-title">No notifications yet</div>
+          <div class="empty-title">Aucune notification pour le moment</div>
           <p class="empty-copy">
-            When AniList sends social or media updates, they will appear here.
+            Quand AniList enverra des mises a jour sociales ou media, elles apparaitront ici.
           </p>
         </div>
       </main>
@@ -130,74 +130,73 @@ const authRecord = computed<Record<string, any>>(() => (unref(pocketbaseStore.au
 const isAniListLinked = computed(() => Boolean(authRecord.value?.anilist_user_id && authRecord.value?.anilist_token))
 
 const notificationLabel = (type: string) => {
-  if (type === 'AIRING') return 'Airing'
+  if (type === 'AIRING') return 'Diffusion'
   if (type.startsWith('MEDIA_')) return 'Media'
   if (type.startsWith('THREAD_')) return 'Forum'
   if (type.startsWith('ACTIVITY_')) return 'Social'
-  if (type === 'FOLLOWING') return 'Follow'
-  if (type === 'RELATED_MEDIA_ADDITION') return 'Related media'
-  return 'Update'
+  if (type === 'FOLLOWING') return 'Suivi'
+  if (type === 'RELATED_MEDIA_ADDITION') return 'Media lie'
+  return 'Mise a jour'
 }
 
 const notificationTitle = (item: AniListNotificationItem) => {
-  const actorName = item.actor?.name || 'AniList user'
-  const mediaTitle = item.media?.title || 'this title'
-  const threadTitle = item.thread?.title || 'this thread'
+  const actorName = item.actor?.name || 'utilisateur AniList'
+  const mediaTitle = item.media?.title || 'ce titre'
 
   switch (item.type) {
     case 'AIRING':
-      return `${mediaTitle} episode ${item.episode || '?'} just aired.`
+      return `L'episode ${item.episode || '?'} de ${mediaTitle} vient d'etre diffuse.`
     case 'FOLLOWING':
-      return `${actorName} followed you.`
+      return `${actorName} vous suit.`
     case 'ACTIVITY_MESSAGE':
-      return `${actorName} sent you a message.`
+      return `${actorName} vous a envoye un message.`
     case 'ACTIVITY_REPLY':
-      return `${actorName} replied to your activity.`
+      return `${actorName} a repondu a votre activite.`
     case 'ACTIVITY_MENTION':
-      return `${actorName} mentioned you in an activity.`
+      return `${actorName} vous a mentionne dans une activite.`
     case 'ACTIVITY_LIKE':
-      return `${actorName} liked your activity.`
+      return `${actorName} a aime votre activite.`
     case 'ACTIVITY_REPLY_LIKE':
-      return `${actorName} liked your activity reply.`
+      return `${actorName} a aime votre reponse d'activite.`
     case 'ACTIVITY_REPLY_SUBSCRIBED':
-      return `${actorName} replied to an activity you joined.`
+      return `${actorName} a repondu a une activite a laquelle vous participez.`
     case 'THREAD_COMMENT_MENTION':
-      return `${actorName} mentioned you in a forum comment.`
+      return `${actorName} vous a mentionne dans un commentaire de forum.`
     case 'THREAD_SUBSCRIBED':
-      return `${actorName} replied to a subscribed thread.`
+      return `${actorName} a repondu a un fil suivi.`
     case 'THREAD_COMMENT_REPLY':
-      return `${actorName} replied to your forum comment.`
+      return `${actorName} a repondu a votre commentaire de forum.`
     case 'THREAD_LIKE':
-      return `${actorName} liked your forum thread.`
+      return `${actorName} a aime votre sujet de forum.`
     case 'THREAD_COMMENT_LIKE':
-      return `${actorName} liked your forum comment.`
+      return `${actorName} a aime votre commentaire de forum.`
     case 'RELATED_MEDIA_ADDITION':
-      return `${mediaTitle} was added as related media.`
+      return `${mediaTitle} a ete ajoute comme media lie.`
     case 'MEDIA_DATA_CHANGE':
-      return `${mediaTitle} had a tracking data change.`
+      return `Les donnees de suivi de ${mediaTitle} ont change.`
     case 'MEDIA_MERGE':
-      return `${mediaTitle} was merged with another entry.`
+      return `${mediaTitle} a ete fusionne avec une autre fiche.`
     case 'MEDIA_DELETION':
-      return `${item.deletedMediaTitle || 'A tracked title'} was deleted from AniList.`
+      return `${item.deletedMediaTitle || 'Un titre suivi'} a ete supprime d'AniList.`
     default:
-      return `Notification from ${actorName}.`
+      return `Notification de ${actorName}.`
   }
 }
 
 const notificationDetail = (item: AniListNotificationItem) => {
   if (item.type === 'MEDIA_MERGE' && item.deletedMediaTitles.length) {
-    return `Merged from: ${item.deletedMediaTitles.join(', ')}`
+    return `Fusionne depuis : ${item.deletedMediaTitles.join(', ')}`
   }
   if (item.reason) return item.reason
   if (item.thread?.title) return item.thread.title
   if (item.media?.title && !notificationTitle(item).includes(item.media.title)) return item.media.title
-  if (item.actor?.name && item.type !== 'FOLLOWING') return `From ${item.actor.name}`
+  if (item.actor?.name && item.type !== 'FOLLOWING') return `Par ${item.actor.name}`
   return ''
 }
 
 const notificationPreview = (item: AniListNotificationItem) => item.media?.cover || item.actor?.avatar || ''
 
-const notificationPreviewAlt = (item: AniListNotificationItem) => item.media?.title || item.actor?.name || 'Notification preview'
+const notificationPreviewAlt = (item: AniListNotificationItem) => item.media?.title || item.actor?.name || 'Apercu de notification'
 
 const notificationFallback = (item: AniListNotificationItem) => {
   const seed = item.media?.title || item.actor?.name || item.thread?.title || 'NT'
@@ -207,16 +206,16 @@ const notificationFallback = (item: AniListNotificationItem) => {
 const useAvatarPreview = (item: AniListNotificationItem) => !item.media?.cover && Boolean(item.actor?.avatar)
 
 const timeAgo = (timestamp: number) => {
-  if (!timestamp) return 'Unknown time'
+  if (!timestamp) return 'Heure inconnue'
 
   const diff = Math.max(0, Math.floor(Date.now() / 1000) - Number(timestamp))
-  if (diff < 60) return 'Just now'
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
-  if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`
+  if (diff < 60) return "A l'instant"
+  if (diff < 3600) return `Il y a ${Math.floor(diff / 60)} min`
+  if (diff < 86400) return `Il y a ${Math.floor(diff / 3600)} h`
+  if (diff < 604800) return `Il y a ${Math.floor(diff / 86400)} j`
 
   const date = new Date(Number(timestamp) * 1000)
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat('fr-FR', {
     month: 'short',
     day: 'numeric',
     year: date.getFullYear() === new Date().getFullYear() ? undefined : 'numeric'

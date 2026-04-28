@@ -71,22 +71,33 @@ export default defineEventHandler(async (event) => {
     return event.node.req.socket.remoteAddress || 'unknown'
   }
 
-  const rateKey = getClientIp()
-  const windowMs = 10_000
-  const maxRequestsPerWindow = 25
-  const rateEntry = rateLimit.get(rateKey)
+  const isRateLimitedIpExempt = (ip: string) => (
+    ip === 'unknown'
+    || ip === '::1'
+    || ip === '127.0.0.1'
+    || ip === '::ffff:127.0.0.1'
+  )
 
-  if (!rateEntry || rateEntry.resetAt <= now) {
-    rateLimit.set(rateKey, { count: 1, resetAt: now + windowMs })
-  } else if (rateEntry.count >= maxRequestsPerWindow) {
-    const retryAfterSeconds = Math.max(1, Math.ceil((rateEntry.resetAt - now) / 1000))
-    setResponseStatus(event, 429)
-    setHeader(event, 'Retry-After', retryAfterSeconds)
-    return {
-      errors: [{ message: `Server AniList rate limit reached. Retry in ${retryAfterSeconds}s.` }]
+  const consumeRateLimitSlot = () => {
+    const rateKey = getClientIp()
+    if (isRateLimitedIpExempt(rateKey)) return 0
+
+    const windowMs = 10_000
+    const maxRequestsPerWindow = 120
+    const requestNow = Date.now()
+    const rateEntry = rateLimit.get(rateKey)
+
+    if (!rateEntry || rateEntry.resetAt <= requestNow) {
+      rateLimit.set(rateKey, { count: 1, resetAt: requestNow + windowMs })
+      return 0
     }
-  } else {
+
+    if (rateEntry.count >= maxRequestsPerWindow) {
+      return Math.max(1, Math.ceil((rateEntry.resetAt - requestNow) / 1000))
+    }
+
     rateEntry.count += 1
+    return 0
   }
 
   const tokenHash = (() => {
@@ -188,6 +199,15 @@ export default defineEventHandler(async (event) => {
     setHeader(event, 'X-Request-Dedup', 'HIT')
     setResponseStatus(event, deduped.statusCode)
     return deduped.payload
+  }
+
+  const retryAfterSeconds = consumeRateLimitSlot()
+  if (retryAfterSeconds > 0) {
+    setResponseStatus(event, 429)
+    setHeader(event, 'Retry-After', retryAfterSeconds)
+    return {
+      errors: [{ message: `Server AniList rate limit reached. Retry in ${retryAfterSeconds}s.` }]
+    }
   }
 
   const performRequest = async () => {

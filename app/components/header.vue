@@ -5,7 +5,7 @@
     :class="{ 'is-logged-in': showFullNav, 'is-compact-nav': !showFullNav }"
   >
     <div class="navbar-content">
-      <!-- Left: Logo -->
+      <!-- Gauche : logo -->
       <div class="navbar-start">
         <NuxtLink to="/" class="logo-link" @click="handleLogoClick">
           <img src="/img/logo.webp" alt="Kizuna" class="logo-image" />
@@ -13,7 +13,7 @@
         </NuxtLink>
       </div>
 
-      <nav v-if="showFullNav" class="nav-links" aria-label="Primary navigation">
+      <nav v-if="showFullNav" class="nav-links" aria-label="Navigation principale">
         <NuxtLink
           v-for="item in navItems"
           :key="item.to"
@@ -25,33 +25,33 @@
         </NuxtLink>
       </nav>
 
-      <!-- Right: Auth-dependent content -->
+      <!-- Droite : contenu selon l'authentification -->
       <div class="navbar-end">
-        <!-- Guest state -->
+        <!-- Etat visiteur -->
         <template v-if="!isLoggedIn">
           <button @click="openLoginDrawer" class="btn-ghost">
-            Log in
+            Connexion
           </button>
           <button @click="handleSignUp" class="btn-primary">
-            Sign up
+            Inscription
           </button>
         </template>
 
-        <!-- Logged in but AniList not linked -->
+        <!-- Connecte mais AniList non lie -->
         <template v-else-if="showPendingLinkState">
           <div class="nav-actions">
             <div class="dropdown dropdown-bottom dropdown-end">
               <div tabindex="0" role="button" class="avatar-btn">
                 <img
                   :src="avatarUrl"
-                  alt="Avatar"
+                  alt="Avatar utilisateur"
                   class="avatar-image"
                 />
               </div>
               <ul class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
                 <li>
                   <NuxtLink class="justify-between" to="/settings">
-                    Settings
+                    Parametres
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                       stroke="currentColor" class="size-5">
                       <path stroke-linecap="round" stroke-linejoin="round"
@@ -61,7 +61,7 @@
                   </NuxtLink>
                 </li>
                 <li @click="handleLogout()">
-                  <a class="justify-between" href="/">Logout
+                  <a class="justify-between" href="/">Deconnexion
                     <svg class="size-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                       stroke-width="1.5" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round"
@@ -74,23 +74,23 @@
           </div>
         </template>
 
-        <!-- Authenticated + AniList linked -->
+        <!-- Authentifie avec AniList lie -->
         <template v-else>
           <div class="nav-actions">
-            <!-- Search icon -->
-            <button class="icon-btn" type="button" aria-label="Open search" @click="openSearchModal">
+            <!-- Icône de recherche -->
+            <button class="icon-btn" type="button" aria-label="Ouvrir la recherche" @click="openSearchModal">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="11" cy="11" r="8"/>
                 <path d="M21 21l-4.35-4.35"/>
               </svg>
             </button>
 
-            <!-- Notification bell -->
+            <!-- Cloche des notifications -->
             <NuxtLink
               class="icon-btn notification-btn"
               :class="{ active: route.path === '/notifications' }"
               to="/notifications"
-              aria-label="Open notifications"
+              aria-label="Ouvrir les notifications"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
@@ -106,14 +106,14 @@
               <div tabindex="0" role="button" class="avatar-btn">
                 <img 
                   :src="avatarUrl" 
-                  alt="Avatar" 
+                  alt="Avatar utilisateur" 
                   class="avatar-image"
                 />
               </div>
               <ul class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
                 <li>
                   <NuxtLink class="justify-between" to="/settings">
-                    Settings
+                    Parametres
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                       stroke="currentColor" class="size-5">
                       <path stroke-linecap="round" stroke-linejoin="round"
@@ -123,7 +123,7 @@
                   </NuxtLink>
                 </li>
                 <li @click="handleLogout()">
-                  <a class="justify-between" href="/">Logout
+                  <a class="justify-between" href="/">Deconnexion
                     <svg class="size-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                       stroke-width="1.5" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round"
@@ -136,7 +136,7 @@
           </div>
         </template>
 
-        <!-- Theme toggle (always visible) -->
+        <!-- Bascule de theme (toujours visible) -->
         <label
           v-if="!showFullNav"
           class="swap-rotate swap theme-toggle"
@@ -148,13 +148,13 @@
             @change="themeStore.changeTheme()" 
           />
 
-          <!-- Sun icon -->
+          <!-- Icône soleil -->
           <svg class="swap-off w-5 h-5 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <path
               d="M5.64,17l-.71.71a1,1,0,0,0,0,1.41,1,1,0,0,0,1.41,0l.71-.71A1,1,0,0,0,5.64,17ZM5,12a1,1,0,0,0-1-1H3a1,1,0,0,0,0,2H4A1,1,0,0,0,5,12Zm7-7a1,1,0,0,0,1-1V3a1,1,0,0,0-2,0V4A1,1,0,0,0,12,5ZM5.64,7.05a1,1,0,0,0,.7.29,1,1,0,0,0,.71-.29,1,1,0,0,0,0-1.41l-.71-.71A1,1,0,0,0,4.93,6.34Zm12,.29a1,1,0,0,0,.7-.29l.71-.71a1,1,0,1,0-1.41-1.41L17,5.64a1,1,0,0,0,0,1.41A1,1,0,0,0,17.66,7.34ZM21,11H20a1,1,0,0,0,0,2h1a1,1,0,0,0,0-2Zm-9,8a1,1,0,0,0-1,1v1a1,1,0,0,0,2,0V20A1,1,0,0,0,12,19ZM18.36,17A1,1,0,0,0,17,18.36l.71.71a1,1,0,0,0,1.41,0,1,1,0,0,0,0-1.41ZM12,6.5A5.5,5.5,0,1,0,17.5,12,5.51,5.51,0,0,0,12,6.5Z" />
           </svg>
 
-          <!-- Moon icon -->
+          <!-- Icône lune -->
           <svg class="swap-on w-5 h-5 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <path
               d="M21.64,13a1,1,0,0,0-1.05-.14,8.05,8.05,0,0,1-3.37.73A8.15,8.15,0,0,1,9.08,5.49a8.59,8.59,0,0,1,.25-2A1,1,0,0,0,8,2.36,10.14,10.14,0,1,0,22,14.05,1,1,0,0,0,21.64,13Zm-9.5,6.69A8.14,8.14,0,0,1,7.08,5.22v.27A10.15,10.15,0,0,0,17.22,15.63a9.79,9.79,0,0,0,2.1-.22A8.11,8.11,0,0,1,12.14,19.73Z" />
@@ -166,7 +166,7 @@
           class="mobile-menu-btn"
           type="button"
           :aria-expanded="isMobileMenuOpen"
-          :aria-label="isMobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'"
+          :aria-label="isMobileMenuOpen ? 'Fermer le menu de navigation' : 'Ouvrir le menu de navigation'"
           aria-controls="mobile-nav-panel"
           @click="toggleMobileMenu"
         >
@@ -184,7 +184,7 @@
         v-if="showFullNav && isMobileMenuOpen"
         id="mobile-nav-panel"
         class="mobile-nav-panel"
-        aria-label="Mobile navigation"
+        aria-label="Navigation mobile"
       >
         <NuxtLink
           v-for="item in navItems"
@@ -208,10 +208,10 @@
         <div class="search-modal-shell" role="dialog" aria-modal="true" aria-labelledby="search-modal-title">
           <div class="search-modal-head">
             <div class="search-modal-title-block">
-              <p class="search-modal-kicker">Search</p>
-              <h2 id="search-modal-title">Anime and users</h2>
+              <p class="search-modal-kicker">Recherche</p>
+              <h2 id="search-modal-title">Animes et utilisateurs</h2>
             </div>
-            <button class="search-modal-close" type="button" aria-label="Close search" @click="closeSearchModal">
+            <button class="search-modal-close" type="button" aria-label="Fermer la recherche" @click="closeSearchModal">
               X
             </button>
           </div>
@@ -225,7 +225,7 @@
               ref="searchInputRef"
               v-model.trim="searchModalQuery"
               type="text"
-              placeholder="Search anime or AniList user"
+              placeholder="Rechercher un anime ou un utilisateur AniList"
               @input="handleGlobalSearch"
             >
           </label>
@@ -245,21 +245,21 @@
               type="button"
               @click="searchModalTab = 'users'"
             >
-              Users
+              Utilisateurs
             </button>
           </div>
 
           <div v-if="isSearchLoading" class="search-modal-state">
-            Searching AniList...
+            Recherche en cours sur AniList...
           </div>
           <div v-else-if="searchModalError" class="search-modal-state search-modal-error">
             {{ searchModalError }}
           </div>
           <div v-else-if="searchModalQuery.length < 2" class="search-modal-state">
-            Type at least 2 characters to search AniList.
+            Saisissez au moins 2 caracteres pour rechercher sur AniList.
           </div>
           <div v-else-if="activeSearchResults.length === 0" class="search-modal-state">
-            No results found.
+            Aucun resultat.
           </div>
           <div v-else class="search-modal-results">
             <button
@@ -281,7 +281,7 @@
                 <div v-if="item.meta" class="search-modal-result-meta">{{ item.meta }}</div>
               </div>
               <div class="search-modal-result-tag" :class="item.type === 'anime' ? 'is-anime' : 'is-user'">
-                {{ item.type === 'anime' ? 'Anime' : 'User' }}
+                {{ item.type === 'anime' ? 'Anime' : 'Utilisateur' }}
               </div>
             </button>
           </div>
@@ -344,11 +344,11 @@ const userSearchResults = ref<Array<{
 }>>([])
 let searchModalTimer: ReturnType<typeof setTimeout> | null = null
 const navItems = [
-  { label: 'Home', to: '/' },
-  { label: 'Profile', to: '/profilePage' },
+  { label: 'Accueil', to: '/' },
+  { label: 'Profil', to: '/profilePage' },
   { label: 'Social', to: '/social' },
-  { label: 'Anime List', to: '/animeList' },
-  { label: 'Browse', to: '/browse' }
+  { label: 'Liste anime', to: '/animeList' },
+  { label: 'Explorer', to: '/browse' }
 ] as const
 
 const activeSearchResults = computed(() =>
@@ -356,7 +356,7 @@ const activeSearchResults = computed(() =>
 )
 const unreadBadgeLabel = computed(() => unreadCount.value > 99 ? '99+' : String(unreadCount.value))
 
-// Use AniList avatar if available
+// Utilise l'avatar AniList s'il est disponible.
 const avatarUrl = computed(() => {
   return authRecord.value?.anilist_avatar_url_large || authRecord.value?.anilist_avatar_url_medium || '/img/user.webp'
 })
@@ -519,13 +519,13 @@ const handleGlobalSearch = () => {
       const userItems = Array.isArray(response?.data?.users?.users) ? response.data.users.users : []
 
       animeSearchResults.value = animeItems.map((item: any) => {
-        const title = String(item?.title?.romaji || item?.title?.english || item?.title?.native || 'Unknown anime')
+        const title = String(item?.title?.romaji || item?.title?.english || item?.title?.native || 'Anime inconnu')
         return {
           key: `anime:${item?.id}`,
           type: 'anime' as const,
           id: Number(item?.id || 0),
           title,
-          subtitle: [item?.format, item?.seasonYear].filter(Boolean).join(' - ') || 'Anime result',
+          subtitle: [item?.format, item?.seasonYear].filter(Boolean).join(' - ') || 'Resultat anime',
           meta: [item?.status, item?.episodes ? `${item.episodes} eps` : ''].filter(Boolean).join(' - '),
           image: String(item?.coverImage?.large || item?.coverImage?.medium || '') || undefined,
           fallback: makeFallback(title, 'anime')
@@ -533,7 +533,7 @@ const handleGlobalSearch = () => {
       }).filter((item: { id: number }) => item.id > 0)
 
       userSearchResults.value = userItems.map((item: any) => {
-        const title = String(item?.name || 'Unknown user')
+        const title = String(item?.name || 'Utilisateur inconnu')
         const animeCount = Number(item?.statistics?.anime?.count || 0)
         const meanScore = Number(item?.statistics?.anime?.meanScore || 0)
         return {
@@ -542,7 +542,7 @@ const handleGlobalSearch = () => {
           id: Number(item?.id || 0),
           title,
           subtitle: `AniList #${Number(item?.id || 0) || '-'}`,
-          meta: `${animeCount} anime${meanScore ? ` - score ${meanScore}` : ''}`,
+          meta: `${animeCount} anime${meanScore ? ` - note ${meanScore}` : ''}`,
           image: String(item?.avatar?.large || item?.avatar?.medium || '') || undefined,
           fallback: makeFallback(title, 'user')
         }
@@ -550,7 +550,7 @@ const handleGlobalSearch = () => {
     } catch (error: any) {
       animeSearchResults.value = []
       userSearchResults.value = []
-      searchModalError.value = error?.message || 'Unable to search AniList right now.'
+      searchModalError.value = error?.message || 'Impossible de rechercher sur AniList pour le moment.'
     } finally {
       isSearchLoading.value = false
     }
@@ -601,7 +601,7 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-/* CSS Variables */
+/* Variables CSS */
 .kizuna-navbar {
   --navy: var(--kz-page-navy);
   --navy-overlay: var(--kz-surface-overlay);
@@ -673,7 +673,7 @@ onBeforeUnmount(() => {
   display: none;
 }
 
-/* Navbar End */
+/* Fin de la barre */
 .navbar-end {
   display: flex;
   align-items: center;
@@ -684,7 +684,7 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
 }
 
-/* Guest Buttons */
+/* Boutons visiteur */
 .btn-ghost {
   display: inline-flex;
   align-items: center;
@@ -729,7 +729,7 @@ onBeforeUnmount(() => {
   box-shadow: 0 4px 12px rgba(61, 180, 242, 0.3);
 }
 
-/* Nav Links */
+/* Liens de navigation */
 .nav-links {
   display: flex;
   align-items: center;
@@ -760,7 +760,7 @@ onBeforeUnmount(() => {
   font-weight: 600;
 }
 
-/* Nav Actions */
+/* Actions de navigation */
 .nav-actions {
   position: relative;
   z-index: 2;
@@ -797,7 +797,7 @@ onBeforeUnmount(() => {
   height: 20px;
 }
 
-/* Notification Bell */
+/* Cloche des notifications */
 .notification-btn {
   position: relative;
 }
@@ -821,7 +821,7 @@ onBeforeUnmount(() => {
   line-height: 1;
 }
 
-/* Avatar Button */
+/* Bouton avatar */
 .avatar-btn {
   width: 40px;
   height: 40px;
@@ -843,7 +843,7 @@ onBeforeUnmount(() => {
   object-position: top center;
 }
 
-/* Theme Toggle */
+/* Bascule de theme */
 .theme-toggle {
   position: relative;
   display: inline-grid;
@@ -895,7 +895,7 @@ onBeforeUnmount(() => {
   pointer-events: none;
 }
 
-/* Dropdown */
+/* Menu deroulant */
 .dropdown-content {
   position: absolute;
   z-index: 90 !important;
@@ -1235,7 +1235,7 @@ onBeforeUnmount(() => {
   font-weight: 700;
 }
 
-/* Responsive */
+/* Adaptation mobile */
 @media (max-width: 1024px) {
   .nav-links {
     display: none;

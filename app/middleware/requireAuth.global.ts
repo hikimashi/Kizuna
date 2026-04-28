@@ -8,7 +8,7 @@ const PUBLIC_PATHS = new Set(['/', '/auth/callback'])
 const PUBLIC_PATH_PATTERNS = [/^\/social\/user\/[^/]+$/]
 
 export default defineNuxtRouteMiddleware(async (to) => {
-  // PocketBase auth is client-side (localStorage), skip SSR guard to avoid false redirects on refresh.
+  // L'auth PocketBase est cote client (localStorage), on ignore donc le guard SSR pour eviter de faux redirects au refresh.
   if (process.server) return
 
   if (PUBLIC_PATHS.has(to.path) || PUBLIC_PATH_PATTERNS.some((pattern) => pattern.test(to.path))) return

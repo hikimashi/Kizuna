@@ -145,7 +145,7 @@ export const useMyAuthStore = defineStore('auth', () => {
         message.includes('NetworkError') ||
         message.includes('fetch');
 
-      // Keep current local session if refresh failed due temporary network issue.
+      // Conserve la session locale courante si le refresh echoue a cause d'un souci reseau temporaire.
       if (hasLocalSession && isTransientNetworkError) {
         userStore.saveUserData(
           mapAuthDataToUser({

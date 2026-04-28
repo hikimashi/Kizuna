@@ -8,11 +8,11 @@
 
         <span class="font-semibold text-xs md:text-lg lg:text-xl px-4 whitespace-pre-line">{{ alert.message }}</span>
       </div>
-      <!-- Buttons -->
+      <!-- Boutons -->
       <div class="flex items-center" >
         <div class="flex gap-2">
           <button v-if="alertStore.showDenyButton" @click="alertStore.onDenyRef?.()" class="btn btn-outline btn-error rounded-md">
-            Deny
+            Refuser
           </button>
           <button @click="alertStore.onAcceptRef?.()" class="btn btn-outline btn-success rounded-md">
             OK

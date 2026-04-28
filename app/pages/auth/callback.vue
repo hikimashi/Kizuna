@@ -1,9 +1,9 @@
 <template>
   <div class="container mx-auto p-4">
-    <h1 class="text-2xl font-bold mb-4">AniList Callback</h1>
-    <p v-if="!processed">Processing AniList authorization...</p>
-    <p v-else-if="success">AniList account linked successfully! Redirecting...</p>
-    <p v-else>Error linking AniList account. Please try again.</p>
+    <h1 class="text-2xl font-bold mb-4">Retour AniList</h1>
+    <p v-if="!processed">Traitement de l'autorisation AniList...</p>
+    <p v-else-if="success">Compte AniList lie avec succes. Redirection...</p>
+    <p v-else>Erreur lors de la liaison du compte AniList. Veuillez reessayer.</p>
   </div>
 </template>
 
@@ -23,17 +23,17 @@ const success = ref(false);
 
 onMounted(async () => {
   if (code.value) {
-    // Traite le retour OAuth AniList puis met à jour l'état UI.
+    // Traite le retour OAuth AniList puis met a jour l'etat de l'interface.
     const result = await anilistAuthStore.handleCallback(code.value, state.value);
     processed.value = true;
     success.value = result;
-    
-    // Redirige vers l'accueil après un court délai pour laisser le message visible.
+
+    // Redirige vers l'accueil apres un court delai pour laisser le message visible.
     setTimeout(() => {
       router.push('/');
     }, 2000);
   } else {
-    // Aucun code => callback invalide ou annulé.
+    // Aucun code : callback invalide ou annule.
     processed.value = true;
     success.value = false;
   }

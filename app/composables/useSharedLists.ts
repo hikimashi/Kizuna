@@ -175,7 +175,7 @@ const isPocketbaseNotFoundError = (error: any) => Number(error?.status || error?
 const getDisplayName = (user?: Partial<UserRecord> | null, fallbackId = '') => {
   const label = String(user?.anilist_username || '').trim()
   if (label) return label
-  return fallbackId ? `User ${fallbackId.slice(0, 4)}` : 'Unknown'
+  return fallbackId ? `Utilisateur ${fallbackId.slice(0, 4)}` : 'Inconnu'
 }
 
 const getAvatar = (user?: Partial<UserRecord> | null) => {
@@ -205,22 +205,22 @@ const hueFromString = (value: string) => {
 const memberColor = (value: string) => `hsl(${hueFromString(value)} 72% 52%)`
 
 const formatRelativeDate = (value?: string) => {
-  if (!value) return 'Updated recently'
+  if (!value) return 'Mis a jour recemment'
   const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'Updated recently'
+  if (Number.isNaN(date.getTime())) return 'Mis a jour recemment'
   const diffMs = Date.now() - date.getTime()
   const diffHours = Math.max(Math.floor(diffMs / 3600000), 0)
-  if (diffHours < 1) return 'Updated just now'
-  if (diffHours < 24) return `Updated ${diffHours}h ago`
+  if (diffHours < 1) return 'Mis a jour a l\'instant'
+  if (diffHours < 24) return `Mis a jour il y a ${diffHours} h`
   const diffDays = Math.floor(diffHours / 24)
-  if (diffDays < 7) return `Updated ${diffDays}d ago`
-  return `Updated ${date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
+  if (diffDays < 7) return `Mis a jour il y a ${diffDays} j`
+  return `Mis a jour le ${date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`
 }
 
 const formatDateLabel = (value?: string) => {
-  if (!value) return 'Unknown date'
+  if (!value) return 'Date inconnue'
   const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'Unknown date'
+  if (Number.isNaN(date.getTime())) return 'Date inconnue'
   return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
@@ -238,7 +238,7 @@ const noAutoCancel = {
 }
 
 const sharedListMediaFieldError = () => new Error(
-  'PocketBase shared_list still needs `image` and `banner` file fields.'
+  'La collection PocketBase `shared_list` doit encore contenir les champs fichiers `image` et `banner`.'
 )
 
 const fetchUsersByIds = async (pb: PocketBaseClient, ids: string[]) => {
@@ -497,7 +497,7 @@ export const useSharedLists = () => {
       try {
         await pocketbaseStore.pb.collection('permission').delete(permissionRecord.id)
       } catch {
-        // Best effort cleanup if membership creation fails after creating the permission record.
+        // Nettoyage de secours si la creation de l'appartenance echoue apres la permission.
       }
       throw error
     }
@@ -506,7 +506,7 @@ export const useSharedLists = () => {
   const requireCurrentUserId = () => {
     const userId = String(currentUserId.value || '')
     if (!userId) {
-      throw new Error('You must be logged in to manage shared lists.')
+      throw new Error('Vous devez etre connecte pour gerer les listes partagees.')
     }
     return userId
   }
@@ -623,7 +623,7 @@ export const useSharedLists = () => {
 
       return {
         id: record.id,
-        title: String(record.name || 'Untitled shared list'),
+        title: String(record.name || 'Liste partagee sans titre'),
         privacy,
         ownerId,
         ownerName,
@@ -695,7 +695,7 @@ export const useSharedLists = () => {
   const assertSharedListAccess = async (listId: string) => {
     const access = await getListAccessContext(listId)
     if (!access.isMember) {
-      throw new Error('You do not have access to this shared list.')
+      throw new Error('Vous n\'avez pas acces a cette liste partagee.')
     }
     return access
   }
@@ -703,7 +703,7 @@ export const useSharedLists = () => {
   const assertSharedListOwner = async (listId: string) => {
     const access = await assertSharedListAccess(listId)
     if (!access.isOwner) {
-      throw new Error('Only the owner can manage this shared list.')
+      throw new Error('Seul le proprietaire peut gerer cette liste partagee.')
     }
     return access
   }
@@ -713,7 +713,7 @@ export const useSharedLists = () => {
     if (access.isOwner) return access
 
     if (!getPermissionCapabilities(access.membership).canManageMembers) {
-      throw new Error('You do not have permission to manage members in this shared list.')
+      throw new Error('Vous n\'avez pas la permission de gerer les membres de cette liste partagee.')
     }
 
     return access
@@ -724,7 +724,7 @@ export const useSharedLists = () => {
     if (access.isOwner) return access
 
     if (!getPermissionCapabilities(access.membership).canAddAnime) {
-      throw new Error('You do not have permission to add anime to this shared list.')
+      throw new Error('Vous n\'avez pas la permission d\'ajouter des animes a cette liste partagee.')
     }
 
     return access
@@ -735,7 +735,7 @@ export const useSharedLists = () => {
     if (access.isOwner) return access
 
     if (!getPermissionCapabilities(access.membership).canEditAnime) {
-      throw new Error('You do not have permission to edit anime entries in this shared list.')
+      throw new Error('Vous n\'avez pas la permission de modifier les entrees anime de cette liste partagee.')
     }
 
     return access
@@ -746,7 +746,7 @@ export const useSharedLists = () => {
     if (access.isOwner) return access
 
     if (!getPermissionCapabilities(access.membership).canDeleteAnime) {
-      throw new Error('You do not have permission to remove anime from this shared list.')
+      throw new Error('Vous n\'avez pas la permission de retirer des animes de cette liste partagee.')
     }
 
     return access
@@ -803,7 +803,7 @@ export const useSharedLists = () => {
         try {
           await pocketbaseStore.pb.collection('permission').delete(previousPermissionId)
         } catch {
-          // Old permission cleanup is best-effort because older records may not be deletable anymore.
+          // Le nettoyage des anciennes permissions reste un effort de secours.
         }
       }
 
@@ -818,7 +818,7 @@ export const useSharedLists = () => {
           await createMembershipRecord(listId, userId, previousPermission)
         }
       } catch {
-        // Best effort rollback if recreating with the new permission fails.
+        // Retour arriere de secours si la recreation echoue avec la nouvelle permission.
       }
       throw error
     }
@@ -829,10 +829,10 @@ export const useSharedLists = () => {
     const listId = normalizeRelationValue(membership.fk_shared_list_id)
     const userId = normalizeRelationValue(membership.fk_user_id)
     if (!listId) {
-      throw new Error('This membership record is missing its shared list.')
+      throw new Error('Cette fiche d\'appartenance n\'a pas de liste partagee associee.')
     }
     if (!userId) {
-      throw new Error('This membership record is missing its member.')
+      throw new Error('Cette fiche d\'appartenance n\'a pas de membre associe.')
     }
 
     const access = await assertCanManageMembersInList(listId)
@@ -898,7 +898,7 @@ export const useSharedLists = () => {
         changed = true
       } catch (error) {
         failedMembershipIds.push(membership.id)
-        console.warn('Failed to migrate legacy shared-list membership.', {
+        console.warn('Echec de la migration d une ancienne appartenance de liste partagee.', {
           listId,
           membershipId: membership.id,
           memberId,
@@ -934,22 +934,22 @@ export const useSharedLists = () => {
     const details = pocketbaseErrorDetails(error)
 
     if (ownerId === currentUserId.value && !membership) {
-      return new Error(`Owner membership is missing on this shared list. ${details}`.trim())
+      return new Error(`L'appartenance du proprietaire est absente sur cette liste partagee. ${details}`.trim())
     }
 
     if (ownerId === currentUserId.value) {
-      return new Error(`PocketBase rejected anime creation for the owner. ${details || 'Failed to create record.'}`.trim())
+      return new Error(`PocketBase a refuse la creation de l'anime pour le proprietaire. ${details || 'Creation de fiche impossible.'}`.trim())
     }
 
     const permission = getPermissionName(membership)
     if (permission !== 'viewer') {
       return new Error(
-        `PocketBase still rejected anime creation for a ${permission} member on this shared list. ` +
-        `${details || 'Check anime_shared_list.createRule and permission.add.'}`
+        `PocketBase refuse encore la creation de l'anime pour un membre ${permission} sur cette liste partagee. ` +
+        `${details || 'Verifiez anime_shared_list.createRule et permission.add.'}`
       )
     }
 
-    return new Error(`PocketBase rejected anime creation on this shared list. ${details || 'Failed to create record.'}`.trim())
+    return new Error(`PocketBase a refuse la creation d'un anime sur cette liste partagee. ${details || 'Creation de fiche impossible.'}`.trim())
   }
 
   const loadSummaries = async () => {
@@ -1106,7 +1106,7 @@ export const useSharedLists = () => {
       return {
         id: animeId || relation.id,
         relationId: relation.id,
-        title: String(anime?.aniilist_media_name || anime?.anilist_media_id || 'Unknown anime'),
+        title: String(anime?.aniilist_media_name || anime?.anilist_media_id || 'Anime inconnu'),
         mediaId: Number(anime?.anilist_media_id || 0),
         fetchLink: anime?.fetch_link,
         addedByUserId: normalizeRelationValue(relation.fk_user_id) || undefined,
@@ -1120,7 +1120,7 @@ export const useSharedLists = () => {
 
     return {
       id: record.id,
-      title: String(record.name || 'Untitled shared list'),
+      title: String(record.name || 'Liste partagee sans titre'),
       privacy,
       ownerId,
       ownerName: ownerId === userId
@@ -1154,7 +1154,7 @@ export const useSharedLists = () => {
     const userId = requireCurrentUserId()
     const title = input.name.trim()
     if (!title) {
-      throw new Error('List name is required.')
+      throw new Error('Le nom de la liste est obligatoire.')
     }
 
     let created: SharedListRecord
@@ -1221,15 +1221,15 @@ export const useSharedLists = () => {
     const memberId = normalizeRelationValue(membership.fk_user_id)
 
     if (!listId) {
-      throw new Error('This membership record is missing its shared list.')
+      throw new Error('Cette fiche d\'appartenance n\'a pas de liste partagee associee.')
     }
 
     const access = await assertSharedListAccess(listId)
     if (!access.isOwner && memberId !== access.userId && !getPermissionCapabilities(access.membership).canManageMembers) {
-      throw new Error('You do not have permission to remove other members from this shared list.')
+      throw new Error('Vous n\'avez pas la permission de retirer d\'autres membres de cette liste partagee.')
     }
     if (memberId && memberId === access.ownerId) {
-      throw new Error('The owner cannot be removed from this shared list.')
+      throw new Error('Le proprietaire ne peut pas etre retire de cette liste partagee.')
     }
 
     return await pocketbaseStore.pb.collection('user_shared_list').delete(membershipId)
@@ -1262,7 +1262,7 @@ export const useSharedLists = () => {
       try {
         await pocketbaseStore.pb.collection('permission').delete(permissionId)
       } catch {
-        // pas grave si la permission est déjà supprimée ou protégée
+        // Sans gravite si la permission est deja supprimee ou protegee.
       }
     }
   }
@@ -1273,7 +1273,7 @@ export const useSharedLists = () => {
   const ensureAnimeRecord = async (input: { mediaId: number; title: string; fetchLink?: string }) => {
     const mediaId = Number(input.mediaId || 0)
     if (!Number.isFinite(mediaId) || mediaId <= 0) {
-      throw new Error('Invalid AniList media id.')
+      throw new Error('Identifiant AniList invalide pour cet anime.')
     }
 
     const existing = await pocketbaseStore.pb.collection('anime').getList<AnimeRecord>(1, 1, {
@@ -1323,7 +1323,7 @@ export const useSharedLists = () => {
     })
 
     if (existingRelation.items[0]) {
-      throw new Error('This anime is already in this shared list.')
+      throw new Error('Cet anime est deja dans cette liste partagee.')
     }
 
     const createRelation = async (withStateFields: boolean) => {
@@ -1345,7 +1345,7 @@ export const useSharedLists = () => {
       return await createRelation(true)
     } catch (error: any) {
       if (isUniqueConstraintError(error)) {
-        throw new Error('This anime is already in this shared list.')
+        throw new Error('Cet anime est deja dans cette liste partagee.')
       }
 
       if (isUnknownFieldError(error)) {
@@ -1353,7 +1353,7 @@ export const useSharedLists = () => {
           return await createRelation(false)
         } catch (retryError: any) {
           if (isUniqueConstraintError(retryError)) {
-            throw new Error('This anime is already in this shared list.')
+            throw new Error('Cet anime est deja dans cette liste partagee.')
           }
           if (isPocketbaseValidationError(retryError)) {
             throw await buildAnimeCreateValidationError(listId, retryError)
@@ -1386,7 +1386,7 @@ export const useSharedLists = () => {
     const relation = await getAnimeSharedListRecord(relationId)
     const listId = normalizeRelationValue(relation.fk_shared_list_id)
     if (!listId) {
-      throw new Error('This anime entry is missing its shared list.')
+      throw new Error('Cette entree anime n\'a pas de liste partagee associee.')
     }
 
     await assertCanEditAnimeInList(listId)
@@ -1399,7 +1399,7 @@ export const useSharedLists = () => {
       return await pocketbaseStore.pb.collection('anime_shared_list').update<AnimeSharedListRecord>(relationId, payload)
     } catch (error: any) {
       if (isUnknownFieldError(error)) {
-        throw new Error('PocketBase anime_shared_list still needs status, progress and score fields.')
+        throw new Error('La collection PocketBase `anime_shared_list` doit encore contenir les champs `status`, `progress` et `score`.')
       }
       throw error
     }
@@ -1409,7 +1409,7 @@ export const useSharedLists = () => {
     const relation = await getAnimeSharedListRecord(relationId)
     const listId = normalizeRelationValue(relation.fk_shared_list_id)
     if (!listId) {
-      throw new Error('This anime entry is missing its shared list.')
+      throw new Error('Cette entree anime n\'a pas de liste partagee associee.')
     }
 
     await assertCanDeleteAnimeFromList(listId)

@@ -4,7 +4,7 @@
       <img v-if="resolvedBannerUrl" :src="resolvedBannerUrl" alt="" class="banner-image">
       <div class="banner-content">
         <div class="banner-avatar">
-          <img v-if="resolvedAvatarUrl" :src="resolvedAvatarUrl" :alt="resolvedUsername || 'AniList avatar'">
+          <img v-if="resolvedAvatarUrl" :src="resolvedAvatarUrl" :alt="resolvedUsername || 'Avatar AniList'">
           <svg
             v-else
             viewBox="0 0 24 24"
@@ -19,8 +19,8 @@
           </svg>
         </div>
         <div class="banner-meta">
-          <div class="banner-username">{{ resolvedUsername || 'User' }}</div>
-          <div class="banner-joined">Joined {{ resolvedJoinedDisplay }}</div>
+          <div class="banner-username">{{ resolvedUsername || 'Utilisateur' }}</div>
+          <div class="banner-joined">Inscrit {{ resolvedJoinedDisplay }}</div>
         </div>
       </div>
     </section>
@@ -79,7 +79,7 @@ const authRecord = computed(() => (unref(pocketbaseStore.authRecord) ?? {}) as R
 const token = computed(() => String(authRecord.value.anilist_token ?? ''))
 
 const resolvedUsername = computed(() =>
-  String(props.username || authRecord.value.anilist_username || authRecord.value.username || 'User')
+  String(props.username || authRecord.value.anilist_username || authRecord.value.username || 'Utilisateur')
 )
 
 const resolvedAvatarUrl = computed(() =>
@@ -94,7 +94,7 @@ const formatJoined = (timestamp?: number | null) => {
   if (!timestamp) return '-'
   const date = new Date(timestamp * 1000)
   if (Number.isNaN(date.getTime())) return '-'
-  return new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(date)
+  return new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(date)
 }
 
 if (import.meta.client && !joinedCache.value) {

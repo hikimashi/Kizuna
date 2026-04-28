@@ -1,9 +1,9 @@
 export default defineNuxtPlugin(async () => {
-  // This plugin ensures that the authentication state is refreshed when the app initializes
+  // Ce plugin rafraichit l'etat d'authentification au demarrage de l'application.
   const authStore = useMyAuthStore();
   const themeStore = useThemeStore();
 
-  // Apply saved theme immediately, then re-resolve after auth refresh.
+  // Applique le theme sauvegarde immediatement, puis le revalide apres le refresh auth.
   themeStore.setTheme();
   await authStore.authRefresh();
   themeStore.setTheme();

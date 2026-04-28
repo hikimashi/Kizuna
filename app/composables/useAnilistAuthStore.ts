@@ -37,19 +37,19 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
   const loginWithAniListWithWarning = async () => {
     await alertStore.openAlert({
       type: 'warning',
-      message: '⚠️ Si vous êtes déjà connecté à AniList.co, la connexion sera automatique. Déconnectez-vous d AniList pour lier un autre compte.',
+      message: 'Si vous etes deja connecte a AniList.co, la connexion sera automatique. Deconnectez-vous d\'AniList pour lier un autre compte.',
       showDeny: false
     });
 
     loginWithAniList();
   };
 
-  // Gère le callback OAuth: échange de token, contrôle de doublon et sync utilisateur.
+  // Gere le callback OAuth : echange de token, controle de doublon et synchronisation utilisateur.
   const handleCallback = async (code: string, state?: string) => {
     try {
       const storedState = localStorage.getItem('anilist_oauth_state');
       if (state && storedState && storedState !== state) {
-        throw new Error('Security alert: Invalid state parameter');
+        throw new Error('Alerte de securite : parametre state invalide');
       }
       localStorage.removeItem('anilist_oauth_state');
 
@@ -59,7 +59,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
       });
 
       if (!response.access_token) {
-        throw new Error('Failed to get access token');
+        throw new Error('Impossible d\'obtenir le token d\'acces');
       }
 
       const anilistUserData = await anilistGraphql.request<any>(
@@ -71,7 +71,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
       const viewer = anilistUserData.data.Viewer;
       const userId = pocketbaseStore.pb.authStore.model?.id;
       if (!userId) {
-        throw new Error('You must be logged in to link an account');
+        throw new Error('Vous devez etre connecte pour lier un compte');
       }
 
       const anilistId = Number(viewer.id);
@@ -102,7 +102,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
 
       toastStore.openToast({
         type: 'success',
-        message: 'Compte AniList lié avec succès.'
+        message: 'Compte AniList lie avec succes.'
       });
 
       return true;
@@ -112,7 +112,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
       if (error.message === 'anilist_duplicate' || pbErrors?.anilist_user_id) {
         toastStore.openToast({
           type: 'error',
-          message: 'Ce compte AniList est déjà utilisé par un autre utilisateur.'
+          message: 'Ce compte AniList est deja utilise par un autre utilisateur.'
         });
       } else {
         toastStore.openToast({
@@ -125,14 +125,14 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
     }
   };
 
-  // Re-sync linked AniList profile fields (username/avatar/banner) into PocketBase.
+  // Resynchronise les champs lies a AniList (pseudo/avatar/banniere) dans PocketBase.
   const refreshLinkedAniListProfile = async () => {
     try {
       const token = pocketbaseStore.authRecord?.anilist_token;
       const userId = pocketbaseStore.pb.authStore.model?.id;
 
       if (!token || !userId) {
-        throw new Error('AniList account is not linked.');
+        throw new Error('Le compte AniList n\'est pas lie.');
       }
 
       const anilistUserData = await anilistGraphql.request<any>(
@@ -143,7 +143,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
 
       const viewer = anilistUserData?.data?.Viewer;
       if (!viewer?.id) {
-        throw new Error('Failed to fetch AniList viewer.');
+        throw new Error('Impossible de recuperer le profil AniList.');
       }
 
       await pocketbaseStore.pb.collection('user').update(userId, {
@@ -158,14 +158,14 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
 
       toastStore.openToast({
         type: 'success',
-        message: 'AniList data refreshed.'
+        message: 'Donnees AniList rafraichies.'
       });
 
       return true;
     } catch (error: any) {
       toastStore.openToast({
         type: 'error',
-        message: error?.message || 'Unable to refresh AniList data.'
+        message: error?.message || 'Impossible de rafraichir les donnees AniList.'
       });
       return false;
     }

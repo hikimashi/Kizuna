@@ -7,7 +7,7 @@
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.35-4.35" />
           </svg>
-          <input v-model.trim="searchInput" type="text" placeholder="Search anime..." />
+          <input v-model.trim="searchInput" type="text" placeholder="Rechercher un anime..." />
         </label>
 
         <div class="filter-group" :class="{ open: openDropdown === 'genre' }">
@@ -175,7 +175,7 @@
         <div class="filter-spacer"></div>
 
         <label class="sort-field">
-          <span class="sort-label">Sort</span>
+          <span class="sort-label">Tri</span>
           <select v-model="sortBy" class="sort-select">
             <option v-for="sortOption in sortOptions" :key="sortOption.value" :value="sortOption.value">
               {{ sortOption.label }}
@@ -184,12 +184,12 @@
         </label>
 
         <div class="view-btns">
-          <button class="vbtn" :class="{ active: viewMode === 'grid' }" type="button" title="Grid" @click="viewMode = 'grid'">
+          <button class="vbtn" :class="{ active: viewMode === 'grid' }" type="button" title="Grille" @click="viewMode = 'grid'">
             <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13" aria-hidden="true">
               <path d="M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 0h7v7h-7z" />
             </svg>
           </button>
-          <button class="vbtn" :class="{ active: viewMode === 'list' }" type="button" title="List" @click="viewMode = 'list'">
+          <button class="vbtn" :class="{ active: viewMode === 'list' }" type="button" title="Liste" @click="viewMode = 'list'">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" aria-hidden="true">
               <path d="M9 6h13M9 12h13M9 18h13M4 6h.01M4 12h.01M4 18h.01" />
             </svg>
@@ -212,7 +212,7 @@
         </button>
 
         <button class="clear-filters-btn" type="button" @click="clearAllFilters">
-          Clear all
+          Tout effacer
         </button>
       </div>
     </section>
@@ -244,40 +244,40 @@ type FilterOption = {
 const currentYear = new Date().getFullYear()
 
 const sortOptions: FilterOption[] = [
-  { value: 'POPULARITY_DESC', label: 'Popularity' },
-  { value: 'SCORE_DESC', label: 'Score' },
-  { value: 'TRENDING_DESC', label: 'Trending' },
-  { value: 'START_DATE_DESC', label: 'Newest' },
-  { value: 'TITLE_ROMAJI', label: 'Title A-Z' }
+  { value: 'POPULARITY_DESC', label: 'Popularite' },
+  { value: 'SCORE_DESC', label: 'Note' },
+  { value: 'TRENDING_DESC', label: 'Tendance' },
+  { value: 'START_DATE_DESC', label: 'Plus recents' },
+  { value: 'TITLE_ROMAJI', label: 'Titre A-Z' }
 ]
 
 const formatOptions: FilterOption[] = [
-  { value: 'ALL', label: 'All formats' },
+  { value: 'ALL', label: 'Tous les formats' },
   { value: 'TV', label: 'TV' },
-  { value: 'MOVIE', label: 'Movie' },
+  { value: 'MOVIE', label: 'Film' },
   { value: 'OVA', label: 'OVA' },
   { value: 'ONA', label: 'ONA' },
   { value: 'SPECIAL', label: 'Special' }
 ]
 
 const seasonOptions: FilterOption[] = [
-  { value: '', label: 'All seasons' },
-  { value: 'WINTER', label: 'Winter' },
-  { value: 'SPRING', label: 'Spring' },
-  { value: 'SUMMER', label: 'Summer' },
-  { value: 'FALL', label: 'Fall' }
+  { value: '', label: 'Toutes les saisons' },
+  { value: 'WINTER', label: 'Hiver' },
+  { value: 'SPRING', label: 'Printemps' },
+  { value: 'SUMMER', label: 'Ete' },
+  { value: 'FALL', label: 'Automne' }
 ]
 
 const statusOptions: FilterOption[] = [
-  { value: '', label: 'Any status' },
-  { value: 'RELEASING', label: 'Airing' },
-  { value: 'FINISHED', label: 'Finished' },
-  { value: 'NOT_YET_RELEASED', label: 'Not Yet Released' },
-  { value: 'CANCELLED', label: 'Cancelled' }
+  { value: '', label: 'Tous les statuts' },
+  { value: 'RELEASING', label: 'En diffusion' },
+  { value: 'FINISHED', label: 'Termine' },
+  { value: 'NOT_YET_RELEASED', label: 'Pas encore sorti' },
+  { value: 'CANCELLED', label: 'Annule' }
 ]
 
 const yearOptions = computed<FilterOption[]>(() => [
-  { value: '', label: 'Any year' },
+  { value: '', label: 'Toutes les annees' },
   ...Array.from({ length: 4 }, (_, index) => ({
     value: String(currentYear - index),
     label: String(currentYear - index)
@@ -285,7 +285,7 @@ const yearOptions = computed<FilterOption[]>(() => [
   { value: '2020s', label: '2020s' },
   { value: '2010s', label: '2010s' },
   { value: '2000s', label: '2000s' },
-  { value: 'older', label: 'Older' }
+  { value: 'older', label: 'Plus anciens' }
 ])
 
 const genreOptions = [
@@ -340,8 +340,8 @@ const openDropdown = ref<DropdownKey>(null)
 let searchTimer: ReturnType<typeof setTimeout> | null = null
 
 const currentFormatLabel = computed(() => formatOptions.find((option) => option.value === format.value)?.label || 'Format')
-const currentSeasonLabel = computed(() => seasonOptions.find((option) => option.value === season.value)?.label || 'Season')
-const currentStatusLabel = computed(() => statusOptions.find((option) => option.value === status.value)?.label || 'Status')
+const currentSeasonLabel = computed(() => seasonOptions.find((option) => option.value === season.value)?.label || 'Saison')
+const currentStatusLabel = computed(() => statusOptions.find((option) => option.value === status.value)?.label || 'Statut')
 
 const genrePillLabel = computed(() => {
   if (selectedGenres.value.length === 0) return 'Genres'
@@ -349,10 +349,10 @@ const genrePillLabel = computed(() => {
   return remainingGenres.length > 0 ? `Genres: ${firstGenre} +${remainingGenres.length}` : `Genres: ${firstGenre}`
 })
 
-const yearPillLabel = computed(() => year.value ? `Year: ${year.value}` : 'Year')
-const seasonPillLabel = computed(() => season.value ? `Season: ${currentSeasonLabel.value}` : 'Season')
-const formatPillLabel = computed(() => format.value !== 'ALL' ? `Format: ${currentFormatLabel.value}` : 'Format')
-const statusPillLabel = computed(() => status.value ? `Status: ${currentStatusLabel.value}` : 'Status')
+const yearPillLabel = computed(() => year.value ? `Annee : ${year.value}` : 'Annee')
+const seasonPillLabel = computed(() => season.value ? `Saison : ${currentSeasonLabel.value}` : 'Saison')
+const formatPillLabel = computed(() => format.value !== 'ALL' ? `Format : ${currentFormatLabel.value}` : 'Format')
+const statusPillLabel = computed(() => status.value ? `Statut : ${currentStatusLabel.value}` : 'Statut')
 
 type ActiveFilter = {
   key: string
@@ -369,7 +369,7 @@ const activeFilters = computed<ActiveFilter[]>(() => {
       key: `search:${searchTerm.value}`,
       type: 'search',
       value: searchTerm.value,
-      label: `Search: ${searchTerm.value}`
+      label: `Recherche : ${searchTerm.value}`
     })
   }
 
@@ -387,7 +387,7 @@ const activeFilters = computed<ActiveFilter[]>(() => {
       key: `year:${year.value}`,
       type: 'year',
       value: year.value,
-      label: `Year: ${year.value}`
+      label: `Annee : ${year.value}`
     })
   }
 
@@ -396,7 +396,7 @@ const activeFilters = computed<ActiveFilter[]>(() => {
       key: `season:${season.value}`,
       type: 'season',
       value: season.value,
-      label: `Season: ${currentSeasonLabel.value}`
+      label: `Saison : ${currentSeasonLabel.value}`
     })
   }
 
@@ -405,7 +405,7 @@ const activeFilters = computed<ActiveFilter[]>(() => {
       key: `format:${format.value}`,
       type: 'format',
       value: format.value,
-      label: `Format: ${currentFormatLabel.value}`
+      label: `Format : ${currentFormatLabel.value}`
     })
   }
 
@@ -414,7 +414,7 @@ const activeFilters = computed<ActiveFilter[]>(() => {
       key: `status:${status.value}`,
       type: 'status',
       value: status.value,
-      label: `Status: ${currentStatusLabel.value}`
+      label: `Statut : ${currentStatusLabel.value}`
     })
   }
 

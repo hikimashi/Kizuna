@@ -170,6 +170,14 @@ export const useMyAuthStore = defineStore('auth', () => {
     }
   };
 
+  const requestPasswordReset = async (email: string) => {
+    try {
+      await pocketbaseStore.pb.collection('user').requestPasswordReset(email);
+    } catch (error: any) {
+      throw new Error(error?.message || 'Password reset request failed. Please try again.');
+    }
+  };
+
   const deleteAccount = async () => {
     try {
       const userId = userStore.userData?.id;
@@ -190,6 +198,7 @@ export const useMyAuthStore = defineStore('auth', () => {
     logout,
     authRefresh,
     emailChange,
+    requestPasswordReset,
     createAccount,
     deleteAccount
   };

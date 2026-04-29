@@ -84,10 +84,10 @@
             </section>
             <div class="btn-row">
               <button class="btn-refresh" :disabled="isRefreshing" @click="refreshAnilistData">
-                {{ isRefreshing ? 'Actualisation...' : 'Actualiser depuis AniList' }}
+                {{ isRefreshing ? 'Actualisation...' : 'Actualiser' }}
               </button>
               <button class="btn-danger" :disabled="isUnlinking" @click="unlinkAniList">
-                {{ isUnlinking ? 'Déliaison...' : 'Délier AniList' }}
+                {{ isUnlinking ? 'Déliaison...' : 'Dissocier' }}
               </button>
             </div>
           </section>

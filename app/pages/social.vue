@@ -10,7 +10,7 @@
         </button>
         <button class="sidebar-link" :class="{ active: activeTab === 'followers' }" @click="activeTab = 'followers'">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" /></svg>
-          Abonnes
+          Abonnés
           <span class="sidebar-count">{{ followersCount }}</span>
         </button>
         <button class="sidebar-link" :class="{ active: activeTab === 'friends' }" @click="activeTab = 'friends'">
@@ -57,7 +57,7 @@
                   :disabled="isFollowBusy(user.id)"
                   @click="toggleFollow(user.id)"
                 >
-                  {{ isFollowBusy(user.id) ? 'Mise a jour...' : user.following ? 'Suivi' : 'Suivre' }}
+                  {{ isFollowBusy(user.id) ? 'Mise à jour...' : user.following ? 'Suivi' : 'Suivre' }}
                 </button>
               </div>
             </div>
@@ -66,7 +66,7 @@
 
         <div v-else class="empty">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="38" height="38"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-          <div class="empty-title">{{ isLoading ? 'Chargement' : 'Aucun utilisateur trouve' }}</div>
+          <div class="empty-title">{{ isLoading ? 'Chargement' : 'Aucun utilisateur trouvé' }}</div>
           <p class="empty-sub">{{ noResultText }}</p>
         </div>
       </main>
@@ -91,7 +91,7 @@ const { isLoading, loadError, followingUsers, followerUsers, friendUsers, follow
 const followedCount = computed(() => followingUsers.value.length)
 const followersCount = computed(() => followerUsers.value.length)
 const friendsCount = computed(() => friendUsers.value.length)
-const activeLabel = computed(() => activeTab.value === 'followed' ? 'Suivis' : activeTab.value === 'followers' ? 'Abonnes' : 'Amis')
+const activeLabel = computed(() => activeTab.value === 'followed' ? 'Suivis' : activeTab.value === 'followers' ? 'Abonnés' : 'Amis')
 
 const filteredUsers = computed(() => {
   const source =
@@ -119,7 +119,7 @@ const toggleFollow = async (id: number) => {
 const noResultText = computed(() => {
   if (isLoading.value) return 'Chargement des utilisateurs AniList...'
   if (loadError.value) return loadError.value
-  return 'Essayez une autre recherche ou changez de categorie sociale.'
+  return 'Essayez une autre recherche ou changez de catégorie sociale.'
 })
 
 const openFriendProfile = (friendId: number) => {

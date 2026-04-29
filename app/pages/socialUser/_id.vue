@@ -28,7 +28,7 @@
           :disabled="isFollowBusy"
           @click="toggleFollowFromBanner"
         >
-          {{ isFollowBusy ? 'Mise a jour...' : isFollowingFriend ? 'Ne plus suivre' : 'Suivre' }}
+          {{ isFollowBusy ? 'Mise à jour...' : isFollowingFriend ? 'Ne plus suivre' : 'Suivre' }}
         </button>
       </div>
     </section>
@@ -46,7 +46,7 @@
           Amis
         </NuxtLink>
         <NuxtLink class="sub-tab" :class="{ active: activeTab === 'shared-lists' }" :to="profileTabRoute('shared-lists')">
-          Listes partagees
+          Listes partagées
         </NuxtLink>
       </div>
     </div>
@@ -84,8 +84,8 @@
             <option value="title">Titre</option>
             <option value="score">Note</option>
             <option value="progress">Progression</option>
-            <option value="updatedAt">Derniere mise a jour</option>
-            <option value="startDate">Date de debut</option>
+            <option value="updatedAt">Dernière mise à jour</option>
+            <option value="startDate">Date de début</option>
           </select>
         </div>
       </aside>
@@ -113,7 +113,7 @@
         </div>
 
         <div v-else-if="visibleAnimeSections.length === 0" class="empty-state">
-          Aucun anime trouve pour ce filtre.
+          Aucun anime trouvé pour ce filtre.
         </div>
 
         <div v-else class="content" :class="`view-${viewMode}`">
@@ -155,7 +155,7 @@
             <div>
               <div class="friend-section-kicker">Favoris AniList</div>
               <h2 class="friend-section-title">{{ friendName || 'Ami' }} Favoris</h2>
-              <p class="friend-section-copy">Animes et personnages favoris recuperes directement depuis ce profil AniList.</p>
+              <p class="friend-section-copy">Animes et personnages favoris récupérés directement depuis ce profil AniList.</p>
             </div>
             <div class="friend-inline-tabs">
               <button class="friend-inline-tab" :class="{ active: favoriteTab === 'anime' }" type="button" @click="favoriteTab = 'anime'">
@@ -177,7 +177,7 @@
           </div>
 
           <div v-else-if="activeFavoriteItems.length === 0" class="empty-state">
-            Aucun favori trouve pour ce profil.
+            Aucun favori trouvé pour ce profil.
           </div>
 
           <div v-else class="friend-favorites-grid">
@@ -232,7 +232,7 @@
               </div>
               <div class="friend-stat-chip">
                 <span class="friend-stat-value">{{ targetFollowersCount }}</span>
-                <span class="friend-stat-label">Abonnes</span>
+                <span class="friend-stat-label">Abonnés</span>
               </div>
               <div class="friend-stat-chip">
                 <span class="friend-stat-value">{{ targetFriendUsers.length }}</span>
@@ -251,7 +251,7 @@
           </div>
 
           <div v-else-if="targetFriendUsers.length === 0" class="empty-state">
-            Aucun suivi mutuel trouve sur ce profil AniList.
+            Aucun suivi mutuel trouvé sur ce profil AniList.
           </div>
 
           <div v-else class="friend-user-grid">
@@ -297,7 +297,7 @@
                     :disabled="isViewerFollowBusy(user.id)"
                     @click="toggleViewerFollow(user.id)"
                   >
-                    {{ isViewerFollowBusy(user.id) ? 'Mise a jour...' : isViewerFollowing(user.id) ? 'Suivi' : 'Suivre' }}
+                    {{ isViewerFollowBusy(user.id) ? 'Mise à jour...' : isViewerFollowing(user.id) ? 'Suivi' : 'Suivre' }}
                   </button>
                 </div>
               </div>
@@ -308,9 +308,9 @@
         <div v-else class="friend-section-panel">
           <div class="friend-section-header">
             <div>
-              <div class="friend-section-kicker">Listes partagees PocketBase</div>
-              <h2 class="friend-section-title">{{ friendName || 'Ami' }} Listes partagees</h2>
-              <p class="friend-section-copy">Les listes publiques sont visibles par tous, celles reservees aux amis par les amis, et les privees uniquement par les membres.</p>
+              <div class="friend-section-kicker">Listes partagées PocketBase</div>
+              <h2 class="friend-section-title">{{ friendName || 'Ami' }} Listes partagées</h2>
+              <p class="friend-section-copy">Les listes publiques sont visibles par tous, celles réservées aux amis par les amis, et les listes privées uniquement par les membres.</p>
             </div>
             <div class="friend-stat-row">
               <div class="friend-stat-chip">
@@ -322,7 +322,7 @@
 
           <div v-if="sharedListsLoading" class="loading">
             <div class="spinner"></div>
-            Chargement des listes partagees...
+            Chargement des listes partagées...
           </div>
 
           <div v-else-if="sharedListsError" class="error-state">
@@ -330,13 +330,13 @@
           </div>
 
           <div v-else-if="targetSharedLists.length === 0" class="empty-state">
-            Aucune liste partagee n'est visible pour ce profil pour le moment.
+            Aucune liste partagée n'est visible pour ce profil pour le moment.
           </div>
 
           <div v-else class="friend-shared-grid">
             <article v-for="list in targetSharedLists" :key="list.id" class="friend-shared-card">
               <div class="friend-shared-banner">
-                <img :src="sharedListBannerSrc(list)" :alt="`Banniere ${list.title}`" />
+                <img :src="sharedListBannerSrc(list)" :alt="`Bannière ${list.title}`" />
                 <div class="friend-shared-chip-row">
                   <span class="friend-shared-chip" :class="privacyChipClass(list.privacy)">{{ privacyLabel(list.privacy) }}</span>
                   <span class="friend-shared-chip role">{{ targetSharedListRole(list) }}</span>
@@ -351,7 +351,7 @@
                   <div class="friend-shared-title-row">
                     <div class="friend-shared-title">{{ list.title }}</div>
                   </div>
-                  <div class="friend-shared-meta">Propriete de {{ list.ownerName }}</div>
+                  <div class="friend-shared-meta">Propriété de {{ list.ownerName }}</div>
                   <div class="friend-shared-desc">{{ sharedListDescription(list) }}</div>
                   <div class="friend-shared-stats">
                     <span>{{ sharedListMembersLabel(list) }}</span>
@@ -567,10 +567,10 @@ const followersQuery = `
 
 const STATUS_LABELS: Record<ListStatusKey, string> = {
   CURRENT: 'En cours',
-  COMPLETED: 'Termine',
+  COMPLETED: 'Terminé',
   PAUSED: 'En pause',
-  DROPPED: 'Abandonne',
-  PLANNING: 'A voir'
+  DROPPED: 'Abandonné',
+  PLANNING: 'À voir'
 }
 
 const STATUS_ORDER: ListStatusKey[] = ['CURRENT', 'COMPLETED', 'PAUSED', 'DROPPED', 'PLANNING']
@@ -694,7 +694,7 @@ const requestAniList = async (query: string, variables: Record<string, any>, cac
     if (!errorMessage) return response
   }
 
-  throw new Error(errorMessage || 'La requete AniList a echoue.')
+  throw new Error(errorMessage || 'La requête AniList a échoué.')
 }
 
 const normalizeDate = (entry: MediaListEntry): number => {
@@ -881,7 +881,7 @@ const memberAvatarStyle = (member: Pick<SharedListMember, 'avatar' | 'color'>) =
   member.avatar ? undefined : { background: member.color }
 
 const privacyLabel = (privacy: SharedListSummary['privacy']) =>
-  privacy === 'private' ? 'Privee' : privacy === 'friends' ? 'Amis uniquement' : 'Publique'
+  privacy === 'private' ? 'Privée' : privacy === 'friends' ? 'Amis uniquement' : 'Publique'
 
 const privacyChipClass = (privacy: SharedListSummary['privacy']) => ({
   'privacy-private': privacy === 'private',
@@ -894,8 +894,8 @@ const sharedListImageSrc = (list: SharedListSummary) => String(list.imageUrl || 
 const targetSharedListRole = (list: SharedListSummary) => list.ownerId === targetPocketbaseUserId.value ? 'Proprietaire' : 'Membre'
 const sharedListDescription = (list: SharedListSummary) =>
   list.animeVisibilityLimited
-    ? 'Les entrees anime sont masquees pour ce niveau de visibilite.'
-    : `${list.animeCount} anime actuellement dans cette liste partagee.`
+    ? 'Les entrées anime sont masquées pour ce niveau de visibilité.'
+    : `${list.animeCount} anime actuellement dans cette liste partagée.`
 const sharedListMembersLabel = (list: SharedListSummary) =>
   list.membersVisibilityLimited
     ? 'Membres masques'
@@ -1082,7 +1082,7 @@ const loadTargetFriends = async (force = false) => {
 
     if (followingResult.status === 'rejected' && followersResult.status === 'rejected') {
       const details = [followingResult.reason?.message, followersResult.reason?.message].filter(Boolean).join(' | ')
-      throw new Error(details || 'Les donnees sociales AniList sont indisponibles.')
+      throw new Error(details || 'Les données sociales AniList sont indisponibles.')
     }
 
     targetFollowingCount.value = followingRaw.length
@@ -1133,7 +1133,7 @@ const loadTargetSharedLists = async (force = false) => {
 
   try {
     if (!currentPocketbaseUserId.value) {
-      sharedListsError.value = 'Connectez-vous pour voir les listes partagees.'
+      sharedListsError.value = 'Connectez-vous pour voir les listes partagées.'
       sharedListsLoaded.value = true
       return
     }
@@ -1158,7 +1158,7 @@ const loadTargetSharedLists = async (force = false) => {
     sharedListsLoaded.value = true
   } catch (error: any) {
     if (requestedUserId !== friendUserId.value) return
-    sharedListsError.value = error?.message || 'Impossible de charger les listes partagees.'
+    sharedListsError.value = error?.message || 'Impossible de charger les listes partagées.'
   } finally {
     if (requestedUserId === friendUserId.value) {
       sharedListsLoading.value = false
@@ -1199,7 +1199,7 @@ const toggleFollowFromBanner = async () => {
   try {
     await socialStore.toggleFollowUser(friendUserId.value)
   } catch (error: any) {
-    errorMessage.value = error?.message || 'Impossible de mettre a jour le suivi AniList.'
+    errorMessage.value = error?.message || 'Impossible de mettre à jour le suivi AniList.'
   }
 }
 
@@ -1209,7 +1209,7 @@ const toggleViewerFollow = async (targetId: number) => {
   try {
     await socialStore.toggleFollowUser(targetId)
   } catch (error: any) {
-    friendSocialError.value = error?.message || 'Impossible de mettre a jour le suivi AniList.'
+    friendSocialError.value = error?.message || 'Impossible de mettre à jour le suivi AniList.'
   }
 }
 

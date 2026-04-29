@@ -108,10 +108,10 @@ const normalizeScore = (value: unknown) => {
   if (value == null) return undefined
   const normalized = Number(value)
   if (!Number.isFinite(normalized)) {
-    throw new Error('La note doit etre un nombre valide.')
+    throw new Error('La note doit être un nombre valide.')
   }
   if (normalized < 0 || normalized > 100) {
-    throw new Error('La note doit etre comprise entre 0 et 100.')
+    throw new Error('La note doit être comprise entre 0 et 100.')
   }
   return normalized
 }
@@ -125,7 +125,7 @@ export const useAnilistSync = () => {
   const getToken = () => {
     const token = String(authRecord.value.anilist_token ?? '')
     if (!token) {
-      throw new Error('Le compte AniList n\'est pas lie. Reconnectez-le dans les parametres.')
+      throw new Error('Le compte AniList n\'est pas lié. Reconnectez-le dans les paramètres.')
     }
     return token
   }
@@ -161,7 +161,7 @@ export const useAnilistSync = () => {
 
     const savedEntry = response?.data?.SaveMediaListEntry
     if (!savedEntry?.id) {
-      throw new Error('AniList n\'a pas renvoye l\'entree mise a jour.')
+      throw new Error('AniList n\'a pas renvoyé l\'entrée mise à jour.')
     }
 
     return savedEntry
@@ -183,7 +183,7 @@ export const useAnilistSync = () => {
     )
 
     if (response?.errors?.length) {
-      throw new Error(response.errors[0]?.message || 'Impossible de supprimer l\'entree AniList.')
+      throw new Error(response.errors[0]?.message || 'Impossible de supprimer l\'entrée AniList.')
     }
 
     const deleted = Boolean(response?.data?.DeleteMediaListEntry?.deleted)

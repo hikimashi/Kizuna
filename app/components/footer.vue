@@ -6,7 +6,7 @@
           <img src="/img/logo.webp" alt="Kizuna" class="brand-logo" />
           <div class="brand-text">
             <p class="brand-name">Kizuna</p>
-            <p class="brand-subtitle">Listes d'animes partagees avec synchronisation AniList</p>
+            <p class="brand-subtitle">Listes d'animes partagées avec synchronisation AniList</p>
           </div>
         </div>
 
@@ -29,7 +29,7 @@
           <div class="footer-group">
             <h3>Contact</h3>
             <a href="mailto:support.kizuna@gmail.com" class="footer-link">support.kizuna@gmail.com</a>
-            <span class="footer-note">Discord : bientot</span>
+            <span class="footer-note">Discord : bientôt</span>
           </div>
         </div>
       </div>
@@ -66,10 +66,10 @@ const navigationLinks: FooterLink[] = [
   { label: 'Social', to: '/social', requiresAuth: true },
   { label: 'Amis', to: '/friends', requiresAuth: true },
   { label: 'Favoris', to: '/favorites', requiresAuth: true },
-  { label: 'Liste anime', to: '/animeList', requiresAuth: true },
+  { label: "Liste d'animes", to: '/animeList', requiresAuth: true },
   { label: 'Explorer', to: '/browse', requiresAuth: true },
-  { label: 'Listes partagees', to: '/sharedLists', requiresAuth: true },
-  { label: 'Parametres', to: '/settings', requiresAuth: true }
+  { label: 'Listes partagées', to: '/sharedLists', requiresAuth: true },
+  { label: 'Paramètres', to: '/settings', requiresAuth: true }
 ]
 
 const handleFooterNavigation = async (link: FooterLink) => {
@@ -89,7 +89,7 @@ const handleProtectedNavigation = async (to: string) => {
 
   toastStore.openToast({
     type: 'warning',
-    message: 'Tu dois te connecter pour acceder a cette page.'
+    message: 'Tu dois te connecter pour accéder à cette page.'
   })
 }
 </script>

@@ -35,8 +35,8 @@
             <option value="title">Titre</option>
             <option value="score">Note</option>
             <option value="progress">Progression</option>
-            <option value="updatedAt">Derniere mise a jour</option>
-            <option value="startDate">Date de debut</option>
+            <option value="updatedAt">Dernière mise à jour</option>
+            <option value="startDate">Date de début</option>
           </select>
         </div>
       </aside>
@@ -70,7 +70,7 @@
               </div>
             </div>
             <div class="editor-panel-copy">
-              <div class="editor-panel-label">Modifier l'entree AniList</div>
+              <div class="editor-panel-label">Modifier l'entrée AniList</div>
               <div class="editor-panel-title">{{ selectedEntryTitle }}</div>
               <div class="editor-panel-subtitle">
                 Progression {{ editProgress || '0' }} / {{ selectedEntryEpisodes ?? '?' }}
@@ -138,7 +138,7 @@
         </div>
 
         <div v-else-if="visibleSections.length === 0" class="empty-state">
-          Aucun anime trouve pour ce filtre.
+          Aucun anime trouvé pour ce filtre.
         </div>
 
         <div v-else class="content" :class="`view-${viewMode}`">
@@ -228,10 +228,10 @@ type MediaListEntry = {
 
 const STATUS_LABELS: Record<ListStatusKey, string> = {
   CURRENT: 'En cours',
-  COMPLETED: 'Termine',
+  COMPLETED: 'Terminé',
   PAUSED: 'En pause',
-  DROPPED: 'Abandonne',
-  PLANNING: 'Prevu'
+  DROPPED: 'Abandonné',
+  PLANNING: 'Prévu'
 }
 
 const STATUS_ORDER: ListStatusKey[] = ['CURRENT', 'COMPLETED', 'PAUSED', 'DROPPED', 'PLANNING']
@@ -273,7 +273,7 @@ const profileTabs = [
   { key: 'anime-list', label: 'Liste d\'anime', to: '/animeList', active: true },
   { key: 'favorites', label: 'Favoris', to: '/favorites' },
   { key: 'friends', label: 'Amis', to: '/friends' },
-  { key: 'shared-lists', label: 'Listes partagees', to: '/sharedLists' }
+  { key: 'shared-lists', label: 'Listes partagées', to: '/sharedLists' }
 ]
 
 const displayTitle = (entry: MediaListEntry) =>
@@ -394,10 +394,10 @@ const saveSelectedEntry = async () => {
       score: editScore.value === '' ? null : Number(editScore.value)
     })
     await fetchAnimeList()
-    toastStore.openToast({ type: 'success', message: "L'entree AniList a ete mise a jour." })
+    toastStore.openToast({ type: 'success', message: "L'entrée AniList a été mise à jour." })
     closeEntryEditor()
   } catch (error: any) {
-    toastStore.openToast({ type: 'error', message: error?.message || "Impossible de mettre a jour l'entree AniList." })
+    toastStore.openToast({ type: 'error', message: error?.message || "Impossible de mettre à jour l'entrée AniList." })
   } finally {
     isSavingEntry.value = false
   }
@@ -416,10 +416,10 @@ const deleteSelectedEntry = async () => {
     isDeletingEntry.value = true
     await anilistSync.deleteEntry(selectedEntryId.value)
     await fetchAnimeList()
-    toastStore.openToast({ type: 'success', message: "L'entree AniList a ete supprimee." })
+    toastStore.openToast({ type: 'success', message: "L'entrée AniList a été supprimée." })
     closeEntryEditor()
   } catch (error: any) {
-    toastStore.openToast({ type: 'error', message: error?.message || "Impossible de supprimer l'entree AniList." })
+    toastStore.openToast({ type: 'error', message: error?.message || "Impossible de supprimer l'entrée AniList." })
   } finally {
     isDeletingEntry.value = false
   }
@@ -427,7 +427,7 @@ const deleteSelectedEntry = async () => {
 
 const fetchAnimeList = async () => {
   if (!token.value || !username.value) {
-    errorMessage.value = 'Compte AniList non lie. Reconnectez-le dans les parametres.'
+    errorMessage.value = 'Compte AniList non lié. Reconnectez-le dans les paramètres.'
     isLoading.value = false
     return
   }
@@ -504,7 +504,7 @@ const fetchAnimeList = async () => {
 
     rawSections.value = nextSections
   } catch (error: any) {
-    errorMessage.value = error?.message || 'Impossible de charger la liste anime.'
+    errorMessage.value = error?.message || "Impossible de charger la liste d'animes."
   } finally {
     isLoading.value = false
   }

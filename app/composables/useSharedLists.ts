@@ -205,16 +205,16 @@ const hueFromString = (value: string) => {
 const memberColor = (value: string) => `hsl(${hueFromString(value)} 72% 52%)`
 
 const formatRelativeDate = (value?: string) => {
-  if (!value) return 'Mis a jour recemment'
+  if (!value) return 'Mis à jour récemment'
   const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'Mis a jour recemment'
+  if (Number.isNaN(date.getTime())) return 'Mis à jour récemment'
   const diffMs = Date.now() - date.getTime()
   const diffHours = Math.max(Math.floor(diffMs / 3600000), 0)
-  if (diffHours < 1) return 'Mis a jour a l\'instant'
-  if (diffHours < 24) return `Mis a jour il y a ${diffHours} h`
+  if (diffHours < 1) return 'Mis à jour à l\'instant'
+  if (diffHours < 24) return `Mis à jour il y a ${diffHours} h`
   const diffDays = Math.floor(diffHours / 24)
-  if (diffDays < 7) return `Mis a jour il y a ${diffDays} j`
-  return `Mis a jour le ${date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`
+  if (diffDays < 7) return `Mis à jour il y a ${diffDays} j`
+  return `Mis à jour le ${date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`
 }
 
 const formatDateLabel = (value?: string) => {
@@ -506,7 +506,7 @@ export const useSharedLists = () => {
   const requireCurrentUserId = () => {
     const userId = String(currentUserId.value || '')
     if (!userId) {
-      throw new Error('Vous devez etre connecte pour gerer les listes partagees.')
+      throw new Error('Vous devez être connecté pour gérer les listes partagées.')
     }
     return userId
   }
@@ -623,7 +623,7 @@ export const useSharedLists = () => {
 
       return {
         id: record.id,
-        title: String(record.name || 'Liste partagee sans titre'),
+        title: String(record.name || 'Liste partagée sans titre'),
         privacy,
         ownerId,
         ownerName,
@@ -695,7 +695,7 @@ export const useSharedLists = () => {
   const assertSharedListAccess = async (listId: string) => {
     const access = await getListAccessContext(listId)
     if (!access.isMember) {
-      throw new Error('Vous n\'avez pas acces a cette liste partagee.')
+      throw new Error('Vous n\'avez pas accès à cette liste partagée.')
     }
     return access
   }
@@ -703,7 +703,7 @@ export const useSharedLists = () => {
   const assertSharedListOwner = async (listId: string) => {
     const access = await assertSharedListAccess(listId)
     if (!access.isOwner) {
-      throw new Error('Seul le proprietaire peut gerer cette liste partagee.')
+      throw new Error('Seul le proprietaire peut gerer cette liste partagée.')
     }
     return access
   }
@@ -713,7 +713,7 @@ export const useSharedLists = () => {
     if (access.isOwner) return access
 
     if (!getPermissionCapabilities(access.membership).canManageMembers) {
-      throw new Error('Vous n\'avez pas la permission de gerer les membres de cette liste partagee.')
+      throw new Error('Vous n\'avez pas la permission de gérer les membres de cette liste partagée.')
     }
 
     return access
@@ -724,7 +724,7 @@ export const useSharedLists = () => {
     if (access.isOwner) return access
 
     if (!getPermissionCapabilities(access.membership).canAddAnime) {
-      throw new Error('Vous n\'avez pas la permission d\'ajouter des animes a cette liste partagee.')
+      throw new Error('Vous n\'avez pas la permission d\'ajouter des animes à cette liste partagée.')
     }
 
     return access
@@ -735,7 +735,7 @@ export const useSharedLists = () => {
     if (access.isOwner) return access
 
     if (!getPermissionCapabilities(access.membership).canEditAnime) {
-      throw new Error('Vous n\'avez pas la permission de modifier les entrees anime de cette liste partagee.')
+      throw new Error('Vous n\'avez pas la permission de modifier les entrées anime de cette liste partagée.')
     }
 
     return access
@@ -746,7 +746,7 @@ export const useSharedLists = () => {
     if (access.isOwner) return access
 
     if (!getPermissionCapabilities(access.membership).canDeleteAnime) {
-      throw new Error('Vous n\'avez pas la permission de retirer des animes de cette liste partagee.')
+      throw new Error('Vous n\'avez pas la permission de retirer des animes de cette liste partagée.')
     }
 
     return access
@@ -829,7 +829,7 @@ export const useSharedLists = () => {
     const listId = normalizeRelationValue(membership.fk_shared_list_id)
     const userId = normalizeRelationValue(membership.fk_user_id)
     if (!listId) {
-      throw new Error('Cette fiche d\'appartenance n\'a pas de liste partagee associee.')
+      throw new Error('Cette fiche d\'appartenance n\'a pas de liste partagée associee.')
     }
     if (!userId) {
       throw new Error('Cette fiche d\'appartenance n\'a pas de membre associe.')
@@ -898,7 +898,7 @@ export const useSharedLists = () => {
         changed = true
       } catch (error) {
         failedMembershipIds.push(membership.id)
-        console.warn('Echec de la migration d une ancienne appartenance de liste partagee.', {
+        console.warn('Echec de la migration d une ancienne appartenance de liste partagée.', {
           listId,
           membershipId: membership.id,
           memberId,
@@ -934,7 +934,7 @@ export const useSharedLists = () => {
     const details = pocketbaseErrorDetails(error)
 
     if (ownerId === currentUserId.value && !membership) {
-      return new Error(`L'appartenance du proprietaire est absente sur cette liste partagee. ${details}`.trim())
+      return new Error(`L'appartenance du proprietaire est absente sur cette liste partagée. ${details}`.trim())
     }
 
     if (ownerId === currentUserId.value) {
@@ -944,12 +944,12 @@ export const useSharedLists = () => {
     const permission = getPermissionName(membership)
     if (permission !== 'viewer') {
       return new Error(
-        `PocketBase refuse encore la creation de l'anime pour un membre ${permission} sur cette liste partagee. ` +
+        `PocketBase refuse encore la creation de l'anime pour un membre ${permission} sur cette liste partagée. ` +
         `${details || 'Verifiez anime_shared_list.createRule et permission.add.'}`
       )
     }
 
-    return new Error(`PocketBase a refuse la creation d'un anime sur cette liste partagee. ${details || 'Creation de fiche impossible.'}`.trim())
+    return new Error(`PocketBase a refuse la creation d'un anime sur cette liste partagée. ${details || 'Creation de fiche impossible.'}`.trim())
   }
 
   const loadSummaries = async () => {
@@ -1120,7 +1120,7 @@ export const useSharedLists = () => {
 
     return {
       id: record.id,
-      title: String(record.name || 'Liste partagee sans titre'),
+      title: String(record.name || 'Liste partagée sans titre'),
       privacy,
       ownerId,
       ownerName: ownerId === userId
@@ -1221,15 +1221,15 @@ export const useSharedLists = () => {
     const memberId = normalizeRelationValue(membership.fk_user_id)
 
     if (!listId) {
-      throw new Error('Cette fiche d\'appartenance n\'a pas de liste partagee associee.')
+      throw new Error('Cette fiche d\'appartenance n\'a pas de liste partagée associee.')
     }
 
     const access = await assertSharedListAccess(listId)
     if (!access.isOwner && memberId !== access.userId && !getPermissionCapabilities(access.membership).canManageMembers) {
-      throw new Error('Vous n\'avez pas la permission de retirer d\'autres membres de cette liste partagee.')
+      throw new Error('Vous n\'avez pas la permission de retirer d\'autres membres de cette liste partagée.')
     }
     if (memberId && memberId === access.ownerId) {
-      throw new Error('Le proprietaire ne peut pas etre retire de cette liste partagee.')
+      throw new Error('Le propriétaire ne peut pas être retiré de cette liste partagée.')
     }
 
     return await pocketbaseStore.pb.collection('user_shared_list').delete(membershipId)
@@ -1323,7 +1323,7 @@ export const useSharedLists = () => {
     })
 
     if (existingRelation.items[0]) {
-      throw new Error('Cet anime est deja dans cette liste partagee.')
+      throw new Error('Cet anime est déjà dans cette liste partagée.')
     }
 
     const createRelation = async (withStateFields: boolean) => {
@@ -1345,7 +1345,7 @@ export const useSharedLists = () => {
       return await createRelation(true)
     } catch (error: any) {
       if (isUniqueConstraintError(error)) {
-        throw new Error('Cet anime est deja dans cette liste partagee.')
+        throw new Error('Cet anime est déjà dans cette liste partagée.')
       }
 
       if (isUnknownFieldError(error)) {
@@ -1353,7 +1353,7 @@ export const useSharedLists = () => {
           return await createRelation(false)
         } catch (retryError: any) {
           if (isUniqueConstraintError(retryError)) {
-            throw new Error('Cet anime est deja dans cette liste partagee.')
+            throw new Error('Cet anime est déjà dans cette liste partagée.')
           }
           if (isPocketbaseValidationError(retryError)) {
             throw await buildAnimeCreateValidationError(listId, retryError)
@@ -1386,7 +1386,7 @@ export const useSharedLists = () => {
     const relation = await getAnimeSharedListRecord(relationId)
     const listId = normalizeRelationValue(relation.fk_shared_list_id)
     if (!listId) {
-      throw new Error('Cette entree anime n\'a pas de liste partagee associee.')
+      throw new Error('Cette entree anime n\'a pas de liste partagée associee.')
     }
 
     await assertCanEditAnimeInList(listId)
@@ -1409,7 +1409,7 @@ export const useSharedLists = () => {
     const relation = await getAnimeSharedListRecord(relationId)
     const listId = normalizeRelationValue(relation.fk_shared_list_id)
     if (!listId) {
-      throw new Error('Cette entree anime n\'a pas de liste partagee associee.')
+      throw new Error('Cette entree anime n\'a pas de liste partagée associee.')
     }
 
     await assertCanDeleteAnimeFromList(listId)

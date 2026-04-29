@@ -5,11 +5,11 @@
         <h1 class="card-title text-2xl">Verification de l'e-mail</h1>
 
         <p v-if="status === 'pending'">Verification de votre adresse e-mail...</p>
-        <p v-else-if="status === 'success'">Votre adresse e-mail a ete verifiee. Vous pouvez maintenant vous connecter.</p>
+        <p v-else-if="status === 'success'">Votre adresse e-mail a été vérifiée. Vous pouvez maintenant vous connecter.</p>
         <p v-else>{{ errorMessage }}</p>
 
         <div class="card-actions mt-4">
-          <button class="btn btn-primary" @click="goHome">Retour a l'accueil</button>
+          <button class="btn btn-primary" @click="goHome">Retour à l'accueil</button>
         </div>
       </div>
     </div>

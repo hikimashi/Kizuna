@@ -51,7 +51,7 @@
               <ul class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
                 <li>
                   <NuxtLink class="justify-between" to="/settings">
-                    Parametres
+                    Paramètres
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                       stroke="currentColor" class="size-5">
                       <path stroke-linecap="round" stroke-linejoin="round"
@@ -61,7 +61,7 @@
                   </NuxtLink>
                 </li>
                 <li @click="handleLogout()">
-                  <a class="justify-between" href="/">Deconnexion
+                  <a class="justify-between" href="/">Déconnexion
                     <svg class="size-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                       stroke-width="1.5" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round"
@@ -113,7 +113,7 @@
               <ul class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
                 <li>
                   <NuxtLink class="justify-between" to="/settings">
-                    Parametres
+                    Paramètres
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                       stroke="currentColor" class="size-5">
                       <path stroke-linecap="round" stroke-linejoin="round"
@@ -123,7 +123,7 @@
                   </NuxtLink>
                 </li>
                 <li @click="handleLogout()">
-                  <a class="justify-between" href="/">Deconnexion
+                  <a class="justify-between" href="/">Déconnexion
                     <svg class="size-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                       stroke-width="1.5" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round"
@@ -136,7 +136,7 @@
           </div>
         </template>
 
-        <!-- Bascule de theme (toujours visible) -->
+        <!-- Bascule de thème (toujours visible) -->
         <label
           v-if="!showFullNav"
           class="swap-rotate swap theme-toggle"
@@ -256,10 +256,10 @@
             {{ searchModalError }}
           </div>
           <div v-else-if="searchModalQuery.length < 2" class="search-modal-state">
-            Saisissez au moins 2 caracteres pour rechercher sur AniList.
+            Saisissez au moins 2 caractères pour rechercher sur AniList.
           </div>
           <div v-else-if="activeSearchResults.length === 0" class="search-modal-state">
-            Aucun resultat.
+            Aucun résultat.
           </div>
           <div v-else class="search-modal-results">
             <button
@@ -347,7 +347,7 @@ const navItems = [
   { label: 'Accueil', to: '/' },
   { label: 'Profil', to: '/profilePage' },
   { label: 'Social', to: '/social' },
-  { label: 'Liste anime', to: '/animeList' },
+  { label: "Liste d'animes", to: '/animeList' },
   { label: 'Explorer', to: '/browse' }
 ] as const
 
@@ -525,7 +525,7 @@ const handleGlobalSearch = () => {
           type: 'anime' as const,
           id: Number(item?.id || 0),
           title,
-          subtitle: [item?.format, item?.seasonYear].filter(Boolean).join(' - ') || 'Resultat anime',
+          subtitle: [item?.format, item?.seasonYear].filter(Boolean).join(' - ') || 'Résultat anime',
           meta: [item?.status, item?.episodes ? `${item.episodes} eps` : ''].filter(Boolean).join(' - '),
           image: String(item?.coverImage?.large || item?.coverImage?.medium || '') || undefined,
           fallback: makeFallback(title, 'anime')
@@ -843,7 +843,7 @@ onBeforeUnmount(() => {
   object-position: top center;
 }
 
-/* Bascule de theme */
+/* Bascule de thème */
 .theme-toggle {
   position: relative;
   display: inline-grid;

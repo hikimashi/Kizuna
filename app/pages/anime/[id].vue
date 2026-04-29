@@ -123,6 +123,7 @@ type SocialBundle = {
   threads: SocialThread[]
 }
 type AniListGraphqlResponse<T> = { data?: T; errors?: Array<{ message?: string | null }> | null }
+type DescriptionTranslationResponse = { description?: string | null; translated?: boolean | null; provider?: string | null }
 
 const route = useRoute()
 const animeId = computed(() => Number(route.params.id))
@@ -321,7 +322,11 @@ const mediaState = await useAsyncData(
     )
     return response.data?.Media ?? null
   },
-  { watch: [animeId, anilistToken] }
+  {
+    watch: [animeId, anilistToken],
+    lazy: true,
+    default: () => null
+  }
 )
 
 const socialState = await useAsyncData(
@@ -374,7 +379,9 @@ const socialState = await useAsyncData(
   },
   {
     default: () => ({ global: [], following: [], self: [], threads: [] }),
-    watch: [animeId, socialPageSize, anilistToken, anilistUserId]
+    watch: [animeId, socialPageSize, anilistToken, anilistUserId],
+    server: false,
+    lazy: true
   }
 )
 
@@ -404,7 +411,9 @@ const reviewsState = await useAsyncData(
   },
   {
     default: () => ({ reviews: [], hasNextPage: false }),
-    watch: [animeId, reviewPage]
+    watch: [animeId, reviewPage],
+    server: false,
+    lazy: true
   }
 )
 
@@ -429,6 +438,31 @@ const description = computed(() =>
     .replace(/\n{3,}/g, '\n\n')
     .trim()
 )
+const translatedDescriptionState = await useAsyncData(
+  () => `anime-description-fr-${animeId.value}`,
+  async () => {
+    if (!animeId.value || !description.value) return null
+
+    const response = await $fetch<DescriptionTranslationResponse>('/api/translate/animeDescription', {
+      method: 'POST',
+      body: {
+        mediaId: animeId.value,
+        description: description.value,
+        targetLang: 'fr'
+      }
+    })
+
+    return response?.description?.trim() || null
+  },
+  {
+    watch: [animeId, description],
+    server: false,
+    lazy: true,
+    default: () => null
+  }
+)
+const translatedDescription = computed(() => translatedDescriptionState.data.value || '')
+const displayedDescription = computed(() => translatedDescription.value || description.value)
 const rankings = computed(() => (media.value?.rankings || []).filter((item) => item.rank && item.allTime).slice(0, 2))
 const studios = computed(() => (media.value?.studios?.nodes || []).filter(Boolean))
 const animationStudio = computed(() => studios.value.find((item) => item?.isAnimationStudio)?.name || studios.value[0]?.name || 'Inconnu')
@@ -562,7 +596,7 @@ const STATUS_TRANSLATIONS: Record<string, string> = {
   TV: 'TV',
   TV_SHORT: 'TV courte',
   MOVIE: 'Film',
-  SPECIAL: 'Special',
+  SPECIAL: 'Spécial',
   OVA: 'OVA',
   ONA: 'ONA',
   MUSIC: 'Musique',
@@ -571,20 +605,20 @@ const STATUS_TRANSLATIONS: Record<string, string> = {
   ONE_SHOT: 'One-shot',
   LIGHT_NOVEL: 'Light novel',
   VISUAL_NOVEL: 'Visual novel',
-  VIDEO_GAME: 'Jeu video',
+  VIDEO_GAME: 'Jeu vidéo',
   OTHER: 'Autre',
   ORIGINAL: 'Original',
   DOUJINSHI: 'Doujinshi',
   COMIC: 'BD',
-  LIVE_ACTION: 'Prise de vue reelle',
+  LIVE_ACTION: 'Prise de vue réelle',
   GAME: 'Jeu',
-  MULTIMEDIA_PROJECT: 'Projet multimedia',
-  PICTURE_BOOK: 'Album illustre',
+  MULTIMEDIA_PROJECT: 'Projet multimédia',
+  PICTURE_BOOK: 'Album illustré',
   WEB_NOVEL: 'Web novel',
   FINISHED: 'Terminé',
   RELEASING: 'En cours',
-  NOT_YET_RELEASED: 'A venir',
-  CANCELLED: 'Annule',
+  NOT_YET_RELEASED: 'À venir',
+  CANCELLED: 'Annulé',
   HIATUS: 'En pause',
   MAIN: 'Principal',
   SUPPORTING: 'Secondaire',
@@ -595,7 +629,7 @@ const STATUS_TRANSLATIONS: Record<string, string> = {
   PARENT: 'Parent',
   SIDE_STORY: 'Histoire annexe',
   CHARACTER: 'Personnage',
-  SUMMARY: 'Resume',
+  SUMMARY: 'Résumé',
   ALTERNATIVE: 'Alternative',
   SPIN_OFF: 'Spin-off',
   SOURCE: 'Source',
@@ -609,7 +643,7 @@ const STATUS_TRANSLATIONS: Record<string, string> = {
   DROPPED: 'Abandonné',
   'watched episode': 'a regardé l\'épisode',
   'plans to watch': 'prévoit de regarder',
-  completed: 'a terminé',
+  completed: 'a terminer',
   dropped: 'a abandonné',
   'paused watching': 'a mis en pause',
   rewatched: 'a revisionné'
@@ -771,7 +805,7 @@ const overviewStats = computed(() => [
     meta: peakScoreBucket.value ? `Pic: ${peakScoreBucket.value.score}` : 'Tendance des notes'
   },
   {
-    label: 'Popularite',
+    label: 'Popularité',
     value: media.value?.popularity ? formatCompactNumber(media.value.popularity) : '-',
     meta: media.value?.popularity ? formatNumber(media.value.popularity) : 'Pas de donnees'
   },
@@ -793,9 +827,9 @@ const statsSummaryCards = computed(() => [
     meta: peakScoreBucket.value ? `Pic de note : ${peakScoreBucket.value.score}` : 'Pas de tendance de note'
   },
   {
-    label: 'Popularite',
+    label: 'Popularité',
     value: media.value?.popularity ? formatNumber(media.value.popularity) : '-',
-    meta: 'Popularite AniList'
+    meta: 'Popularité AniList'
   },
   {
     label: 'Favoris',
@@ -988,7 +1022,7 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
 
 <template>
   <div class="anime-page">
-    <div v-if="loading" class="state-panel">Chargement de l'anime...</div>
+    <SkeletonLoader v-if="loading" variant="anime-detail" />
     <div v-else-if="hasError || !media" class="state-panel error">Impossible de charger cette fiche anime.</div>
     <div v-else>
       <div
@@ -1056,7 +1090,7 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
               <div v-if="genres.length" class="media-genre-row">
                 <span v-for="genre in genres" :key="`${genre}-hero`" class="media-genre-chip">{{ genre }}</span>
               </div>
-              <p class="media-description">{{ description }}</p>
+              <p class="media-description">{{ displayedDescription }}</p>
 
               <div class="actions">
                 <div ref="listActionRef" class="list-action">

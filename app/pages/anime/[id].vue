@@ -719,7 +719,7 @@ function loadMoreSocial() {
 }
 
 function formatRankingLabel(type?: string | null) {
-  if (type === 'RATED') return 'Mieux note'
+  if (type === 'RATED') return 'Mieux noté'
   if (type === 'POPULAR') return 'Plus populaire'
   return formatStatus(type)
 }

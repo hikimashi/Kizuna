@@ -1179,8 +1179,23 @@
 .thread-title,
 .create-thread-link,
 .timeline-entry a {
-  color: var(--text-primary);
+  color: var(--accent);
   text-decoration: none;
+}
+
+.social-side-title a:hover,
+.social-side-title a:focus-visible,
+.activity-user-link:hover,
+.activity-user-link:focus-visible,
+.activity-title-link:hover,
+.activity-title-link:focus-visible,
+.thread-title:hover,
+.thread-title:focus-visible,
+.create-thread-link:hover,
+.create-thread-link:focus-visible,
+.timeline-entry a:hover,
+.timeline-entry a:focus-visible {
+  text-decoration: underline;
 }
 
 .social-subheading,
@@ -1353,6 +1368,17 @@
   font-size: 11px;
   font-weight: 800;
   text-decoration: none;
+}
+
+.activity-meta-link {
+  border-color: rgba(61, 180, 242, 0.22);
+  background: rgba(61, 180, 242, 0.1);
+  color: var(--accent);
+}
+
+.activity-meta-link:hover,
+.activity-meta-link:focus-visible {
+  text-decoration: underline;
 }
 
 .activity-actions {

@@ -33,7 +33,7 @@ onMounted(async () => {
       router.push('/');
     }, 2000);
   } else {
-    // Aucun code : callback invalide ou annule.
+    // Aucun code : callback invalide ou annulé.
     processed.value = true;
     success.value = false;
   }

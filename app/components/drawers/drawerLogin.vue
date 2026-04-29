@@ -16,10 +16,10 @@
       <div class="flex justify-center mb-4 sm:mb-6 ">
         <img src="/img/user.webp" alt="Logo" class="h-24 sm:h-32 md:h-36 border border-primary rounded-full" />
       </div>
-      <h2 class="text-xl sm:text-2xl font-bold text-center text-primary mb-4 sm:mb-6">Connexion a votre compte</h2>
+      <h2 class="text-xl sm:text-2xl font-bold text-center text-primary mb-4 sm:mb-6">Connexion à votre compte</h2>
 
       <div class="items-center my-4 sm:my-6">
-        <span class="flex flex-wrap justify-center text-sm sm:text-base text-center">Pas encore de compte ? &nbsp; <a @click="createAccount()" class="text-blue-500 hover:underline cursor-pointer">Creer un compte</a></span>
+        <span class="flex flex-wrap justify-center text-sm sm:text-base text-center">Pas encore de compte ? &nbsp; <a @click="createAccount()" class="text-blue-500 hover:underline cursor-pointer">Créer un compte</a></span>
         </div>
 
       <form ref="loginForm" @submit.prevent="doLogin()">
@@ -50,15 +50,15 @@
           </svg>
           <input v-model="password" type="password" required placeholder="Mot de passe" minlength="8"
             pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
-            title="Doit contenir au moins 8 caracteres, avec un chiffre, une minuscule et une majuscule" />
+            title="Doit contenir au moins 8 caractères, avec un chiffre, une minuscule et une majuscule" />
         </label>
         <p class="validator-hint hidden">
-          Doit contenir au moins 8 caracteres, avec
+          Doit contenir au moins 8 caractères, avec
           <br />Au moins un chiffre <br />Au moins une lettre minuscule <br />Au moins une lettre majuscule
         </p>
 
         <div class="flex items-center justify-between p-2 mb-4 sm:mb-6">
-          <a href="#" class="text-sm sm:text-base text-blue-500 hover:underline">Mot de passe oublie ?</a>
+          <a href="#" class="text-sm sm:text-base text-blue-500 hover:underline">Mot de passe oublié ?</a>
         </div>
 
         <button type="submit" class="w-full btn btn-primary">
@@ -138,7 +138,7 @@ const doGoogleLogin = async () => {
     if (loginForm.value) {
       loginForm.value.reset();
     }
-    toast.openToast({ type: 'error', message: e.message || 'La connexion Google a echoue.' });
+    toast.openToast({ type: 'error', message: e.message || 'La connexion Google a échoué.' });
     return;
   }
   close();
@@ -154,7 +154,7 @@ const doGithubLogin = async () => {
     if (loginForm.value) {
       loginForm.value.reset();
     }
-    toast.openToast({ type: 'error', message: e.message || 'La connexion GitHub a echoue.' });
+    toast.openToast({ type: 'error', message: e.message || 'La connexion GitHub a échoué.' });
     return;
   }
   close();

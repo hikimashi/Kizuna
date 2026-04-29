@@ -27,7 +27,7 @@
         <NuxtLink class="sub-tab active" :to="`/social/compare/${friendUserId}`">Comparaison</NuxtLink>
         <NuxtLink class="sub-tab" :to="profileTabRoute('favorites')">Favoris</NuxtLink>
         <NuxtLink class="sub-tab" :to="profileTabRoute('friends')">Amis</NuxtLink>
-        <NuxtLink class="sub-tab" :to="profileTabRoute('shared-lists')">Listes partagees</NuxtLink>
+        <NuxtLink class="sub-tab" :to="profileTabRoute('shared-lists')">Listes partagées</NuxtLink>
       </div>
     </div>
 
@@ -48,7 +48,7 @@
         <div class="vs-divider"></div>
 
         <div class="hero-center">
-          <div class="compat-label">Compatibilite</div>
+          <div class="compat-label">Compatibilité</div>
           <div class="compat-score">{{ compatibilityPercent }}<span>%</span></div>
           <div class="compat-bar"><div class="compat-fill" :style="{ width: compatBarWidth }"></div></div>
           <div class="compat-desc">{{ compatibilityLabel }}</div>
@@ -83,12 +83,12 @@
         <div class="qs-card">
           <div class="qs-label">Seulement vous</div>
           <div class="qs-value">{{ onlySelfCountLabel }}</div>
-          <div class="qs-sub">anime a recommander</div>
+          <div class="qs-sub">anime à recommander</div>
         </div>
         <div class="qs-card">
           <div class="qs-label">Seulement l'autre</div>
           <div class="qs-value">{{ onlyFriendCountLabel }}</div>
-          <div class="qs-sub">anime a decouvrir</div>
+          <div class="qs-sub">anime à découvrir</div>
         </div>
       </div>
       <div v-if="compareError" class="placeholder-panel" style="margin-bottom:14px;">
@@ -103,7 +103,7 @@
         <button class="tab" :class="{ active: activeTab === 'diff' }" type="button" @click="activeTab = 'diff'">Ecart de note</button>
       </div>
 
-      <div v-if="isEntriesLoading" class="placeholder-panel">Chargement des donnees de comparaison...</div>
+      <div v-if="isEntriesLoading" class="placeholder-panel">Chargement des données de comparaison...</div>
 
       <div v-else-if="activeTab === 'shared'">
         <div class="section-title">Animes que vous avez vus tous les deux</div>
@@ -111,7 +111,7 @@
           <div class="legend-item"><div class="legend-dot legend-me"></div>Votre note</div>
           <div class="legend-item"><div class="legend-dot legend-them"></div>Sa note</div>
         </div>
-        <div v-if="sharedEntries.length === 0" class="placeholder-panel">Aucun anime en commun dans En cours/Termine.</div>
+        <div v-if="sharedEntries.length === 0" class="placeholder-panel">Aucun anime en commun dans En cours/Terminé.</div>
         <div v-else class="shared-grid">
           <div v-for="item in sharedEntries" :key="item.mediaId" class="shared-card">
             <img
@@ -159,7 +159,7 @@
       </div>
 
       <div v-else-if="activeTab === 'only'">
-        <div class="section-title">Animes vus seulement par vous - a recommander</div>
+        <div class="section-title">Animes vus seulement par vous - à recommander</div>
         <div v-if="onlySelfEntries.length === 0" class="placeholder-panel">Aucun anime exclusif.</div>
         <div v-else class="only-list">
           <div v-for="item in onlySelfEntries" :key="item.mediaId" class="only-item">
@@ -181,7 +181,7 @@
       </div>
 
       <div v-else-if="activeTab === 'discover'">
-        <div class="section-title">Animes vus seulement par l'autre - a decouvrir</div>
+        <div class="section-title">Animes vus seulement par l'autre - à découvrir</div>
         <div v-if="onlyFriendEntries.length === 0" class="placeholder-panel">Aucun anime exclusif.</div>
         <div v-else class="only-list">
           <div v-for="item in onlyFriendEntries" :key="item.mediaId" class="only-item">
@@ -292,7 +292,7 @@ const formatScore = (score: number) => {
   return score % 1 === 0 ? String(score) : score.toFixed(1)
 }
 
-const statusLabel = (status: 'CURRENT' | 'COMPLETED') => (status === 'CURRENT' ? 'En cours' : 'Termine')
+const statusLabel = (status: 'CURRENT' | 'COMPLETED') => (status === 'CURRENT' ? 'En cours' : 'Terminé')
 
 const selfMap = computed(() => {
   const map = new Map<number, CompareEntry>()
@@ -626,7 +626,7 @@ const fetchCompareEntries = async () => {
     friendEntries.value = mapEntries(friendRes)
   } catch (error) {
     console.error('[compareList] entries failed', error)
-    compareError.value = error instanceof Error ? error.message : 'La comparaison a echoue.'
+    compareError.value = error instanceof Error ? error.message : 'La comparaison a échoué.'
   } finally {
     isEntriesLoading.value = false
     hasEntriesLoaded.value = true

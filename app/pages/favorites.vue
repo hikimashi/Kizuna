@@ -34,7 +34,7 @@
       </div>
 
       <div v-else-if="activeItems.length === 0" class="favorites-empty">
-        Aucun favori trouve dans cet onglet.
+        Aucun favori trouvé dans cet onglet.
       </div>
 
       <div v-else class="favorites-grid">
@@ -77,7 +77,7 @@
 
       <div ref="sentinelRef" class="load-sentinel">
         <div v-if="loadingMore" class="spinner small"></div>
-        <span v-else-if="!activeHasNext && activeItems.length">Plus de resultats</span>
+        <span v-else-if="!activeHasNext && activeItems.length">Plus de résultats</span>
       </div>
     </div>
   </div>
@@ -205,10 +205,10 @@ const anilistUserId = computed(() => Number(authRecord.value.anilist_user_id ?? 
 const anilistUsername = computed(() => String(authRecord.value.anilist_username ?? ''))
 
 const profileTabs = [
-  { key: 'anime-list', label: 'Liste anime', to: '/animeList' },
+  { key: 'anime-list', label: "Liste d'animes", to: '/animeList' },
   { key: 'favorites', label: 'Favoris', to: '/favorites', active: true },
   { key: 'friends', label: 'Amis', to: '/friends' },
-  { key: 'shared-lists', label: 'Listes partagees', to: '/sharedLists' }
+  { key: 'shared-lists', label: 'Listes partagées', to: '/sharedLists' }
 ]
 
 const activeItems = computed(() => activeTab.value === 'anime' ? animeItems.value : characterItems.value)
@@ -256,7 +256,7 @@ const loadNextPage = async () => {
   if (loadingMore.value || initialLoading.value || !activeHasNext.value) return
   const hasToken = Boolean(token.value)
   if (!hasToken && !anilistUserId.value && !anilistUsername.value) {
-    errorMessage.value = 'Compte AniList non lie. Reconnectez-le dans les parametres.'
+    errorMessage.value = 'Compte AniList non lié. Reconnectez-le dans les paramètres.'
     return
   }
 

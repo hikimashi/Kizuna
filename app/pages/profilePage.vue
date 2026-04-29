@@ -1,7 +1,7 @@
 <template>
   <div class="profile-page">
     <section class="banner-wrap" :class="{ 'has-image': Boolean(bannerSrc) }">
-      <img v-if="bannerSrc" :src="bannerSrc" alt="Banniere AniList" class="banner-image" />
+      <img v-if="bannerSrc" :src="bannerSrc" alt="Bannière AniList" class="banner-image" />
       <div class="banner-content">
         <div class="banner-avatar">
           <img v-if="avatarSrc" :src="avatarSrc" alt="Avatar AniList" />
@@ -28,7 +28,7 @@
           </div>
 
           <div class="panel">
-            <span class="panel-title">Vue d'ensemble des genres</span>
+            <span class="panel-title">Genres</span>
             <div ref="genreTagsContainerRef" class="genre-tags">
               <template v-if="isLoading">
                 <span v-for="n in 5" :key="`genre-skeleton-${n}`" class="tag skeleton-pulse" />
@@ -74,7 +74,7 @@
           </div>
 
           <div class="panel" v-if="isLoading || hasFavoriteAnime">
-            <span class="panel-title">Animes favoris</span>
+            <span class="panel-title">Favoris</span>
             <div class="fav-grid">
               <div v-if="isLoading" v-for="n in 5" :key="`fav-anime-skeleton-${n}`" class="fav-card">
                 <div class="fav-placeholder skeleton-pulse">-</div>
@@ -142,7 +142,7 @@
                 <span class="stat-num" :class="{ 'skeleton-pulse skeleton-text': isLoading }">
                   <span v-if="!isLoading">{{ daysWatched }}</span>
                 </span>
-                <span class="stat-lbl">Jours regardes</span>
+                <span class="stat-lbl">Jours regardés</span>
               </div>
               <div class="stat">
                 <span class="stat-num" :class="{ 'skeleton-pulse skeleton-text': isLoading }">
@@ -168,7 +168,7 @@
 
           <div class="panel">
             <div class="activity-header">
-              <span class="activity-title">Activite</span>
+              <span class="activity-title">Activité</span>
             </div>
 
             <template v-if="isLoading || (activityLoading && activityItems.length === 0)">
@@ -243,7 +243,7 @@
                 Charger plus
               </button>
               <div v-else-if="!activityHasMore && activityItems.length === 0" class="activity-empty">
-                Aucune activite recente.
+                Aucune activité récente.
               </div>
             </template>
           </div>
@@ -338,7 +338,7 @@ function getGenreColor(genre: string): string {
 
 function timeAgo(timestamp: number): string {
   const seconds = Math.floor((Date.now() - timestamp * 1000) / 1000)
-  if (seconds < 60) return "A l'instant"
+  if (seconds < 60) return "À l'instant"
   const minutes = Math.floor(seconds / 60)
   if (minutes < 60) return `Il y a ${minutes} min`
   const hours = Math.floor(minutes / 60)
@@ -358,11 +358,11 @@ function getActivityPrefix(activity: any): string {
   const status = String(activity?.status ?? '').toLowerCase()
   const progress = activity?.progress
 
-  if (status === 'watched') return `A regarde l'episode ${progress ?? '?'} de `
-  if (status === 'completed') return 'A termine '
+  if (status === 'watched') return `A regardé l'épisode ${progress ?? '?'} de `
+  if (status === 'completed') return 'A terminé '
   if (status === 'rewatched') return 'A re-regarde '
   const raw = String(activity?.status ?? 'updated').replace(/_/g, ' ').toLowerCase()
-  const normalized = raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : 'Mis a jour'
+  const normalized = raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : 'Mis à jour'
   return `${normalized} `
 }
 

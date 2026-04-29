@@ -2,8 +2,8 @@
   <div class="container mx-auto p-4">
     <h1 class="text-2xl font-bold mb-4">Retour AniList</h1>
     <p v-if="!processed">Traitement de l'autorisation AniList...</p>
-    <p v-else-if="success">Compte AniList lie avec succes. Redirection...</p>
-    <p v-else>Erreur lors de la liaison du compte AniList. Veuillez reessayer.</p>
+    <p v-else-if="success">Compte AniList lié avec succès. Redirection...</p>
+    <p v-else>Erreur lors de la liaison du compte AniList. Veuillez réessayer.</p>
   </div>
 </template>
 

@@ -247,7 +247,7 @@ const sortOptions: FilterOption[] = [
   { value: 'POPULARITY_DESC', label: 'Popularite' },
   { value: 'SCORE_DESC', label: 'Note' },
   { value: 'TRENDING_DESC', label: 'Tendance' },
-  { value: 'START_DATE_DESC', label: 'Plus recents' },
+  { value: 'START_DATE_DESC', label: 'Plus récents' },
   { value: 'TITLE_ROMAJI', label: 'Titre A-Z' }
 ]
 
@@ -271,7 +271,7 @@ const seasonOptions: FilterOption[] = [
 const statusOptions: FilterOption[] = [
   { value: '', label: 'Tous les statuts' },
   { value: 'RELEASING', label: 'En diffusion' },
-  { value: 'FINISHED', label: 'Termine' },
+  { value: 'FINISHED', label: 'Terminé' },
   { value: 'NOT_YET_RELEASED', label: 'Pas encore sorti' },
   { value: 'CANCELLED', label: 'Annule' }
 ]

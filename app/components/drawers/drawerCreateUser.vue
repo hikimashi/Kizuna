@@ -16,10 +16,10 @@
              <div class="flex justify-center mb-4 sm:mb-6">
                  <img src="/img/user.webp" alt="Logo" class="h-24 sm:h-32 md:h-36 border border-primary rounded-full" />
              </div>
-             <h2 class="text-xl sm:text-2xl font-bold text-center text-primary mb-4 sm:mb-6">Creer un nouveau compte</h2>
+             <h2 class="text-xl sm:text-2xl font-bold text-center text-primary mb-4 sm:mb-6">Créer un nouveau compte</h2>
 
              <div class="items-center my-4 sm:my-6">
-                 <span class="flex flex-wrap justify-center text-sm sm:text-base text-center">Vous avez deja un compte ? &nbsp; <a @click="login()" class="text-blue-500 hover:underline cursor-pointer">Connexion</a></span>
+                 <span class="flex flex-wrap justify-center text-sm sm:text-base text-center">Vous avez déjà un compte ? &nbsp; <a @click="login()" class="text-blue-500 hover:underline cursor-pointer">Connexion</a></span>
              </div>
 
              <form @submit.prevent="createUser()">
@@ -50,10 +50,10 @@
                      </svg>
                      <input v-model="newUser.password" type="password" required placeholder="Mot de passe" minlength="8"
                          pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
-                         title="Doit contenir au moins 8 caracteres, avec un chiffre, une minuscule et une majuscule" />
+                         title="Doit contenir au moins 8 caractères, avec un chiffre, une minuscule et une majuscule" />
                  </label>
                  <p class="validator-hint hidden">
-                     Doit contenir au moins 8 caracteres, avec
+                     Doit contenir au moins 8 caractères, avec
                      <br />Au moins un chiffre <br />Au moins une lettre minuscule <br />Au moins une lettre majuscule
                  </p>
 
@@ -70,16 +70,16 @@
                      </svg>
                      <input v-model="newUser.passwordConfirm" type="password" required placeholder="Confirmer le mot de passe" minlength="8"
                          pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
-                         title="Doit contenir au moins 8 caracteres, avec un chiffre, une minuscule et une majuscule" />
+                         title="Doit contenir au moins 8 caractères, avec un chiffre, une minuscule et une majuscule" />
                  </label>
                  <p class="validator-hint hidden">
-                     Doit contenir au moins 8 caracteres, avec
+                     Doit contenir au moins 8 caractères, avec
                      <br />Au moins un chiffre <br />Au moins une lettre minuscule <br />Au moins une lettre majuscule
                  </p>
                  <p v-if="passwordMisMatch()" class="text-error">Les mots de passe ne correspondent pas.</p>
 
                  <button type="submit" class="w-full btn btn-primary mt-6">
-                     <span>Creer un compte</span>
+                     <span>Créer un compte</span>
                  </button>
              </form>
 
@@ -143,10 +143,10 @@ const createUser = async () => {
     await authStore.createAccount(newUser.value);
     toast.openToast({
       type: 'success',
-      message: 'Compte cree. Verifiez votre boite mail avant de vous connecter.'
+      message: 'Compte créé. Vérifiez votre boîte mail avant de vous connecter.'
     });
   } catch (e: any) {
-    toast.openToast({ type: 'error', message: e.message || 'La creation du compte a echoue.' });
+    toast.openToast({ type: 'error', message: e.message || 'La création du compte a échoué.' });
     return;
   }
   clearForm();
@@ -159,7 +159,7 @@ const doGoogleLogin = async () => {
     await authStore.loginWithGoogle();
     toast.openToast({ type: 'success', message: 'Bienvenue.' });
   } catch (e: any) {
-    toast.openToast({ type: 'error', message: e.message || 'La connexion Google a echoue.' });
+    toast.openToast({ type: 'error', message: e.message || 'La connexion Google a échoué.' });
     return;
   }
   clearForm();
@@ -173,7 +173,7 @@ const doGithubLogin = async () => {
     await authStore.loginWithGithub();
     toast.openToast({ type: 'success', message: 'Bienvenue.' });
   } catch (e: any) {
-    toast.openToast({ type: 'error', message: e.message || 'La connexion GitHub a echoue.' });
+    toast.openToast({ type: 'error', message: e.message || 'La connexion GitHub a échoué.' });
     return;
   }
   clearForm();

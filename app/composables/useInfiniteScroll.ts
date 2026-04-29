@@ -1,4 +1,4 @@
-import { ref, onMounted, onUnmounted, type Ref } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, type Ref } from 'vue'
 
 export interface UseInfiniteScrollOptions {
   /** Distance depuis le bas (en pixels) pour declencher le chargement */
@@ -82,6 +82,32 @@ export function useInfiniteScroll<T>(
   const sentinelRef = ref<HTMLElement | null>(null)
 
   let observer: IntersectionObserver | null = null
+  let checkViewportTimer: ReturnType<typeof setTimeout> | null = null
+
+  const sentinelIsVisible = () => {
+    if (!sentinelRef.value) return false
+
+    const rect = sentinelRef.value.getBoundingClientRect()
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight
+    const triggerOffset = Math.max(threshold, 0)
+
+    return rect.top <= viewportHeight + triggerOffset
+  }
+
+  const scheduleViewportCheck = () => {
+    if (checkViewportTimer) {
+      clearTimeout(checkViewportTimer)
+    }
+
+    checkViewportTimer = setTimeout(async () => {
+      checkViewportTimer = null
+
+      if (!hasMore.value || loading.value) return
+      if (!sentinelIsVisible()) return
+
+      await loadMore()
+    }, 0)
+  }
 
   const loadMore = async () => {
     if (loading.value || !hasMore.value) return
@@ -102,6 +128,8 @@ export function useInfiniteScroll<T>(
       hasMore.value = false
     } finally {
       loading.value = false
+      await nextTick()
+      scheduleViewportCheck()
     }
   }
 
@@ -113,6 +141,7 @@ export function useInfiniteScroll<T>(
     // Coupe l'ancien observer
     if (observer) {
       observer.disconnect()
+      observer = null
     }
     
     await loadMore()
@@ -133,6 +162,10 @@ export function useInfiniteScroll<T>(
 
   const setupObserver = () => {
     if (!sentinelRef.value) return
+
+    if (observer) {
+      observer.disconnect()
+    }
 
     observer = new IntersectionObserver(
       (entries) => {
@@ -165,6 +198,9 @@ export function useInfiniteScroll<T>(
   onUnmounted(() => {
     if (observer) {
       observer.disconnect()
+    }
+    if (checkViewportTimer) {
+      clearTimeout(checkViewportTimer)
     }
   })
 

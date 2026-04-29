@@ -28,6 +28,7 @@ export default defineNuxtConfig({
     },
     anilistClientSecret: process.env.ANILIST_CLIENT_SECRET,
     valkeyUrl: process.env.VALKEY_URL || process.env.REDIS_URL,
+    translationProvider: process.env.TRANSLATION_PROVIDER || 'google-gtx',
   },
   app: {
     head: {

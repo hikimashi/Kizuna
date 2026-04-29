@@ -244,7 +244,7 @@ type FilterOption = {
 const currentYear = new Date().getFullYear()
 
 const sortOptions: FilterOption[] = [
-  { value: 'POPULARITY_DESC', label: 'Popularite' },
+  { value: 'POPULARITY_DESC', label: 'Popularité' },
   { value: 'SCORE_DESC', label: 'Note' },
   { value: 'TRENDING_DESC', label: 'Tendance' },
   { value: 'START_DATE_DESC', label: 'Plus récents' },
@@ -273,7 +273,7 @@ const statusOptions: FilterOption[] = [
   { value: 'RELEASING', label: 'En diffusion' },
   { value: 'FINISHED', label: 'Terminé' },
   { value: 'NOT_YET_RELEASED', label: 'Pas encore sorti' },
-  { value: 'CANCELLED', label: 'Annule' }
+  { value: 'CANCELLED', label: 'Annulé' }
 ]
 
 const yearOptions = computed<FilterOption[]>(() => [

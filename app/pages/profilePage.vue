@@ -354,13 +354,25 @@ function getActivityTitle(activity: any): string {
   return activity?.media?.title?.english ?? activity?.media?.title?.romaji ?? 'Titre inconnu'
 }
 
+const ACTIVITY_STATUS_PREFIXES: Record<string, string> = {
+  'watched episode': "A regardé l'épisode",
+  'plans to watch': 'Prévoit de regarder',
+  completed: 'A terminé',
+  rewatched: 'A re-regardé',
+  'paused watching': 'A mis en pause',
+  dropped: 'A abandonné'
+}
+
 function getActivityPrefix(activity: any): string {
-  const status = String(activity?.status ?? '').toLowerCase()
+  const status = String(activity?.status ?? '').replace(/_/g, ' ').toLowerCase().trim()
   const progress = activity?.progress
+
+  if (status === 'watched episode') return `${ACTIVITY_STATUS_PREFIXES['watched episode']} ${progress ?? '?'} de `
+  if (ACTIVITY_STATUS_PREFIXES[status]) return `${ACTIVITY_STATUS_PREFIXES[status]} `
 
   if (status === 'watched') return `A regardé l'épisode ${progress ?? '?'} de `
   if (status === 'completed') return 'A terminé '
-  if (status === 'rewatched') return 'A re-regarde '
+  if (status === 'rewatched') return 'A re-regardé '
   const raw = String(activity?.status ?? 'updated').replace(/_/g, ' ').toLowerCase()
   const normalized = raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : 'Mis à jour'
   return `${normalized} `

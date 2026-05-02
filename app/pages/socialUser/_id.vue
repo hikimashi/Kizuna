@@ -891,7 +891,7 @@ const privacyChipClass = (privacy: SharedListSummary['privacy']) => ({
 
 const sharedListBannerSrc = (list: SharedListSummary) => String(list.bannerUrl || '').trim() || DEFAULT_SHARED_LIST_BANNER
 const sharedListImageSrc = (list: SharedListSummary) => String(list.imageUrl || '').trim() || DEFAULT_SHARED_LIST_IMAGE
-const targetSharedListRole = (list: SharedListSummary) => list.ownerId === targetPocketbaseUserId.value ? 'Proprietaire' : 'Membre'
+const targetSharedListRole = (list: SharedListSummary) => list.ownerId === targetPocketbaseUserId.value ? 'Propriétaire' : 'Membre'
 const sharedListDescription = (list: SharedListSummary) =>
   list.animeVisibilityLimited
     ? 'Les entrées anime sont masquées pour ce niveau de visibilité.'

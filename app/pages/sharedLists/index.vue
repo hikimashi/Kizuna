@@ -176,7 +176,7 @@
                   {{ privacyLabel(list.privacy) }}
                 </div>
                 <div class="role-chip" :class="list.isOwner ? 'owner' : 'member'">
-                  {{ list.isOwner ? 'Proprietaire' : 'Membre' }}
+                  {{ list.isOwner ? 'Propriétaire' : 'Membre' }}
                 </div>
               </div>
             </div>

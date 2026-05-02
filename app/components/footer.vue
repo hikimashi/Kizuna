@@ -64,12 +64,12 @@ const navigationLinks: FooterLink[] = [
   { label: 'Accueil', to: '/' },
   { label: 'Profil', to: '/profilePage', requiresAuth: true },
   { label: 'Social', to: '/social', requiresAuth: true },
-  { label: 'Amis', to: '/friends', requiresAuth: true },
   { label: 'Favoris', to: '/favorites', requiresAuth: true },
   { label: "Liste d'animes", to: '/animeList', requiresAuth: true },
   { label: 'Explorer', to: '/browse', requiresAuth: true },
+  { label: 'Amis', to: '/friends', requiresAuth: true },
+  { label: 'Manuel', to: '/manual' },
   { label: 'Listes partagées', to: '/sharedLists', requiresAuth: true },
-  { label: 'Paramètres', to: '/settings', requiresAuth: true }
 ]
 
 const handleFooterNavigation = async (link: FooterLink) => {

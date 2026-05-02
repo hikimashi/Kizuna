@@ -703,7 +703,7 @@ export const useSharedLists = () => {
   const assertSharedListOwner = async (listId: string) => {
     const access = await assertSharedListAccess(listId)
     if (!access.isOwner) {
-      throw new Error('Seul le proprietaire peut gerer cette liste partagée.')
+      throw new Error('Seul le propriétaire peut gerer cette liste partagée.')
     }
     return access
   }
@@ -934,11 +934,11 @@ export const useSharedLists = () => {
     const details = pocketbaseErrorDetails(error)
 
     if (ownerId === currentUserId.value && !membership) {
-      return new Error(`L'appartenance du proprietaire est absente sur cette liste partagée. ${details}`.trim())
+      return new Error(`L'appartenance du propriétaire est absente sur cette liste partagée. ${details}`.trim())
     }
 
     if (ownerId === currentUserId.value) {
-      return new Error(`PocketBase a refuse la creation de l'anime pour le proprietaire. ${details || 'Creation de fiche impossible.'}`.trim())
+      return new Error(`PocketBase a refuse la creation de l'anime pour le propriétaire. ${details || 'Creation de fiche impossible.'}`.trim())
     }
 
     const permission = getPermissionName(membership)

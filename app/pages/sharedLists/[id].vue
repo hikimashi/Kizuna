@@ -415,7 +415,7 @@
               </div>
 
               <div class="member-badge" :class="{ owner: member.role === 'owner' }">
-                {{ member.role === 'owner' ? 'Proprietaire' : 'Membre' }}
+                {{ member.role === 'owner' ? 'Propriétaire' : 'Membre' }}
               </div>
 
               <button
@@ -550,7 +550,7 @@
                   </div>
                   <div class="drawer-member-copy">
                     <strong>{{ member.name }}</strong>
-                    <span>{{ member.role === 'owner' ? 'Proprietaire' : 'Membre' }}</span>
+                    <span>{{ member.role === 'owner' ? 'Propriétaire' : 'Membre' }}</span>
                   </div>
                   <select
                     v-if="member.role !== 'owner' && member.membershipId && !member.isCurrentUser"
@@ -609,7 +609,7 @@
                   <strong>{{ privacyLabel(detail.privacy) }}</strong>
                 </div>
                 <div class="info-row">
-                  <span>Proprietaire</span>
+                  <span>Propriétaire</span>
                   <strong>{{ detail.ownerName }}</strong>
                 </div>
                 <div class="info-row">
@@ -946,7 +946,7 @@ const selectedAnimeEntry = computed(() =>
 )
 const detailRoleLabel = computed(() => {
   if (!detail.value) return ''
-  if (detail.value.isOwner) return 'Proprietaire'
+  if (detail.value.isOwner) return 'Propriétaire'
   if (detail.value.isMember) return 'Membre'
   return 'Visiteur'
 })

@@ -10,7 +10,7 @@
           type="button"
           @click="activeTab = 'anime'"
         >
-          Anime
+          Animes
           <span class="favorites-count">{{ animeItems.length }}</span>
         </button>
         <button

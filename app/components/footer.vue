@@ -6,7 +6,7 @@
           <img src="/img/logo.webp" alt="Kizuna" class="brand-logo" />
           <div class="brand-text">
             <p class="brand-name">Kizuna</p>
-            <p class="brand-subtitle">Shared anime lists with AniList sync</p>
+            <p class="brand-subtitle">Listes d'animes partagées avec synchronisation AniList</p>
           </div>
         </div>
 
@@ -29,7 +29,7 @@
           <div class="footer-group">
             <h3>Contact</h3>
             <a href="mailto:support.kizuna@gmail.com" class="footer-link">support.kizuna@gmail.com</a>
-            <span class="footer-note">Discord: coming soon</span>
+            <span class="footer-note">Discord : bientôt</span>
           </div>
         </div>
       </div>
@@ -38,7 +38,7 @@
         <span class="copyright">© {{ currentYear }} Kizuna.</span>
         <a href="https://docs.anilist.co/" target="_blank" rel="noopener noreferrer" class="api-pill">
           <img src="/img/anilist.svg" alt="AniList" class="anilist-logo" />
-          <span class="api-text">Powered by AniList API</span>
+          <span class="api-text">Propulse par l'API AniList</span>
         </a>
       </div>
     </div>
@@ -61,15 +61,15 @@ const pocketbaseStore = usePocketbaseStore()
 const toastStore = useToastStore()
 const authRecord = computed(() => unref(pocketbaseStore.authRecord) as { id?: string } | null)
 const navigationLinks: FooterLink[] = [
-  { label: 'Home', to: '/' },
-  { label: 'Profile', to: '/profilePage', requiresAuth: true },
+  { label: 'Accueil', to: '/' },
+  { label: 'Profil', to: '/profilePage', requiresAuth: true },
   { label: 'Social', to: '/social', requiresAuth: true },
-  { label: 'Friends', to: '/friends', requiresAuth: true },
-  { label: 'Favorites', to: '/favorites', requiresAuth: true },
-  { label: 'Anime List', to: '/animeList', requiresAuth: true },
-  { label: 'Browse', to: '/browse', requiresAuth: true },
-  { label: 'Shared Lists', to: '/sharedLists', requiresAuth: true },
-  { label: 'Settings', to: '/settings', requiresAuth: true }
+  { label: 'Favoris', to: '/favorites', requiresAuth: true },
+  { label: "Liste d'animes", to: '/animeList', requiresAuth: true },
+  { label: 'Explorer', to: '/browse', requiresAuth: true },
+  { label: 'Amis', to: '/friends', requiresAuth: true },
+  { label: 'Manuel', to: '/manual' },
+  { label: 'Listes partagées', to: '/sharedLists', requiresAuth: true },
 ]
 
 const handleFooterNavigation = async (link: FooterLink) => {
@@ -89,7 +89,7 @@ const handleProtectedNavigation = async (to: string) => {
 
   toastStore.openToast({
     type: 'warning',
-    message: 'Tu dois te connecter pour acceder a cette page.'
+    message: 'Tu dois te connecter pour accéder à cette page.'
   })
 }
 </script>

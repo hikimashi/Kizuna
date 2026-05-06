@@ -1,5 +1,6 @@
 <template>
   <div class="w-full min-h-screen flex flex-col">
+    <NuxtLoadingIndicator color="#3db4f2" :height="3" :throttle="0" />
     <ClientOnly>
       <Header />
     </ClientOnly>
@@ -23,5 +24,4 @@ import DrawersContainer from './components/drawers/drawersContainer.vue';
 import Toast from './components/toast/toast.vue';
 import Alert from './components/alerts/alert.vue';
 import ScrollToTop from './components/scrollToTop.vue';
-
 </script>

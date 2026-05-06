@@ -4,13 +4,13 @@
 
     <div class="page">
       <div class="top-bar">
-        <div class="page-title">Friends</div>
+        <div class="page-title">Amis</div>
         <label class="search-box">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.35-4.35" />
           </svg>
-          <input v-model.trim="searchText" type="text" placeholder="Search mutuals..." />
+          <input v-model.trim="searchText" type="text" placeholder="Rechercher des suivis mutuels..." />
         </label>
       </div>
 
@@ -30,14 +30,14 @@
           </div>
           <div class="card-body">
             <div class="card-name">{{ user.username }}</div>
-            <div class="card-meta">Joined {{ user.joined }}</div>
+            <div class="card-meta">Inscrit {{ user.joined }}</div>
             <div class="card-stats">
               <div class="card-stat"><span class="card-stat-num">{{ user.animeCount }}</span><span class="card-stat-lbl">Anime</span></div>
-              <div class="card-stat"><span class="card-stat-num">{{ user.score.toFixed(1) }}</span><span class="card-stat-lbl">Score</span></div>
+              <div class="card-stat"><span class="card-stat-num">{{ user.score.toFixed(1) }}</span><span class="card-stat-lbl">Note</span></div>
             </div>
             <div class="card-actions">
               <button class="btn-view-profile" type="button" @click="openFriendProfile(user.id)">
-                View profile
+                Voir le profil
               </button>
               <button
                 class="btn-follow following"
@@ -45,7 +45,7 @@
                 :disabled="isFollowBusy(user.id)"
                 @click="toggleFollow(user.id)"
               >
-                {{ isFollowBusy(user.id) ? 'Updating...' : 'Following' }}
+                {{ isFollowBusy(user.id) ? 'Mise à jour...' : 'Suivi' }}
               </button>
             </div>
           </div>
@@ -56,7 +56,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="38" height="38">
           <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
-        <div class="empty-title">{{ isLoading ? 'Loading' : 'No mutual follows found' }}</div>
+        <div class="empty-title">{{ isLoading ? 'Chargement' : 'Aucun suivi mutuel trouvé' }}</div>
         <p class="empty-sub">{{ noResultText }}</p>
       </div>
     </div>
@@ -75,10 +75,10 @@ const { isLoading, loadError, friendUsers, followPendingIds } = storeToRefs(soci
 const searchText = ref('')
 
 const profileTabs = [
-  { key: 'anime-list', label: 'Anime List', to: '/animeList' },
-  { key: 'favorites', label: 'Favorites', to: '/favorites' },
-  { key: 'friends', label: 'Friends', to: '/friends', active: true },
-  { key: 'shared-lists', label: 'Shared Lists', to: '/sharedLists' }
+  { key: 'anime-list', label: "Liste d'animes", to: '/animeList' },
+  { key: 'favorites', label: 'Favoris', to: '/favorites' },
+  { key: 'friends', label: 'Amis', to: '/friends', active: true },
+  { key: 'shared-lists', label: 'Listes partagées', to: '/sharedLists' }
 ]
 
 const filteredFriends = computed(() => {
@@ -99,9 +99,9 @@ const toggleFollow = async (id: number) => {
 }
 
 const noResultText = computed(() => {
-  if (isLoading.value) return 'Loading AniList friends...'
+  if (isLoading.value) return 'Chargement des amis AniList...'
   if (loadError.value) return loadError.value
-  return 'Mutual follows from your AniList account appear here.'
+  return 'Les suivis mutuels de votre compte AniList apparaissent ici.'
 })
 
 const openFriendProfile = (friendId: number) => {

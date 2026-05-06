@@ -9,11 +9,11 @@
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.35-4.35" />
           </svg>
-          <input v-model.trim="searchTerm" type="text" placeholder="Filter">
+          <input v-model.trim="searchTerm" type="text" placeholder="Filtrer">
         </label>
 
         <div>
-          <div class="sidebar-section">Lists</div>
+          <div class="sidebar-section">Listes</div>
           <div class="list-links">
             <button
               v-for="item in listFilterItems"
@@ -30,26 +30,26 @@
         </div>
 
         <div>
-          <div class="sidebar-section">Sort</div>
+          <div class="sidebar-section">Tri</div>
           <select v-model="sortBy" class="sort-select">
-            <option value="title">Title</option>
-            <option value="score">Score</option>
-            <option value="progress">Progress</option>
-            <option value="updatedAt">Last updated</option>
-            <option value="startDate">Start date</option>
+            <option value="title">Titre</option>
+            <option value="score">Note</option>
+            <option value="progress">Progression</option>
+            <option value="updatedAt">Dernière mise à jour</option>
+            <option value="startDate">Date de début</option>
           </select>
         </div>
       </aside>
 
       <section class="main">
         <div class="view-bar">
-          <button class="view-btn" :class="{ active: viewMode === 'grid' }" type="button" title="Grid" @click="viewMode = 'grid'">
+          <button class="view-btn" :class="{ active: viewMode === 'grid' }" type="button" title="Grille" @click="viewMode = 'grid'">
             <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 0h7v7h-7z" /></svg>
           </button>
-          <button class="view-btn" :class="{ active: viewMode === 'list' }" type="button" title="List" @click="viewMode = 'list'">
+          <button class="view-btn" :class="{ active: viewMode === 'list' }" type="button" title="Liste" @click="viewMode = 'list'">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M9 6h13M9 12h13M9 18h13M4 6h.01M4 12h.01M4 18h.01" /></svg>
           </button>
-          <button class="view-btn" :class="{ active: viewMode === 'compact' }" type="button" title="Compact" @click="viewMode = 'compact'">
+          <button class="view-btn" :class="{ active: viewMode === 'compact' }" type="button" title="Compacte" @click="viewMode = 'compact'">
             <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M3 5h18v2H3zm0 6h18v2H3zm0 6h18v2H3z" /></svg>
           </button>
         </div>
@@ -70,17 +70,17 @@
               </div>
             </div>
             <div class="editor-panel-copy">
-              <div class="editor-panel-label">Edit AniList entry</div>
+              <div class="editor-panel-label">Modifier l'entrée AniList</div>
               <div class="editor-panel-title">{{ selectedEntryTitle }}</div>
               <div class="editor-panel-subtitle">
-                Progress {{ editProgress || '0' }} / {{ selectedEntryEpisodes ?? '?' }}
+                Progression {{ editProgress || '0' }} / {{ selectedEntryEpisodes ?? '?' }}
               </div>
             </div>
           </div>
 
           <div class="editor-panel-fields">
             <label class="editor-field">
-              <span>Status</span>
+              <span>Statut</span>
               <select v-model="editStatus" class="editor-input">
                 <option v-for="status in STATUS_ORDER" :key="status" :value="status">
                   {{ STATUS_LABELS[status] }}
@@ -89,7 +89,7 @@
             </label>
 
             <label class="editor-field">
-              <span>Progress</span>
+              <span>Progression</span>
               <input
                 v-model="editProgress"
                 class="editor-input"
@@ -101,7 +101,7 @@
             </label>
 
             <label class="editor-field">
-              <span>Score</span>
+              <span>Note</span>
               <input
                 v-model="editScore"
                 class="editor-input"
@@ -109,7 +109,7 @@
                 min="0"
                 max="100"
                 step="0.1"
-                placeholder="No score"
+                placeholder="Sans note"
                 inputmode="decimal"
               >
             </label>
@@ -117,20 +117,20 @@
 
           <div class="editor-panel-actions">
             <button class="editor-btn editor-btn-muted" type="button" @click="closeEntryEditor">
-              Cancel
+              Annuler
             </button>
             <button class="editor-btn editor-btn-danger" type="button" :disabled="isDeletingEntry" @click="deleteSelectedEntry">
-              {{ isDeletingEntry ? 'Deleting...' : 'Delete' }}
+              {{ isDeletingEntry ? 'Suppression...' : 'Supprimer' }}
             </button>
             <button class="editor-btn editor-btn-primary" type="button" :disabled="isSavingEntry" @click="saveSelectedEntry">
-              {{ isSavingEntry ? 'Saving...' : 'Save changes' }}
+              {{ isSavingEntry ? 'Enregistrement...' : 'Enregistrer les modifications' }}
             </button>
           </div>
         </section>
 
         <div v-if="isLoading" class="loading">
           <div class="spinner"></div>
-          Loading list...
+          Chargement de la liste...
         </div>
 
         <div v-else-if="errorMessage" class="error-state">
@@ -138,7 +138,7 @@
         </div>
 
         <div v-else-if="visibleSections.length === 0" class="empty-state">
-          No anime found for this filter.
+          Aucun anime trouvé pour ce filtre.
         </div>
 
         <div v-else class="content" :class="`view-${viewMode}`">
@@ -227,11 +227,11 @@ type MediaListEntry = {
 }
 
 const STATUS_LABELS: Record<ListStatusKey, string> = {
-  CURRENT: 'Watching',
-  COMPLETED: 'Completed',
-  PAUSED: 'Paused',
-  DROPPED: 'Dropped',
-  PLANNING: 'Planned'
+  CURRENT: 'En cours',
+  COMPLETED: 'Terminé',
+  PAUSED: 'En pause',
+  DROPPED: 'Abandonné',
+  PLANNING: 'Prévu'
 }
 
 const STATUS_ORDER: ListStatusKey[] = ['CURRENT', 'COMPLETED', 'PAUSED', 'DROPPED', 'PLANNING']
@@ -270,14 +270,14 @@ const authRecord = computed(() => (unref(pocketbaseStore.authRecord) ?? {}) as R
 const token = computed(() => String(authRecord.value.anilist_token ?? ''))
 const username = computed(() => String(authRecord.value.anilist_username ?? ''))
 const profileTabs = [
-  { key: 'anime-list', label: 'Anime List', to: '/animeList', active: true },
-  { key: 'favorites', label: 'Favorites', to: '/favorites' },
-  { key: 'friends', label: 'Friends', to: '/friends' },
-  { key: 'shared-lists', label: 'Shared Lists', to: '/sharedLists' }
+  { key: 'anime-list', label: 'Liste d\'anime', to: '/animeList', active: true },
+  { key: 'favorites', label: 'Favoris', to: '/favorites' },
+  { key: 'friends', label: 'Amis', to: '/friends' },
+  { key: 'shared-lists', label: 'Listes partagées', to: '/sharedLists' }
 ]
 
 const displayTitle = (entry: MediaListEntry) =>
-  entry.media.title.romaji || entry.media.title.english || entry.media.title.native || 'Unknown title'
+  entry.media.title.romaji || entry.media.title.english || entry.media.title.native || 'Titre inconnu'
 
 const currentCoverVariant = computed<AnilistCoverVariant>(() =>
   viewMode.value === 'grid' ? 'card' : 'thumb'
@@ -312,7 +312,7 @@ const statusDotClass = (status: ListStatusKey) => {
 const listFilterItems = computed(() => {
   const allCount = STATUS_ORDER.reduce((sum, key) => sum + rawSections.value[key].length, 0)
   return [
-    { key: 'ALL' as FilterKey, label: 'All', count: allCount },
+    { key: 'ALL' as FilterKey, label: 'Toutes', count: allCount },
     ...STATUS_ORDER.map((key) => ({
       key: key as FilterKey,
       label: STATUS_LABELS[key],
@@ -394,10 +394,10 @@ const saveSelectedEntry = async () => {
       score: editScore.value === '' ? null : Number(editScore.value)
     })
     await fetchAnimeList()
-    toastStore.openToast({ type: 'success', message: 'AniList entry updated.' })
+    toastStore.openToast({ type: 'success', message: "L'entrée AniList a été mise à jour." })
     closeEntryEditor()
   } catch (error: any) {
-    toastStore.openToast({ type: 'error', message: error?.message || 'Unable to update AniList entry.' })
+    toastStore.openToast({ type: 'error', message: error?.message || "Impossible de mettre à jour l'entrée AniList." })
   } finally {
     isSavingEntry.value = false
   }
@@ -408,7 +408,7 @@ const deleteSelectedEntry = async () => {
 
   const confirmed = await alertStore.openAlert({
     type: 'warning',
-    message: `Delete "${selectedEntryTitle.value}" from your AniList list?`
+    message: `Supprimer "${selectedEntryTitle.value}" de votre liste AniList ?`
   })
   if (!confirmed) return
 
@@ -416,10 +416,10 @@ const deleteSelectedEntry = async () => {
     isDeletingEntry.value = true
     await anilistSync.deleteEntry(selectedEntryId.value)
     await fetchAnimeList()
-    toastStore.openToast({ type: 'success', message: 'AniList entry deleted.' })
+    toastStore.openToast({ type: 'success', message: "L'entrée AniList a été supprimée." })
     closeEntryEditor()
   } catch (error: any) {
-    toastStore.openToast({ type: 'error', message: error?.message || 'Unable to delete AniList entry.' })
+    toastStore.openToast({ type: 'error', message: error?.message || "Impossible de supprimer l'entrée AniList." })
   } finally {
     isDeletingEntry.value = false
   }
@@ -427,7 +427,7 @@ const deleteSelectedEntry = async () => {
 
 const fetchAnimeList = async () => {
   if (!token.value || !username.value) {
-    errorMessage.value = 'AniList account not linked. Please reconnect in Settings.'
+    errorMessage.value = 'Compte AniList non lié. Reconnectez-le dans les paramètres.'
     isLoading.value = false
     return
   }
@@ -483,7 +483,7 @@ const fetchAnimeList = async () => {
     )
 
     if (response?.errors?.length) {
-      throw new Error(response.errors[0]?.message || 'Unable to load list')
+      throw new Error(response.errors[0]?.message || 'Impossible de charger la liste.')
     }
 
     const nextSections: Record<ListStatusKey, MediaListEntry[]> = {
@@ -504,7 +504,7 @@ const fetchAnimeList = async () => {
 
     rawSections.value = nextSections
   } catch (error: any) {
-    errorMessage.value = error?.message || 'Unable to load anime list.'
+    errorMessage.value = error?.message || "Impossible de charger la liste d'animes."
   } finally {
     isLoading.value = false
   }

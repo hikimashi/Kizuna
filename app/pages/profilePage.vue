@@ -1,10 +1,10 @@
 <template>
   <div class="profile-page">
     <section class="banner-wrap" :class="{ 'has-image': Boolean(bannerSrc) }">
-      <img v-if="bannerSrc" :src="bannerSrc" alt="AniList banner" class="banner-image" />
+      <img v-if="bannerSrc" :src="bannerSrc" alt="Bannière AniList" class="banner-image" />
       <div class="banner-content">
         <div class="banner-avatar">
-          <img v-if="avatarSrc" :src="avatarSrc" alt="AniList avatar" />
+          <img v-if="avatarSrc" :src="avatarSrc" alt="Avatar AniList" />
           <svg v-else viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <circle cx="12" cy="8.5" r="4" />
             <path stroke-linecap="round" d="M4 20.5c0-4 3.6-7 8-7s8 3 8 7" />
@@ -12,7 +12,7 @@
         </div>
         <div class="banner-meta">
           <div class="banner-username">{{ username }}</div>
-          <div class="banner-joined">Joined {{ joinedDisplay }}</div>
+          <div class="banner-joined">Inscrit {{ joinedDisplay }}</div>
         </div>
       </div>
     </section>
@@ -28,7 +28,7 @@
           </div>
 
           <div class="panel">
-            <span class="panel-title">Genre Overview</span>
+            <span class="panel-title">Genres</span>
             <div ref="genreTagsContainerRef" class="genre-tags">
               <template v-if="isLoading">
                 <span v-for="n in 5" :key="`genre-skeleton-${n}`" class="tag skeleton-pulse" />
@@ -74,7 +74,7 @@
           </div>
 
           <div class="panel" v-if="isLoading || hasFavoriteAnime">
-            <span class="panel-title">Favorite Anime</span>
+            <span class="panel-title">Favoris</span>
             <div class="fav-grid">
               <div v-if="isLoading" v-for="n in 5" :key="`fav-anime-skeleton-${n}`" class="fav-card">
                 <div class="fav-placeholder skeleton-pulse">-</div>
@@ -103,14 +103,14 @@
                 />
                 <div v-if="navigatingFavoriteAnimeId === anime?.id" class="fav-card-loader">
                   <div class="fav-card-loader-spinner" />
-                  <span>Opening...</span>
+                  <span>Ouverture...</span>
                 </div>
               </a>
             </div>
           </div>
 
           <div class="panel" v-if="isLoading || hasFavoriteCharacters">
-            <span class="panel-title">Favorite Characters</span>
+            <span class="panel-title">Personnages favoris</span>
             <div class="fav-grid">
               <div v-if="isLoading" v-for="n in 3" :key="`fav-char-skeleton-${n}`" class="fav-card">
                 <div class="fav-placeholder skeleton-pulse">-</div>
@@ -136,19 +136,19 @@
                 <span class="stat-num" :class="{ 'skeleton-pulse skeleton-text': isLoading }">
                   <span v-if="!isLoading">{{ totalAnimes }}</span>
                 </span>
-                <span class="stat-lbl">Total Animes</span>
+                <span class="stat-lbl">Total animes</span>
               </div>
               <div class="stat">
                 <span class="stat-num" :class="{ 'skeleton-pulse skeleton-text': isLoading }">
                   <span v-if="!isLoading">{{ daysWatched }}</span>
                 </span>
-                <span class="stat-lbl">Days Watched</span>
+                <span class="stat-lbl">Jours regardés</span>
               </div>
               <div class="stat">
                 <span class="stat-num" :class="{ 'skeleton-pulse skeleton-text': isLoading }">
                   <span v-if="!isLoading">{{ meanScore }}</span>
                 </span>
-                <span class="stat-lbl">Mean Score</span>
+                <span class="stat-lbl">Note moyenne</span>
               </div>
             </div>
             <div class="progress-markers">
@@ -168,7 +168,7 @@
 
           <div class="panel">
             <div class="activity-header">
-              <span class="activity-title">Activity</span>
+              <span class="activity-title">Activité</span>
             </div>
 
             <template v-if="isLoading || (activityLoading && activityItems.length === 0)">
@@ -200,7 +200,7 @@
                     v-if="activityCoverSrc(activity)"
                     :src="activityCoverSrc(activity)"
                     :srcset="activityCoverSrcSet(activity)"
-                    alt="Cover"
+                    alt="Couverture"
                     loading="lazy"
                     decoding="async"
                   />
@@ -231,7 +231,7 @@
                 <span class="a-date">{{ timeAgo(activity.createdAt) }}</span>
               </article>
               <div v-if="activityLoading && activityItems.length > 0" class="activity-loading-more">
-                Loading more...
+                Chargement...
               </div>
               <button
                 v-else-if="activityHasMore && activityItems.length > 0"
@@ -240,10 +240,10 @@
                 type="button"
                 @click="loadMoreActivity"
               >
-                Load more
+                Charger plus
               </button>
               <div v-else-if="!activityHasMore && activityItems.length === 0" class="activity-empty">
-                No recent activity.
+                Aucune activité récente.
               </div>
             </template>
           </div>
@@ -298,7 +298,7 @@ const loadMoreActivity = async () => {
 
     activityPage.value += 1
   } catch (error) {
-    console.error('Failed to load activity page:', error)
+    console.error("Echec du chargement de la page d'activite :", error)
     activityHasMore.value = false
   } finally {
     activityLoading.value = false
@@ -338,36 +338,48 @@ function getGenreColor(genre: string): string {
 
 function timeAgo(timestamp: number): string {
   const seconds = Math.floor((Date.now() - timestamp * 1000) / 1000)
-  if (seconds < 60) return 'just now'
+  if (seconds < 60) return "À l'instant"
   const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
+  if (minutes < 60) return `Il y a ${minutes} min`
   const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
+  if (hours < 24) return `Il y a ${hours} h`
   const days = Math.floor(hours / 24)
-  if (days < 30) return `${days} day${days > 1 ? 's' : ''} ago`
+  if (days < 30) return `Il y a ${days} jour${days > 1 ? 's' : ''}`
   const months = Math.floor(days / 30)
-  if (months < 12) return `${months} month${months > 1 ? 's' : ''} ago`
-  return `${Math.floor(months / 12)} year${Math.floor(months / 12) > 1 ? 's' : ''} ago`
+  if (months < 12) return `Il y a ${months} mois`
+  return `Il y a ${Math.floor(months / 12)} an${Math.floor(months / 12) > 1 ? 's' : ''}`
 }
 
 function getActivityTitle(activity: any): string {
-  return activity?.media?.title?.english ?? activity?.media?.title?.romaji ?? 'Unknown Title'
+  return activity?.media?.title?.english ?? activity?.media?.title?.romaji ?? 'Titre inconnu'
+}
+
+const ACTIVITY_STATUS_PREFIXES: Record<string, string> = {
+  'watched episode': "A regardé l'épisode",
+  'plans to watch': 'Prévoit de regarder',
+  completed: 'A terminé',
+  rewatched: 'A re-regardé',
+  'paused watching': 'A mis en pause',
+  dropped: 'A abandonné'
 }
 
 function getActivityPrefix(activity: any): string {
-  const status = String(activity?.status ?? '').toLowerCase()
+  const status = String(activity?.status ?? '').replace(/_/g, ' ').toLowerCase().trim()
   const progress = activity?.progress
 
-  if (status === 'watched') return `Watched episode ${progress ?? '?'} of `
-  if (status === 'completed') return 'Completed '
-  if (status === 'rewatched') return 'Rewatched '
+  if (status === 'watched episode') return `${ACTIVITY_STATUS_PREFIXES['watched episode']} ${progress ?? '?'} de `
+  if (ACTIVITY_STATUS_PREFIXES[status]) return `${ACTIVITY_STATUS_PREFIXES[status]} `
+
+  if (status === 'watched') return `A regardé l'épisode ${progress ?? '?'} de `
+  if (status === 'completed') return 'A terminé '
+  if (status === 'rewatched') return 'A re-regardé '
   const raw = String(activity?.status ?? 'updated').replace(/_/g, ' ').toLowerCase()
-  const normalized = raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : 'Updated'
+  const normalized = raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : 'Mis à jour'
   return `${normalized} `
 }
 
 function getFavoriteAnimeTitle(anime: any): string {
-  return anime?.title?.english ?? anime?.title?.romaji ?? 'Unknown Anime'
+  return anime?.title?.english ?? anime?.title?.romaji ?? 'Anime inconnu'
 }
 
 async function openAnimePage(animeId?: number | null) {
@@ -445,7 +457,7 @@ function favoriteAnimeCoverSrcSet(anime: any): string | undefined {
 }
 
 function getFavoriteCharacterName(character: any): string {
-  return character?.name?.full ?? character?.name?.userPreferred ?? 'Unknown Character'
+  return character?.name?.full ?? character?.name?.userPreferred ?? 'Personnage inconnu'
 }
 
 function activityCoverSrc(activity: any): string {
@@ -460,7 +472,7 @@ const authRecord = computed<Record<string, any>>(() => unref(pocketbaseStore.aut
 const authUserId = computed(() => Number(authRecord.value.anilist_user_id ?? 0))
 const authUsername = computed(() => String(authRecord.value.anilist_username ?? ''))
 const authUserKey = computed(() => `${authUserId.value}:${authUsername.value}`)
-const username = computed(() => authRecord.value.anilist_username ?? 'Username')
+const username = computed(() => authRecord.value.anilist_username ?? "Nom d'utilisateur")
 const anilistIdDisplay = computed(() => authRecord.value.anilist_user_id ?? '-')
 const avatarSrc = computed(() => authRecord.value.anilist_avatar_url_large || authRecord.value.anilist_avatar_url_medium || '')
 const bannerSrc = computed(() => authRecord.value.anilist_banner || '')
@@ -469,7 +481,7 @@ const joinedDisplay = computed(() => {
   if (!created) return '-'
   const date = new Date(created)
   if (Number.isNaN(date.getTime())) return '-'
-  return new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(date)
+  return new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(date)
 })
 
 const topGenres = computed(() => genres.value.slice(0, 5))

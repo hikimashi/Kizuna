@@ -10,7 +10,7 @@
           type="button"
           @click="activeTab = 'anime'"
         >
-          Anime
+          Animes
           <span class="favorites-count">{{ animeItems.length }}</span>
         </button>
         <button
@@ -19,14 +19,14 @@
           type="button"
           @click="activeTab = 'characters'"
         >
-          Characters
+          Personnages
           <span class="favorites-count">{{ characterItems.length }}</span>
         </button>
       </div>
 
       <div v-if="initialLoading" class="favorites-empty">
         <div class="spinner"></div>
-        Loading favorites...
+        Chargement des favoris...
       </div>
 
       <div v-else-if="errorMessage" class="favorites-empty error">
@@ -34,7 +34,7 @@
       </div>
 
       <div v-else-if="activeItems.length === 0" class="favorites-empty">
-        No favorites found for this tab.
+        Aucun favori trouvé dans cet onglet.
       </div>
 
       <div v-else class="favorites-grid">
@@ -64,7 +64,7 @@
               </div>
               <div v-if="activeTab === 'anime' && navigatingAnimeId === item.id" class="favorite-loader">
                 <div class="spinner"></div>
-                <span>Opening...</span>
+                <span>Ouverture...</span>
               </div>
             </div>
             <div class="favorite-meta">
@@ -77,7 +77,7 @@
 
       <div ref="sentinelRef" class="load-sentinel">
         <div v-if="loadingMore" class="spinner small"></div>
-        <span v-else-if="!activeHasNext && activeItems.length">No more results</span>
+        <span v-else-if="!activeHasNext && activeItems.length">Plus de résultats</span>
       </div>
     </div>
   </div>
@@ -205,10 +205,10 @@ const anilistUserId = computed(() => Number(authRecord.value.anilist_user_id ?? 
 const anilistUsername = computed(() => String(authRecord.value.anilist_username ?? ''))
 
 const profileTabs = [
-  { key: 'anime-list', label: 'Anime List', to: '/animeList' },
-  { key: 'favorites', label: 'Favorites', to: '/favorites', active: true },
-  { key: 'friends', label: 'Friends', to: '/friends' },
-  { key: 'shared-lists', label: 'Shared Lists', to: '/sharedLists' }
+  { key: 'anime-list', label: "Liste d'animes", to: '/animeList' },
+  { key: 'favorites', label: 'Favoris', to: '/favorites', active: true },
+  { key: 'friends', label: 'Amis', to: '/friends' },
+  { key: 'shared-lists', label: 'Listes partagées', to: '/sharedLists' }
 ]
 
 const activeItems = computed(() => activeTab.value === 'anime' ? animeItems.value : characterItems.value)
@@ -223,10 +223,10 @@ const favoriteHref = (item: FavoriteCard) => (
 )
 
 const normalizeAnime = (node: any): FavoriteCard => {
-  const title = node?.title?.romaji || node?.title?.english || node?.title?.native || 'Unknown title'
+  const title = node?.title?.romaji || node?.title?.english || node?.title?.native || 'Titre inconnu'
   const format = node?.format ? String(node.format).replaceAll('_', ' ') : 'ANIME'
   const year = node?.seasonYear ? String(node.seasonYear) : ''
-  const score = node?.meanScore ? `${Number(node.meanScore)}%` : 'No score'
+  const score = node?.meanScore ? `${Number(node.meanScore)}%` : 'Sans note'
   const subtitle = [format, year, score].filter(Boolean).join(' - ')
 
   return {
@@ -240,13 +240,13 @@ const normalizeAnime = (node: any): FavoriteCard => {
 }
 
 const normalizeCharacter = (node: any): FavoriteCard => {
-  const title = node?.name?.userPreferred || node?.name?.full || node?.name?.native || 'Unknown character'
+  const title = node?.name?.userPreferred || node?.name?.full || node?.name?.native || 'Personnage inconnu'
   const favCount = Number(node?.favourites ?? 0)
 
   return {
     id: Number(node?.id ?? 0),
     title,
-    subtitle: favCount ? `${favCount.toLocaleString('en-US')} favorites` : 'Character',
+    subtitle: favCount ? `${favCount.toLocaleString('fr-FR')} favoris` : 'Personnage',
     image: String(node?.image?.large || node?.image?.medium || ''),
     siteUrl: String(node?.siteUrl || '')
   }
@@ -256,7 +256,7 @@ const loadNextPage = async () => {
   if (loadingMore.value || initialLoading.value || !activeHasNext.value) return
   const hasToken = Boolean(token.value)
   if (!hasToken && !anilistUserId.value && !anilistUsername.value) {
-    errorMessage.value = 'AniList account not linked. Please reconnect in Settings.'
+    errorMessage.value = 'Compte AniList non lié. Reconnectez-le dans les paramètres.'
     return
   }
 
@@ -287,7 +287,7 @@ const loadNextPage = async () => {
     )
 
     if (response?.errors?.length) {
-      throw new Error(response.errors[0]?.message || 'Unable to load favorites.')
+      throw new Error(response.errors[0]?.message || 'Impossible de charger les favoris.')
     }
 
     const connection = response?.data?.Viewer?.favourites?.[field] || response?.data?.User?.favourites?.[field]
@@ -306,7 +306,7 @@ const loadNextPage = async () => {
       characterLoaded.value = true
     }
   } catch (error: any) {
-    errorMessage.value = error?.message || 'Unable to load favorites.'
+    errorMessage.value = error?.message || 'Impossible de charger les favoris.'
   } finally {
     initialLoading.value = false
     loadingMore.value = false

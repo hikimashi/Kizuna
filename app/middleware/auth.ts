@@ -4,14 +4,14 @@ import { usePocketbaseStore } from '~/composables/usePocketbaseStore';
 import { useMyAuthStore } from '~/composables/useMyAuthStore';
 
 export default defineNuxtRouteMiddleware(async (to) => {
-  // PocketBase auth is client-side (localStorage), skip SSR guard to avoid false redirects on refresh.
+  // L'auth PocketBase est cote client (localStorage), on ignore donc le guard SSR pour eviter de faux redirects au refresh.
   if (process.server) return;
 
   const pocketbaseStore = usePocketbaseStore();
   const authStore = useMyAuthStore();
   const hasToken = Boolean(pocketbaseStore.pb.authStore.token);
 
-  // Allow access to auth callback page without authentication
+  // Autorise l'acces a la page de callback auth sans authentification.
   if (to.path === '/auth/callback') {
     return;
   }

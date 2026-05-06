@@ -2,13 +2,13 @@
   <section class="browse-results">
     <div class="results-info">
       <template v-if="totalResults > 0">
-        Showing <b>{{ items.length }}</b> of <b>{{ totalResults }}</b> results
+        Affichage de <b>{{ items.length }}</b> sur <b>{{ totalResults }}</b> résultats
       </template>
       <template v-else-if="loading && items.length === 0">
-        Loading results...
+        Chargement des résultats...
       </template>
       <template v-else>
-        Browse the AniList catalog
+        Explorez le catalogue AniList
       </template>
     </div>
 
@@ -27,8 +27,8 @@
           <path d="m20 20-3.4-3.4" />
         </svg>
       </div>
-      <h2>No anime match these filters</h2>
-      <p>Try a broader search, another season, or fewer tags.</p>
+      <h2>Aucun anime ne correspond à ces filtres</h2>
+      <p>Essayez une recherche plus large, une autre saison ou moins de tags.</p>
     </div>
 
     <div v-else class="results-shell" :class="`view-${currentViewMode}`">
@@ -111,7 +111,7 @@
                 </span>
               </div>
               <div v-if="anime.mediaListEntry?.id" class="card-library-state">
-                In {{ statusLabel(anime.mediaListEntry?.status) }}
+                Dans {{ statusLabel(anime.mediaListEntry?.status) }}
               </div>
             </div>
 
@@ -144,11 +144,11 @@
 
     <div v-if="loading && items.length > 0" class="loading-more">
       <div class="spinner-ring"></div>
-      <p>Loading more...</p>
+      <p>Chargement...</p>
     </div>
 
     <div v-else-if="!hasMore && items.length > 0" class="end-of-list">
-      Reached the end of these results.
+      Fin de ces résultats.
     </div>
 
     <div ref="sentinelRef" class="sentinel-element"></div>
@@ -233,21 +233,21 @@ const authRecord = computed(() => (unref(pocketbaseStore.authRecord) ?? {}) as R
 const token = computed(() => String(authRecord.value.anilist_token ?? ''))
 
 const animeTitle = (anime: BrowseAnime) =>
-  anime.title.romaji || anime.title.english || 'Unknown title'
+  anime.title.romaji || anime.title.english || 'Titre inconnu'
 
 const formatLabel = (format?: string | null) => {
   if (!format) return 'Anime'
-  if (format === 'TV_SHORT') return 'TV Short'
+  if (format === 'TV_SHORT') return 'TV court'
   return format.replaceAll('_', ' ')
 }
 
 const formatScore = (score?: number | null) => {
-  if (!score) return 'N/A'
+  if (!score) return 'N/D'
   return score % 1 === 0 ? String(score) : score.toFixed(1)
 }
 
 const episodesLabel = (episodes?: number | null) => {
-  if (!episodes) return 'Unknown eps'
+  if (!episodes) return 'Episodes inconnus'
   return `${episodes} eps`
 }
 
@@ -265,19 +265,19 @@ const openAnimeDetails = (animeId?: number | null) => {
 }
 
 const statusLabel = (status?: string | null) => {
-  if (status === 'CURRENT') return 'Watching'
-  if (status === 'COMPLETED') return 'Completed'
-  if (status === 'PAUSED') return 'Paused'
-  if (status === 'DROPPED') return 'Dropped'
-  return 'Planning'
+  if (status === 'CURRENT') return 'En cours'
+  if (status === 'COMPLETED') return 'Terminé'
+  if (status === 'PAUSED') return 'En pause'
+  if (status === 'DROPPED') return 'Abandonné'
+  return 'Prévu'
 }
 
 const isAdded = (anime: BrowseAnime) => Boolean(anime.mediaListEntry?.id)
 
 const cardActionLabel = (anime: BrowseAnime) => {
-  if (addingMediaId.value === anime.id) return 'Adding anime'
-  if (isAdded(anime)) return `Already in ${statusLabel(anime.mediaListEntry?.status)}`
-  return 'Add to Planning'
+  if (addingMediaId.value === anime.id) return "Ajout de l'anime"
+  if (isAdded(anime)) return `Déjà dans ${statusLabel(anime.mediaListEntry?.status)}`
+  return 'Ajouter à Prévu'
 }
 
 const cardSubmeta = (anime: BrowseAnime) => {
@@ -409,7 +409,7 @@ const fetchAnimeList = async (page: number, perPage: number): Promise<BrowseAnim
   )
 
   if (data?.errors?.length) {
-    loadError.value = data.errors[0]?.message || 'Failed to fetch anime list'
+    loadError.value = data.errors[0]?.message || 'Impossible de récupérer la liste anime.'
     throw new Error(loadError.value)
   }
 
@@ -453,9 +453,9 @@ const addToPlanning = async (anime: BrowseAnime) => {
         : item
     ))
 
-    toastStore.openToast({ type: 'success', message: 'Anime added to Planning.' })
+    toastStore.openToast({ type: 'success', message: "L'anime a été ajouté à Prévu." })
   } catch (error: any) {
-    toastStore.openToast({ type: 'error', message: error?.message || 'Unable to add anime to AniList.' })
+    toastStore.openToast({ type: 'error', message: error?.message || "Impossible d'ajouter l'anime à AniList." })
   } finally {
     addingMediaId.value = null
   }

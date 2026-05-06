@@ -3,7 +3,7 @@
     v-if="showButton"
     type="button"
     @click="scrollToTop"
-    class="scroll-to-top-btn"
+    class="fixed bottom-16 right-2.5 z-50 flex size-9 items-center justify-center rounded-md border border-[var(--kz-hover-border)] bg-[var(--kz-soft-accent-bg)] text-[var(--kz-text-primary)] transition duration-200 hover:-translate-y-0.5 hover:bg-[var(--kz-soft-accent-bg-hover)] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[var(--kz-accent)]"
     aria-label="Scroll to top"
   >
     <svg
@@ -12,7 +12,7 @@
       viewBox="0 0 24 24"
       stroke-width="1.5"
       stroke="currentColor"
-      class="scroll-to-top-icon"
+      class="size-4"
     >
       <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
     </svg>
@@ -45,38 +45,3 @@ onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll);
 });
 </script>
-
-<style scoped>
-.scroll-to-top-btn {
-  position: fixed;
-  bottom: 62px;
-  right: 10px;
-  z-index: 50;
-  width: 36px;
-  height: 36px;
-  background: var(--kz-soft-accent-bg);
-  border: 1px solid var(--kz-hover-border);
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.scroll-to-top-btn:hover {
-  background: var(--kz-soft-accent-bg-hover);
-  transform: translateY(-2px);
-}
-
-.scroll-to-top-btn:focus-visible {
-  outline: 2px solid var(--kz-accent);
-  outline-offset: 3px;
-}
-
-.scroll-to-top-icon {
-  width: 16px;
-  height: 16px;
-  color: var(--kz-text-primary);
-}
-</style>

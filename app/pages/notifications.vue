@@ -1,27 +1,27 @@
 <template>
   <div class="notifications-page">
     <div class="page">
-      <aside class="sidebar">
+      <aside class="sidebar shadow-xl backdrop-blur-sm">
         <div class="sidebar-heading">Notifications</div>
         <p class="sidebar-copy">
           Dernieres mises a jour AniList pour votre compte.
         </p>
 
-        <div class="sidebar-card">
+        <div class="sidebar-card shadow-sm">
           <span class="sidebar-card-label">Non lues</span>
           <span class="sidebar-card-value">{{ unreadCount }}</span>
         </div>
 
-        <div class="sidebar-card">
+        <div class="sidebar-card shadow-sm">
           <span class="sidebar-card-label">Chargees</span>
           <span class="sidebar-card-value">{{ items.length }}</span>
         </div>
 
-        <button class="sidebar-action" type="button" :disabled="isLoading" @click="refreshNotifications">
+        <button class="sidebar-action shadow-sm" type="button" :disabled="isLoading" @click="refreshNotifications">
           {{ isLoading ? 'Actualisation...' : 'Actualiser les notifications' }}
         </button>
 
-        <NuxtLink class="sidebar-link" to="/settings">
+        <NuxtLink class="sidebar-link shadow-sm" to="/settings">
           Ouvrir les parametres
         </NuxtLink>
       </aside>
@@ -36,16 +36,16 @@
           </div>
         </div>
 
-        <div v-if="loadError" class="state-card error-card">
+        <div v-if="loadError" class="state-card error-card shadow-sm">
           {{ loadError }}
         </div>
 
-        <div v-if="!isAniListLinked" class="state-card">
+        <div v-if="!isAniListLinked" class="state-card shadow-sm">
           Liez votre compte AniList pour charger les notifications.
         </div>
 
         <div v-else-if="isLoading && !items.length" class="notification-list">
-          <article v-for="n in 6" :key="`skeleton-${n}`" class="notification-card is-skeleton">
+          <article v-for="n in 6" :key="`skeleton-${n}`" class="notification-card is-skeleton shadow-sm">
             <div class="notification-media skeleton-block"></div>
             <div class="notification-copy">
               <div class="notification-line skeleton-line"></div>
@@ -59,7 +59,7 @@
           <button
             v-for="item in items"
             :key="item.key"
-            class="notification-card"
+            class="notification-card shadow-sm"
             type="button"
             @click="openNotification(item)"
           >
@@ -94,7 +94,7 @@
 
           <button
             v-if="hasNextPage"
-            class="load-more"
+            class="load-more shadow-sm"
             type="button"
             :disabled="isLoading"
             @click="notificationStore.loadMore()"
@@ -103,7 +103,7 @@
           </button>
         </div>
 
-        <div v-else-if="!isLoading" class="state-card empty-card">
+        <div v-else-if="!isLoading" class="state-card empty-card shadow-sm">
           <div class="empty-title">Aucune notification pour le moment</div>
           <p class="empty-copy">
             Quand AniList enverra des mises a jour sociales ou media, elles apparaitront ici.

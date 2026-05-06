@@ -1,12 +1,21 @@
 <template>
-  <div class="container mx-auto max-w-xl p-4 sm:p-6">
-    <div class="card bg-base-200 shadow-xl">
+  <div class="flex min-h-[calc(100vh-8rem)] items-center justify-center px-4 py-8">
+    <div class="card w-full max-w-xl border border-base-300/40 bg-base-200/85 shadow-xl backdrop-blur">
       <div class="card-body items-center text-center">
-        <h1 class="card-title text-2xl">Verification de l'e-mail</h1>
+        <div class="badge badge-primary badge-outline">Compte</div>
+        <h1 class="card-title text-2xl sm:text-3xl">Verification de l'e-mail</h1>
 
-        <p v-if="status === 'pending'">Verification de votre adresse e-mail...</p>
-        <p v-else-if="status === 'success'">Votre adresse e-mail a ete verifiée. Vous pouvez maintenant vous connecter.</p>
-        <p v-else>{{ errorMessage }}</p>
+        <p class="max-w-md text-sm leading-6 text-base-content/80 sm:text-base">
+          {{ statusMessage }}
+        </p>
+
+        <div class="mt-2">
+          <span
+            class="loading loading-dots loading-md"
+            :class="status === 'pending' ? 'text-primary' : status === 'success' ? 'text-success' : 'text-error'"
+            aria-hidden="true"
+          />
+        </div>
 
         <div class="card-actions mt-4">
           <button class="btn btn-primary" @click="goHome">Retour a l'accueil</button>
@@ -25,6 +34,12 @@ const pocketbaseStore = usePocketbaseStore();
 
 const status = ref<'pending' | 'success' | 'error'>('pending');
 const errorMessage = ref("Lien de verification invalide ou expire.");
+
+const statusMessage = computed(() => {
+  if (status.value === 'pending') return "Verification de votre adresse e-mail...";
+  if (status.value === 'success') return 'Votre adresse e-mail a ete verifiee. Vous pouvez maintenant vous connecter.';
+  return errorMessage.value;
+});
 
 const token = computed(() => {
   const value = route.query.token;

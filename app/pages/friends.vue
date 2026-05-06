@@ -3,9 +3,9 @@
     <userHeaderTabs :tabs="profileTabs" />
 
     <div class="page">
-      <div class="top-bar">
+      <div class="top-bar rounded-2xl border border-[var(--kz-border)] bg-[var(--kz-card-bg)] px-4 py-4 shadow-xl backdrop-blur-sm">
         <div class="page-title">Amis</div>
-        <label class="search-box">
+        <label class="search-box shadow-sm">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.35-4.35" />
@@ -15,7 +15,7 @@
       </div>
 
       <div v-if="filteredFriends.length" class="user-grid">
-        <article v-for="user in filteredFriends" :key="user.id" class="user-card">
+        <article v-for="user in filteredFriends" :key="user.id" class="user-card shadow-lg">
           <div class="card-banner">
             <img v-if="user.banner" :src="user.banner" alt="" class="card-banner-img" />
           </div>
@@ -36,11 +36,11 @@
               <div class="card-stat"><span class="card-stat-num">{{ user.score.toFixed(1) }}</span><span class="card-stat-lbl">Note</span></div>
             </div>
             <div class="card-actions">
-              <button class="btn-view-profile" type="button" @click="openFriendProfile(user.id)">
+              <button class="btn-view-profile shadow-sm" type="button" @click="openFriendProfile(user.id)">
                 Voir le profil
               </button>
               <button
-                class="btn-follow following"
+                class="btn-follow following shadow-sm"
                 type="button"
                 :disabled="isFollowBusy(user.id)"
                 @click="toggleFollow(user.id)"
@@ -52,7 +52,7 @@
         </article>
       </div>
 
-      <div v-else class="empty">
+      <div v-else class="empty rounded-2xl border border-[var(--kz-border)] bg-[var(--kz-card-bg)] shadow-sm">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="38" height="38">
           <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>

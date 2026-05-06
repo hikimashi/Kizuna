@@ -23,11 +23,11 @@
 
     <div class="sub-tabs-bar">
       <div class="sub-tabs">
-        <NuxtLink class="sub-tab" :to="profileTabRoute('anime-list')">Anime List</NuxtLink>
-        <NuxtLink class="sub-tab active" :to="`/social/compare/${friendUserId}`">Compare List</NuxtLink>
-        <NuxtLink class="sub-tab" :to="profileTabRoute('favorites')">Favorites</NuxtLink>
-        <NuxtLink class="sub-tab" :to="profileTabRoute('friends')">Friends</NuxtLink>
-        <NuxtLink class="sub-tab" :to="profileTabRoute('shared-lists')">Shared Lists</NuxtLink>
+        <NuxtLink class="sub-tab" :to="profileTabRoute('anime-list')">Liste d'animes</NuxtLink>
+        <NuxtLink class="sub-tab active" :to="`/social/compare/${friendUserId}`">Comparaison</NuxtLink>
+        <NuxtLink class="sub-tab" :to="profileTabRoute('favorites')">Favoris</NuxtLink>
+        <NuxtLink class="sub-tab" :to="profileTabRoute('friends')">Amis</NuxtLink>
+        <NuxtLink class="sub-tab" :to="profileTabRoute('shared-lists')">Listes partagees</NuxtLink>
       </div>
     </div>
 
@@ -42,13 +42,13 @@
             </svg>
           </div>
           <div class="user-name">{{ selfName }}</div>
-          <div class="user-stat">{{ selfListCountLabel }} anime - {{ selfMeanScore }} avg</div>
+          <div class="user-stat">{{ selfListCountLabel }} anime - moyenne {{ selfMeanScore }}</div>
         </div>
 
         <div class="vs-divider"></div>
 
         <div class="hero-center">
-          <div class="compat-label">Compatibility</div>
+          <div class="compat-label">Compatibilite</div>
           <div class="compat-score">{{ compatibilityPercent }}<span>%</span></div>
           <div class="compat-bar"><div class="compat-fill" :style="{ width: compatBarWidth }"></div></div>
           <div class="compat-desc">{{ compatibilityLabel }}</div>
@@ -65,30 +65,30 @@
             </svg>
           </div>
           <div class="user-name">{{ friendName }}</div>
-          <div class="user-stat">{{ friendListCountLabel }} anime - {{ friendMeanScore }} avg</div>
+          <div class="user-stat">{{ friendListCountLabel }} anime - moyenne {{ friendMeanScore }}</div>
         </div>
       </div>
 
       <div class="quick-stats">
         <div class="qs-card">
-          <div class="qs-label">Anime in Common</div>
+          <div class="qs-label">Animes en commun</div>
           <div class="qs-value">{{ commonCountLabel }}</div>
-          <div class="qs-sub">out of {{ selfListCountLabel }} / {{ friendListCountLabel }}</div>
+          <div class="qs-sub">sur {{ selfListCountLabel }} / {{ friendListCountLabel }}</div>
         </div>
         <div class="qs-card">
-          <div class="qs-label">Avg Score Diff</div>
+          <div class="qs-label">Ecart moyen de note</div>
           <div class="qs-value" :style="avgScoreDiffColor">{{ avgScoreDiffLabel }}</div>
           <div class="qs-sub">{{ avgScoreDiffSub }}</div>
         </div>
         <div class="qs-card">
-          <div class="qs-label">Only You Watched</div>
+          <div class="qs-label">Seulement vous</div>
           <div class="qs-value">{{ onlySelfCountLabel }}</div>
-          <div class="qs-sub">anime to recommend</div>
+          <div class="qs-sub">anime a recommander</div>
         </div>
         <div class="qs-card">
-          <div class="qs-label">Only They Watched</div>
+          <div class="qs-label">Seulement l'autre</div>
           <div class="qs-value">{{ onlyFriendCountLabel }}</div>
-          <div class="qs-sub">anime to discover</div>
+          <div class="qs-sub">anime a decouvrir</div>
         </div>
       </div>
       <div v-if="compareError" class="placeholder-panel" style="margin-bottom:14px;">
@@ -96,22 +96,22 @@
       </div>
 
       <div class="tabs">
-        <button class="tab" :class="{ active: activeTab === 'shared' }" type="button" @click="activeTab = 'shared'">Shared ({{ sharedEntries.length }})</button>
+        <button class="tab" :class="{ active: activeTab === 'shared' }" type="button" @click="activeTab = 'shared'">Communs ({{ sharedEntries.length }})</button>
         <button class="tab" :class="{ active: activeTab === 'genres' }" type="button" @click="activeTab = 'genres'">Genres</button>
-        <button class="tab" :class="{ active: activeTab === 'only' }" type="button" @click="activeTab = 'only'">Only Yours ({{ onlySelfEntries.length }})</button>
-        <button class="tab" :class="{ active: activeTab === 'discover' }" type="button" @click="activeTab = 'discover'">Discover ({{ onlyFriendEntries.length }})</button>
-        <button class="tab" :class="{ active: activeTab === 'diff' }" type="button" @click="activeTab = 'diff'">Score Diff</button>
+        <button class="tab" :class="{ active: activeTab === 'only' }" type="button" @click="activeTab = 'only'">Seulement vous ({{ onlySelfEntries.length }})</button>
+        <button class="tab" :class="{ active: activeTab === 'discover' }" type="button" @click="activeTab = 'discover'">A decouvrir ({{ onlyFriendEntries.length }})</button>
+        <button class="tab" :class="{ active: activeTab === 'diff' }" type="button" @click="activeTab = 'diff'">Ecart de note</button>
       </div>
 
-      <div v-if="isEntriesLoading" class="placeholder-panel">Loading compare data...</div>
+      <div v-if="isEntriesLoading" class="placeholder-panel">Chargement des données de comparaison...</div>
 
       <div v-else-if="activeTab === 'shared'">
-        <div class="section-title">Anime you both watched</div>
+        <div class="section-title">Animes que vous avez vus tous les deux</div>
         <div class="genre-legend">
-          <div class="legend-item"><div class="legend-dot legend-me"></div>Your score</div>
-          <div class="legend-item"><div class="legend-dot legend-them"></div>Their score</div>
+          <div class="legend-item"><div class="legend-dot legend-me"></div>Votre note</div>
+          <div class="legend-item"><div class="legend-dot legend-them"></div>Sa note</div>
         </div>
-        <div v-if="sharedEntries.length === 0" class="placeholder-panel">No shared anime in Watching/Completed.</div>
+        <div v-if="sharedEntries.length === 0" class="placeholder-panel">Aucun anime en commun dans En cours/Termine.</div>
         <div v-else class="shared-grid">
           <div v-for="item in sharedEntries" :key="item.mediaId" class="shared-card">
             <img
@@ -135,13 +135,13 @@
       </div>
 
       <div v-else-if="activeTab === 'genres'">
-        <div class="section-title">Genre overlap</div>
+        <div class="section-title">Chevauchement des genres</div>
         <div class="genre-compare">
           <div class="genre-legend">
-            <div class="legend-item"><div class="legend-dot legend-me"></div>You</div>
+            <div class="legend-item"><div class="legend-dot legend-me"></div>Vous</div>
             <div class="legend-item"><div class="legend-dot legend-them"></div>{{ friendName }}</div>
           </div>
-          <div v-if="genreRows.length === 0" class="placeholder-panel">No genre data.</div>
+          <div v-if="genreRows.length === 0" class="placeholder-panel">Aucune donnee de genre.</div>
           <div v-else v-for="row in genreRows" :key="row.genre" class="genre-row">
             <div class="genre-name">{{ row.genre }}</div>
             <div class="genre-bars">
@@ -159,8 +159,8 @@
       </div>
 
       <div v-else-if="activeTab === 'only'">
-        <div class="section-title">Anime only you've watched - recommend to them</div>
-        <div v-if="onlySelfEntries.length === 0" class="placeholder-panel">No exclusive anime.</div>
+        <div class="section-title">Animes vus seulement par vous - a recommander</div>
+        <div v-if="onlySelfEntries.length === 0" class="placeholder-panel">Aucun anime exclusif.</div>
         <div v-else class="only-list">
           <div v-for="item in onlySelfEntries" :key="item.mediaId" class="only-item">
             <div class="only-thumb">
@@ -181,8 +181,8 @@
       </div>
 
       <div v-else-if="activeTab === 'discover'">
-        <div class="section-title">Anime only they've watched - discover new ones</div>
-        <div v-if="onlyFriendEntries.length === 0" class="placeholder-panel">No exclusive anime.</div>
+        <div class="section-title">Animes vus seulement par l'autre - a decouvrir</div>
+        <div v-if="onlyFriendEntries.length === 0" class="placeholder-panel">Aucun anime exclusif.</div>
         <div v-else class="only-list">
           <div v-for="item in onlyFriendEntries" :key="item.mediaId" class="only-item">
             <div class="only-thumb">
@@ -203,8 +203,8 @@
       </div>
 
       <div v-else>
-        <div class="section-title">Biggest score disagreements</div>
-        <div v-if="scoreDiffRows.length === 0" class="placeholder-panel">No scored overlap yet.</div>
+        <div class="section-title">Plus grands ecarts de notes</div>
+        <div v-if="scoreDiffRows.length === 0" class="placeholder-panel">Aucun chevauchement note pour le moment.</div>
         <div v-else class="diff-list">
           <div v-for="item in scoreDiffRows" :key="item.mediaId" class="diff-item">
             <div class="diff-thumb">
@@ -252,12 +252,12 @@ const authRecord = computed(() => (unref(pocketbaseStore.authRecord) ?? {}) as R
 const token = computed(() => String(authRecord.value.anilist_token ?? ''))
 const friendUserId = computed(() => Number(route.params.id ?? 0))
 
-const selfName = computed(() => String(authRecord.value.anilist_username || 'You'))
+const selfName = computed(() => String(authRecord.value.anilist_username || 'Vous'))
 const selfAvatar = computed(() =>
   String(authRecord.value.anilist_avatar_url_large || authRecord.value.anilist_avatar_url_medium || '')
 )
 
-const friendName = ref('Friend')
+const friendName = ref('Ami')
 const friendAvatar = ref('')
 const bannerUrl = ref('')
 const selfMeanScore = ref('--')
@@ -292,7 +292,7 @@ const formatScore = (score: number) => {
   return score % 1 === 0 ? String(score) : score.toFixed(1)
 }
 
-const statusLabel = (status: 'CURRENT' | 'COMPLETED') => (status === 'CURRENT' ? 'Watching' : 'Completed')
+const statusLabel = (status: 'CURRENT' | 'COMPLETED') => (status === 'CURRENT' ? 'En cours' : 'Termine')
 
 const selfMap = computed(() => {
   const map = new Map<number, CompareEntry>()
@@ -428,9 +428,9 @@ const avgScoreDiffLabel = computed(() => {
 
 const avgScoreDiffSub = computed(() => {
   if (avgScoreDiffValue.value == null) return '--'
-  if (avgScoreDiffValue.value > 0) return 'you rate higher'
-  if (avgScoreDiffValue.value < 0) return 'they rate higher'
-  return 'same average'
+  if (avgScoreDiffValue.value > 0) return 'vous notez plus haut'
+  if (avgScoreDiffValue.value < 0) return "l'autre note plus haut"
+  return 'meme moyenne'
 })
 
 const avgScoreDiffColor = computed(() => {
@@ -457,11 +457,11 @@ const compatBarWidth = computed(() => {
 
 const compatibilityLabel = computed(() => {
   const value = Number(compatibilityPercent.value)
-  if (!Number.isFinite(value)) return 'Loading...'
-  if (value >= 85) return 'Great match'
-  if (value >= 60) return 'Good match'
-  if (value >= 30) return 'Some overlap'
-  return 'Low overlap'
+  if (!Number.isFinite(value)) return 'Chargement...'
+  if (value >= 85) return 'Tres bon match'
+  if (value >= 60) return 'Bon match'
+  if (value >= 30) return 'Quelques points communs'
+  return 'Peu de points communs'
 })
 
 const fetchSelfProfile = async () => {
@@ -493,7 +493,7 @@ const fetchSelfProfile = async () => {
   `
 
   try {
-    // Prefer Viewer when token exists; fallback to explicit User query.
+    // Prefere Viewer quand un token existe, sinon bascule sur une requete User explicite.
     let response: any = null
     if (token.value) {
       response = await anilistGraphql.request<any>(
@@ -516,7 +516,7 @@ const fetchSelfProfile = async () => {
     const rawMeanScore = Number(stats.meanScore ?? NaN)
     selfMeanScore.value = Number.isFinite(rawMeanScore) ? rawMeanScore.toFixed(1) : '--'
   } catch {
-    // Keep static placeholders if profile fetch fails.
+    // Garde les valeurs d'attente si la recuperation du profil echoue.
   }
 }
 
@@ -547,14 +547,14 @@ const fetchFriendProfile = async () => {
     )
     const user = response?.data?.User
     if (!user) return
-    friendName.value = String(user.name || 'Friend')
+    friendName.value = String(user.name || 'Ami')
     friendAvatar.value = String(user.avatar?.large || user.avatar?.medium || '')
     bannerUrl.value = String(user.bannerImage || '')
     const animeStats = user.statistics?.anime
     const rawMeanScore = Number(animeStats?.meanScore ?? NaN)
     friendMeanScore.value = Number.isFinite(rawMeanScore) ? rawMeanScore.toFixed(1) : '--'
   } catch {
-    // Keep static placeholders if profile fetch fails.
+    // Garde les valeurs d'attente si la recuperation du profil echoue.
   }
 }
 
@@ -593,7 +593,7 @@ const fetchCompareEntries = async () => {
       for (const entry of entries) {
         const mediaId = Number(entry?.media?.id || 0)
         if (!mediaId) continue
-        const title = String(entry?.media?.title?.romaji || entry?.media?.title?.english || entry?.media?.title?.native || 'Unknown title')
+        const title = String(entry?.media?.title?.romaji || entry?.media?.title?.english || entry?.media?.title?.native || 'Titre inconnu')
         const coverImage = (entry?.media?.coverImage || null) as AnilistCoverImage | null
         const normalized: CompareEntry = {
           mediaId,
@@ -626,7 +626,7 @@ const fetchCompareEntries = async () => {
     friendEntries.value = mapEntries(friendRes)
   } catch (error) {
     console.error('[compareList] entries failed', error)
-    compareError.value = error instanceof Error ? error.message : 'Comparison failed'
+    compareError.value = error instanceof Error ? error.message : 'La comparaison a echoue.'
   } finally {
     isEntriesLoading.value = false
     hasEntriesLoaded.value = true

@@ -1,8 +1,8 @@
 <template>
-  <!-- Background overlay -->
+  <!-- Fond de superposition -->
   <div v-if="open" class="login-drawer-overlay fixed inset-0 bg-base-100/50 backdrop-blur-[4px] z-40" @click="handleClose" />
 
-  <!-- DrawerLogin panel -->
+  <!-- Panneau de connexion -->
   <div
     class="login-drawer-panel fixed top-0 right-0 h-[100dvh] w-full sm:max-w-[420px] bg-base-100 shadow-2xl z-50 transform transition-transform duration-500 ease-in-out"
     :class="open ? 'translate-x-0' : 'translate-x-full'">
@@ -16,10 +16,10 @@
       <div class="flex justify-center mb-4 sm:mb-6 ">
         <img src="/img/user.webp" alt="Logo" class="h-24 sm:h-32 md:h-36 border border-primary rounded-full" />
       </div>
-      <h2 class="text-xl sm:text-2xl font-bold text-center text-primary mb-4 sm:mb-6">Login to your Account</h2>
+      <h2 class="text-xl sm:text-2xl font-bold text-center text-primary mb-4 sm:mb-6">Connexion a votre compte</h2>
 
       <div class="items-center my-4 sm:my-6">
-        <span class="flex flex-wrap justify-center text-sm sm:text-base text-center">Don't have an account? &nbsp; <a @click="createAccount()" class="text-blue-500 hover:underline cursor-pointer">Create an Account</a></span>
+        <span class="flex flex-wrap justify-center text-sm sm:text-base text-center">Pas encore de compte ? &nbsp; <a @click="createAccount()" class="text-blue-500 hover:underline cursor-pointer">Créer un compte</a></span>
         </div>
 
       <form ref="loginForm" @submit.prevent="doLogin()">
@@ -35,10 +35,10 @@
           </svg>
           <input v-model="email" type="email" placeholder="yourmail@mail.com" required />
         </label>
-        <div class="validator-hint hidden">Enter valid email address</div>
+        <div class="validator-hint hidden">Saisissez une adresse e-mail valide</div>
 
         <div>
-          <div class="fieldset-legend mt-2" for="password">Password</div>
+          <div class="fieldset-legend mt-2" for="password">Mot de passe</div>
         </div>
         <label class="w-full input input-primary validator">
           <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -48,39 +48,38 @@
               <circle cx="16.5" cy="7.5" r=".5" fill="currentColor" />
             </g>
           </svg>
-          <input v-model="password" type="password" required placeholder="Password" minlength="8"
+          <input v-model="password" type="password" required placeholder="Mot de passe" minlength="8"
             pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
-            title="Must be more than 8 characters, including number, lowercase letter, uppercase letter" />
+            title="Doit contenir au moins 8 caracteres, avec un chiffre, une minuscule et une majuscule" />
         </label>
         <p class="validator-hint hidden">
-          Must be more than 8 characters, including
-          <br />At least one number <br />At least one lowercase letter <br />At least one uppercase
-          letter
+          Doit contenir au moins 8 caracteres, avec
+          <br />Au moins un chiffre <br />Au moins une lettre minuscule <br />Au moins une lettre majuscule
         </p>
 
         <div class="flex items-center justify-between p-2 mb-4 sm:mb-6">
-          <a href="#" class="text-sm sm:text-base text-blue-500 hover:underline">Forgot Password?</a>
+          <a href="#" class="text-sm sm:text-base text-blue-500 hover:underline">Mot de passe oublie ?</a>
         </div>
 
         <button type="submit" class="w-full btn btn-primary">
-          <span>Login</span>
+          <span>Connexion</span>
         </button>
       </form>
-      <div class="divider my-5 sm:my-8">OR</div>
+      <div class="divider my-5 sm:my-8">OU</div>
       <div class="flex flex-col space-y-4">
 
         <button
           class="w-full btn btn-primary focus:outline-none focus:shadow-outline transition duration-300"
           @click="doGoogleLogin()">
           <img src="https://authjs.dev/img/providers/google.svg" alt="Google" class="w-6 h-6 mr-2" />
-          <span>Sign in with Google</span>
+          <span>Se connecter avec Google</span>
         </button>
 
         <button
           class="w-full btn btn-primary focus:outline-none focus:shadow-outline transition duration-300"
           @click="doGithubLogin()">
           <img src="https://authjs.dev/img/providers/github.svg" alt="GitHub" class="w-6 h-6 mr-2" />
-          <span>Sign in with GitHub</span>
+          <span>Se connecter avec GitHub</span>
         </button>
 
       </div>
@@ -118,12 +117,12 @@ const close = () => {
 const doLogin = async () => {
   try {
     await authStore.login(email.value, password.value);
-    toast.openToast({ type: 'success', message: `Welcome` });
+    toast.openToast({ type: 'success', message: 'Bienvenue.' });
   } catch (e: any) {
     if (loginForm.value) {
       loginForm.value.reset();
     }
-    toast.openToast({ type: 'error', message: e.message || 'Invalid credentials!' });
+    toast.openToast({ type: 'error', message: e.message || 'Identifiants invalides.' });
     return;
   }
   themeStore.setTheme();
@@ -134,12 +133,12 @@ const doLogin = async () => {
 const doGoogleLogin = async () => {
   try {
     await authStore.loginWithGoogle();
-    toast.openToast({ type: 'success', message: `Welcome` });
+    toast.openToast({ type: 'success', message: 'Bienvenue.' });
   } catch (e: any) {
     if (loginForm.value) {
       loginForm.value.reset();
     }
-    toast.openToast({ type: 'error', message: e.message || 'Google login failed!' });
+    toast.openToast({ type: 'error', message: e.message || 'La connexion Google a echoue.' });
     return;
   }
   close();
@@ -150,12 +149,12 @@ const doGoogleLogin = async () => {
 const doGithubLogin = async () => {
   try {
     await authStore.loginWithGithub();
-    toast.openToast({ type: 'success', message: `Welcome` });
+    toast.openToast({ type: 'success', message: 'Bienvenue.' });
   } catch (e: any) {
     if (loginForm.value) {
       loginForm.value.reset();
     }
-    toast.openToast({ type: 'error', message: e.message || 'GitHub login failed!' });
+    toast.openToast({ type: 'error', message: e.message || 'La connexion GitHub a echoue.' });
     return;
   }
   close();
@@ -177,4 +176,3 @@ const createAccount = () => {
   z-index: 190;
 }
 </style>
-

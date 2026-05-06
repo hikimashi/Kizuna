@@ -5,17 +5,17 @@
         <div class="hero-content">
           <div class="eyebrow-pill fade-up">
             <span class="pulsing-dot"></span>
-            <span>Powered by AniList API</span>
+            <span>Propulse par l'API AniList</span>
           </div>
 
           <h1 class="hero-title fade-up">
-            Your anime,<br />
-            <em>shared</em> together.
+            Vos animes,<br />
+            <em>partages</em> ensemble.
           </h1>
 
           <p class="hero-subtitle fade-up">
-            Kizuna connects your AniList profile with your friends. Build joint watchlists,
-            track progress together, and discover what to watch next, as a group.
+            Kizuna relie votre profil AniList a vos amis. Creez des listes communes,
+            suivez votre progression ensemble et trouvez quoi regarder ensuite, en groupe.
           </p>
 
           <div class="cta-buttons fade-up">
@@ -23,10 +23,10 @@
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="hero-icon">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"/>
               </svg>
-              Sign in
+              Se connecter
             </button>
             <button @click="scrollToFeatures" class="btn-secondary">
-              Learn more
+              En savoir plus
               <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M5 12h14M12 5l7 7-7 7"/>
               </svg>
@@ -35,18 +35,18 @@
 
           <div class="stats-row fade-up">
             <div class="stat-item">
-              <span class="stat-label">POWERED BY</span>
+              <span class="stat-label">PROPULSE PAR</span>
               <span class="stat-value">AniList</span>
             </div>
             <div class="stat-divider"></div>
             <div class="stat-item">
-              <span class="stat-label">SHARED LISTS</span>
-              <span class="stat-value stat-infinity">∞</span>
+              <span class="stat-label">LISTES PARTAGEES</span>
+              <span class="stat-value stat-infinity">&infin;</span>
             </div>
             <div class="stat-divider"></div>
             <div class="stat-item">
-              <span class="stat-label">ALWAYS</span>
-              <span class="stat-value">Free</span>
+              <span class="stat-label">TOUJOURS</span>
+              <span class="stat-value">Gratuit</span>
             </div>
           </div>
         </div>
@@ -54,10 +54,10 @@
 
       <section ref="featuresSection" class="features-section">
         <div class="features-content">
-          <span class="section-label">WHY KIZUNA</span>
+          <span class="section-label">POURQUOI KIZUNA</span>
           <h2 class="section-title">
-            Everything you need to<br />
-            <span>watch together</span>
+            Tout ce qu'il faut pour<br />
+            <span>regarder ensemble</span>
           </h2>
 
           <div class="features-grid">
@@ -90,16 +90,16 @@
           <div class="dashboard-grid">
             <div class="dashboard-panel">
               <div class="panel-header panel-header-spread">
-                <h2 class="panel-title">Shared lists</h2>
+                <h2 class="panel-title">Listes partagees</h2>
                 <NuxtLink class="panel-link-btn" to="/sharedLists">
-                  View all
+                  Voir tout
                 </NuxtLink>
               </div>
               <div class="search-bar">
                 <svg class="hamburger-icon" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/>
                 </svg>
-                <input v-model.trim="dashboardListSearch" type="text" placeholder="Search a list" />
+                <input v-model.trim="dashboardListSearch" type="text" placeholder="Rechercher une liste" />
                 <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <circle cx="11" cy="11" r="8"/>
                   <path d="M21 21l-4.35-4.35"/>
@@ -107,7 +107,7 @@
               </div>
 
               <div v-if="dashboardListsLoading" class="dashboard-empty-state">
-                Loading shared lists...
+                Chargement des listes partagees...
               </div>
               <div v-else-if="dashboardListsError" class="dashboard-empty-state dashboard-error-state">
                 {{ dashboardListsError }}
@@ -119,26 +119,26 @@
                     <div class="list-item-banner-overlay"></div>
                   </div>
                   <div class="list-item-thumb">
-                    <img :src="dashboardListImageSrc(list)" :alt="`${list.title} image`" loading="lazy" decoding="async">
+                    <img :src="dashboardListImageSrc(list)" :alt="`Image ${list.title}`" loading="lazy" decoding="async">
                   </div>
                   <div class="list-item-copy">
                     <span class="list-item-name">{{ list.title }}</span>
-                    <span class="list-item-meta">{{ list.memberCount }} members &middot; {{ list.animeCount }} anime</span>
-                    <span class="list-item-owner">Owned by {{ list.ownerName }}</span>
+                    <span class="list-item-meta">{{ list.memberCount }} membres &middot; {{ list.animeCount }} anime</span>
+                    <span class="list-item-owner">Propriete de {{ list.ownerName }}</span>
                   </div>
                 </NuxtLink>
               </div>
               <div v-else class="dashboard-empty-state">
-                No shared list found.
+                Aucune liste partagee trouvee.
               </div>
             </div>
 
             <div ref="friendsPanelRef" class="dashboard-panel">
               <div ref="friendsHeaderRef" class="panel-header">
-                <h2 class="panel-title">Friends</h2>
+                <h2 class="panel-title">Amis</h2>
                 <div class="panel-header-actions">
                   <NuxtLink class="panel-link-btn" to="/friends">
-                    View all
+                    Voir tout
                   </NuxtLink>
                   <button class="add-friend-btn" type="button" @click="openFollowModal">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -152,7 +152,7 @@
                 <svg class="hamburger-icon" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/>
                 </svg>
-                <input v-model.trim="dashboardFriendSearch" type="text" placeholder="Search a friend" />
+                <input v-model.trim="dashboardFriendSearch" type="text" placeholder="Rechercher un ami" />
                 <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <circle cx="11" cy="11" r="8"/>
                   <path d="M21 21l-4.35-4.35"/>
@@ -160,7 +160,7 @@
               </div>
 
               <div v-if="friendsLoading" class="dashboard-empty-state">
-                Loading friends...
+                Chargement des amis...
               </div>
               <div v-else-if="friendsError" class="dashboard-empty-state dashboard-error-state">
                 {{ friendsError }}
@@ -181,7 +181,7 @@
                 </button>
               </div>
               <div v-else class="dashboard-empty-state">
-                No mutual friends yet.
+                Aucun ami commun pour le moment.
               </div>
             </div>
           </div>
@@ -190,13 +190,13 @@
       <template v-else>
         <section class="anilist-link-cta">
           <div class="anilist-link-card">
-            <p class="anilist-link-label">AniList connection required</p>
-            <h2>Link your AniList account to continue</h2>
+            <p class="anilist-link-label">Connexion AniList requise</p>
+            <h2>Liez votre compte AniList pour continuer</h2>
             <p>
-              Connect once to sync your profile, banner, and anime data before using the dashboard.
+              Connectez-le une fois pour synchroniser votre profil, votre banniere et vos données anime avant d'utiliser le tableau de bord.
             </p>
             <button class="anilist-link-button" @click="connectAniList">
-              Link AniList account
+              Lier le compte AniList
             </button>
           </div>
         </section>
@@ -208,10 +208,10 @@
         <div class="follow-modal">
           <div class="follow-modal-head">
             <div>
-              <p class="follow-modal-kicker">Find users</p>
-              <h2>Search users to follow</h2>
+              <p class="follow-modal-kicker">Trouver des utilisateurs</p>
+              <h2>Rechercher des utilisateurs a suivre</h2>
             </div>
-            <button class="follow-modal-close" type="button" @click="closeFollowModal">×</button>
+            <button class="follow-modal-close" type="button" @click="closeFollowModal">Ã—</button>
           </div>
 
           <label class="follow-search-box">
@@ -222,19 +222,19 @@
             <input
               v-model.trim="followSearchQuery"
               type="text"
-              placeholder="Search AniList username"
+              placeholder="Rechercher un pseudo AniList"
               @input="handleFollowSearch"
             >
           </label>
 
           <div v-if="isSearchingUsers" class="follow-search-state">
-            Searching AniList users...
+            Recherche des utilisateurs AniList...
           </div>
           <div v-else-if="followSearchError" class="follow-search-state dashboard-error-state">
             {{ followSearchError }}
           </div>
           <div v-else-if="followSearchQuery.length >= 2 && !followSearchResults.length" class="follow-search-state">
-            No matching user found.
+            Aucun utilisateur correspondant.
           </div>
 
           <div v-if="followSearchResults.length" class="follow-results">
@@ -256,13 +256,13 @@
                 <div class="follow-result-copy">
                   <div class="follow-result-name">{{ user.name }}</div>
                   <div class="follow-result-subtitle">
-                    {{ `AniList #${user.anilistUserId} · ${user.animeCount} anime · score ${user.meanScore || '-'}` }}
+                    {{ `AniList #${user.anilistUserId} - ${user.animeCount} anime - note ${user.meanScore || '-'}` }}
                   </div>
                   <div class="follow-result-badges">
-                    <span v-if="isFollowBusy(user.anilistUserId)" class="follow-badge">Updating...</span>
-                    <span v-if="user.alreadyFriend" class="follow-badge follow-badge-friend">Already friend</span>
-                    <span v-else-if="user.inKizuna" class="follow-badge follow-badge-kizuna">On Kizuna</span>
-                    <span v-else class="follow-badge">AniList only</span>
+                    <span v-if="isFollowBusy(user.anilistUserId)" class="follow-badge">Mise a jour...</span>
+                    <span v-if="user.alreadyFriend" class="follow-badge follow-badge-friend">Deja ami</span>
+                    <span v-else-if="user.inKizuna" class="follow-badge follow-badge-kizuna">Sur Kizuna</span>
+                    <span v-else class="follow-badge">AniList uniquement</span>
                   </div>
                 </div>
               </div>
@@ -274,14 +274,14 @@
                   :disabled="!user.anilistUserId || user.alreadyFriend || isFollowBusy(user.anilistUserId)"
                   @click.stop="followUserFromSearch(user)"
                 >
-                  {{ isFollowBusy(user.anilistUserId) ? 'Updating...' : user.alreadyFriend ? 'Friend added' : 'Follow' }}
+                  {{ isFollowBusy(user.anilistUserId) ? 'Mise a jour...' : user.alreadyFriend ? 'Ami ajoute' : 'Suivre' }}
                 </button>
               </div>
             </div>
           </div>
 
           <p class="follow-modal-note">
-            Search now comes from AniList directly. If the profile is already synced on Kizuna, it is marked in the result card.
+            La recherche vient maintenant directement d'AniList. Si le profil est deja synchronise sur Kizuna, cela apparait dans la carte de resultat.
           </p>
         </div>
       </div>
@@ -391,33 +391,33 @@ function setCardRef(el: unknown, index: number) {
 
 const features = [
   {
-    title: 'Friends & Social',
-    description: 'Follow your friends, see what they\'re watching, and compare your lists in real time.',
+    title: 'Amis et social',
+    description: 'Suivez vos amis, voyez ce qu\'ils regardent et comparez vos listes en temps reel.',
     iconSvg: '<svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>'
   },
   {
-    title: 'Shared Lists',
-    description: 'Create collaborative anime lists with your group. Add, remove, and vote on entries together.',
+    title: 'Listes partagees',
+    description: 'Creez des listes d\'anime collaboratives avec votre groupe. Ajoutez, retirez et decidez ensemble.',
     iconSvg: '<svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>'
   },
   {
-    title: 'Progress Tracking',
-    description: 'Sync your AniList data automatically. Your watch progress is always up to date.',
+    title: 'Suivi de progression',
+    description: 'Synchronisez automatiquement vos données AniList. Votre progression reste toujours a jour.',
     iconSvg: '<svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>'
   },
   {
-    title: 'Browse & Discover',
-    description: 'Explore the full AniList catalogue. Find your next obsession with smart recommendations.',
+    title: 'Explorer et decouvrir',
+    description: 'Explorez tout le catalogue AniList. Trouvez votre prochaine obsession grace a des recommandations utiles.',
     iconSvg: '<svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>'
   },
   {
-    title: 'Real-time Notifications',
-    description: 'Get notified when friends update their lists, finish a series, or share something new.',
+    title: 'Notifications en temps reel',
+    description: 'Recevez une alerte quand vos amis mettent a jour leurs listes, terminent une serie ou partagent quelque chose de nouveau.',
     iconSvg: '<svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>'
   },
   {
-    title: 'AniList Native',
-    description: 'No new account needed. Sign in directly with AniList — your data, your control.',
+    title: 'Natif AniList',
+    description: 'Aucun nouveau compte necessaire. Connectez-vous directement avec AniList : vos données, votre controle.',
     iconSvg: '<svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>'
   }
 ]
@@ -557,7 +557,7 @@ const handleFollowSearch = () => {
       followSearchResults.value = filteredUsers
         .map((user: AniListSearchUser) => {
           const anilistUserId = Number(user?.id || 0)
-          const name = String(user?.name || 'Unknown user')
+          const name = String(user?.name || 'Utilisateur inconnu')
           const avatar = String(user?.avatar?.large || user?.avatar?.medium || '')
           const localUser = pocketbaseMatches.get(anilistUserId)
           const hue = buildHue(name)
@@ -577,7 +577,7 @@ const handleFollowSearch = () => {
         })
         .filter(user => user.anilistUserId > 0)
     } catch {
-      followSearchError.value = 'Unable to search AniList users right now.'
+      followSearchError.value = 'Impossible de rechercher des utilisateurs AniList pour le moment.'
       followSearchResults.value = []
     } finally {
       isSearchingUsers.value = false
@@ -607,7 +607,7 @@ const followUserFromSearch = async (user: { anilistUserId: number }) => {
         : entry
     )
   } catch (error: any) {
-    followSearchError.value = error?.message || 'Unable to update AniList follow right now.'
+    followSearchError.value = error?.message || 'Impossible de mettre a jour le suivi AniList pour le moment.'
   }
 }
 
@@ -626,7 +626,7 @@ const loadDashboardLists = async () => {
     dashboardLists.value = await sharedListsStore.loadSummaries()
   } catch (error: any) {
     dashboardLists.value = []
-    dashboardListsError.value = error?.message || 'Unable to load shared lists.'
+    dashboardListsError.value = error?.message || 'Impossible de charger les listes partagees.'
   } finally {
     dashboardListsLoading.value = false
   }

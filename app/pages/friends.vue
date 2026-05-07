@@ -68,8 +68,6 @@ import { computed, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAnilistSocialStore } from '~/composables/useAnilistSocialStore'
 
-definePageMeta({ middleware: ['auth'] })
-
 const socialStore = useAnilistSocialStore()
 const { isLoading, loadError, friendUsers, followPendingIds } = storeToRefs(socialStore)
 const searchText = ref('')

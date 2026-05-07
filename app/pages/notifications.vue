@@ -120,8 +120,6 @@ import { storeToRefs } from 'pinia'
 import { useAnilistNotificationsStore, type AniListNotificationItem } from '~/composables/useAnilistNotificationsStore'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 
-definePageMeta({ middleware: ['auth'] })
-
 const notificationStore = useAnilistNotificationsStore()
 const pocketbaseStore = usePocketbaseStore()
 const { unreadCount, items, isLoading, loadError, hasNextPage } = storeToRefs(notificationStore)

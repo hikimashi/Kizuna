@@ -79,8 +79,6 @@ import { computed, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAnilistSocialStore } from '~/composables/useAnilistSocialStore'
 
-definePageMeta({ middleware: ['auth'] })
-
 type SocialTab = 'followed' | 'followers' | 'friends'
 
 const activeTab = ref<SocialTab>('followed')

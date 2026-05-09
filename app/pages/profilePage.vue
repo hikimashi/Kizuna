@@ -260,8 +260,6 @@ import { getAnilistCoverSrc, getAnilistCoverSrcSet, type AnilistCoverImage } fro
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 import { useAnilistProfileStore } from '~/composables/useAnilistProfileStore'
 
-definePageMeta({ middleware: ['auth'] })
-
 const pocketbaseStore = usePocketbaseStore()
 const profileStore = useAnilistProfileStore()
 const {

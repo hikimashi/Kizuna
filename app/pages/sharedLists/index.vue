@@ -265,8 +265,6 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useSharedLists, type SharedListMember, type SharedListPrivacy, type SharedListSummary } from '~/composables/useSharedLists'
 
-definePageMeta({ middleware: ['auth'] })
-
 type FilterKey = 'all' | 'owned' | 'joined'
 type SortKey = 'recent' | 'title' | 'animeCount' | 'members'
 type SearchableUser = { id: string; name: string; avatar?: string; initials: string; color: string }

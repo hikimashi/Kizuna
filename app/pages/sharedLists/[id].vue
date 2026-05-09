@@ -651,8 +651,6 @@ import {
   type SharedListPrivacy
 } from '~/composables/useSharedLists'
 
-definePageMeta({ middleware: ['auth'] })
-
 type DetailTab = 'anime' | 'members'
 type ViewMode = 'grid' | 'list' | 'compact'
 type AnimeSortKey = 'title' | 'score' | 'progress' | 'updatedAt'

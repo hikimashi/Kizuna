@@ -209,11 +209,6 @@ type MediaListEntry = {
     month?: number | null
     day?: number | null
   } | null
-  completedAt?: {
-    year?: number | null
-    month?: number | null
-    day?: number | null
-  } | null
   media: {
     id?: number | null
     episodes?: number | null
@@ -443,11 +438,6 @@ const fetchAnimeList = async () => {
             progress
             updatedAt
             startedAt {
-              year
-              month
-              day
-            }
-            completedAt {
               year
               month
               day

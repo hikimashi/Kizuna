@@ -89,8 +89,6 @@ import { getAnilistCoverSrc, getAnilistCoverSrcSet, type AnilistCoverImage } fro
 import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 
-definePageMeta({ middleware: ['auth'] })
-
 type FavoriteTab = 'anime' | 'characters'
 
 type FavoriteCard = {

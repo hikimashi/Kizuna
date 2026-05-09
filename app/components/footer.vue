@@ -60,6 +60,10 @@ const currentYear = new Date().getFullYear()
 const pocketbaseStore = usePocketbaseStore()
 const toastStore = useToastStore()
 const authRecord = computed(() => unref(pocketbaseStore.authRecord) as { id?: string } | null)
+const isAniListLinked = computed(() => {
+  const record = authRecord.value as Record<string, any> | null
+  return Boolean(record?.anilist_user_id && record?.anilist_token)
+})
 const navigationLinks: FooterLink[] = [
   { label: 'Accueil', to: '/' },
   { label: 'Profil', to: '/profilePage', requiresAuth: true },
@@ -82,7 +86,7 @@ const handleFooterNavigation = async (link: FooterLink) => {
 }
 
 const handleProtectedNavigation = async (to: string) => {
-  if (authRecord.value?.id) {
+  if (authRecord.value?.id && isAniListLinked.value) {
     await navigateTo(to)
     return
   }

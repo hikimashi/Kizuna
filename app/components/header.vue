@@ -9,7 +9,7 @@
       <div class="navbar-start">
         <NuxtLink to="/" class="logo-link" @click="handleLogoClick">
           <img src="/img/logo.webp" alt="Kizuna" class="logo-image" />
-          <span class="logo-text" :class="{ 'logo-text-hidden': isLoggedIn }">Kizuna</span>
+          <span class="logo-text" :class="{ 'logo-text-hidden': showFullNav }">Kizuna</span>
         </NuxtLink>
       </div>
 

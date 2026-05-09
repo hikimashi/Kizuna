@@ -217,8 +217,6 @@ import { useMyAuthStore } from '~/composables/useMyAuthStore'
 import { useToastStore } from '~/composables/useToastStore'
 import { useAlertStore } from '~/composables/useAlertStore'
 
-definePageMeta({ middleware: ['auth'] })
-
 type SectionKey = 'anilist' | 'profile' | 'security' | 'appearance'
 
 const pocketbaseStore = usePocketbaseStore()

@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore';
-import { useMyAuthStore } from '~/composables/useMyAuthStore';
 
 export const useUserStore = defineStore('userStore', () => {
   const pocketbase = usePocketbaseStore();
@@ -24,15 +23,10 @@ export const useUserStore = defineStore('userStore', () => {
     }
   };
 
-  const userDataHasEdited = async (data: UserType) => {
-    return JSON.stringify(data) !== JSON.stringify(userData.value);
-  };
-
   return {
     userData,
     saveUserData,
     clearUser,
     updateUser,
-    userDataHasEdited,
   };
 });

@@ -25,21 +25,21 @@
       </div>
     </section>
 
-    <div class="sub-tabs-bar">
-      <div class="sub-tabs">
+    <div class="border-b border-[var(--kz-border)] bg-[color-mix(in_srgb,var(--kz-card-bg)_88%,transparent)] supports-[backdrop-filter]:backdrop-blur-sm">
+      <div class="tabs tabs-bordered mx-auto flex-nowrap justify-start overflow-x-auto px-2 sm:px-3 md:justify-center">
         <template v-for="tab in props.tabs" :key="tab.key">
           <NuxtLink
             v-if="tab.to && !tab.disabled"
-            class="sub-tab"
-            :class="{ active: tab.active }"
+            class="tab h-auto min-h-0 whitespace-nowrap border-b-2 border-transparent px-3 py-3 text-[11px] font-medium text-[var(--kz-text-secondary)] transition hover:text-[var(--kz-text-primary)] sm:px-4 sm:text-xs md:px-5"
+            :class="tabClass(tab)"
             :to="tab.to"
           >
             {{ tab.label }}
           </NuxtLink>
           <span
             v-else
-            class="sub-tab"
-            :class="{ active: tab.active, disabled: Boolean(tab.disabled) }"
+            class="tab h-auto min-h-0 whitespace-nowrap border-b-2 border-transparent px-3 py-3 text-[11px] font-medium text-[var(--kz-text-secondary)] transition sm:px-4 sm:text-xs md:px-5"
+            :class="tabClass(tab)"
             aria-disabled="true"
           >
             {{ tab.label }}
@@ -102,6 +102,11 @@ if (import.meta.client && !joinedCache.value) {
 }
 
 const resolvedJoinedDisplay = computed(() => joinedCache.value || '-')
+
+const tabClass = (tab: SubTabItem) => ({
+  'tab-active border-b-[var(--kz-accent)] text-[var(--kz-accent)]': Boolean(tab.active),
+  'cursor-default opacity-45 hover:text-[var(--kz-text-secondary)]': Boolean(tab.disabled),
+})
 
 onMounted(async () => {
   if (joinedCache.value || !token.value) return
@@ -240,75 +245,6 @@ onMounted(async () => {
   transform: translateY(-12px);
 }
 
-.sub-tabs-bar {
-  background: #0e1826;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  padding-top: 0;
-  display: flex;
-  justify-content: center;
-}
-
-.sub-tabs {
-  display: flex;
-  align-items: center;
-}
-
-.sub-tab {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  padding: 10px 20px;
-  font-size: 13px;
-  font-family: 'Overpass', sans-serif;
-  font-weight: 500;
-  line-height: 1.2;
-  color: #7a9ab8;
-  border: none;
-  background: none;
-  border-bottom: 2px solid transparent;
-  transition: color 0.15s, border-color 0.15s;
-  margin: 0;
-  margin-bottom: -1px;
-  box-sizing: border-box;
-  appearance: none;
-  -webkit-appearance: none;
-  vertical-align: middle;
-  transform: translateY(3px);
-}
-
-.sub-tab.active {
-  color: #3db4f2;
-  border-bottom-color: #3db4f2;
-  font-weight: 600;
-}
-
-.sub-tab:hover:not(.disabled):not(.active) {
-  color: #9fbbd6;
-}
-
-.sub-tab.disabled {
-  cursor: default;
-}
-
-[data-theme="winter"] .sub-tabs-bar {
-  background: rgba(239, 246, 253, 0.78);
-  border-bottom-color: rgba(23, 52, 78, 0.18);
-}
-
-[data-theme="winter"] .sub-tab {
-  color: #4a6883;
-}
-
-[data-theme="winter"] .sub-tab.active {
-  color: #1f88cb;
-  border-bottom-color: #1f88cb;
-}
-
-[data-theme="winter"] .sub-tab:hover:not(.disabled):not(.active) {
-  color: #2f577d;
-}
-
 @media (max-width: 1024px) {
   .banner-avatar {
     width: 110px;
@@ -317,11 +253,6 @@ onMounted(async () => {
 
   .banner-content {
     left: 20px;
-  }
-
-  .sub-tab {
-    padding: 9px 14px;
-    font-size: 12px;
   }
 }
 
@@ -362,16 +293,6 @@ onMounted(async () => {
     font-size: 12px;
     transform: none;
   }
-
-  .sub-tabs-bar {
-    justify-content: flex-start;
-    overflow-x: auto;
-  }
-
-  .sub-tabs {
-    min-width: max-content;
-    padding: 0 8px;
-  }
 }
 
 @media (max-width: 420px) {
@@ -382,11 +303,6 @@ onMounted(async () => {
   .banner-avatar {
     width: 84px;
     height: 84px;
-  }
-
-  .sub-tab {
-    padding: 9px 12px;
-    font-size: 11px;
   }
 }
 

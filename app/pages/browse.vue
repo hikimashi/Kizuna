@@ -1,8 +1,8 @@
 <template>
   <div class="browse-page" @keydown.esc="closeDropdown">
     <section class="browse-shell">
-      <div class="filters-bar">
-        <label class="search-wrap">
+      <div class="filters-bar shadow-xl">
+        <label class="search-wrap transition">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" aria-hidden="true">
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.35-4.35" />
@@ -12,7 +12,7 @@
 
         <div class="filter-group" :class="{ open: openDropdown === 'genre' }">
           <button
-            class="filter-pill"
+            class="filter-pill shadow-sm"
             :class="{ 'has-value': selectedGenres.length > 0 }"
             type="button"
             :aria-expanded="openDropdown === 'genre'"
@@ -28,13 +28,13 @@
             </svg>
           </button>
 
-          <div class="dropdown genre-dropdown" @click.stop>
+          <div class="dropdown genre-dropdown shadow-2xl" @click.stop>
             <div class="dropdown-title">Genres</div>
             <div class="genre-chips">
               <button
                 v-for="genreOption in genreOptions"
                 :key="genreOption"
-                class="genre-chip"
+                class="genre-chip shadow-sm"
                 :class="{ selected: selectedGenres.includes(genreOption) }"
                 :style="genreChipStyle(genreOption)"
                 type="button"
@@ -48,7 +48,7 @@
 
         <div class="filter-group" :class="{ open: openDropdown === 'year' }">
           <button
-            class="filter-pill"
+            class="filter-pill shadow-sm"
             :class="{ 'has-value': Boolean(year) }"
             type="button"
             :aria-expanded="openDropdown === 'year'"
@@ -64,11 +64,11 @@
             </svg>
           </button>
 
-          <div class="dropdown" @click.stop>
+          <div class="dropdown shadow-2xl" @click.stop>
             <button
               v-for="yearOption in yearOptions"
               :key="yearOption.value"
-              class="dropdown-item"
+              class="dropdown-item rounded-lg"
               :class="{ selected: year === yearOption.value }"
               type="button"
               @click.stop="setYear(yearOption.value)"
@@ -80,7 +80,7 @@
 
         <div class="filter-group" :class="{ open: openDropdown === 'season' }">
           <button
-            class="filter-pill"
+            class="filter-pill shadow-sm"
             :class="{ 'has-value': Boolean(season) }"
             type="button"
             :aria-expanded="openDropdown === 'season'"
@@ -95,11 +95,11 @@
             </svg>
           </button>
 
-          <div class="dropdown" @click.stop>
+          <div class="dropdown shadow-2xl" @click.stop>
             <button
               v-for="seasonOption in seasonOptions"
               :key="seasonOption.value"
-              class="dropdown-item"
+              class="dropdown-item rounded-lg"
               :class="{ selected: season === seasonOption.value }"
               type="button"
               @click.stop="setSeason(seasonOption.value)"
@@ -111,7 +111,7 @@
 
         <div class="filter-group" :class="{ open: openDropdown === 'format' }">
           <button
-            class="filter-pill"
+            class="filter-pill shadow-sm"
             :class="{ 'has-value': format !== 'ALL' }"
             type="button"
             :aria-expanded="openDropdown === 'format'"
@@ -126,11 +126,11 @@
             </svg>
           </button>
 
-          <div class="dropdown" @click.stop>
+          <div class="dropdown shadow-2xl" @click.stop>
             <button
               v-for="formatOption in formatOptions"
               :key="formatOption.value"
-              class="dropdown-item"
+              class="dropdown-item rounded-lg"
               :class="{ selected: format === formatOption.value }"
               type="button"
               @click.stop="setFormat(formatOption.value)"
@@ -142,7 +142,7 @@
 
         <div class="filter-group" :class="{ open: openDropdown === 'status' }">
           <button
-            class="filter-pill"
+            class="filter-pill shadow-sm"
             :class="{ 'has-value': Boolean(status) }"
             type="button"
             :aria-expanded="openDropdown === 'status'"
@@ -158,11 +158,11 @@
             </svg>
           </button>
 
-          <div class="dropdown" @click.stop>
+          <div class="dropdown shadow-2xl" @click.stop>
             <button
               v-for="statusOption in statusOptions"
               :key="statusOption.value"
-              class="dropdown-item"
+              class="dropdown-item rounded-lg"
               :class="{ selected: status === statusOption.value }"
               type="button"
               @click.stop="setStatus(statusOption.value)"
@@ -176,7 +176,7 @@
 
         <label class="sort-field">
           <span class="sort-label">Tri</span>
-          <select v-model="sortBy" class="sort-select">
+          <select v-model="sortBy" class="sort-select shadow-sm">
             <option v-for="sortOption in sortOptions" :key="sortOption.value" :value="sortOption.value">
               {{ sortOption.label }}
             </option>
@@ -184,12 +184,12 @@
         </label>
 
         <div class="view-btns">
-          <button class="vbtn" :class="{ active: viewMode === 'grid' }" type="button" title="Grille" @click="viewMode = 'grid'">
+          <button class="vbtn shadow-sm" :class="{ active: viewMode === 'grid' }" type="button" title="Grille" @click="viewMode = 'grid'">
             <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13" aria-hidden="true">
               <path d="M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 0h7v7h-7z" />
             </svg>
           </button>
-          <button class="vbtn" :class="{ active: viewMode === 'list' }" type="button" title="Liste" @click="viewMode = 'list'">
+          <button class="vbtn shadow-sm" :class="{ active: viewMode === 'list' }" type="button" title="Liste" @click="viewMode = 'list'">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" aria-hidden="true">
               <path d="M9 6h13M9 12h13M9 18h13M4 6h.01M4 12h.01M4 18h.01" />
             </svg>
@@ -201,7 +201,7 @@
         <button
           v-for="filterItem in activeFilters"
           :key="filterItem.key"
-          class="active-tag"
+          class="active-tag shadow-sm"
           type="button"
           @click="removeFilter(filterItem)"
         >
@@ -211,7 +211,7 @@
           </svg>
         </button>
 
-        <button class="clear-filters-btn" type="button" @click="clearAllFilters">
+        <button class="clear-filters-btn shadow-sm transition" type="button" @click="clearAllFilters">
           Tout effacer
         </button>
       </div>
@@ -244,10 +244,10 @@ type FilterOption = {
 const currentYear = new Date().getFullYear()
 
 const sortOptions: FilterOption[] = [
-  { value: 'POPULARITY_DESC', label: 'Popularité' },
+  { value: 'POPULARITY_DESC', label: 'Popularite' },
   { value: 'SCORE_DESC', label: 'Note' },
   { value: 'TRENDING_DESC', label: 'Tendance' },
-  { value: 'START_DATE_DESC', label: 'Plus récents' },
+  { value: 'START_DATE_DESC', label: 'Plus recents' },
   { value: 'TITLE_ROMAJI', label: 'Titre A-Z' }
 ]
 
@@ -271,9 +271,9 @@ const seasonOptions: FilterOption[] = [
 const statusOptions: FilterOption[] = [
   { value: '', label: 'Tous les statuts' },
   { value: 'RELEASING', label: 'En diffusion' },
-  { value: 'FINISHED', label: 'Terminé' },
+  { value: 'FINISHED', label: 'Termine' },
   { value: 'NOT_YET_RELEASED', label: 'Pas encore sorti' },
-  { value: 'CANCELLED', label: 'Annulé' }
+  { value: 'CANCELLED', label: 'Annule' }
 ]
 
 const yearOptions = computed<FilterOption[]>(() => [

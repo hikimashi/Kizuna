@@ -123,7 +123,6 @@ type SocialBundle = {
   threads: SocialThread[]
 }
 type AniListGraphqlResponse<T> = { data?: T; errors?: Array<{ message?: string | null }> | null }
-type DescriptionTranslationResponse = { description?: string | null; translated?: boolean | null; provider?: string | null }
 
 const route = useRoute()
 const animeId = computed(() => Number(route.params.id))
@@ -322,11 +321,7 @@ const mediaState = await useAsyncData(
     )
     return response.data?.Media ?? null
   },
-  {
-    watch: [animeId, anilistToken],
-    lazy: true,
-    default: () => null
-  }
+  { watch: [animeId, anilistToken] }
 )
 
 const socialState = await useAsyncData(
@@ -379,9 +374,7 @@ const socialState = await useAsyncData(
   },
   {
     default: () => ({ global: [], following: [], self: [], threads: [] }),
-    watch: [animeId, socialPageSize, anilistToken, anilistUserId],
-    server: false,
-    lazy: true
+    watch: [animeId, socialPageSize, anilistToken, anilistUserId]
   }
 )
 
@@ -411,9 +404,7 @@ const reviewsState = await useAsyncData(
   },
   {
     default: () => ({ reviews: [], hasNextPage: false }),
-    watch: [animeId, reviewPage],
-    server: false,
-    lazy: true
+    watch: [animeId, reviewPage]
   }
 )
 
@@ -438,31 +429,6 @@ const description = computed(() =>
     .replace(/\n{3,}/g, '\n\n')
     .trim()
 )
-const translatedDescriptionState = await useAsyncData(
-  () => `anime-description-fr-${animeId.value}`,
-  async () => {
-    if (!animeId.value || !description.value) return null
-
-    const response = await $fetch<DescriptionTranslationResponse>('/api/translate/animeDescription', {
-      method: 'POST',
-      body: {
-        mediaId: animeId.value,
-        description: description.value,
-        targetLang: 'fr'
-      }
-    })
-
-    return response?.description?.trim() || null
-  },
-  {
-    watch: [animeId, description],
-    server: false,
-    lazy: true,
-    default: () => null
-  }
-)
-const translatedDescription = computed(() => translatedDescriptionState.data.value || '')
-const displayedDescription = computed(() => translatedDescription.value || description.value)
 const rankings = computed(() => (media.value?.rankings || []).filter((item) => item.rank && item.allTime).slice(0, 2))
 const studios = computed(() => (media.value?.studios?.nodes || []).filter(Boolean))
 const animationStudio = computed(() => studios.value.find((item) => item?.isAnimationStudio)?.name || studios.value[0]?.name || 'Inconnu')
@@ -596,7 +562,7 @@ const STATUS_TRANSLATIONS: Record<string, string> = {
   TV: 'TV',
   TV_SHORT: 'TV courte',
   MOVIE: 'Film',
-  SPECIAL: 'Spécial',
+  SPECIAL: 'Special',
   OVA: 'OVA',
   ONA: 'ONA',
   MUSIC: 'Musique',
@@ -605,20 +571,20 @@ const STATUS_TRANSLATIONS: Record<string, string> = {
   ONE_SHOT: 'One-shot',
   LIGHT_NOVEL: 'Light novel',
   VISUAL_NOVEL: 'Visual novel',
-  VIDEO_GAME: 'Jeu vidéo',
+  VIDEO_GAME: 'Jeu video',
   OTHER: 'Autre',
   ORIGINAL: 'Original',
   DOUJINSHI: 'Doujinshi',
   COMIC: 'BD',
-  LIVE_ACTION: 'Prise de vue réelle',
+  LIVE_ACTION: 'Prise de vue reelle',
   GAME: 'Jeu',
-  MULTIMEDIA_PROJECT: 'Projet multimédia',
-  PICTURE_BOOK: 'Album illustré',
+  MULTIMEDIA_PROJECT: 'Projet multimedia',
+  PICTURE_BOOK: 'Album illustre',
   WEB_NOVEL: 'Web novel',
-  FINISHED: 'Terminé',
+  FINISHED: 'Termine',
   RELEASING: 'En cours',
-  NOT_YET_RELEASED: 'À venir',
-  CANCELLED: 'Annulé',
+  NOT_YET_RELEASED: 'A venir',
+  CANCELLED: 'Annule',
   HIATUS: 'En pause',
   MAIN: 'Principal',
   SUPPORTING: 'Secondaire',
@@ -629,24 +595,24 @@ const STATUS_TRANSLATIONS: Record<string, string> = {
   PARENT: 'Parent',
   SIDE_STORY: 'Histoire annexe',
   CHARACTER: 'Personnage',
-  SUMMARY: 'Résumé',
+  SUMMARY: 'Resume',
   ALTERNATIVE: 'Alternative',
   SPIN_OFF: 'Spin-off',
   SOURCE: 'Source',
   COMPILATION: 'Compilation',
   CONTAINS: 'Contient',
   CURRENT: 'En cours',
-  PLANNING: 'À voir',
-  COMPLETED: 'Terminé',
+  PLANNING: 'A voir',
+  COMPLETED: 'Termine',
   REPEATING: 'Revisionnage',
   PAUSED: 'En pause',
-  DROPPED: 'Abandonné',
-  'watched episode': 'a regardé l\'épisode',
-  'plans to watch': 'prévoit de regarder',
-  completed: 'a terminer',
-  dropped: 'a abandonné',
+  DROPPED: 'Abandonne',
+  'watched episode': 'a regarde l\'episode',
+  'plans to watch': 'prevoit de regarder',
+  completed: 'a termine',
+  dropped: 'a abandonne',
   'paused watching': 'a mis en pause',
-  rewatched: 'a revisionné'
+  rewatched: 'a revisionne'
 }
 
 function formatStatus(value?: string | null) {
@@ -714,7 +680,7 @@ function activityMediaTitle(activity: Activity) {
 function activitySummary(activity: Activity) {
   const status = activity.status
     ? `${activity.status.charAt(0).toUpperCase()}${activity.status.slice(1)}`
-    : 'Mise à jour'
+    : 'Mise a jour'
   return activity.progress ? `${formatStatus(status)} ${activity.progress} de` : formatStatus(status)
 }
 
@@ -753,7 +719,7 @@ function loadMoreSocial() {
 }
 
 function formatRankingLabel(type?: string | null) {
-  if (type === 'RATED') return 'Mieux noté'
+  if (type === 'RATED') return 'Mieux note'
   if (type === 'POPULAR') return 'Plus populaire'
   return formatStatus(type)
 }
@@ -797,7 +763,7 @@ const overviewStats = computed(() => [
   {
     label: 'Note moyenne',
     value: media.value?.averageScore ? `${media.value.averageScore}%` : '-',
-    meta: 'Note de la communauté'
+    meta: 'Note de la communaute'
   },
   {
     label: 'Score moyen',
@@ -805,21 +771,21 @@ const overviewStats = computed(() => [
     meta: peakScoreBucket.value ? `Pic: ${peakScoreBucket.value.score}` : 'Tendance des notes'
   },
   {
-    label: 'Popularité',
+    label: 'Popularite',
     value: media.value?.popularity ? formatCompactNumber(media.value.popularity) : '-',
-    meta: media.value?.popularity ? formatNumber(media.value.popularity) : 'Pas de donnees'
+    meta: media.value?.popularity ? formatNumber(media.value.popularity) : 'Pas de données'
   },
   {
     label: 'Favoris',
     value: media.value?.favourites ? formatCompactNumber(media.value.favourites) : '-',
-    meta: media.value?.favourites ? `${formatNumber(media.value.favourites)} utilisateurs` : 'Pas de donnees'
+    meta: media.value?.favourites ? `${formatNumber(media.value.favourites)} utilisateurs` : 'Pas de données'
   }
 ])
 const statsSummaryCards = computed(() => [
   {
     label: 'Note moyenne',
     value: media.value?.averageScore ? `${media.value.averageScore}%` : '-',
-    meta: 'Note de la communauté'
+    meta: 'Note de la communaute'
   },
   {
     label: 'Score moyen',
@@ -827,9 +793,9 @@ const statsSummaryCards = computed(() => [
     meta: peakScoreBucket.value ? `Pic de note : ${peakScoreBucket.value.score}` : 'Pas de tendance de note'
   },
   {
-    label: 'Popularité',
+    label: 'Popularite',
     value: media.value?.popularity ? formatNumber(media.value.popularity) : '-',
-    meta: 'Popularité AniList'
+    meta: 'Popularite AniList'
   },
   {
     label: 'Favoris',
@@ -839,12 +805,12 @@ const statsSummaryCards = computed(() => [
   {
     label: 'Episodes',
     value: media.value?.episodes ? String(media.value.episodes) : '?',
-    meta: media.value?.duration ? `${media.value.duration} min chacun` : 'Durée inconnue'
+    meta: media.value?.duration ? `${media.value.duration} min chacun` : 'Duree inconnue'
   },
   {
     label: 'Studio',
     value: animationStudio.value,
-    meta: producers.value[0] ? `Producteur : ${producers.value[0]}` : 'Donnees de production'
+    meta: producers.value[0] ? `Producteur : ${producers.value[0]}` : 'Données de production'
   }
 ])
 const infoFacts = computed(() => [
@@ -852,7 +818,7 @@ const infoFacts = computed(() => [
   { label: 'Statut', value: formatStatus(media.value?.status) },
   { label: 'Saison', value: formatSeason(media.value?.season, media.value?.seasonYear) },
   { label: 'Episodes', value: media.value?.episodes ? String(media.value.episodes) : '?' },
-  { label: 'Durée', value: media.value?.duration ? `${media.value.duration} min` : 'Inconnue' },
+  { label: 'Duree', value: media.value?.duration ? `${media.value.duration} min` : 'Inconnue' },
   { label: 'Source', value: formatStatus(media.value?.source) }
 ])
 const scoreMarkers = computed(() => {
@@ -872,16 +838,16 @@ const tabs = [
 
 const listOptions: Array<{ value: EditableAniListStatus; label: string }> = [
   { value: 'CURRENT', label: 'En cours' },
-  { value: 'PLANNING', label: 'À voir' },
-  { value: 'COMPLETED', label: 'Terminé' },
+  { value: 'PLANNING', label: 'A voir' },
+  { value: 'COMPLETED', label: 'Termine' },
   { value: 'REPEATING', label: 'Revisionnage' },
   { value: 'PAUSED', label: 'En pause' },
-  { value: 'DROPPED', label: 'Abandonné' }
+  { value: 'DROPPED', label: 'Abandonne' }
 ]
 
 const currentListLabel = computed(() => {
   const status = media.value?.mediaListEntry?.status
-  if (!status) return 'Ajouter à la liste'
+  if (!status) return 'Ajouter a la liste'
   return listOptions.find((option) => option.value === status)?.label || formatStatus(status)
 })
 
@@ -901,7 +867,7 @@ async function toggleFavorite() {
       { animeId: media.value.id },
       { token: anilistToken.value, skipCache: true }
     )
-    if (response?.errors?.length) throw new Error(response.errors[0]?.message || 'Impossible de mettre à jour le favori.')
+    if (response?.errors?.length) throw new Error(response.errors[0]?.message || 'Impossible de mettre a jour le favori.')
   } catch {
     media.value.isFavourite = !next
     media.value.favourites = prevCount
@@ -1022,7 +988,7 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
 
 <template>
   <div class="anime-page">
-    <SkeletonLoader v-if="loading" variant="anime-detail" />
+    <div v-if="loading" class="state-panel">Chargement de l'anime...</div>
     <div v-else-if="hasError || !media" class="state-panel error">Impossible de charger cette fiche anime.</div>
     <div v-else>
       <div
@@ -1051,14 +1017,14 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
               <div class="sidebar-title">Données</div>
               <div class="data-row"><span class="data-label">Format</span><span class="data-value">{{ formatStatus(media.format) }}</span></div>
               <div class="data-row"><span class="data-label">Episodes</span><span class="data-value">{{ media.episodes || '?' }}</span></div>
-              <div class="data-row"><span class="data-label">Durée d'épisode</span><span class="data-value">{{ media.duration ? `${media.duration} min` : 'Inconnue' }}</span></div>
+              <div class="data-row"><span class="data-label">Duree d'episode</span><span class="data-value">{{ media.duration ? `${media.duration} min` : 'Inconnue' }}</span></div>
               <div class="data-row"><span class="data-label">Statut</span><span class="data-value">{{ formatStatus(media.status) }}</span></div>
-              <div class="data-row"><span class="data-label">Date de début</span><span class="data-value">{{ formatDate(media.startDate) }}</span></div>
+              <div class="data-row"><span class="data-label">Date de debut</span><span class="data-value">{{ formatDate(media.startDate) }}</span></div>
               <div class="data-row"><span class="data-label">Date de fin</span><span class="data-value">{{ formatDate(media.endDate) }}</span></div>
               <div class="data-row"><span class="data-label">Saison</span><span class="data-value">{{ formatSeason(media.season, media.seasonYear) }}</span></div>
               <div class="data-row"><span class="data-label">Note moyenne</span><span class="data-value">{{ media.averageScore ? `${media.averageScore}%` : '-' }}</span></div>
               <div class="data-row"><span class="data-label">Score moyen</span><span class="data-value">{{ media.meanScore ? `${media.meanScore}%` : '-' }}</span></div>
-              <div class="data-row"><span class="data-label">Popularité</span><span class="data-value">{{ formatNumber(media.popularity) }}</span></div>
+              <div class="data-row"><span class="data-label">Popularite</span><span class="data-value">{{ formatNumber(media.popularity) }}</span></div>
               <div class="data-row"><span class="data-label">Favoris</span><span class="data-value">{{ formatNumber(media.favourites) }}</span></div>
               <div class="data-row"><span class="data-label">Studio</span><span class="data-value">{{ animationStudio }}</span></div>
               <div v-if="producers.length" class="data-row"><span class="data-label">Producteurs</span><span class="data-value stacked"><span v-for="producer in producers" :key="producer">{{ producer }}</span></span></div>
@@ -1084,13 +1050,13 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                 <span class="media-meta-pill">{{ formatStatus(media.format) }}</span>
                 <span class="media-meta-pill">{{ formatSeason(media.season, media.seasonYear) }}</span>
                 <span class="media-meta-pill">{{ media.averageScore ? `${media.averageScore}% de note` : 'Pas de note pour le moment' }}</span>
-                <span class="media-meta-pill">{{ media.episodes ? `${media.episodes} eps` : 'Épisodes à venir' }}</span>
+                <span class="media-meta-pill">{{ media.episodes ? `${media.episodes} eps` : 'Episodes a venir' }}</span>
               </div>
               <h1 class="media-title">{{ pageTitle }}</h1>
               <div v-if="genres.length" class="media-genre-row">
                 <span v-for="genre in genres" :key="`${genre}-hero`" class="media-genre-chip">{{ genre }}</span>
               </div>
-              <p class="media-description">{{ displayedDescription }}</p>
+              <p class="media-description">{{ description }}</p>
 
               <div class="actions">
                 <div ref="listActionRef" class="list-action">
@@ -1308,7 +1274,7 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                     </div>
                   </a>
                 </div>
-                <div v-else class="social-empty compact">Aucun aperçu d'épisode avec miniature n'a été trouvé sur AniList pour ce titre.</div>
+                <div v-else class="social-empty compact">Aucun apercu d'episode avec miniature n'a ete trouve sur AniList pour ce titre.</div>
               </section>
             </template>
 
@@ -1455,7 +1421,7 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                   </section>
 
                   <section v-if="rankings.length" class="info-card">
-                    <h3 class="info-card-title">Temps forts de la communauté</h3>
+                    <h3 class="info-card-title">Temps forts de la communaute</h3>
                     <div class="info-card-list">
                       <div v-for="item in rankings" :key="`${item.type}-${item.rank}-detail`" class="info-card-row">
                         <span>{{ formatRankingLabel(item.type) }}</span>
@@ -1486,8 +1452,8 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                   <article class="social-panel">
                     <div class="social-panel-head">
                       <div>
-                        <h2 class="social-heading">Activité récente</h2>
-                        <p class="social-subheading">Activité récente des listes anime autour de ce titre.</p>
+                        <h2 class="social-heading">Activite recente</h2>
+                        <p class="social-subheading">Activite recente des listes anime autour de ce titre.</p>
                       </div>
 
                       <div class="social-controls">
@@ -1508,10 +1474,10 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                     </div>
 
                     <p v-if="!canUsePersonalFeeds" class="social-note">
-                      Liez votre compte AniList pour débloquer les flux Moi et Suivis.
+                      Liez votre compte AniList pour debloquer les flux Moi et Suivis.
                     </p>
 
-                    <div v-if="socialLoading" class="social-empty">Chargement de l'activité...</div>
+                    <div v-if="socialLoading" class="social-empty">Chargement de l'activite...</div>
 
                     <div v-else-if="activeSocialActivities.length" class="activity-feed-list">
                       <article v-for="activity in activeSocialActivities" :key="`${activity.id}-feed`" class="activity-entry-card">
@@ -1562,15 +1528,15 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                         </div>
 
                         <div class="activity-actions">
-                          <span class="activity-action">Réponses {{ activity.replyCount || 0 }}</span>
+                          <span class="activity-action">Reponses {{ activity.replyCount || 0 }}</span>
                           <span class="activity-action">J'aime {{ activity.likeCount || 0 }}</span>
-                          <span v-if="activity.isSubscribed" class="activity-action accent">Abonné</span>
+                          <span v-if="activity.isSubscribed" class="activity-action accent">Abonne</span>
                         </div>
                       </article>
                     </div>
 
                     <div v-else class="social-empty">
-                      Aucune activité pour ce flux pour le moment.
+                      Aucune activite pour ce flux pour le moment.
                     </div>
 
                     <button
@@ -1630,11 +1596,11 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                     </div>
 
                     <div v-else-if="canUsePersonalFeeds" class="social-empty compact">
-                      Aucun utilisateur suivi trouvé pour cet anime pour le moment.
+                      Aucun utilisateur suivi trouve pour cet anime pour le moment.
                     </div>
 
                     <div v-if="canUsePersonalFeeds && followingTimelineItems.length" class="timeline-block">
-                      <h3 class="mini-title">Chronologie de l'activité</h3>
+                      <h3 class="mini-title">Chronologie de l'activite</h3>
                       <div class="timeline-list">
                         <template v-for="(item, index) in followingTimelineItems" :key="`timeline-${index}`">
                           <div v-if="item.type === 'gap'" class="timeline-gap">{{ item.label }}</div>
@@ -1659,7 +1625,7 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                         <h2 class="social-side-title">
                           Discussions
                         </h2>
-                        <p class="social-side-subtitle">Discussions récentes des forums AniList.</p>
+                        <p class="social-side-subtitle">Discussions recentes des forums AniList.</p>
                       </div>
                       <a class="create-thread-link" :href="createThreadUrl" target="_blank" rel="noreferrer">
                         Créer une discussion
@@ -1682,7 +1648,7 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                           </div>
                           <div class="thread-metrics">
                             <span>{{ formatCompactNumber(thread.viewCount || 0) }} vues</span>
-                            <span>{{ thread.replyCount || 0 }} réponses</span>
+                            <span>{{ thread.replyCount || 0 }} reponses</span>
                           </div>
                         </div>
 
@@ -1696,7 +1662,7 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                     </div>
 
                     <div v-else class="social-empty compact">
-                      Aucune discussion trouvée pour cet anime.
+                      Aucune discussion trouvee pour cet anime.
                     </div>
                   </article>
                 </aside>

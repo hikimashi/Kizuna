@@ -206,7 +206,7 @@ export const useAnilistProfileStore = defineStore('anilistProfile', () => {
       favoriteCharacters.value = allFavoriteCharacters
       loadedForKey.value = userKey.value
     } catch (error) {
-      console.error('Echec du chargement des donnees du profil :', error)
+      console.error('Echec du chargement des données du profil :', error)
     } finally {
       isLoading.value = false
     }

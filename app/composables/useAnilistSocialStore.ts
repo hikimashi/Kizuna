@@ -291,7 +291,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
 
       if (followingResult.status === 'rejected' && followersResult.status === 'rejected') {
         const details = [followingResult.reason?.message, followersResult.reason?.message].filter(Boolean).join(' | ')
-        throw new Error(details || 'Les donnees sociales AniList sont indisponibles.')
+        throw new Error(details || 'Les données sociales AniList sont indisponibles.')
       }
 
       const followersIds = new Set(followersRaw.map(user => Number(user.id)))
@@ -327,7 +327,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
 
       loadedForKey.value = userKey.value
     } catch (error: any) {
-      console.error('Echec du chargement des donnees sociales AniList :', error)
+      console.error('Echec du chargement des données sociales AniList :', error)
       const message = error?.data?.errors?.[0]?.message || error?.message
       loadError.value = message || 'Impossible de charger les données sociales AniList.'
       reset(true)
@@ -342,7 +342,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
       throw new Error('Utilisateur AniList invalide.')
     }
     if (!anilistUserId.value || !token.value) {
-      throw new Error('Le compte AniList n\'est pas lié.')
+      throw new Error('Le compte AniList n\'est pas lie.')
     }
     if (userId === anilistUserId.value) {
       throw new Error('Vous ne pouvez pas suivre votre propre compte AniList.')
@@ -370,7 +370,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
 
       await loadSocial(true)
     } catch (error: any) {
-      const message = error?.data?.errors?.[0]?.message || error?.message || 'Impossible de mettre à jour le suivi AniList.'
+      const message = error?.data?.errors?.[0]?.message || error?.message || 'Impossible de mettre a jour le suivi AniList.'
       loadError.value = message
       throw new Error(message)
     } finally {

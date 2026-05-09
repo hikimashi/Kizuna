@@ -1,16 +1,17 @@
 <template>
-  <div class="toast toast-top toast-end w-56 mt-15 z-100">
+  <div class="toast toast-top toast-end z-50 mt-15 w-72 max-w-[calc(100vw-2rem)]">
     <div
       v-for="toast in toasts"
+      :key="toast.id"
       :class="toastClass(toast.type)"
-      class="alert bg-base-100 border-2 text-base-content font-semibold align-middle"
+      class="alert border-2 bg-base-100/95 text-base-content font-semibold align-middle shadow-lg backdrop-blur-sm"
     >
       <component
         :is="toastIconMap[toast.type]"
         :class="toastColor(toast.type)"
-        class="w-6 h-6"
+        class="h-6 w-6 shrink-0"
       />
-      <span>{{ toast.message }}</span>
+      <span class="text-sm leading-5">{{ toast.message }}</span>
     </div>
   </div>
 </template>

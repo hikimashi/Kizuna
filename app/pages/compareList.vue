@@ -21,13 +21,13 @@
       </div>
     </div>
 
-    <div class="sub-tabs-bar">
-      <div class="sub-tabs">
-        <NuxtLink class="sub-tab" :to="profileTabRoute('anime-list')">Liste d'animes</NuxtLink>
-        <NuxtLink class="sub-tab active" :to="`/social/compare/${friendUserId}`">Comparaison</NuxtLink>
-        <NuxtLink class="sub-tab" :to="profileTabRoute('favorites')">Favoris</NuxtLink>
-        <NuxtLink class="sub-tab" :to="profileTabRoute('friends')">Amis</NuxtLink>
-        <NuxtLink class="sub-tab" :to="profileTabRoute('shared-lists')">Listes partagées</NuxtLink>
+    <div class="border-b border-[var(--kz-border)] bg-[color-mix(in_srgb,var(--kz-card-bg)_88%,transparent)] supports-[backdrop-filter]:backdrop-blur-sm">
+      <div class="tabs tabs-bordered mx-auto flex-nowrap justify-start overflow-x-auto px-2 sm:px-3 md:justify-center">
+        <NuxtLink class="tab h-auto min-h-0 whitespace-nowrap border-b-2 border-transparent px-3 py-3 text-[11px] font-medium text-[var(--kz-text-secondary)] transition hover:text-[var(--kz-text-primary)] sm:px-4 sm:text-xs md:px-5" :to="profileTabRoute('anime-list')">Liste d'animes</NuxtLink>
+        <NuxtLink class="tab tab-active h-auto min-h-0 whitespace-nowrap border-b-2 border-[var(--kz-accent)] px-3 py-3 text-[11px] font-semibold text-[var(--kz-accent)] transition sm:px-4 sm:text-xs md:px-5" :to="`/social/compare/${friendUserId}`">Comparaison</NuxtLink>
+        <NuxtLink class="tab h-auto min-h-0 whitespace-nowrap border-b-2 border-transparent px-3 py-3 text-[11px] font-medium text-[var(--kz-text-secondary)] transition hover:text-[var(--kz-text-primary)] sm:px-4 sm:text-xs md:px-5" :to="profileTabRoute('favorites')">Favoris</NuxtLink>
+        <NuxtLink class="tab h-auto min-h-0 whitespace-nowrap border-b-2 border-transparent px-3 py-3 text-[11px] font-medium text-[var(--kz-text-secondary)] transition hover:text-[var(--kz-text-primary)] sm:px-4 sm:text-xs md:px-5" :to="profileTabRoute('friends')">Amis</NuxtLink>
+        <NuxtLink class="tab h-auto min-h-0 whitespace-nowrap border-b-2 border-transparent px-3 py-3 text-[11px] font-medium text-[var(--kz-text-secondary)] transition hover:text-[var(--kz-text-primary)] sm:px-4 sm:text-xs md:px-5" :to="profileTabRoute('shared-lists')">Listes partagees</NuxtLink>
       </div>
     </div>
 
@@ -48,7 +48,7 @@
         <div class="vs-divider"></div>
 
         <div class="hero-center">
-          <div class="compat-label">Compatibilité</div>
+          <div class="compat-label">Compatibilite</div>
           <div class="compat-score">{{ compatibilityPercent }}<span>%</span></div>
           <div class="compat-bar"><div class="compat-fill" :style="{ width: compatBarWidth }"></div></div>
           <div class="compat-desc">{{ compatibilityLabel }}</div>
@@ -70,25 +70,25 @@
       </div>
 
       <div class="quick-stats">
-        <div class="qs-card">
+        <div class="qs-card shadow-sm">
           <div class="qs-label">Animes en commun</div>
           <div class="qs-value">{{ commonCountLabel }}</div>
           <div class="qs-sub">sur {{ selfListCountLabel }} / {{ friendListCountLabel }}</div>
         </div>
-        <div class="qs-card">
+        <div class="qs-card shadow-sm">
           <div class="qs-label">Ecart moyen de note</div>
           <div class="qs-value" :style="avgScoreDiffColor">{{ avgScoreDiffLabel }}</div>
           <div class="qs-sub">{{ avgScoreDiffSub }}</div>
         </div>
-        <div class="qs-card">
+        <div class="qs-card shadow-sm">
           <div class="qs-label">Seulement vous</div>
           <div class="qs-value">{{ onlySelfCountLabel }}</div>
-          <div class="qs-sub">anime à recommander</div>
+          <div class="qs-sub">anime a recommander</div>
         </div>
-        <div class="qs-card">
+        <div class="qs-card shadow-sm">
           <div class="qs-label">Seulement l'autre</div>
           <div class="qs-value">{{ onlyFriendCountLabel }}</div>
-          <div class="qs-sub">anime à découvrir</div>
+          <div class="qs-sub">anime a decouvrir</div>
         </div>
       </div>
       <div v-if="compareError" class="placeholder-panel" style="margin-bottom:14px;">
@@ -96,11 +96,11 @@
       </div>
 
       <div class="tabs">
-        <button class="tab" :class="{ active: activeTab === 'shared' }" type="button" @click="activeTab = 'shared'">Communs ({{ sharedEntries.length }})</button>
-        <button class="tab" :class="{ active: activeTab === 'genres' }" type="button" @click="activeTab = 'genres'">Genres</button>
-        <button class="tab" :class="{ active: activeTab === 'only' }" type="button" @click="activeTab = 'only'">Seulement vous ({{ onlySelfEntries.length }})</button>
-        <button class="tab" :class="{ active: activeTab === 'discover' }" type="button" @click="activeTab = 'discover'">A decouvrir ({{ onlyFriendEntries.length }})</button>
-        <button class="tab" :class="{ active: activeTab === 'diff' }" type="button" @click="activeTab = 'diff'">Ecart de note</button>
+        <button class="tab shadow-sm" :class="{ active: activeTab === 'shared' }" type="button" @click="activeTab = 'shared'">Communs ({{ sharedEntries.length }})</button>
+        <button class="tab shadow-sm" :class="{ active: activeTab === 'genres' }" type="button" @click="activeTab = 'genres'">Genres</button>
+        <button class="tab shadow-sm" :class="{ active: activeTab === 'only' }" type="button" @click="activeTab = 'only'">Seulement vous ({{ onlySelfEntries.length }})</button>
+        <button class="tab shadow-sm" :class="{ active: activeTab === 'discover' }" type="button" @click="activeTab = 'discover'">A decouvrir ({{ onlyFriendEntries.length }})</button>
+        <button class="tab shadow-sm" :class="{ active: activeTab === 'diff' }" type="button" @click="activeTab = 'diff'">Ecart de note</button>
       </div>
 
       <div v-if="isEntriesLoading" class="placeholder-panel">Chargement des données de comparaison...</div>
@@ -111,7 +111,7 @@
           <div class="legend-item"><div class="legend-dot legend-me"></div>Votre note</div>
           <div class="legend-item"><div class="legend-dot legend-them"></div>Sa note</div>
         </div>
-        <div v-if="sharedEntries.length === 0" class="placeholder-panel">Aucun anime en commun dans En cours/Terminé.</div>
+        <div v-if="sharedEntries.length === 0" class="placeholder-panel">Aucun anime en commun dans En cours/Termine.</div>
         <div v-else class="shared-grid">
           <div v-for="item in sharedEntries" :key="item.mediaId" class="shared-card">
             <img
@@ -159,7 +159,7 @@
       </div>
 
       <div v-else-if="activeTab === 'only'">
-        <div class="section-title">Animes vus seulement par vous - à recommander</div>
+        <div class="section-title">Animes vus seulement par vous - a recommander</div>
         <div v-if="onlySelfEntries.length === 0" class="placeholder-panel">Aucun anime exclusif.</div>
         <div v-else class="only-list">
           <div v-for="item in onlySelfEntries" :key="item.mediaId" class="only-item">
@@ -181,7 +181,7 @@
       </div>
 
       <div v-else-if="activeTab === 'discover'">
-        <div class="section-title">Animes vus seulement par l'autre - à découvrir</div>
+        <div class="section-title">Animes vus seulement par l'autre - a decouvrir</div>
         <div v-if="onlyFriendEntries.length === 0" class="placeholder-panel">Aucun anime exclusif.</div>
         <div v-else class="only-list">
           <div v-for="item in onlyFriendEntries" :key="item.mediaId" class="only-item">
@@ -292,7 +292,7 @@ const formatScore = (score: number) => {
   return score % 1 === 0 ? String(score) : score.toFixed(1)
 }
 
-const statusLabel = (status: 'CURRENT' | 'COMPLETED') => (status === 'CURRENT' ? 'En cours' : 'Terminé')
+const statusLabel = (status: 'CURRENT' | 'COMPLETED') => (status === 'CURRENT' ? 'En cours' : 'Termine')
 
 const selfMap = computed(() => {
   const map = new Map<number, CompareEntry>()
@@ -626,7 +626,7 @@ const fetchCompareEntries = async () => {
     friendEntries.value = mapEntries(friendRes)
   } catch (error) {
     console.error('[compareList] entries failed', error)
-    compareError.value = error instanceof Error ? error.message : 'La comparaison a échoué.'
+    compareError.value = error instanceof Error ? error.message : 'La comparaison a echoue.'
   } finally {
     isEntriesLoading.value = false
     hasEntriesLoaded.value = true

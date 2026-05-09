@@ -8,7 +8,7 @@ export const useMyAuthStore = defineStore('auth', () => {
   const userStore = useUserStore();
   const unverifiedEmailMessage = 'Please verify your email address before logging in.';
 
-  // Convertit les donnees PocketBase vers le format UserType utilise par l'app.
+  // Convertit les données PocketBase vers le format UserType utilise par l'app.
   const mapAuthDataToUser = (authData: { token: string; record: any }): UserType => {
     const { record } = authData;
 

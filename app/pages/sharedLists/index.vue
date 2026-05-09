@@ -5,7 +5,8 @@
     <main class="page-shell">
       <section class="top-bar">
         <div>
-          <h1 class="page-title">Listes partagées</h1>
+          <h1 class="page-title">Listes partagees</h1>
+          <p class="page-subtitle">Creez des listes d'animes, choisissez une banniere et une image, puis gerez les membres depuis la liste.</p>
         </div>
 
         <div class="top-actions">
@@ -30,6 +31,7 @@
         <div class="create-head">
           <div>
             <h2>Créer une liste partagée</h2>
+            <p>Creez la liste, definissez son apparence, puis ajoutez des membres immediatement.</p>
           </div>
           <button class="icon-close" type="button" aria-label="Fermer" @click="toggleCreatePanel">x</button>
         </div>
@@ -41,10 +43,10 @@
           </label>
 
           <label class="field">
-            <span>Confidentialité</span>
+            <span>Confidentialite</span>
             <select v-model="draftPrivacy">
               <option value="friends">Amis uniquement</option>
-              <option value="private">Privée</option>
+              <option value="private">Privee</option>
               <option value="public">Publique</option>
             </select>
           </label>
@@ -52,27 +54,29 @@
 
         <div class="media-grid">
           <label class="media-field">
-            <span>Image</span>
+            <span>Image de la liste</span>
             <div class="media-preview media-preview-square">
-              <img v-if="draftGroupImagePreview" :src="draftGroupImagePreview" alt="Aperçu de l'image de liste" />
-              <img v-else :src="DEFAULT_SHARED_LIST_IMAGE" alt="Image de liste par défaut" />
+              <img v-if="draftGroupImagePreview" :src="draftGroupImagePreview" alt="Apercu de l'image de liste" />
+              <img v-else :src="DEFAULT_SHARED_LIST_IMAGE" alt="Image de liste par defaut" />
             </div>
             <input class="media-input" type="file" accept="image/*" @change="handleDraftGroupImageChange" />
+            <small>{{ draftGroupImageFile?.name || 'Image unique stockee dans PocketBase.' }}</small>
           </label>
 
           <label class="media-field">
-            <span>Bannière</span>
+            <span>Banniere</span>
             <div class="media-preview media-preview-banner" :style="{ background: stripForPrivacy(draftPrivacy, true) }">
-              <img v-if="draftBannerPreview" :src="draftBannerPreview" alt="Aperçu de la bannière" />
-              <span v-else>Aperçu de la bannière</span>
+              <img v-if="draftBannerPreview" :src="draftBannerPreview" alt="Apercu de la banniere" />
+              <span v-else>Apercu de la banniere</span>
             </div>
             <input class="media-input" type="file" accept="image/*" @change="handleDraftBannerChange" />
+            <small>{{ draftBannerImageFile?.name || 'Image de banniere large stockee dans PocketBase.' }}</small>
           </label>
         </div>
 
         <div class="member-picker">
           <label class="field">
-            <span>Ajouter des utilisateurs</span>
+            <span>Ajouter des utilisateurs maintenant</span>
             <input
               v-model.trim="draftMemberQuery"
               type="text"
@@ -127,7 +131,7 @@
         </div>
       </section>
 
-      <section class="filter-row" aria-label="Filtres des listes partagées">
+      <section class="filter-row" aria-label="Filtres des listes partagees">
         <button
           v-for="filter in filters"
           :key="filter.key"
@@ -143,7 +147,7 @@
 
         <span class="sort-label">Trier par</span>
         <select v-model="sortBy" class="sort-select">
-          <option value="recent">Récentes</option>
+          <option value="recent">Recentes</option>
           <option value="title">Nom A-Z</option>
           <option value="animeCount">Nombre d'animes</option>
           <option value="members">Membres</option>
@@ -151,7 +155,7 @@
       </section>
 
       <div v-if="isLoading" class="status-card">
-        Chargement des listes partagées...
+        Chargement des listes partagees...
       </div>
 
       <div v-else-if="loadError" class="status-card error">
@@ -168,7 +172,7 @@
             class="list-card"
           >
             <div class="card-banner" :style="{ background: stripForPrivacy(list.privacy, list.isOwner) }">
-              <img :src="bannerSrcFor(list)" :alt="`Bannière ${list.title}`" />
+              <img :src="bannerSrcFor(list)" :alt="`Banniere ${list.title}`" />
               <div class="card-banner-overlay"></div>
               <div class="card-banner-top">
                 <div class="privacy-chip" :class="privacyChipClass(list.privacy)">
@@ -176,7 +180,7 @@
                   {{ privacyLabel(list.privacy) }}
                 </div>
                 <div class="role-chip" :class="list.isOwner ? 'owner' : 'member'">
-                  {{ list.isOwner ? 'Propriétaire' : 'Membre' }}
+                  {{ list.isOwner ? 'Proprietaire' : 'Membre' }}
                 </div>
               </div>
             </div>
@@ -197,13 +201,12 @@
                 <div class="card-top">
                   <div class="card-title-wrap">
                     <div class="card-title">{{ list.title }}</div>
-                    <div class="card-created">Créée {{ formatDateLabel(list.createdAt) }}</div>
+                    <div class="card-created">Creee {{ formatDateLabel(list.createdAt) }}</div>
                   </div>
                 </div>
 
                 <div class="card-desc">
-                  Propriété de {{ list.ownerName }}. {{ list.animeCount }} anime actuellement dans la liste partagée
-  e.
+                  Propriete de {{ list.ownerName }}. {{ list.animeCount }} anime actuellement dans la liste partagee.
                 </div>
 
                 <div class="card-meta">
@@ -251,8 +254,8 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32" aria-hidden="true">
           <path stroke-linecap="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0 1 18 0z" />
         </svg>
-        <div class="empty-title">Aucune liste partagée ne correspond à vos filtres.</div>
-        <div class="empty-sub">Créez une nouvelle liste ou affinez votre recherche.</div>
+        <div class="empty-title">Aucune liste partagee ne correspond a vos filtres.</div>
+        <div class="empty-sub">Creez une nouvelle liste ou affinez votre recherche.</div>
       </button>
     </main>
   </div>
@@ -269,10 +272,10 @@ type SortKey = 'recent' | 'title' | 'animeCount' | 'members'
 type SearchableUser = { id: string; name: string; avatar?: string; initials: string; color: string }
 
 const profileTabs = [
-  { key: 'anime-list', label: "Liste d'animes", to: '/animeList' },
+  { key: 'anime-list', label: 'Liste anime', to: '/animeList' },
   { key: 'favorites', label: 'Favoris', to: '/favorites' },
   { key: 'friends', label: 'Amis', to: '/friends' },
-  { key: 'shared-lists', label: 'Listes partagées', to: '/sharedLists', active: true }
+  { key: 'shared-lists', label: 'Listes partagees', to: '/sharedLists', active: true }
 ]
 
 const {
@@ -285,7 +288,6 @@ const {
 } = useSharedLists()
 
 const searchTerm = ref('')
-const route = useRoute()
 const activeFilter = ref<FilterKey>('all')
 const sortBy = ref<SortKey>('recent')
 const isLoading = ref(true)
@@ -351,7 +353,7 @@ const stripForPrivacy = (privacy: SharedListPrivacy, owned: boolean) => {
   return owned ? 'linear-gradient(135deg,#3db4f2,#1dd3b0)' : 'linear-gradient(135deg,#f77f00,#ffbe0b)'
 }
 
-const privacyLabel = (privacy: SharedListPrivacy) => privacy === 'private' ? 'Privée' : privacy === 'friends' ? 'Amis uniquement' : 'Publique'
+const privacyLabel = (privacy: SharedListPrivacy) => privacy === 'private' ? 'Privee' : privacy === 'friends' ? 'Amis uniquement' : 'Publique'
 const privacyChipClass = (privacy: SharedListPrivacy) => ({ 'pc-private': privacy === 'private', 'pc-friends': privacy === 'friends', 'pc-public': privacy === 'public' })
 const emojiFromTitle = (title: string) => title.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 3) || 'SL'
 const openList = (id: string) => navigateTo(`/sharedLists/${id}`)
@@ -375,7 +377,7 @@ const loadPage = async () => {
   try {
     lists.value = await loadSummaries()
   } catch (error: any) {
-    loadError.value = error?.message || 'Impossible de charger les listes partagées.'
+    loadError.value = error?.message || 'Impossible de charger les listes partagees.'
     lists.value = []
   } finally {
     isLoading.value = false
@@ -399,15 +401,6 @@ const resetCreateForm = () => {
 const toggleCreatePanel = () => {
   createPanelOpen.value = !createPanelOpen.value
   if (!createPanelOpen.value) resetCreateForm()
-}
-
-const openCreatePanelFromRoute = () => {
-  const wantsCreate = route.query.create === '1'
-  if (!wantsCreate) return
-  createPanelOpen.value = true
-  if (typeof route.query.name === 'string' && route.query.name.trim()) {
-    draftName.value = route.query.name.trim().slice(0, 20)
-  }
 }
 
 const handleDraftGroupImageChange = (event: Event) => {
@@ -485,7 +478,7 @@ const handleCreate = async () => {
     await loadPage()
     await navigateTo(`/sharedLists/${created.id}`)
   } catch (error: any) {
-    actionError.value = error?.message || 'Impossible de créer la liste partagée.'
+    actionError.value = error?.message || 'Impossible de créer la liste partagee.'
   } finally {
     isSubmitting.value = false
   }
@@ -493,10 +486,6 @@ const handleCreate = async () => {
 
 watch(currentUserId, () => {
   loadPage()
-}, { immediate: true })
-
-watch(() => route.query, () => {
-  openCreatePanelFromRoute()
 }, { immediate: true })
 
 onBeforeUnmount(() => {

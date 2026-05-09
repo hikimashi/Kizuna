@@ -1,28 +1,28 @@
 <template>
   <div class="notifications-page">
     <div class="page">
-      <aside class="sidebar">
+      <aside class="sidebar shadow-xl backdrop-blur-sm">
         <div class="sidebar-heading">Notifications</div>
         <p class="sidebar-copy">
-          Dernières mises à jour AniList pour votre compte.
+          Dernieres mises a jour AniList pour votre compte.
         </p>
 
-        <div class="sidebar-card">
+        <div class="sidebar-card shadow-sm">
           <span class="sidebar-card-label">Non lues</span>
           <span class="sidebar-card-value">{{ unreadCount }}</span>
         </div>
 
-        <div class="sidebar-card">
-          <span class="sidebar-card-label">Chargées</span>
+        <div class="sidebar-card shadow-sm">
+          <span class="sidebar-card-label">Chargees</span>
           <span class="sidebar-card-value">{{ items.length }}</span>
         </div>
 
-        <button class="sidebar-action" type="button" :disabled="isLoading" @click="refreshNotifications">
+        <button class="sidebar-action shadow-sm" type="button" :disabled="isLoading" @click="refreshNotifications">
           {{ isLoading ? 'Actualisation...' : 'Actualiser les notifications' }}
         </button>
 
-        <NuxtLink class="sidebar-link" to="/settings">
-          Ouvrir les paramètres
+        <NuxtLink class="sidebar-link shadow-sm" to="/settings">
+          Ouvrir les parametres
         </NuxtLink>
       </aside>
 
@@ -31,21 +31,21 @@
           <div>
             <div class="page-title">Notifications</div>
             <p class="page-subtitle">
-              Ouvrir cette page remet à zéro le compteur AniList non lu.
+              Ouvrir cette page remet a zero le compteur AniList non lu.
             </p>
           </div>
         </div>
 
-        <div v-if="loadError" class="state-card error-card">
+        <div v-if="loadError" class="state-card error-card shadow-sm">
           {{ loadError }}
         </div>
 
-        <div v-if="!isAniListLinked" class="state-card">
+        <div v-if="!isAniListLinked" class="state-card shadow-sm">
           Liez votre compte AniList pour charger les notifications.
         </div>
 
         <div v-else-if="isLoading && !items.length" class="notification-list">
-          <article v-for="n in 6" :key="`skeleton-${n}`" class="notification-card is-skeleton">
+          <article v-for="n in 6" :key="`skeleton-${n}`" class="notification-card is-skeleton shadow-sm">
             <div class="notification-media skeleton-block"></div>
             <div class="notification-copy">
               <div class="notification-line skeleton-line"></div>
@@ -59,7 +59,7 @@
           <button
             v-for="item in items"
             :key="item.key"
-            class="notification-card"
+            class="notification-card shadow-sm"
             type="button"
             @click="openNotification(item)"
           >
@@ -94,7 +94,7 @@
 
           <button
             v-if="hasNextPage"
-            class="load-more"
+            class="load-more shadow-sm"
             type="button"
             :disabled="isLoading"
             @click="notificationStore.loadMore()"
@@ -103,10 +103,10 @@
           </button>
         </div>
 
-        <div v-else-if="!isLoading" class="state-card empty-card">
+        <div v-else-if="!isLoading" class="state-card empty-card shadow-sm">
           <div class="empty-title">Aucune notification pour le moment</div>
           <p class="empty-copy">
-            Quand AniList enverra des mises à jour sociales ou média, elles apparaîtront ici.
+            Quand AniList enverra des mises a jour sociales ou media, elles apparaitront ici.
           </p>
         </div>
       </main>
@@ -131,12 +131,12 @@ const isAniListLinked = computed(() => Boolean(authRecord.value?.anilist_user_id
 
 const notificationLabel = (type: string) => {
   if (type === 'AIRING') return 'Diffusion'
-  if (type.startsWith('MEDIA_')) return 'Média'
+  if (type.startsWith('MEDIA_')) return 'Media'
   if (type.startsWith('THREAD_')) return 'Forum'
   if (type.startsWith('ACTIVITY_')) return 'Social'
   if (type === 'FOLLOWING') return 'Suivi'
-  if (type === 'RELATED_MEDIA_ADDITION') return 'Média lié'
-  return 'Mise à jour'
+  if (type === 'RELATED_MEDIA_ADDITION') return 'Media lie'
+  return 'Mise a jour'
 }
 
 const notificationTitle = (item: AniListNotificationItem) => {
@@ -145,39 +145,39 @@ const notificationTitle = (item: AniListNotificationItem) => {
 
   switch (item.type) {
     case 'AIRING':
-      return `L'épisode ${item.episode || '?'} de ${mediaTitle} vient d'être diffusé.`
+      return `L'episode ${item.episode || '?'} de ${mediaTitle} vient d'etre diffuse.`
     case 'FOLLOWING':
       return `${actorName} vous suit.`
     case 'ACTIVITY_MESSAGE':
-      return `${actorName} vous a envoyé un message.`
+      return `${actorName} vous a envoye un message.`
     case 'ACTIVITY_REPLY':
-      return `${actorName} a répondu à votre activité.`
+      return `${actorName} a repondu a votre activite.`
     case 'ACTIVITY_MENTION':
-      return `${actorName} vous a mentionné dans une activité.`
+      return `${actorName} vous a mentionne dans une activite.`
     case 'ACTIVITY_LIKE':
-      return `${actorName} a aimé votre activité.`
+      return `${actorName} a aime votre activite.`
     case 'ACTIVITY_REPLY_LIKE':
-      return `${actorName} a aimé votre réponse d'activité.`
+      return `${actorName} a aime votre reponse d'activite.`
     case 'ACTIVITY_REPLY_SUBSCRIBED':
-      return `${actorName} a répondu à une activité à laquelle vous participez.`
+      return `${actorName} a repondu a une activite a laquelle vous participez.`
     case 'THREAD_COMMENT_MENTION':
-      return `${actorName} vous a mentionné dans un commentaire de forum.`
+      return `${actorName} vous a mentionne dans un commentaire de forum.`
     case 'THREAD_SUBSCRIBED':
-      return `${actorName} a répondu à un fil suivi.`
+      return `${actorName} a repondu a un fil suivi.`
     case 'THREAD_COMMENT_REPLY':
-      return `${actorName} a répondu à votre commentaire de forum.`
+      return `${actorName} a repondu a votre commentaire de forum.`
     case 'THREAD_LIKE':
-      return `${actorName} a aimé votre sujet de forum.`
+      return `${actorName} a aime votre sujet de forum.`
     case 'THREAD_COMMENT_LIKE':
-      return `${actorName} a aimé votre commentaire de forum.`
+      return `${actorName} a aime votre commentaire de forum.`
     case 'RELATED_MEDIA_ADDITION':
-      return `${mediaTitle} a été ajouté comme média lié.`
+      return `${mediaTitle} a ete ajoute comme media lie.`
     case 'MEDIA_DATA_CHANGE':
-      return `Les données de suivi de ${mediaTitle} ont changé.`
+      return `Les données de suivi de ${mediaTitle} ont change.`
     case 'MEDIA_MERGE':
-      return `${mediaTitle} a été fusionné avec une autre fiche.`
+      return `${mediaTitle} a ete fusionne avec une autre fiche.`
     case 'MEDIA_DELETION':
-      return `${item.deletedMediaTitle || 'Un titre suivi'} a été supprimé d'AniList.`
+      return `${item.deletedMediaTitle || 'Un titre suivi'} a ete supprime d'AniList.`
     default:
       return `Notification de ${actorName}.`
   }
@@ -185,7 +185,7 @@ const notificationTitle = (item: AniListNotificationItem) => {
 
 const notificationDetail = (item: AniListNotificationItem) => {
   if (item.type === 'MEDIA_MERGE' && item.deletedMediaTitles.length) {
-    return `Fusionné depuis : ${item.deletedMediaTitles.join(', ')}`
+    return `Fusionne depuis : ${item.deletedMediaTitles.join(', ')}`
   }
   if (item.reason) return item.reason
   if (item.thread?.title) return item.thread.title
@@ -196,7 +196,7 @@ const notificationDetail = (item: AniListNotificationItem) => {
 
 const notificationPreview = (item: AniListNotificationItem) => item.media?.cover || item.actor?.avatar || ''
 
-const notificationPreviewAlt = (item: AniListNotificationItem) => item.media?.title || item.actor?.name || 'Aperçu de notification'
+const notificationPreviewAlt = (item: AniListNotificationItem) => item.media?.title || item.actor?.name || 'Apercu de notification'
 
 const notificationFallback = (item: AniListNotificationItem) => {
   const seed = item.media?.title || item.actor?.name || item.thread?.title || 'NT'
@@ -209,7 +209,7 @@ const timeAgo = (timestamp: number) => {
   if (!timestamp) return 'Heure inconnue'
 
   const diff = Math.max(0, Math.floor(Date.now() / 1000) - Number(timestamp))
-  if (diff < 60) return "À l'instant"
+  if (diff < 60) return "A l'instant"
   if (diff < 3600) return `Il y a ${Math.floor(diff / 60)} min`
   if (diff < 86400) return `Il y a ${Math.floor(diff / 3600)} h`
   if (diff < 604800) return `Il y a ${Math.floor(diff / 86400)} j`

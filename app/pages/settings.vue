@@ -1,7 +1,7 @@
 <template>
   <div class="settings-page">
     <div class="page">
-      <aside class="sidebar">
+      <aside class="sidebar shadow-xl backdrop-blur-sm">
         <div class="sidebar-section">Profil</div>
         <button class="sidebar-link" :class="{ active: activeSection === 'anilist' }" type="button" @click="scrollToSection('anilist')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15">
@@ -21,7 +21,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15">
             <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
           </svg>
-          Sécurité
+          Securite
         </button>
 
         <div class="sidebar-section">Application</div>
@@ -38,8 +38,9 @@
           <section id="section-anilist" ref="anilistSectionRef" class="settings-section">
             <div class="section-header">
               <div class="section-title">AniList</div>
+              <div class="section-subtitle">Parametres du profil AniList lie</div>
             </div>
-            <section class="card">
+            <section class="card shadow-xl backdrop-blur-sm">
               <div class="card-header"><span class="card-title">Informations du profil</span></div>
               <div class="card-body anilist-card-body">
                 <div class="fields-grid">
@@ -53,7 +54,7 @@
                   </div>
                 </div>
                 <div class="readonly-note">
-                  <span>L'avatar et la bannière sont en lecture seule. Modifiez-les sur AniList puis actualisez.</span>
+                  <span>L'avatar et la banniere sont en lecture seule. Modifiez-les sur AniList puis actualisez.</span>
                   <a class="anilist-settings-link" href="https://anilist.co/settings" target="_blank" rel="noopener noreferrer">
                     <svg viewBox="0 0 100 100" width="14" height="14" aria-hidden="true">
                       <circle cx="50" cy="50" r="50" fill="currentColor" />
@@ -61,7 +62,7 @@
                       <rect x="45" y="20" width="16" height="60" fill="#0B1622" />
                       <rect x="64" y="35" width="16" height="45" fill="#0B1622" />
                     </svg>
-                    Paramètres AniList
+                    Parametres AniList
                   </a>
                 </div>
                 <div class="profile-hero">
@@ -73,21 +74,21 @@
                     </div>
                   </div>
                   <div class="profile-banner-col">
-                    <div class="profile-banner-label">Bannière</div>
+                    <div class="profile-banner-label">Banniere</div>
                     <div class="profile-banner-img">
-                      <img v-if="bannerSrc" :src="bannerSrc" alt="Bannière AniList" />
-                      <div v-else class="profile-banner-placeholder">Aucune bannière définie sur AniList</div>
+                      <img v-if="bannerSrc" :src="bannerSrc" alt="Banniere AniList" />
+                      <div v-else class="profile-banner-placeholder">Aucune banniere definie sur AniList</div>
                     </div>
                   </div>
                 </div>
               </div>
             </section>
             <div class="btn-row">
-              <button class="btn-refresh" :disabled="isRefreshing" @click="refreshAnilistData">
-                {{ isRefreshing ? 'Actualisation...' : 'Actualiser' }}
+              <button class="btn-refresh inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60" :disabled="isRefreshing" @click="refreshAnilistData">
+                {{ isRefreshing ? 'Actualisation...' : 'Actualiser depuis AniList' }}
               </button>
-              <button class="btn-danger" :disabled="isUnlinking" @click="unlinkAniList">
-                {{ isUnlinking ? 'Déliaison...' : 'Dissocier' }}
+              <button class="btn-danger inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60" :disabled="isUnlinking" @click="unlinkAniList">
+                {{ isUnlinking ? 'Deliaison...' : 'Delier AniList' }}
               </button>
             </div>
           </section>
@@ -97,7 +98,7 @@
               <div class="section-title">Profil</div>
               <div class="section-subtitle">Informations de votre compte</div>
             </div>
-            <section class="card">
+            <section class="card shadow-xl backdrop-blur-sm">
               <div class="card-header"><span class="card-title">Details du profil</span></div>
               <div class="card-body">
                 <div class="fields-grid">
@@ -113,10 +114,11 @@
 
           <section id="section-security" ref="securitySectionRef" class="settings-section">
             <div class="section-header">
-              <div class="section-title">Sécurité</div>
+              <div class="section-title">Securite</div>
+              <div class="section-subtitle">Mot de passe et securite du compte</div>
             </div>
 
-            <section class="card">
+            <section class="card shadow-xl backdrop-blur-sm">
               <div class="card-header"><span class="card-title">Compte</span></div>
               <div class="card-body">
                 <div class="account-field">
@@ -124,15 +126,15 @@
                     <div class="account-field-name">Adresse e-mail</div>
                     <div class="account-field-desc">{{ emailDisplay }}</div>
                   </div>
-                  <button class="btn-edit" type="button" @click="toggleEmailChange">
+                  <button class="btn-edit inline-flex items-center justify-center rounded-md px-3.5 py-2 text-xs font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60" type="button" @click="toggleEmailChange">
                     {{ showEmailChange ? 'Annuler' : 'Modifier' }}
                   </button>
                 </div>
                 <div v-if="showEmailChange" class="account-action">
                   <label class="field-label" for="new-email">Nouvel e-mail</label>
-                  <input id="new-email" v-model="pendingEmail" class="action-input" type="email" placeholder="name@example.com" />
+                  <input id="new-email" v-model="pendingEmail" class="action-input w-full rounded-lg px-3 text-sm" type="email" placeholder="name@example.com" />
                   <div class="action-buttons">
-                    <button class="btn-edit" :disabled="isChangingEmail" type="button" @click="submitEmailChange">
+                    <button class="btn-edit inline-flex items-center justify-center rounded-md px-3.5 py-2 text-xs font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60" :disabled="isChangingEmail" type="button" @click="submitEmailChange">
                       {{ isChangingEmail ? 'Envoi...' : 'Envoyer la confirmation' }}
                     </button>
                   </div>
@@ -143,36 +145,36 @@
                     <div class="account-field-name">Mot de passe</div>
                     <div class="account-field-desc">Modifiez directement votre mot de passe.</div>
                   </div>
-                  <button class="btn-edit" type="button" @click="togglePasswordReset">
+                  <button class="btn-edit inline-flex items-center justify-center rounded-md px-3.5 py-2 text-xs font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60" type="button" @click="togglePasswordReset">
                     {{ showPasswordReset ? 'Annuler' : 'Modifier' }}
                   </button>
                 </div>
                 <div v-if="showPasswordReset" class="account-action">
                   <label class="field-label" for="current-password">Mot de passe actuel</label>
-                  <input id="current-password" v-model="currentPassword" class="action-input" type="password" />
+                  <input id="current-password" v-model="currentPassword" class="action-input w-full rounded-lg px-3 text-sm" type="password" />
                   <label class="field-label" for="next-password">Nouveau mot de passe</label>
-                  <input id="next-password" v-model="newPassword" class="action-input" type="password" />
+                  <input id="next-password" v-model="newPassword" class="action-input w-full rounded-lg px-3 text-sm" type="password" />
                   <label class="field-label" for="confirm-password">Confirmer le mot de passe</label>
-                  <input id="confirm-password" v-model="confirmPassword" class="action-input" type="password" />
+                  <input id="confirm-password" v-model="confirmPassword" class="action-input w-full rounded-lg px-3 text-sm" type="password" />
                   <p v-if="passwordChangeError" class="security-error">{{ passwordChangeError }}</p>
                   <div class="action-buttons">
-                    <button class="btn-edit" :disabled="isUpdatingPassword" type="button" @click="updatePasswordDirectly">
-                      {{ isUpdatingPassword ? 'Mise à jour...' : 'Mettre à jour le mot de passe' }}
+                    <button class="btn-edit inline-flex items-center justify-center rounded-md px-3.5 py-2 text-xs font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60" :disabled="isUpdatingPassword" type="button" @click="updatePasswordDirectly">
+                      {{ isUpdatingPassword ? 'Mise a jour...' : 'Mettre a jour le mot de passe' }}
                     </button>
                   </div>
                 </div>
               </div>
             </section>
 
-            <section class="danger-card">
-              <div class="card-header"><span class="card-title">Zone de danger</span></div>
+            <section class="danger-card shadow-xl backdrop-blur-sm">
+              <div class="card-header"><span class="card-title">Zone dangereuse</span></div>
               <div class="card-body">
                 <div class="account-field danger-row">
                   <div class="account-field-info">
                     <div class="account-field-name">Supprimer le compte</div>
-                    <div class="account-field-desc">Supprime définitivement votre compte. Cette action est irréversible.</div>
+                    <div class="account-field-desc">Supprime definitivement votre compte. Cette action est irreversible.</div>
                   </div>
-                  <button class="btn-danger" :disabled="isDeleting" @click="deleteAccount">
+                  <button class="btn-danger inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60" :disabled="isDeleting" @click="deleteAccount">
                     {{ isDeleting ? 'Suppression...' : 'Supprimer' }}
                   </button>
                 </div>
@@ -183,18 +185,19 @@
           <section id="section-appearance" ref="appearanceSectionRef" class="settings-section">
             <div class="section-header">
               <div class="section-title">Apparence</div>
+              <div class="section-subtitle">Theme et preferences visuelles</div>
             </div>
-            <section class="card">
-              <div class="card-header"><span class="card-title">Couleur du thème</span></div>
+            <section class="card shadow-xl backdrop-blur-sm">
+              <div class="card-header"><span class="card-title">Couleur du theme</span></div>
               <div class="card-body">
                 <div class="theme-controls">
-                  <button class="theme-chip" :class="{ active: selectedTheme === 'forest' }" @click="previewTheme('forest')">Sombre</button>
-                  <button class="theme-chip" :class="{ active: selectedTheme === 'winter' }" @click="previewTheme('winter')">Clair</button>
-                  <button class="btn-edit" :disabled="isSavingTheme" @click="saveTheme">
+                  <button class="theme-chip inline-flex items-center justify-center rounded-md px-3.5 text-xs font-bold transition hover:-translate-y-0.5" :class="{ active: selectedTheme === 'forest' }" @click="previewTheme('forest')">Foret</button>
+                  <button class="theme-chip inline-flex items-center justify-center rounded-md px-3.5 text-xs font-bold transition hover:-translate-y-0.5" :class="{ active: selectedTheme === 'winter' }" @click="previewTheme('winter')">Hiver</button>
+                  <button class="btn-edit inline-flex items-center justify-center rounded-md px-3.5 py-2 text-xs font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60" :disabled="isSavingTheme" @click="saveTheme">
                     {{ isSavingTheme ? 'Enregistrement...' : 'Enregistrer' }}
                   </button>
                 </div>
-                <p class="account-field-desc" style="margin-top: 10px;">Le thème est prévisualisé instantanément ; cliquez sur Enregistrer pour le conserver.</p>
+                <p class="account-field-desc" style="margin-top: 10px;">Le theme est previsualise instantanement ; cliquez sur Enregistrer pour le conserver.</p>
               </div>
             </section>
           </section>
@@ -261,7 +264,7 @@ const anilistTokenExpiryDisplay = computed(() => {
 const passwordChangeError = computed(() => {
   if (!currentPassword.value && !newPassword.value && !confirmPassword.value) return ''
   if (!currentPassword.value || !newPassword.value || !confirmPassword.value) return 'Tous les champs sont obligatoires.'
-  if (newPassword.value.length < 8) return 'Le nouveau mot de passe doit contenir au moins 8 caractères.'
+  if (newPassword.value.length < 8) return 'Le nouveau mot de passe doit contenir au moins 8 caracteres.'
   if (newPassword.value !== confirmPassword.value) return 'Les mots de passe ne correspondent pas.'
   return ''
 })
@@ -359,7 +362,7 @@ const refreshAnilistData = async () => {
 
 const unlinkAniList = async () => {
   if (isUnlinking.value) return
-  const ok = await alertStore.openAlert({ type: 'warning', message: 'Délier le compte AniList de Kizuna ?' })
+  const ok = await alertStore.openAlert({ type: 'warning', message: 'Delier le compte AniList de Kizuna ?' })
   if (!ok) return
 
   isUnlinking.value = true
@@ -378,10 +381,10 @@ const unlinkAniList = async () => {
     })
 
     await myAuthStore.authRefresh()
-    toastStore.openToast({ type: 'success', message: 'AniList a été délié.' })
+    toastStore.openToast({ type: 'success', message: 'AniList a ete delie.' })
     await navigateTo('/')
   } catch (error: any) {
-    toastStore.openToast({ type: 'error', message: error?.message || 'Impossible de délier AniList.' })
+    toastStore.openToast({ type: 'error', message: error?.message || 'Impossible de delier AniList.' })
   } finally {
     isUnlinking.value = false
   }
@@ -397,9 +400,9 @@ const saveTheme = async () => {
     await pocketbaseStore.pb.collection('user').update(userId, { theme: selectedTheme.value })
     await myAuthStore.authRefresh()
     themeStore.setThemeByName(selectedTheme.value)
-    toastStore.openToast({ type: 'success', message: 'Thème enregistré.' })
+    toastStore.openToast({ type: 'success', message: 'Theme enregistre.' })
   } catch (error: any) {
-    toastStore.openToast({ type: 'error', message: error?.message || "Impossible d'enregistrer le thème." })
+    toastStore.openToast({ type: 'error', message: error?.message || "Impossible d'enregistrer le theme." })
   } finally {
     isSavingTheme.value = false
   }
@@ -456,13 +459,13 @@ const updatePasswordDirectly = async () => {
     })
 
     await myAuthStore.authRefresh()
-    toastStore.openToast({ type: 'success', message: 'Mot de passe mis à jour.' })
+    toastStore.openToast({ type: 'success', message: 'Mot de passe mis a jour.' })
     currentPassword.value = ''
     newPassword.value = ''
     confirmPassword.value = ''
     showPasswordReset.value = false
   } catch (error: any) {
-    toastStore.openToast({ type: 'error', message: error?.message || 'Impossible de mettre à jour le mot de passe.' })
+    toastStore.openToast({ type: 'error', message: error?.message || 'Impossible de mettre a jour le mot de passe.' })
   } finally {
     isUpdatingPassword.value = false
   }
@@ -472,7 +475,7 @@ const deleteAccount = async () => {
   if (isDeleting.value) return
   const ok = await alertStore.openAlert({
     type: 'error',
-    message: 'Supprimer votre compte définitivement ? Cette action est irréversible.'
+    message: 'Supprimer votre compte definitivement ? Cette action est irreversible.'
   })
   if (!ok) return
 
@@ -480,7 +483,7 @@ const deleteAccount = async () => {
   try {
     await myAuthStore.deleteAccount()
     await myAuthStore.logout()
-    toastStore.openToast({ type: 'success', message: 'Compte supprimé.' })
+    toastStore.openToast({ type: 'success', message: 'Compte supprime.' })
     await navigateTo('/')
   } catch (error: any) {
     toastStore.openToast({ type: 'error', message: error?.message || 'Impossible de supprimer le compte.' })

@@ -37,7 +37,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
   const loginWithAniListWithWarning = async () => {
     await alertStore.openAlert({
       type: 'warning',
-      message: 'Si vous êtes déjà connecté à AniList.co, la connexion sera automatique. Déconnectez-vous d\'AniList pour lier un autre compte.',
+      message: 'Si vous etes deja connecte a AniList.co, la connexion sera automatique. Deconnectez-vous d\'AniList pour lier un autre compte.',
       showDeny: false
     });
 
@@ -49,7 +49,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
     try {
       const storedState = localStorage.getItem('anilist_oauth_state');
       if (state && storedState && storedState !== state) {
-        throw new Error('Alerte de sécurité : paramètre state invalide');
+        throw new Error('Alerte de securite : parametre state invalide');
       }
       localStorage.removeItem('anilist_oauth_state');
 
@@ -59,7 +59,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
       });
 
       if (!response.access_token) {
-        throw new Error('Impossible d\'obtenir le token d\'accès');
+        throw new Error('Impossible d\'obtenir le token d\'acces');
       }
 
       const anilistUserData = await anilistGraphql.request<any>(
@@ -71,7 +71,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
       const viewer = anilistUserData.data.Viewer;
       const userId = pocketbaseStore.pb.authStore.model?.id;
       if (!userId) {
-        throw new Error('Vous devez être connecté pour lier un compte');
+        throw new Error('Vous devez etre connecte pour lier un compte');
       }
 
       const anilistId = Number(viewer.id);
@@ -102,7 +102,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
 
       toastStore.openToast({
         type: 'success',
-        message: 'Compte AniList lié avec succès.'
+        message: 'Compte AniList lie avec succes.'
       });
 
       return true;
@@ -112,7 +112,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
       if (error.message === 'anilist_duplicate' || pbErrors?.anilist_user_id) {
         toastStore.openToast({
           type: 'error',
-          message: 'Ce compte AniList est déjà utilisé par un autre utilisateur.'
+          message: 'Ce compte AniList est deja utilise par un autre utilisateur.'
         });
       } else {
         toastStore.openToast({
@@ -132,7 +132,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
       const userId = pocketbaseStore.pb.authStore.model?.id;
 
       if (!token || !userId) {
-        throw new Error('Le compte AniList n\'est pas lié.');
+        throw new Error('Le compte AniList n\'est pas lie.');
       }
 
       const anilistUserData = await anilistGraphql.request<any>(
@@ -143,7 +143,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
 
       const viewer = anilistUserData?.data?.Viewer;
       if (!viewer?.id) {
-        throw new Error('Impossible de récupérer le profil AniList.');
+        throw new Error('Impossible de recuperer le profil AniList.');
       }
 
       await pocketbaseStore.pb.collection('user').update(userId, {
@@ -158,14 +158,14 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
 
       toastStore.openToast({
         type: 'success',
-        message: 'Donnees AniList rafraichies.'
+        message: 'Données AniList rafraichies.'
       });
 
       return true;
     } catch (error: any) {
       toastStore.openToast({
         type: 'error',
-        message: error?.message || 'Impossible de rafraîchir les données AniList.'
+        message: error?.message || 'Impossible de rafraichir les données AniList.'
       });
       return false;
     }

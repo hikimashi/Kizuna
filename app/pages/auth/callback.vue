@@ -1,9 +1,21 @@
 <template>
-  <div class="container mx-auto p-4">
-    <h1 class="text-2xl font-bold mb-4">Retour AniList</h1>
-    <p v-if="!processed">Traitement de l'autorisation AniList...</p>
-    <p v-else-if="success">Compte AniList lié avec succès. Redirection...</p>
-    <p v-else>Erreur lors de la liaison du compte AniList. Veuillez réessayer.</p>
+  <div class="flex min-h-[calc(100vh-8rem)] items-center justify-center px-4 py-8">
+    <div class="card w-full max-w-xl border border-base-300/40 bg-base-200/80 shadow-xl backdrop-blur">
+      <div class="card-body items-center text-center">
+        <div class="badge badge-primary badge-outline">AniList</div>
+        <h1 class="card-title text-2xl sm:text-3xl">Retour AniList</h1>
+        <p class="max-w-md text-sm leading-6 text-base-content/80 sm:text-base">
+          {{ statusMessage }}
+        </p>
+        <div class="mt-2">
+          <span
+            class="loading loading-dots loading-md"
+            :class="processed ? (success ? 'text-success' : 'text-error') : 'text-primary'"
+            aria-hidden="true"
+          />
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -21,6 +33,12 @@ const state = computed(() => route.query.state as string);
 const processed = ref(false);
 const success = ref(false);
 
+const statusMessage = computed(() => {
+  if (!processed.value) return "Traitement de l'autorisation AniList..."
+  if (success.value) return 'Compte AniList lie avec succes. Redirection...'
+  return 'Erreur lors de la liaison du compte AniList. Veuillez reessayer.'
+})
+
 onMounted(async () => {
   if (code.value) {
     // Traite le retour OAuth AniList puis met a jour l'etat de l'interface.
@@ -33,7 +51,7 @@ onMounted(async () => {
       router.push('/');
     }, 2000);
   } else {
-    // Aucun code : callback invalide ou annulé.
+    // Aucun code : callback invalide ou annule.
     processed.value = true;
     success.value = false;
   }

@@ -3,9 +3,9 @@
     <userHeaderTabs :tabs="profileTabs" />
 
     <div class="page">
-      <div class="favorites-toolbar">
+      <div class="favorites-toolbar rounded-2xl border border-[var(--kz-border)] bg-[var(--kz-card-bg)] p-2 shadow-xl backdrop-blur-sm">
         <button
-          class="favorites-tab"
+          class="favorites-tab shadow-sm"
           :class="{ active: activeTab === 'anime' }"
           type="button"
           @click="activeTab = 'anime'"
@@ -14,7 +14,7 @@
           <span class="favorites-count">{{ animeItems.length }}</span>
         </button>
         <button
-          class="favorites-tab"
+          class="favorites-tab shadow-sm"
           :class="{ active: activeTab === 'characters' }"
           type="button"
           @click="activeTab = 'characters'"
@@ -24,21 +24,21 @@
         </button>
       </div>
 
-      <div v-if="initialLoading" class="favorites-empty">
+      <div v-if="initialLoading" class="favorites-empty rounded-2xl border border-[var(--kz-border)] bg-[var(--kz-card-bg)] shadow-sm">
         <div class="spinner"></div>
         Chargement des favoris...
       </div>
 
-      <div v-else-if="errorMessage" class="favorites-empty error">
+      <div v-else-if="errorMessage" class="favorites-empty error rounded-2xl border border-[var(--kz-border)] bg-[var(--kz-card-bg)] shadow-sm">
         {{ errorMessage }}
       </div>
 
-      <div v-else-if="activeItems.length === 0" class="favorites-empty">
+      <div v-else-if="activeItems.length === 0" class="favorites-empty rounded-2xl border border-[var(--kz-border)] bg-[var(--kz-card-bg)] shadow-sm">
         Aucun favori trouvé dans cet onglet.
       </div>
 
       <div v-else class="favorites-grid">
-        <article v-for="item in activeItems" :key="item.id" class="favorite-card">
+        <article v-for="item in activeItems" :key="item.id" class="favorite-card shadow-sm">
           <a
             :href="favoriteHref(item)"
             class="favorite-link"

@@ -123,7 +123,16 @@
               <span class="section-count">{{ section.items.length }}</span>
             </div>
             <div class="anime-grid">
-              <article v-for="entry in section.items" :key="entry.id" class="anime-card">
+              <article
+                v-for="entry in section.items"
+                :key="entry.id"
+                class="anime-card"
+                role="link"
+                tabindex="0"
+                @click="openAnimeDetails(entry.media.id)"
+                @keydown.enter.prevent="openAnimeDetails(entry.media.id)"
+                @keydown.space.prevent="openAnimeDetails(entry.media.id)"
+              >
                 <img
                   v-if="coverImageSrc(entry)"
                   :src="coverImageSrc(entry)"
@@ -1186,6 +1195,12 @@ const openFriendProfile = (targetId: number) => {
   const id = Number(targetId)
   if (!Number.isFinite(id) || id <= 0) return
   navigateTo(`/social/user/${id}`)
+}
+
+const openAnimeDetails = (animeId?: number | null) => {
+  const id = Number(animeId)
+  if (!Number.isFinite(id) || id <= 0) return
+  navigateTo(`/anime/${id}`)
 }
 
 const openSharedList = (listId: string) => {

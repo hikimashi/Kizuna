@@ -14,10 +14,10 @@
       <div class="mb-4 flex justify-center sm:mb-6">
         <img src="/img/user.webp" alt="Logo" class="h-24 rounded-full border border-primary bg-base-100/70 p-1 shadow-lg sm:h-32 md:h-36" />
       </div>
-      <h2 class="mb-4 text-center text-xl font-bold text-primary sm:mb-6 sm:text-2xl">Creer un nouveau compte</h2>
+      <h2 class="mb-4 text-center text-xl font-bold text-primary sm:mb-6 sm:text-2xl">Créer un nouveau compte</h2>
 
       <div class="my-4 rounded-2xl border border-base-300/60 bg-base-100/50 px-4 py-3 text-center shadow-sm sm:my-6">
-        <span class="flex flex-wrap justify-center text-center text-sm sm:text-base">Vous avez deja un compte ?&nbsp;<a @click="login()" class="cursor-pointer font-semibold text-primary transition hover:underline">Connexion</a></span>
+        <span class="flex flex-wrap justify-center text-center text-sm sm:text-base">Vous avez déjà un compte ?&nbsp;<a @click="login()" class="cursor-pointer font-semibold text-primary transition hover:underline">Connexion</a></span>
       </div>
 
       <form class="space-y-3" @submit.prevent="createUser()">
@@ -95,7 +95,7 @@
         <p v-if="passwordMisMatch()" class="text-error">Les mots de passe ne correspondent pas.</p>
 
         <button type="submit" class="btn btn-primary mt-6 w-full">
-          <span>Creer un compte</span>
+          <span>Créer un compte</span>
         </button>
       </form>
 
@@ -157,7 +157,7 @@ const createUser = async () => {
     await authStore.createAccount(newUser.value);
     toast.openToast({
       type: 'success',
-      message: 'Compte cree. Verifiez votre boite mail avant de vous connecter.'
+      message: 'Compte crée . Verifiez votre boite mail avant de vous connecter.'
     });
   } catch (e: any) {
     toast.openToast({ type: 'error', message: e.message || 'La creation du compte a echoue.' });

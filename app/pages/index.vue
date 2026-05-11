@@ -14,7 +14,7 @@
           </h1>
 
           <p class="hero-subtitle fade-up">
-            Kizuna relie votre profil AniList a vos amis. Creez des listes communes,
+            Kizuna relie votre profil AniList a vos amis. Créez des listes communes,
             suivez votre progression ensemble et trouvez quoi regarder ensuite, en groupe.
           </p>
 
@@ -40,7 +40,7 @@
             </div>
             <div class="stat-divider"></div>
             <div class="stat-item">
-              <span class="stat-label">LISTES PARTAGEES</span>
+              <span class="stat-label">LISTES PARTAGÉES</span>
               <span class="stat-value stat-infinity">&infin;</span>
             </div>
             <div class="stat-divider"></div>
@@ -90,7 +90,7 @@
           <div class="dashboard-grid">
             <div class="dashboard-panel">
               <div class="panel-header panel-header-spread">
-                <h2 class="panel-title">Listes partagees</h2>
+                <h2 class="panel-title">Listes partagées</h2>
                 <NuxtLink class="panel-link-btn" to="/sharedLists">
                   Voir tout
                 </NuxtLink>
@@ -107,7 +107,7 @@
               </div>
 
               <div v-if="dashboardListsLoading" class="dashboard-empty-state">
-                Chargement des listes partagees...
+                Chargement des listes partagées...
               </div>
               <div v-else-if="dashboardListsError" class="dashboard-empty-state dashboard-error-state">
                 {{ dashboardListsError }}
@@ -124,12 +124,12 @@
                   <div class="list-item-copy">
                     <span class="list-item-name">{{ list.title }}</span>
                     <span class="list-item-meta">{{ list.memberCount }} membres &middot; {{ list.animeCount }} anime</span>
-                    <span class="list-item-owner">Propriete de {{ list.ownerName }}</span>
+                    <span class="list-item-owner">Propriété de {{ list.ownerName }}</span>
                   </div>
                 </NuxtLink>
               </div>
               <div v-else class="dashboard-empty-state">
-                Aucune liste partagee trouvee.
+                Aucune liste partagée trouvée.
               </div>
             </div>
 
@@ -211,7 +211,7 @@
               <p class="follow-modal-kicker">Trouver des utilisateurs</p>
               <h2>Rechercher des utilisateurs a suivre</h2>
             </div>
-            <button class="follow-modal-close" type="button" @click="closeFollowModal">Ã—</button>
+            <button class="follow-modal-close" type="button" @click="closeFollowModal">X</button>
           </div>
 
           <label class="follow-search-box">
@@ -260,7 +260,7 @@
                   </div>
                   <div class="follow-result-badges">
                     <span v-if="isFollowBusy(user.anilistUserId)" class="follow-badge">Mise a jour...</span>
-                    <span v-if="user.alreadyFriend" class="follow-badge follow-badge-friend">Deja ami</span>
+                    <span v-if="user.alreadyFriend" class="follow-badge follow-badge-friend">Déjà ami</span>
                     <span v-else-if="user.inKizuna" class="follow-badge follow-badge-kizuna">Sur Kizuna</span>
                     <span v-else class="follow-badge">AniList uniquement</span>
                   </div>
@@ -281,7 +281,7 @@
           </div>
 
           <p class="follow-modal-note">
-            La recherche vient maintenant directement d'AniList. Si le profil est deja synchronise sur Kizuna, cela apparait dans la carte de resultat.
+            La recherche vient maintenant directement d'AniList. Si le profil est déjà synchronisé sur Kizuna, cela apparait dans la carte de resultat.
           </p>
         </div>
       </div>
@@ -396,8 +396,8 @@ const features = [
     iconSvg: '<svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>'
   },
   {
-    title: 'Listes partagees',
-    description: 'Creez des listes d\'anime collaboratives avec votre groupe. Ajoutez, retirez et decidez ensemble.',
+    title: 'Listes partagées',
+    description: 'Créez des listes d\'anime collaboratives avec votre groupe. Ajoutez, retirez et decidez ensemble.',
     iconSvg: '<svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>'
   },
   {
@@ -626,7 +626,7 @@ const loadDashboardLists = async () => {
     dashboardLists.value = await sharedListsStore.loadSummaries()
   } catch (error: any) {
     dashboardLists.value = []
-    dashboardListsError.value = error?.message || 'Impossible de charger les listes partagees.'
+    dashboardListsError.value = error?.message || 'Impossible de charger les listes partagées.'
   } finally {
     dashboardListsLoading.value = false
   }

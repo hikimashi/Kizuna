@@ -37,7 +37,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
   const loginWithAniListWithWarning = async () => {
     await alertStore.openAlert({
       type: 'warning',
-      message: 'Si vous etes deja connecte a AniList.co, la connexion sera automatique. Deconnectez-vous d\'AniList pour lier un autre compte.',
+      message: 'Si vous etes déjà connecte a AniList.co, la connexion sera automatique. Deconnectez-vous d\'AniList pour lier un autre compte.',
       showDeny: false
     });
 
@@ -102,7 +102,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
 
       toastStore.openToast({
         type: 'success',
-        message: 'Compte AniList lie avec succes.'
+        message: 'Compte AniList lié avec succès.'
       });
 
       return true;
@@ -112,7 +112,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
       if (error.message === 'anilist_duplicate' || pbErrors?.anilist_user_id) {
         toastStore.openToast({
           type: 'error',
-          message: 'Ce compte AniList est deja utilise par un autre utilisateur.'
+          message: 'Ce compte AniList est déjà utilise par un autre utilisateur.'
         });
       } else {
         toastStore.openToast({

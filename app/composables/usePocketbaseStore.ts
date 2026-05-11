@@ -6,7 +6,7 @@ export const usePocketbaseStore = defineStore('usePocketBaseStore', () => {
   const config = useRuntimeConfig();
   const pb = new PocketBase(config.public.pocketbaseUrl as string);
   
-  // Cree des refs reactives pour l'etat d'authentification.
+  // Crée des refs reactives pour l'etat d'authentification.
   const authRecord = ref(pb.authStore.model);
   const authToken = ref(pb.authStore.token);
   const isAuthValid = ref(pb.authStore.isValid);

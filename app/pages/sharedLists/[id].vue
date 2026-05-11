@@ -579,7 +579,7 @@
                 </div>
               </div>
               <div class="anime-editor-copy">
-                <div class="anime-editor-kicker">Modifier l'entree partagee</div>
+                <div class="anime-editor-kicker">Modifier l'entrée partagée</div>
                 <h2 id="anime-editor-title" class="anime-editor-title">{{ selectedAnimeEntry.title }}</h2>
                 <div class="anime-editor-subtitle">
                   Progression {{ editAnimeProgress || '0' }} / {{ selectedAnimeEpisodes ?? '?' }}

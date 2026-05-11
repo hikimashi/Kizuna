@@ -27,7 +27,7 @@
         <NuxtLink class="tab tab-active h-auto min-h-0 whitespace-nowrap border-b-2 border-[var(--kz-accent)] px-3 py-3 text-[11px] font-semibold text-[var(--kz-accent)] transition sm:px-4 sm:text-xs md:px-5" :to="`/social/compare/${friendUserId}`">Comparaison</NuxtLink>
         <NuxtLink class="tab h-auto min-h-0 whitespace-nowrap border-b-2 border-transparent px-3 py-3 text-[11px] font-medium text-[var(--kz-text-secondary)] transition hover:text-[var(--kz-text-primary)] sm:px-4 sm:text-xs md:px-5" :to="profileTabRoute('favorites')">Favoris</NuxtLink>
         <NuxtLink class="tab h-auto min-h-0 whitespace-nowrap border-b-2 border-transparent px-3 py-3 text-[11px] font-medium text-[var(--kz-text-secondary)] transition hover:text-[var(--kz-text-primary)] sm:px-4 sm:text-xs md:px-5" :to="profileTabRoute('friends')">Amis</NuxtLink>
-        <NuxtLink class="tab h-auto min-h-0 whitespace-nowrap border-b-2 border-transparent px-3 py-3 text-[11px] font-medium text-[var(--kz-text-secondary)] transition hover:text-[var(--kz-text-primary)] sm:px-4 sm:text-xs md:px-5" :to="profileTabRoute('shared-lists')">Listes partagees</NuxtLink>
+        <NuxtLink class="tab h-auto min-h-0 whitespace-nowrap border-b-2 border-transparent px-3 py-3 text-[11px] font-medium text-[var(--kz-text-secondary)] transition hover:text-[var(--kz-text-primary)] sm:px-4 sm:text-xs md:px-5" :to="profileTabRoute('shared-lists')">Listes partagées</NuxtLink>
       </div>
     </div>
 

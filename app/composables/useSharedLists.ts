@@ -829,10 +829,10 @@ export const useSharedLists = () => {
     const listId = normalizeRelationValue(membership.fk_shared_list_id)
     const userId = normalizeRelationValue(membership.fk_user_id)
     if (!listId) {
-      throw new Error('Cette fiche d\'appartenance n\'a pas de liste partagée associee.')
+      throw new Error('Cette fiche d\'appartenance n\'a pas de liste partagée associée.')
     }
     if (!userId) {
-      throw new Error('Cette fiche d\'appartenance n\'a pas de membre associe.')
+      throw new Error('Cette fiche d\'appartenance n\'a pas de membre associé.')
     }
 
     const access = await assertCanManageMembersInList(listId)
@@ -1221,7 +1221,7 @@ export const useSharedLists = () => {
     const memberId = normalizeRelationValue(membership.fk_user_id)
 
     if (!listId) {
-      throw new Error('Cette fiche d\'appartenance n\'a pas de liste partagée associee.')
+      throw new Error('Cette fiche d\'appartenance n\'a pas de liste partagée associée.')
     }
 
     const access = await assertSharedListAccess(listId)
@@ -1262,7 +1262,7 @@ export const useSharedLists = () => {
       try {
         await pocketbaseStore.pb.collection('permission').delete(permissionId)
       } catch {
-        // Sans gravite si la permission est deja supprimee ou protegee.
+        // Sans gravité si la permission est déjà supprimée ou protegée.
       }
     }
   }
@@ -1386,7 +1386,7 @@ export const useSharedLists = () => {
     const relation = await getAnimeSharedListRecord(relationId)
     const listId = normalizeRelationValue(relation.fk_shared_list_id)
     if (!listId) {
-      throw new Error('Cette entree anime n\'a pas de liste partagée associee.')
+      throw new Error('Cette entrée anime n\'a pas de liste partagée associée.')
     }
 
     await assertCanEditAnimeInList(listId)
@@ -1409,7 +1409,7 @@ export const useSharedLists = () => {
     const relation = await getAnimeSharedListRecord(relationId)
     const listId = normalizeRelationValue(relation.fk_shared_list_id)
     if (!listId) {
-      throw new Error('Cette entree anime n\'a pas de liste partagée associee.')
+      throw new Error('Cette entrée anime n\'a pas de liste partagée associée.')
     }
 
     await assertCanDeleteAnimeFromList(listId)

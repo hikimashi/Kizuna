@@ -35,7 +35,7 @@ export const useMyAuthStore = defineStore('auth', () => {
     };
   };
 
-  // Cree un compte local puis envoie l'email de verification.
+  // Crée un compte local puis envoie l'email de verification.
   const createAccount = async (newUser: NewUserType) => {
     const email = normalizeAuthEmail(newUser.email);
     const data = {

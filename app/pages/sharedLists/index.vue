@@ -5,8 +5,8 @@
     <main class="page-shell">
       <section class="top-bar">
         <div>
-          <h1 class="page-title">Listes partagees</h1>
-          <p class="page-subtitle">Creez des listes d'animes, choisissez une banniere et une image, puis gerez les membres depuis la liste.</p>
+          <h1 class="page-title">Listes partagées</h1>
+          <p class="page-subtitle">Créez des listes d'animes, choisissez une banniere et une image, puis gerez les membres depuis la liste.</p>
         </div>
 
         <div class="top-actions">
@@ -31,7 +31,7 @@
         <div class="create-head">
           <div>
             <h2>Créer une liste partagée</h2>
-            <p>Creez la liste, definissez son apparence, puis ajoutez des membres immediatement.</p>
+            <p>Créez la liste, définissez son apparence, puis ajoutez des membres immédiatement.</p>
           </div>
           <button class="icon-close" type="button" aria-label="Fermer" @click="toggleCreatePanel">x</button>
         </div>
@@ -131,7 +131,7 @@
         </div>
       </section>
 
-      <section class="filter-row" aria-label="Filtres des listes partagees">
+      <section class="filter-row" aria-label="Filtres des listes partagées">
         <button
           v-for="filter in filters"
           :key="filter.key"
@@ -147,7 +147,7 @@
 
         <span class="sort-label">Trier par</span>
         <select v-model="sortBy" class="sort-select">
-          <option value="recent">Recentes</option>
+          <option value="recent">Récentes</option>
           <option value="title">Nom A-Z</option>
           <option value="animeCount">Nombre d'animes</option>
           <option value="members">Membres</option>
@@ -155,7 +155,7 @@
       </section>
 
       <div v-if="isLoading" class="status-card">
-        Chargement des listes partagees...
+        Chargement des listes partagées...
       </div>
 
       <div v-else-if="loadError" class="status-card error">
@@ -201,12 +201,12 @@
                 <div class="card-top">
                   <div class="card-title-wrap">
                     <div class="card-title">{{ list.title }}</div>
-                    <div class="card-created">Creee {{ formatDateLabel(list.createdAt) }}</div>
+                    <div class="card-created">Créée {{ formatDateLabel(list.createdAt) }}</div>
                   </div>
                 </div>
 
                 <div class="card-desc">
-                  Propriete de {{ list.ownerName }}. {{ list.animeCount }} anime actuellement dans la liste partagee.
+                  Propriété de {{ list.ownerName }}. {{ list.animeCount }} anime actuellement dans la liste partagée.
                 </div>
 
                 <div class="card-meta">
@@ -254,8 +254,8 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32" aria-hidden="true">
           <path stroke-linecap="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0 1 18 0z" />
         </svg>
-        <div class="empty-title">Aucune liste partagee ne correspond a vos filtres.</div>
-        <div class="empty-sub">Creez une nouvelle liste ou affinez votre recherche.</div>
+        <div class="empty-title">Aucune liste partagée ne correspond a vos filtres.</div>
+        <div class="empty-sub">Créez une nouvelle liste ou affinez votre recherche.</div>
       </button>
     </main>
   </div>
@@ -273,7 +273,7 @@ const profileTabs = [
   { key: 'anime-list', label: 'Liste anime', to: '/animeList' },
   { key: 'favorites', label: 'Favoris', to: '/favorites' },
   { key: 'friends', label: 'Amis', to: '/friends' },
-  { key: 'shared-lists', label: 'Listes partagees', to: '/sharedLists', active: true }
+  { key: 'shared-lists', label: 'Listes partagées', to: '/sharedLists', active: true }
 ]
 
 const {
@@ -375,7 +375,7 @@ const loadPage = async () => {
   try {
     lists.value = await loadSummaries()
   } catch (error: any) {
-    loadError.value = error?.message || 'Impossible de charger les listes partagees.'
+    loadError.value = error?.message || 'Impossible de charger les listes partagées.'
     lists.value = []
   } finally {
     isLoading.value = false
@@ -476,7 +476,7 @@ const handleCreate = async () => {
     await loadPage()
     await navigateTo(`/sharedLists/${created.id}`)
   } catch (error: any) {
-    actionError.value = error?.message || 'Impossible de créer la liste partagee.'
+    actionError.value = error?.message || 'Impossible de créer la liste partagée.'
   } finally {
     isSubmitting.value = false
   }

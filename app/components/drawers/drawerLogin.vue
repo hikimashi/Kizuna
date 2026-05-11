@@ -17,7 +17,7 @@
       <h2 class="mb-4 text-center text-xl font-bold text-primary sm:mb-6 sm:text-2xl">Connexion a votre compte</h2>
 
       <div class="my-4 rounded-2xl border border-base-300/60 bg-base-100/50 px-4 py-3 text-center shadow-sm sm:my-6">
-        <span class="flex flex-wrap justify-center text-center text-sm sm:text-base">Pas encore de compte ?&nbsp;<a @click="createAccount()" class="cursor-pointer font-semibold text-primary transition hover:underline">Creer un compte</a></span>
+        <span class="flex flex-wrap justify-center text-center text-sm sm:text-base">Pas encore de compte ?&nbsp;<a @click="createAccount()" class="cursor-pointer font-semibold text-primary transition hover:underline">Créer un compte</a></span>
       </div>
 
       <form ref="loginForm" class="space-y-3" @submit.prevent="doLogin()">

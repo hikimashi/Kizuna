@@ -156,7 +156,7 @@ export const useAnilistSync = () => {
     )
 
     if (response?.errors?.length) {
-      throw new Error(response.errors[0]?.message || 'Impossible d\'enregistrer l\'entree AniList.')
+      throw new Error(response.errors[0]?.message || 'Impossible d\'enregistrer l\'entrée AniList.')
     }
 
     const savedEntry = response?.data?.SaveMediaListEntry

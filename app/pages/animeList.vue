@@ -64,7 +64,7 @@
         </div>
 
         <div v-else-if="visibleSections.length === 0" class="empty-state">
-          Aucun anime trouve pour ce filtre.
+          Aucun anime trouvé pour ce filtre.
         </div>
 
         <div v-else class="content" :class="`view-${viewMode}`">
@@ -329,7 +329,7 @@ const profileTabs = [
   { key: 'anime-list', label: 'Liste d\'anime', to: '/animeList', active: true },
   { key: 'favorites', label: 'Favoris', to: '/favorites' },
   { key: 'friends', label: 'Amis', to: '/friends' },
-  { key: 'shared-lists', label: 'Listes partagees', to: '/sharedLists' }
+  { key: 'shared-lists', label: 'Listes partagées', to: '/sharedLists' }
 ]
 
 const displayTitle = (entry: MediaListEntry) =>
@@ -434,7 +434,7 @@ const ensureSharedListsLoaded = async () => {
     sharedLists.value = await sharedListsStore.loadSummaries()
   } catch (error: any) {
     sharedLists.value = []
-    sharedListError.value = error?.message || 'Impossible de charger vos listes partagees.'
+    sharedListError.value = error?.message || 'Impossible de charger vos listes partagées.'
   } finally {
     isSharedListsLoading.value = false
   }
@@ -497,10 +497,10 @@ const addSelectedAnimeToSharedList = async (listId: string) => {
       progress: Number.isFinite(progress) ? progress : 0,
       score: Number.isFinite(score) ? score : 0
     })
-    toastStore.openToast({ type: 'success', message: "L'anime a ete ajoute a la liste partagee." })
+    toastStore.openToast({ type: 'success', message: "L'anime a ete ajoute a la liste partagée." })
     showSharedListPicker.value = false
   } catch (error: any) {
-    sharedListError.value = error?.message || "Impossible d'ajouter cet anime a la liste partagee."
+    sharedListError.value = error?.message || "Impossible d'ajouter cet anime a la liste partagée."
   } finally {
     isAddingToSharedList.value = false
   }
@@ -518,10 +518,10 @@ const saveSelectedEntry = async () => {
       score: editScore.value === '' ? null : Number(editScore.value)
     })
     await fetchAnimeList()
-    toastStore.openToast({ type: 'success', message: "L'entree AniList a ete mise a jour." })
+    toastStore.openToast({ type: 'success', message: "L'entrée AniList a été mise à jour." })
     closeEntryEditor()
   } catch (error: any) {
-    toastStore.openToast({ type: 'error', message: error?.message || "Impossible de mettre a jour l'entree AniList." })
+    toastStore.openToast({ type: 'error', message: error?.message || "Impossible de mettre à jour l'entrée AniList." })
   } finally {
     isSavingEntry.value = false
   }
@@ -540,10 +540,10 @@ const deleteSelectedEntry = async () => {
     isDeletingEntry.value = true
     await anilistSync.deleteEntry(selectedEntryId.value)
     await fetchAnimeList()
-    toastStore.openToast({ type: 'success', message: "L'entree AniList a ete supprimee." })
+    toastStore.openToast({ type: 'success', message: "L'entrée AniList a été supprimée." })
     closeEntryEditor()
   } catch (error: any) {
-    toastStore.openToast({ type: 'error', message: error?.message || "Impossible de supprimer l'entree AniList." })
+    toastStore.openToast({ type: 'error', message: error?.message || "Impossible de supprimer l'entrée AniList." })
   } finally {
     isDeletingEntry.value = false
   }

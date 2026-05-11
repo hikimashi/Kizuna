@@ -1274,7 +1274,7 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                     </div>
                   </a>
                 </div>
-                <div v-else class="social-empty compact">Aucun apercu d'episode avec miniature n'a ete trouve sur AniList pour ce titre.</div>
+                <div v-else class="social-empty compact">Aucun aperçu d'épisode avec miniature n'a été trouvé sur AniList pour ce titre.</div>
               </section>
             </template>
 
@@ -1452,8 +1452,8 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                   <article class="social-panel">
                     <div class="social-panel-head">
                       <div>
-                        <h2 class="social-heading">Activite recente</h2>
-                        <p class="social-subheading">Activite recente des listes anime autour de ce titre.</p>
+                        <h2 class="social-heading">Activite récente</h2>
+                        <p class="social-subheading">Activite récente des listes anime autour de ce titre.</p>
                       </div>
 
                       <div class="social-controls">
@@ -1596,7 +1596,7 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                     </div>
 
                     <div v-else-if="canUsePersonalFeeds" class="social-empty compact">
-                      Aucun utilisateur suivi trouve pour cet anime pour le moment.
+                      Aucun utilisateur suivi trouvé pour cet anime pour le moment.
                     </div>
 
                     <div v-if="canUsePersonalFeeds && followingTimelineItems.length" class="timeline-block">
@@ -1625,7 +1625,7 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                         <h2 class="social-side-title">
                           Discussions
                         </h2>
-                        <p class="social-side-subtitle">Discussions recentes des forums AniList.</p>
+                        <p class="social-side-subtitle">Discussions récentes des forums AniList.</p>
                       </div>
                       <a class="create-thread-link" :href="createThreadUrl" target="_blank" rel="noreferrer">
                         Créer une discussion
@@ -1662,7 +1662,7 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                     </div>
 
                     <div v-else class="social-empty compact">
-                      Aucune discussion trouvee pour cet anime.
+                      Aucune discussion trouvée pour cet anime.
                     </div>
                   </article>
                 </aside>

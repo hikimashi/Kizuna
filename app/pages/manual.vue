@@ -484,7 +484,7 @@ const portugueseContent: ManualContent = {
       id: 'notifications',
       kicker: 'Função',
       title: 'Consultar notificações',
-      description: 'A página de notificações reúne os eventos recentes ligados à sua atividade AniList ou social no Kizuna.',
+      description: 'A página de notificações reúne os eventos récentes ligados à sua atividade AniList ou social no Kizuna.',
       imageTitle: 'Inserir captura aqui',
       imageHint: 'Exemplo: sino no header ou página de notificações.',
       steps: [

@@ -46,7 +46,7 @@
           Amis
         </NuxtLink>
         <NuxtLink class="sub-tab" :class="{ active: activeTab === 'shared-lists' }" :to="profileTabRoute('shared-lists')">
-          Listes partagees
+          Listes partagées
         </NuxtLink>
       </div>
     </div>
@@ -113,7 +113,7 @@
         </div>
 
         <div v-else-if="visibleAnimeSections.length === 0" class="empty-state">
-          Aucun anime trouve pour ce filtre.
+          Aucun anime trouvé pour ce filtre.
         </div>
 
         <div v-else class="content" :class="`view-${viewMode}`">
@@ -186,7 +186,7 @@
           </div>
 
           <div v-else-if="activeFavoriteItems.length === 0" class="empty-state">
-            Aucun favori trouve pour ce profil.
+            Aucun favori trouvé pour ce profil.
           </div>
 
           <div v-else class="friend-favorites-grid">
@@ -260,7 +260,7 @@
           </div>
 
           <div v-else-if="targetFriendUsers.length === 0" class="empty-state">
-            Aucun suivi mutuel trouve sur ce profil AniList.
+            Aucun suivi mutuel trouvé sur ce profil AniList.
           </div>
 
           <div v-else class="friend-user-grid">
@@ -317,8 +317,8 @@
         <div v-else class="friend-section-panel">
           <div class="friend-section-header">
             <div>
-              <div class="friend-section-kicker">Listes partagees PocketBase</div>
-              <h2 class="friend-section-title">{{ friendName || 'Ami' }} Listes partagees</h2>
+              <div class="friend-section-kicker">Listes partagées PocketBase</div>
+              <h2 class="friend-section-title">{{ friendName || 'Ami' }} Listes partagées</h2>
               <p class="friend-section-copy">Les listes publiques sont visibles par tous, celles reservees aux amis par les amis, et les privees uniquement par les membres.</p>
             </div>
             <div class="friend-stat-row">
@@ -331,7 +331,7 @@
 
           <div v-if="sharedListsLoading" class="loading">
             <div class="spinner"></div>
-            Chargement des listes partagees...
+            Chargement des listes partagées...
           </div>
 
           <div v-else-if="sharedListsError" class="error-state">
@@ -339,7 +339,7 @@
           </div>
 
           <div v-else-if="targetSharedLists.length === 0" class="empty-state">
-            Aucune liste partagee n'est visible pour ce profil pour le moment.
+            Aucune liste partagée n'est visible pour ce profil pour le moment.
           </div>
 
           <div v-else class="friend-shared-grid">
@@ -360,7 +360,7 @@
                   <div class="friend-shared-title-row">
                     <div class="friend-shared-title">{{ list.title }}</div>
                   </div>
-                  <div class="friend-shared-meta">Propriete de {{ list.ownerName }}</div>
+                  <div class="friend-shared-meta">Propriété de {{ list.ownerName }}</div>
                   <div class="friend-shared-desc">{{ sharedListDescription(list) }}</div>
                   <div class="friend-shared-stats">
                     <span>{{ sharedListMembersLabel(list) }}</span>
@@ -903,11 +903,11 @@ const sharedListImageSrc = (list: SharedListSummary) => String(list.imageUrl || 
 const targetSharedListRole = (list: SharedListSummary) => list.ownerId === targetPocketbaseUserId.value ? 'Proprietaire' : 'Membre'
 const sharedListDescription = (list: SharedListSummary) =>
   list.animeVisibilityLimited
-    ? 'Les entrees anime sont masquees pour ce niveau de visibilite.'
-    : `${list.animeCount} anime actuellement dans cette liste partagee.`
+    ? 'Les entrées anime sont masquées pour ce niveau de visibilité.'
+    : `${list.animeCount} anime actuellement dans cette liste partagée.`
 const sharedListMembersLabel = (list: SharedListSummary) =>
   list.membersVisibilityLimited
-    ? 'Membres masques'
+    ? 'Membres masqués'
     : `${list.memberCount} membre${list.memberCount > 1 ? 's' : ''}`
 const profileTabRoute = (tab: FriendPageTab) => ({
   path: `/social/user/${friendUserId.value}`,
@@ -1142,7 +1142,7 @@ const loadTargetSharedLists = async (force = false) => {
 
   try {
     if (!currentPocketbaseUserId.value) {
-      sharedListsError.value = 'Connectez-vous pour voir les listes partagees.'
+      sharedListsError.value = 'Connectez-vous pour voir les listes partagées.'
       sharedListsLoaded.value = true
       return
     }
@@ -1167,7 +1167,7 @@ const loadTargetSharedLists = async (force = false) => {
     sharedListsLoaded.value = true
   } catch (error: any) {
     if (requestedUserId !== friendUserId.value) return
-    sharedListsError.value = error?.message || 'Impossible de charger les listes partagees.'
+    sharedListsError.value = error?.message || 'Impossible de charger les listes partagées.'
   } finally {
     if (requestedUserId === friendUserId.value) {
       sharedListsLoading.value = false

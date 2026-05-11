@@ -32,7 +32,7 @@ cd Kizuna
 npm install
 ```
 
-Creez ensuite un fichier `.env` a la racine avec au minimum:
+Créez ensuite un fichier `.env` a la racine avec au minimum:
 
 ```env
 POCKETBASE_URL=http://localhost:8090

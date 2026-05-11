@@ -262,86 +262,6 @@
                 </div>
               </div>
 
-              <section v-if="canManageAnime && selectedAnimeEntry" class="editor-panel">
-                <div class="editor-panel-media">
-                  <div class="editor-panel-thumb">
-                    <img
-                      v-if="selectedAnimeCoverSrc"
-                      :src="selectedAnimeCoverSrc"
-                      :srcset="selectedAnimeCoverSrcSet"
-                      :alt="selectedAnimeEntry.title"
-                      loading="lazy"
-                      decoding="async"
-                    >
-                    <div v-else class="anime-card-placeholder">
-                      <span>{{ animeCoverLabel(selectedAnimeEntry.title) }}</span>
-                    </div>
-                  </div>
-                  <div class="editor-panel-copy">
-                    <div class="editor-panel-label">Modifier l'entree partagée</div>
-                    <div class="editor-panel-title">{{ selectedAnimeEntry.title }}</div>
-                    <div class="editor-panel-subtitle">
-                      Progression {{ editAnimeProgress || '0' }} / {{ selectedAnimeEpisodes ?? '?' }}
-                    </div>
-                  </div>
-                </div>
-
-                <div class="editor-panel-fields">
-                  <label class="editor-field">
-                    <span>Statut</span>
-                    <select v-model="editAnimeStatus" class="editor-input">
-                      <option v-for="status in STATUS_ORDER" :key="status" :value="status">
-                        {{ STATUS_LABELS[status] }}
-                      </option>
-                    </select>
-                  </label>
-
-                  <label class="editor-field">
-                    <span>Progression</span>
-                    <input
-                      v-model="editAnimeProgress"
-                      class="editor-input"
-                      type="number"
-                      min="0"
-                      :max="selectedAnimeEpisodes ?? undefined"
-                      inputmode="numeric"
-                    >
-                  </label>
-
-                  <label class="editor-field">
-                    <span>Note</span>
-                    <input
-                      v-model="editAnimeScore"
-                      class="editor-input"
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.1"
-                      placeholder="Pas de note"
-                      inputmode="decimal"
-                    >
-                  </label>
-                </div>
-
-                <div class="editor-panel-actions">
-                  <button class="editor-btn editor-btn-muted" type="button" @click="closeAnimeEditor">
-                    Annuler
-                  </button>
-                  <button
-                    v-if="canDeleteAnime"
-                    class="editor-btn editor-btn-danger"
-                    type="button"
-                    :disabled="isDeletingAnime"
-                    @click="deleteAnimeEntry"
-                  >
-                    {{ isDeletingAnime ? 'Suppression...' : 'Supprimer' }}
-                  </button>
-                  <button class="editor-btn editor-btn-primary" type="button" :disabled="isSavingAnime" @click="saveAnimeEntry">
-                    {{ isSavingAnime ? 'Enregistrement...' : 'Enregistrer les modifications' }}
-                  </button>
-                </div>
-              </section>
-
               <div v-if="!visibleAnimeSections.length" class="empty-state">
                 <div class="empty-state-title">{{ detail.animeVisibilityLimited ? 'Les entrées anime sont masquées.' : 'Aucun anime trouvé pour ce filtre.' }}</div>
                 <div class="empty-state-text">
@@ -635,6 +555,103 @@
         </div>
       </aside>
     </div>
+
+    <Teleport to="body">
+      <div
+        v-if="canManageAnime && selectedAnimeEntry"
+        class="anime-editor-modal-layer"
+        @click.self="closeAnimeEditor"
+      >
+        <div class="anime-editor-modal" role="dialog" aria-modal="true" aria-labelledby="anime-editor-title">
+          <div class="anime-editor-head">
+            <div class="anime-editor-media">
+              <div class="anime-editor-thumb">
+                <img
+                  v-if="selectedAnimeCoverSrc"
+                  :src="selectedAnimeCoverSrc"
+                  :srcset="selectedAnimeCoverSrcSet"
+                  :alt="selectedAnimeEntry.title"
+                  loading="lazy"
+                  decoding="async"
+                >
+                <div v-else class="anime-card-placeholder">
+                  <span>{{ animeCoverLabel(selectedAnimeEntry.title) }}</span>
+                </div>
+              </div>
+              <div class="anime-editor-copy">
+                <div class="anime-editor-kicker">Modifier l'entree partagee</div>
+                <h2 id="anime-editor-title" class="anime-editor-title">{{ selectedAnimeEntry.title }}</h2>
+                <div class="anime-editor-subtitle">
+                  Progression {{ editAnimeProgress || '0' }} / {{ selectedAnimeEpisodes ?? '?' }}
+                </div>
+              </div>
+            </div>
+            <button class="anime-editor-close" type="button" aria-label="Fermer" @click="closeAnimeEditor">
+              X
+            </button>
+          </div>
+
+          <div v-if="actionError" class="anime-editor-inline-error">
+            {{ actionError }}
+          </div>
+
+          <div class="anime-editor-fields">
+            <label class="anime-editor-field">
+              <span>Statut</span>
+              <select v-model="editAnimeStatus" class="anime-editor-input">
+                <option v-for="status in STATUS_ORDER" :key="status" :value="status">
+                  {{ STATUS_LABELS[status] }}
+                </option>
+              </select>
+            </label>
+
+            <label class="anime-editor-field">
+              <span>Progression</span>
+              <input
+                v-model="editAnimeProgress"
+                class="anime-editor-input"
+                type="number"
+                min="0"
+                :max="selectedAnimeEpisodes ?? undefined"
+                inputmode="numeric"
+              >
+            </label>
+
+            <label class="anime-editor-field">
+              <span>Note</span>
+              <input
+                v-model="editAnimeScore"
+                class="anime-editor-input"
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                placeholder="Pas de note"
+                inputmode="decimal"
+              >
+            </label>
+          </div>
+
+          <div class="anime-editor-actions">
+            <button class="editor-btn editor-btn-muted" type="button" @click="closeAnimeEditor">
+              Annuler
+            </button>
+            <button
+              v-if="canDeleteAnime"
+              class="editor-btn editor-btn-danger"
+              type="button"
+              :disabled="isDeletingAnime"
+              @click="deleteAnimeEntry"
+            >
+              {{ isDeletingAnime ? 'Suppression...' : 'Supprimer' }}
+            </button>
+            <button class="editor-btn editor-btn-primary" type="button" :disabled="isSavingAnime" @click="saveAnimeEntry">
+              {{ isSavingAnime ? 'Enregistrement...' : 'Enregistrer les modifications' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -1510,6 +1527,12 @@ const deleteGroup = async () => {
 }
 
 const animeCoverLabel = (title: string) => title.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 3) || 'AN'
+const isAnimeEditorOpen = computed(() => canManageAnime.value && Boolean(selectedAnimeEntry.value))
+
+const handleAnimeEditorKeydown = (event: KeyboardEvent) => {
+  if (event.key !== 'Escape' || !isAnimeEditorOpen.value) return
+  closeAnimeEditor()
+}
 
 watch(listId, () => {
   memberQuery.value = ''
@@ -1536,7 +1559,14 @@ onBeforeUnmount(() => {
   if (animeSearchTimer) clearTimeout(animeSearchTimer)
   revokePreviewUrl(settingsGroupImagePreview.value)
   revokePreviewUrl(settingsBannerPreview.value)
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('keydown', handleAnimeEditorKeydown)
+  }
 })
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('keydown', handleAnimeEditorKeydown)
+}
 </script>
 
 <style scoped>
@@ -2774,22 +2804,156 @@ onBeforeUnmount(() => {
   margin-top: -2px;
 }
 
+.anime-editor-modal-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(7, 12, 20, 0.72);
+  backdrop-filter: blur(14px);
+}
+
+.anime-editor-modal {
+  width: min(760px, 100%);
+  max-height: min(88vh, 920px);
+  overflow: auto;
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(13, 18, 31, 0.98) 0%, rgba(8, 12, 22, 0.98) 100%);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+  padding: 24px;
+}
+
+.anime-editor-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.anime-editor-media {
+  display: flex;
+  gap: 18px;
+  min-width: 0;
+}
+
+.anime-editor-thumb {
+  width: 92px;
+  height: 128px;
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+  flex: 0 0 auto;
+}
+
+.anime-editor-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.anime-editor-copy {
+  min-width: 0;
+}
+
+.anime-editor-kicker {
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(173, 216, 255, 0.72);
+  margin-bottom: 8px;
+}
+
+.anime-editor-title {
+  margin: 0;
+  font-size: 1.6rem;
+  line-height: 1.15;
+  color: #f8fbff;
+}
+
+.anime-editor-subtitle {
+  margin-top: 10px;
+  color: rgba(224, 233, 245, 0.78);
+}
+
+.anime-editor-close {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8fbff;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.anime-editor-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.anime-editor-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: rgba(232, 239, 248, 0.92);
+}
+
+.anime-editor-input {
+  width: 100%;
+  min-height: 46px;
+  appearance: none;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(19, 28, 44, 0.92);
+  color: #f8fbff;
+  padding: 0 14px;
+}
+
+.anime-editor-input option {
+  background: #0f1724;
+  color: #f8fbff;
+}
+
+.anime-editor-inline-error {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 107, 107, 0.12);
+  border: 1px solid rgba(255, 107, 107, 0.24);
+  color: #ffd7d7;
+}
+
+.anime-editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
 .settings-overlay {
   position: fixed;
   inset: 0;
   background: rgba(8, 12, 24, 0.72);
   z-index: 60;
-  display: flex;
-  justify-content: flex-end;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  backdrop-filter: blur(14px);
 }
 
 .settings-drawer {
-  width: min(100%, 540px);
-  height: 100%;
+  width: min(760px, 100%);
+  max-height: min(88vh, 920px);
   overflow: auto;
-  background: var(--kz-card-bg);
-  border-left: 1px solid rgba(160,177,197,.12);
-  box-shadow: -12px 0 40px rgba(0,0,0,.28);
+  background: linear-gradient(180deg, rgba(13, 18, 31, 0.98) 0%, rgba(8, 12, 22, 0.98) 100%);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 28px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.4);
   display: flex;
   flex-direction: column;
 }
@@ -2799,31 +2963,33 @@ onBeforeUnmount(() => {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  padding: 22px 22px 18px;
-  border-bottom: 1px solid rgba(160,177,197,.08);
+  padding: 24px 24px 0;
 }
 
 .settings-kicker {
-  font-size: 10px;
+  font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: .14em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--kz-text-dim);
+  color: rgba(173, 216, 255, 0.72);
 }
 
 .settings-drawer-head h2 {
-  margin: 6px 0 0;
-  font-size: 24px;
-  color: var(--kz-text-primary);
+  margin: 8px 0 0;
+  font-size: 1.6rem;
+  line-height: 1.15;
+  color: #f8fbff;
 }
 
 .icon-close {
-  min-width: 36px;
-  min-height: 36px;
-  border-radius: 10px;
-  border: 1px solid rgba(160,177,197,.12);
-  background: transparent;
-  color: var(--kz-text-dim);
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 999px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8fbff;
   cursor: pointer;
 }
 
@@ -2831,23 +2997,25 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 20px 22px 28px;
+  padding: 24px;
 }
 
 .drawer-card {
-  padding: 18px;
+  padding: 0;
+  background: transparent;
+  border: 0;
 }
 
 .drawer-card-head h3 {
   margin: 0;
   font-size: 16px;
-  color: var(--kz-text-primary);
+  color: #f8fbff;
 }
 
 .drawer-card-head p {
   margin: 6px 0 0;
   font-size: 12px;
-  color: var(--kz-text-dim);
+  color: rgba(224, 233, 245, 0.76);
   line-height: 1.55;
 }
 
@@ -2877,21 +3045,30 @@ onBeforeUnmount(() => {
 .settings-media-field span {
   font-size: 11px;
   font-weight: 700;
-  color: var(--kz-text-dim);
+  color: rgba(232, 239, 248, 0.92);
 }
 
 .settings-input {
-  color: var(--kz-text-primary);
-  padding: 0 12px;
-  background: rgba(255,255,255,.02);
+  min-height: 46px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f8fbff;
+  padding: 0 14px;
+  background: rgba(19, 28, 44, 0.92);
+  appearance: none;
+}
+
+.settings-input option {
+  background: #0f1724;
+  color: #f8fbff;
 }
 
 .settings-media-preview {
   position: relative;
   overflow: hidden;
-  border-radius: 12px;
-  border: 1px solid rgba(160,177,197,.12);
-  background: rgba(255,255,255,.02);
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.04);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2918,16 +3095,16 @@ onBeforeUnmount(() => {
 
 .media-input {
   width: 100%;
-  border-radius: 8px;
-  border: 1px dashed rgba(160,177,197,.18);
-  background: rgba(255,255,255,.02);
+  border-radius: 14px;
+  border: 1px dashed rgba(255,255,255,.16);
+  background: rgba(255,255,255,.03);
   padding: 10px;
-  color: var(--kz-text-secondary);
+  color: rgba(224, 233, 245, 0.76);
   font-family: 'Overpass', sans-serif;
 }
 
 .settings-media-field small {
-  color: var(--kz-text-dim);
+  color: rgba(224, 233, 245, 0.72);
   font-size: 11px;
 }
 
@@ -2949,15 +3126,15 @@ onBeforeUnmount(() => {
 }
 
 .drawer-btn-muted {
-  border-color: rgba(160,177,197,.12);
+  border-color: rgba(255,255,255,.12);
   background: transparent;
-  color: var(--kz-text-secondary);
+  color: rgba(224, 233, 245, 0.82);
 }
 
 .drawer-btn-primary {
   border-color: rgba(61,180,242,.28);
   background: rgba(61,180,242,.12);
-  color: var(--kz-accent);
+  color: #3db4f2;
 }
 
 .drawer-btn-danger {
@@ -2999,7 +3176,6 @@ onBeforeUnmount(() => {
 [data-theme='winter'] .member-card,
 [data-theme='winter'] .panel-card,
 [data-theme='winter'] .editor-panel,
-[data-theme='winter'] .drawer-card,
 [data-theme='winter'] .status-card,
 [data-theme='winter'] .settings-drawer,
 [data-theme='winter'] .search-box,
@@ -3023,10 +3199,71 @@ onBeforeUnmount(() => {
 [data-theme='winter'] .sidebar .sort-select,
 [data-theme='winter'] .settings-drawer-head h2,
 [data-theme='winter'] .drawer-card-head h3,
+[data-theme='winter'] .anime-editor-title,
+[data-theme='winter'] .sidebar .stat-chip strong,
 [data-theme='winter'] .info-row strong,
 [data-theme='winter'] .member-name,
 [data-theme='winter'] .search-name,
 [data-theme='winter'] .anime-search-name {
+  color: #96b6d3
+}
+
+[data-theme='winter'] .sidebar .stat-chip span {
+  color: #5a7693;
+}
+
+[data-theme='winter'] .anime-editor-kicker,
+[data-theme='winter'] .anime-editor-subtitle,
+[data-theme='winter'] .anime-editor-field span,
+[data-theme='winter'] .anime-editor-inline-error,
+[data-theme='winter'] .anime-editor-input,
+[data-theme='winter'] .anime-editor-input option {
+  color: #96b6d3;
+}
+
+[data-theme='winter'] .anime-editor-input {
+  background: rgba(25, 27, 37, 0.96);
+  border-color: rgba(23,52,78,.18);
+}
+
+[data-theme='winter'] .anime-editor-input option {
+  background: 090d17;
+}
+
+[data-theme='winter'] .anime-editor-modal {
+  border-color: rgba(253, 253, 253, 0.141);
+}
+
+[data-theme='winter'] .settings-kicker,
+[data-theme='winter'] .drawer-card-head p,
+[data-theme='winter'] .settings-field span,
+[data-theme='winter'] .settings-media-field span,
+[data-theme='winter'] .settings-media-field small,
+[data-theme='winter'] .drawer-btn-muted,
+[data-theme='winter'] .info-row {
+  color: #5a7693;
+}
+
+[data-theme='winter'] .settings-input,
+[data-theme='winter'] .media-input {
+  background: rgba(244,249,254,.96);
+  border-color: rgba(23,52,78,.18);
+  color: #17344e;
+}
+
+[data-theme='winter'] .settings-input option {
+  background: #f4f9fe;
+  color: #17344e;
+}
+
+[data-theme='winter'] .settings-media-preview {
+  background: rgba(244,249,254,.9);
+  border-color: rgba(23,52,78,.14);
+  color: #17344e;
+}
+
+[data-theme='winter'] .icon-close {
+  background: rgba(23,52,78,.08);
   color: #17344e;
 }
 
@@ -3182,6 +3419,17 @@ onBeforeUnmount(() => {
 
   .settings-drawer {
     width: 100%;
+    max-height: min(92vh, 100%);
+    border-radius: 22px;
+  }
+
+  .anime-editor-modal-layer {
+    padding: 12px;
+  }
+
+  .anime-editor-modal {
+    padding: 18px;
+    border-radius: 22px;
   }
 
   .view-bar,
@@ -3214,6 +3462,15 @@ onBeforeUnmount(() => {
     text-align: center;
   }
 
+  .anime-editor-media,
+  .anime-editor-actions {
+    flex-direction: column;
+  }
+
+  .anime-editor-fields {
+    grid-template-columns: 1fr;
+  }
+
   .section-title {
     justify-content: center;
     text-align: center;
@@ -3224,15 +3481,11 @@ onBeforeUnmount(() => {
   }
 
   .settings-drawer-head {
-    padding: 18px 16px 16px;
+    padding: 18px 18px 0;
   }
 
   .settings-drawer-body {
-    padding: 16px;
-  }
-
-  .drawer-card {
-    padding: 14px;
+    padding: 18px;
   }
 }
 

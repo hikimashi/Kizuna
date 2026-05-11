@@ -132,7 +132,7 @@
                 </div>
               </div>
               <div class="anime-editor-copy">
-                <div class="anime-editor-kicker">Modifier l'entree AniList</div>
+                <div class="anime-editor-kicker">Modifier l'entrée AniList</div>
                 <h2 id="anime-editor-title" class="anime-editor-title">{{ selectedEntryTitle }}</h2>
                 <div class="anime-editor-subtitle">
                   Progression {{ editProgress || '0' }} / {{ selectedEntryEpisodes ?? '?' }}
@@ -183,7 +183,7 @@
 
           <div class="anime-editor-quick-actions">
             <button class="editor-btn editor-btn-blue" type="button" @click="openSelectedAnimeInfo">
-              Voir la fiche anime
+              Voir la fiche d'anime
             </button>
             <button
               class="editor-btn editor-btn-blue"
@@ -191,7 +191,7 @@
               :disabled="isSharedListsLoading || isAddingToSharedList"
               @click="toggleSharedListPicker"
             >
-              {{ showSharedListPicker ? 'Fermer les listes' : 'Ajouter a une liste' }}
+              {{ showSharedListPicker ? 'Fermer les listes' : 'Ajouter à une liste' }}
             </button>
           </div>
 
@@ -200,7 +200,7 @@
               Chargement des listes...
             </div>
             <div v-else-if="sharedListOptions.length === 0" class="anime-editor-list-picker-state">
-              Aucune liste partagee disponible.
+              Aucune liste partagée disponible.
             </div>
             <div v-else class="anime-editor-list-grid">
               <button

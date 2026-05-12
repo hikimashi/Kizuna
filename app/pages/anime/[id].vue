@@ -771,7 +771,7 @@ const overviewStats = computed(() => [
     meta: peakScoreBucket.value ? `Pic: ${peakScoreBucket.value.score}` : 'Tendance des notes'
   },
   {
-    label: 'Popularite',
+    label: 'Popularité',
     value: media.value?.popularity ? formatCompactNumber(media.value.popularity) : '-',
     meta: media.value?.popularity ? formatNumber(media.value.popularity) : 'Pas de données'
   },
@@ -793,9 +793,9 @@ const statsSummaryCards = computed(() => [
     meta: peakScoreBucket.value ? `Pic de note : ${peakScoreBucket.value.score}` : 'Pas de tendance de note'
   },
   {
-    label: 'Popularite',
+    label: 'Popularité',
     value: media.value?.popularity ? formatNumber(media.value.popularity) : '-',
-    meta: 'Popularite AniList'
+    meta: 'Popularité AniList'
   },
   {
     label: 'Favoris',
@@ -805,7 +805,7 @@ const statsSummaryCards = computed(() => [
   {
     label: 'Episodes',
     value: media.value?.episodes ? String(media.value.episodes) : '?',
-    meta: media.value?.duration ? `${media.value.duration} min chacun` : 'Duree inconnue'
+    meta: media.value?.duration ? `${media.value.duration} min chacun` : 'Durée inconnue'
   },
   {
     label: 'Studio',
@@ -818,7 +818,7 @@ const infoFacts = computed(() => [
   { label: 'Statut', value: formatStatus(media.value?.status) },
   { label: 'Saison', value: formatSeason(media.value?.season, media.value?.seasonYear) },
   { label: 'Episodes', value: media.value?.episodes ? String(media.value.episodes) : '?' },
-  { label: 'Duree', value: media.value?.duration ? `${media.value.duration} min` : 'Inconnue' },
+  { label: 'Durée', value: media.value?.duration ? `${media.value.duration} min` : 'Inconnue' },
   { label: 'Source', value: formatStatus(media.value?.source) }
 ])
 const scoreMarkers = computed(() => {
@@ -1017,14 +1017,14 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
               <div class="sidebar-title">Données</div>
               <div class="data-row"><span class="data-label">Format</span><span class="data-value">{{ formatStatus(media.format) }}</span></div>
               <div class="data-row"><span class="data-label">Episodes</span><span class="data-value">{{ media.episodes || '?' }}</span></div>
-              <div class="data-row"><span class="data-label">Duree d'episode</span><span class="data-value">{{ media.duration ? `${media.duration} min` : 'Inconnue' }}</span></div>
+              <div class="data-row"><span class="data-label">Durée d'episode</span><span class="data-value">{{ media.duration ? `${media.duration} min` : 'Inconnue' }}</span></div>
               <div class="data-row"><span class="data-label">Statut</span><span class="data-value">{{ formatStatus(media.status) }}</span></div>
               <div class="data-row"><span class="data-label">Date de debut</span><span class="data-value">{{ formatDate(media.startDate) }}</span></div>
               <div class="data-row"><span class="data-label">Date de fin</span><span class="data-value">{{ formatDate(media.endDate) }}</span></div>
               <div class="data-row"><span class="data-label">Saison</span><span class="data-value">{{ formatSeason(media.season, media.seasonYear) }}</span></div>
               <div class="data-row"><span class="data-label">Note moyenne</span><span class="data-value">{{ media.averageScore ? `${media.averageScore}%` : '-' }}</span></div>
               <div class="data-row"><span class="data-label">Score moyen</span><span class="data-value">{{ media.meanScore ? `${media.meanScore}%` : '-' }}</span></div>
-              <div class="data-row"><span class="data-label">Popularite</span><span class="data-value">{{ formatNumber(media.popularity) }}</span></div>
+              <div class="data-row"><span class="data-label">Popularité</span><span class="data-value">{{ formatNumber(media.popularity) }}</span></div>
               <div class="data-row"><span class="data-label">Favoris</span><span class="data-value">{{ formatNumber(media.favourites) }}</span></div>
               <div class="data-row"><span class="data-label">Studio</span><span class="data-value">{{ animationStudio }}</span></div>
               <div v-if="producers.length" class="data-row"><span class="data-label">Producteurs</span><span class="data-value stacked"><span v-for="producer in producers" :key="producer">{{ producer }}</span></span></div>

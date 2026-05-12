@@ -64,7 +64,10 @@
         </div>
 
         <div v-else-if="visibleSections.length === 0" class="empty-state">
-          Aucun anime trouvé pour ce filtre.
+          <p>Aucun anime trouvé pour ce filtre.</p>
+          <button class="empty-state-action" type="button" @click="openBrowsePage">
+            Ajouter un anime à sa liste
+          </button>
         </div>
 
         <div v-else class="content" :class="`view-${viewMode}`">
@@ -326,7 +329,7 @@ const authRecord = computed(() => (unref(pocketbaseStore.authRecord) ?? {}) as R
 const token = computed(() => String(authRecord.value.anilist_token ?? ''))
 const username = computed(() => String(authRecord.value.anilist_username ?? ''))
 const profileTabs = [
-  { key: 'anime-list', label: 'Liste d\'anime', to: '/animeList', active: true },
+  { key: 'anime-list', label: 'Liste d\'animes', to: '/animeList', active: true },
   { key: 'favorites', label: 'Favoris', to: '/favorites' },
   { key: 'friends', label: 'Amis', to: '/friends' },
   { key: 'shared-lists', label: 'Listes partagées', to: '/sharedLists' }
@@ -469,6 +472,10 @@ const closeEntryEditor = () => {
 const openSelectedAnimeInfo = () => {
   if (!selectedEntryMediaId.value) return
   navigateTo(`/anime/${selectedEntryMediaId.value}`)
+}
+
+const openBrowsePage = () => {
+  navigateTo('/browse')
 }
 
 const toggleSharedListPicker = async () => {

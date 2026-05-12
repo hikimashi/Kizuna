@@ -227,6 +227,37 @@
   text-align: center;
 }
 
+.manual-doc-visual-image {
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+  object-position: top center;
+  border-radius: 8px;
+  border: 1px solid var(--doc-border);
+  background: var(--doc-surface-2);
+  cursor: zoom-in;
+}
+
+.manual-doc-visual-caption,
+.manual-doc-visual-placeholder {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+.manual-doc-visual-placeholder {
+  min-height: 220px;
+  width: 100%;
+  justify-content: center;
+  padding: 18px;
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(61, 180, 242, 0.08), rgba(255, 255, 255, 0.02)),
+    var(--doc-surface-2);
+}
+
 .manual-doc-visual-frame span {
   font-size: 18px;
   font-weight: 700;
@@ -236,6 +267,17 @@
   max-width: 28ch;
   color: var(--doc-text-soft);
   line-height: 1.7;
+}
+
+.manual-doc-visual-file {
+  margin: 0;
+  color: var(--doc-text-soft);
+  font-size: 12px;
+}
+
+.manual-doc-visual-file code,
+.manual-doc-file-chip {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 .manual-doc-note-grid {
@@ -252,6 +294,75 @@
 
 .manual-doc-note-card p {
   margin: 8px 0 0;
+  font-size: 14px;
+}
+
+.manual-doc-file-list {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.manual-doc-file-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--doc-border);
+  border-radius: 999px;
+  background: var(--doc-surface-2);
+  color: var(--doc-text-muted);
+  font-size: 12px;
+}
+
+.manual-doc-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(7, 12, 18, 0.84);
+  backdrop-filter: blur(8px);
+}
+
+.manual-doc-lightbox-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--doc-border);
+  border-radius: 999px;
+  background: rgba(26, 37, 50, 0.92);
+  color: var(--doc-text);
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.manual-doc-lightbox-figure {
+  margin: 0;
+  width: min(1280px, 100%);
+  display: grid;
+  gap: 12px;
+}
+
+.manual-doc-lightbox-image {
+  width: 100%;
+  max-height: calc(100vh - 120px);
+  object-fit: contain;
+  border-radius: 12px;
+  border: 1px solid var(--doc-border);
+  background: #0c141d;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+}
+
+.manual-doc-lightbox-caption {
+  color: var(--doc-text-muted);
+  text-align: center;
   font-size: 14px;
 }
 

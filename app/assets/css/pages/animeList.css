@@ -761,6 +761,35 @@
   font-size: 13px;
 }
 
+.empty-state {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+}
+
+.empty-state p {
+  margin: 0;
+}
+
+.empty-state-action {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid rgba(61, 180, 242, 0.35);
+  border-radius: 8px;
+  background: rgba(61, 180, 242, 0.12);
+  color: #9ddcff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.empty-state-action:hover {
+  background: rgba(61, 180, 242, 0.18);
+  border-color: rgba(61, 180, 242, 0.48);
+  color: #c8eeff;
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);

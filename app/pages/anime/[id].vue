@@ -123,6 +123,11 @@ type SocialBundle = {
   threads: SocialThread[]
 }
 type AniListGraphqlResponse<T> = { data?: T; errors?: Array<{ message?: string | null }> | null }
+type AnimeDescriptionTranslationResponse = {
+  description: string
+  translated: boolean
+  provider: string
+}
 
 const route = useRoute()
 const animeId = computed(() => Number(route.params.id))
@@ -311,6 +316,13 @@ const toggleFavouriteMutation = `
   }
 `
 
+const normalizeDescription = (value: string) =>
+  value
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/?[^>]+>/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+
 const mediaState = await useAsyncData(
   () => `anime-detail-${animeId.value}-${anilistToken.value ? 'auth' : 'public'}`,
   async () => {
@@ -408,6 +420,34 @@ const reviewsState = await useAsyncData(
   }
 )
 
+const sourceDescription = computed(() => normalizeDescription(String(mediaState.data.value?.description || '')))
+
+const translatedDescriptionState = await useAsyncData(
+  () => `anime-description-translation-${animeId.value}-${sourceDescription.value ? 'ready' : 'empty'}`,
+  async () => {
+    if (!sourceDescription.value) {
+      return null
+    }
+
+    try {
+      return await $fetch<AnimeDescriptionTranslationResponse>('/api/translate/animeDescription', {
+        method: 'POST',
+        body: {
+          mediaId: animeId.value,
+          description: sourceDescription.value,
+          targetLang: 'fr'
+        }
+      })
+    } catch {
+      return null
+    }
+  },
+  {
+    default: () => null,
+    watch: [animeId, sourceDescription]
+  }
+)
+
 const media = computed(() => mediaState.data.value)
 const socialBundle = computed<SocialBundle>(() => socialState.data.value ?? { global: [], following: [], self: [], threads: [] })
 const reviewsBundle = computed(() => reviewsState.data.value ?? { reviews: [], hasNextPage: false })
@@ -422,13 +462,10 @@ const socialLoading = computed(() => socialState.pending.value && !socialBundle.
 const pageTitle = computed(() => media.value?.title?.english || media.value?.title?.romaji || 'Anime')
 const bannerImage = computed(() => media.value?.bannerImage || media.value?.coverImage?.large || media.value?.coverImage?.medium || '')
 const coverImage = computed(() => media.value?.coverImage?.large || media.value?.coverImage?.medium || '')
-const description = computed(() =>
-  (media.value?.description || '')
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/?[^>]+>/g, '')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim()
-)
+const description = computed(() => {
+  const translated = translatedDescriptionState.data.value?.description
+  return normalizeDescription(String(translated || sourceDescription.value || ''))
+})
 const rankings = computed(() => (media.value?.rankings || []).filter((item) => item.rank && item.allTime).slice(0, 2))
 const studios = computed(() => (media.value?.studios?.nodes || []).filter(Boolean))
 const animationStudio = computed(() => studios.value.find((item) => item?.isAnimationStudio)?.name || studios.value[0]?.name || 'Inconnu')

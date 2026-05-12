@@ -6,7 +6,43 @@ import { authEmailCandidates, normalizeAuthEmail } from '~/utils/authEmail';
 export const useMyAuthStore = defineStore('auth', () => {
   const pocketbaseStore = usePocketbaseStore();
   const userStore = useUserStore();
-  const unverifiedEmailMessage = 'Please verify your email address before logging in.';
+  const unverifiedEmailMessage = 'Veuillez verifier votre adresse e-mail avant de vous connecter.';
+  const invalidLoginMessage = 'Identifiants invalides. Verifiez votre email et votre mot de passe.';
+
+  const getAuthErrorMessage = (error: any, fallback: string) => {
+    const candidateMessages = [
+      error?.response?.data?.message,
+      error?.response?.message,
+      error?.data?.message,
+      error?.message
+    ]
+      .map((value) => String(value || '').trim())
+      .filter(Boolean);
+
+    const rawMessage = candidateMessages[0] || fallback;
+    const normalizedMessage = rawMessage.toLowerCase();
+
+    if (
+      normalizedMessage.includes('verify') ||
+      normalizedMessage.includes('verif') ||
+      normalizedMessage.includes('unverified')
+    ) {
+      return unverifiedEmailMessage;
+    }
+
+    if (
+      normalizedMessage.includes('auth') ||
+      normalizedMessage.includes('credential') ||
+      normalizedMessage.includes('invalid') ||
+      normalizedMessage.includes('password') ||
+      normalizedMessage.includes('not found') ||
+      normalizedMessage.includes('wrong')
+    ) {
+      return invalidLoginMessage;
+    }
+
+    return rawMessage || fallback;
+  };
 
   // Convertit les données PocketBase vers le format UserType utilise par l'app.
   const mapAuthDataToUser = (authData: { token: string; record: any }): UserType => {
@@ -77,13 +113,13 @@ export const useMyAuthStore = defineStore('auth', () => {
             pocketbaseStore.pb.authStore.clear();
             localStorage.removeItem('pocketbase_auth');
             userStore.clearUser();
-            throw new Error(unverifiedEmailMessage);
+            throw Object.assign(new Error(unverifiedEmailMessage), { code: 'unverified_email' });
           }
 
           userStore.saveUserData(mapAuthDataToUser(authData));
           return authData;
         } catch (error: any) {
-          if (error?.message === unverifiedEmailMessage) {
+          if (error?.code === 'unverified_email') {
             throw error;
           }
 
@@ -93,7 +129,11 @@ export const useMyAuthStore = defineStore('auth', () => {
 
       throw lastError;
     } catch (error: any) {
-      throw new Error(error?.message || 'Login failed. Please check your credentials.');
+      if (error?.code === 'unverified_email') {
+        throw error;
+      }
+
+      throw new Error(getAuthErrorMessage(error, invalidLoginMessage));
     }
   };
 

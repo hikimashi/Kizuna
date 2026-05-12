@@ -31,7 +31,7 @@
               <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
             </g>
           </svg>
-          <input v-model="newUser.email" type="email" placeholder="yourmail@mail.com" required />
+          <input v-model="newUser.email" type="email" placeholder="example@mail.com" required />
         </label>
         <div class="validator-hint hidden">Saisissez une adresse e-mail valide</div>
 

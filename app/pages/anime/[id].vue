@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
 import { useAnilistSync, type EditableAniListStatus } from '~/composables/useAnilistSync'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
+import { useSharedLists, type SharedListSummary } from '~/composables/useSharedLists'
 import BrowseAnimeCard from '~/components/BrowseAnimeCard.vue'
 
 type FuzzyDate = { year?: number | null; month?: number | null; day?: number | null }
@@ -135,11 +136,18 @@ const selectedTab = ref<'overview' | 'watch' | 'characters' | 'reviews' | 'stats
 const pocketbaseStore = usePocketbaseStore()
 const anilistGraphql = useAnilistGraphql()
 const anilistSync = useAnilistSync()
+const sharedListsStore = useSharedLists()
 const actionBusy = ref<'favorite' | 'list' | null>(null)
 const listMenuOpen = ref(false)
 const listActionRef = ref<HTMLElement | null>(null)
+const sharedListActionRef = ref<HTMLElement | null>(null)
 const anilistToken = computed(() => String(((pocketbaseStore.authRecord as any) || {})?.anilist_token ?? ''))
 const anilistUserId = computed(() => Number(((pocketbaseStore.authRecord as any) || {})?.anilist_user_id ?? 0))
+const isSharedListsLoading = ref(false)
+const isAddingToSharedList = ref(false)
+const sharedListError = ref('')
+const showSharedListPicker = ref(false)
+const sharedLists = ref<SharedListSummary[]>([])
 const socialFeedType = ref<'SELF' | 'FOLLOWING' | 'GLOBAL'>('GLOBAL')
 const socialPageSize = ref(8)
 const reviewPage = ref(1)
@@ -618,10 +626,10 @@ const STATUS_TRANSLATIONS: Record<string, string> = {
   MULTIMEDIA_PROJECT: 'Projet multimedia',
   PICTURE_BOOK: 'Album illustre',
   WEB_NOVEL: 'Web novel',
-  FINISHED: 'Termine',
+  FINISHED: 'Terminé',
   RELEASING: 'En cours',
   NOT_YET_RELEASED: 'A venir',
-  CANCELLED: 'Annule',
+  CANCELLED: 'Annulé',
   HIATUS: 'En pause',
   MAIN: 'Principal',
   SUPPORTING: 'Secondaire',
@@ -640,16 +648,16 @@ const STATUS_TRANSLATIONS: Record<string, string> = {
   CONTAINS: 'Contient',
   CURRENT: 'En cours',
   PLANNING: 'A voir',
-  COMPLETED: 'Termine',
+  COMPLETED: 'Terminé',
   REPEATING: 'Revisionnage',
   PAUSED: 'En pause',
-  DROPPED: 'Abandonne',
+  DROPPED: 'Abandonné',
   'watched episode': 'a regarde l\'episode',
   'plans to watch': 'prevoit de regarder',
-  completed: 'a termine',
-  dropped: 'a abandonne',
+  completed: 'a terminé',
+  dropped: 'a abandonné',
   'paused watching': 'a mis en pause',
-  rewatched: 'a revisionne'
+  rewatched: 'a revisionné'
 }
 
 function formatStatus(value?: string | null) {
@@ -876,17 +884,22 @@ const tabs = [
 const listOptions: Array<{ value: EditableAniListStatus; label: string }> = [
   { value: 'CURRENT', label: 'En cours' },
   { value: 'PLANNING', label: 'A voir' },
-  { value: 'COMPLETED', label: 'Termine' },
+  { value: 'COMPLETED', label: 'Terminé' },
   { value: 'REPEATING', label: 'Revisionnage' },
   { value: 'PAUSED', label: 'En pause' },
-  { value: 'DROPPED', label: 'Abandonne' }
+  { value: 'DROPPED', label: 'Abandonné' }
 ]
 
+const currentListStatus = ref<EditableAniListStatus | ''>('')
 const currentListLabel = computed(() => {
-  const status = media.value?.mediaListEntry?.status
-  if (!status) return 'Ajouter a la liste'
+  const status = currentListStatus.value || media.value?.mediaListEntry?.status
+  if (!status) return 'Ajouter à la liste'
   return listOptions.find((option) => option.value === status)?.label || formatStatus(status)
 })
+
+const sharedListOptions = computed(() =>
+  sharedLists.value.filter(list => list.isOwner || list.isMember)
+)
 
 async function toggleFavorite() {
   if (!media.value?.id || !anilistToken.value || actionBusy.value) return
@@ -918,6 +931,8 @@ async function saveListStatus(status: EditableAniListStatus) {
 
   actionBusy.value = 'list'
   listMenuOpen.value = false
+  const previousStatus = currentListStatus.value || media.value.mediaListEntry?.status || ''
+  currentListStatus.value = status
 
   try {
     const savedEntry = await anilistSync.saveEntry({
@@ -930,8 +945,60 @@ async function saveListStatus(status: EditableAniListStatus) {
       id: Number(savedEntry.id),
       status: String(savedEntry.status || status)
     }
+  } catch {
+    currentListStatus.value = previousStatus
   } finally {
     actionBusy.value = null
+  }
+}
+
+const ensureSharedListsLoaded = async () => {
+  if (isSharedListsLoading.value) return
+  if (sharedLists.value.length > 0) return
+
+  try {
+    isSharedListsLoading.value = true
+    sharedListError.value = ''
+    sharedLists.value = await sharedListsStore.loadSummaries()
+  } catch (error: any) {
+    sharedLists.value = []
+    sharedListError.value = error?.message || 'Impossible de charger vos listes partagées.'
+  } finally {
+    isSharedListsLoading.value = false
+  }
+}
+
+const toggleSharedListPicker = async () => {
+  if (showSharedListPicker.value) {
+    showSharedListPicker.value = false
+    return
+  }
+
+  await ensureSharedListsLoaded()
+  showSharedListPicker.value = true
+}
+
+const addSelectedAnimeToSharedList = async (listId: string) => {
+  if (!media.value?.id || !listId || isAddingToSharedList.value) return
+
+  const status = (currentListStatus.value || media.value.mediaListEntry?.status || 'PLANNING') as EditableAniListStatus
+
+  try {
+    isAddingToSharedList.value = true
+    sharedListError.value = ''
+    await sharedListsStore.addAnimeToList(listId, {
+      mediaId: media.value.id,
+      title: pageTitle.value,
+      fetchLink: `/anime/${media.value.id}`,
+      status,
+      progress: 0,
+      score: 0
+    })
+    showSharedListPicker.value = false
+  } catch (error: any) {
+    sharedListError.value = error?.message || "Impossible d'ajouter cet anime a la liste partagée."
+  } finally {
+    isAddingToSharedList.value = false
   }
 }
 
@@ -992,10 +1059,12 @@ function hasReviewOverflow(review: Review) {
 }
 
 function handleDocumentClick(event: MouseEvent) {
-  if (!listMenuOpen.value) return
   const target = event.target as Node | null
-  if (listActionRef.value && target && !listActionRef.value.contains(target)) {
+  if (listMenuOpen.value && listActionRef.value && target && !listActionRef.value.contains(target)) {
     listMenuOpen.value = false
+  }
+  if (showSharedListPicker.value && sharedListActionRef.value && target && !sharedListActionRef.value.contains(target)) {
+    showSharedListPicker.value = false
   }
 }
 
@@ -1007,6 +1076,9 @@ function loadMoreReviews() {
 watch(animeId, () => {
   reviewPage.value = 1
   expandedReviews.value = {}
+  currentListStatus.value = ''
+  showSharedListPicker.value = false
+  sharedListError.value = ''
 })
 
 onMounted(() => {
@@ -1108,7 +1180,7 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                       :key="option.value"
                       type="button"
                       class="list-option"
-                      :class="{ active: media.mediaListEntry?.status === option.value }"
+                      :class="{ active: (currentListStatus || media.mediaListEntry?.status) === option.value }"
                       @click="saveListStatus(option.value)"
                     >
                       {{ option.label }}
@@ -1116,10 +1188,43 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                   </div>
                 </div>
 
+                <div ref="sharedListActionRef" class="list-action">
+                  <button class="btn btn-primary list-button" type="button" :disabled="!anilistToken || isSharedListsLoading || isAddingToSharedList" @click="toggleSharedListPicker">
+                    <span>{{ showSharedListPicker ? 'Fermer les listes partagées' : 'Ajouter à une liste partagée' }}</span>
+                    <span class="button-arrow">&#9662;</span>
+                  </button>
+                </div>
+
                 <button class="favorite-button" type="button" :disabled="actionBusy === 'favorite' || !anilistToken" @click="toggleFavorite">
                   <span v-if="media.isFavourite">&#9829;</span>
                   <span v-else>&#9825;</span>
                 </button>
+              </div>
+
+              <div v-if="showSharedListPicker" class="anime-editor-list-picker">
+                <div v-if="isSharedListsLoading" class="anime-editor-list-picker-state">
+                  Chargement des listes partagées...
+                </div>
+                <div v-else-if="sharedListOptions.length === 0" class="anime-editor-list-picker-state">
+                  Aucune liste partagée disponible.
+                </div>
+                <div v-else class="anime-editor-list-grid">
+                  <button
+                    v-for="list in sharedListOptions"
+                    :key="list.id"
+                    class="anime-editor-list-option"
+                    type="button"
+                    :disabled="isAddingToSharedList"
+                    @click="addSelectedAnimeToSharedList(list.id)"
+                  >
+                    <span class="anime-editor-list-option-title">{{ list.title }}</span>
+                    <span class="anime-editor-list-option-meta">{{ list.memberCount }} membres · {{ list.animeCount }} anime</span>
+                  </button>
+                </div>
+              </div>
+
+              <div v-if="sharedListError" class="anime-editor-inline-error">
+                {{ sharedListError }}
               </div>
             </div>
 

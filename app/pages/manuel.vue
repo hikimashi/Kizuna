@@ -1,13 +1,13 @@
 <template>
-  <div class="manual-doc-page">
-    <div class="manual-doc-shell">
-      <aside class="manual-doc-sidebar">
-        <div class="manual-doc-sidebar-inner">
-          <div class="manual-doc-toolbar">
-            <p class="manual-doc-label">{{ currentContent.sidebarLabel }}</p>
+  <div class="manuel-doc-page">
+    <div class="manuel-doc-shell">
+      <aside class="manuel-doc-sidebar">
+        <div class="manuel-doc-sidebar-inner">
+          <div class="manuel-doc-toolbar">
+            <p class="manuel-doc-label">{{ currentContent.sidebarLabel }}</p>
             <button
               type="button"
-              class="manual-doc-language-btn"
+              class="manuel-doc-language-btn"
               @click="toggleLanguage"
             >
               {{ currentLanguage === 'fr' ? 'Português' : 'Français' }}
@@ -15,54 +15,54 @@
           </div>
 
           <h1>{{ currentContent.sidebarTitle }}</h1>
-          <p class="manual-doc-intro">{{ currentContent.sidebarIntro }}</p>
+          <p class="manuel-doc-intro">{{ currentContent.sidebarIntro }}</p>
 
-          <nav class="manual-doc-nav" aria-label="Sommaire du manuel">
+          <nav class="manuel-doc-nav" aria-label="Sommaire du manuel">
             <a
               v-for="item in currentContent.navigationItems"
               :key="item.id"
               :href="`#${item.id}`"
-              class="manual-doc-nav-link"
+              class="manuel-doc-nav-link"
             >
-              <span class="manual-doc-nav-index">{{ item.index }}</span>
+              <span class="manuel-doc-nav-index">{{ item.index }}</span>
               <span>{{ item.label }}</span>
             </a>
           </nav>
         </div>
       </aside>
 
-      <main class="manual-doc-content">
-        <section id="overview" class="manual-doc-section">
-          <p class="manual-doc-kicker">{{ currentContent.overview.kicker }}</p>
+      <main class="manuel-doc-content">
+        <section id="overview" class="manuel-doc-section">
+          <p class="manuel-doc-kicker">{{ currentContent.overview.kicker }}</p>
           <h2>{{ currentContent.overview.title }}</h2>
           <p>{{ currentContent.overview.description }}</p>
 
-          <div class="manual-doc-callout">
+          <div class="manuel-doc-callout">
             <strong>{{ currentContent.overview.calloutTitle }}</strong>
             <p>{{ currentContent.overview.calloutText }}</p>
           </div>
         </section>
 
         <section
-          v-for="section in currentContent.manualSections"
+          v-for="section in currentContent.manuelSections"
           :id="section.id"
           :key="section.id"
-          class="manual-doc-section"
+          class="manuel-doc-section"
         >
-          <div class="manual-doc-section-head">
-            <p class="manual-doc-kicker">{{ section.kicker }}</p>
+          <div class="manuel-doc-section-head">
+            <p class="manuel-doc-kicker">{{ section.kicker }}</p>
             <h2>{{ section.title }}</h2>
             <p>{{ section.description }}</p>
           </div>
 
-          <div class="manual-doc-grid">
-            <div class="manual-doc-text">
+          <div class="manuel-doc-grid">
+            <div class="manuel-doc-text">
               <article
                 v-for="step in section.steps"
                 :key="`${section.id}-${step.number}`"
-                class="manual-doc-step"
+                class="manuel-doc-step"
               >
-                <div class="manual-doc-step-badge">{{ step.number }}</div>
+                <div class="manuel-doc-step-badge">{{ step.number }}</div>
                 <div>
                   <h3>{{ step.title }}</h3>
                   <p>{{ step.text }}</p>
@@ -70,69 +70,30 @@
               </article>
             </div>
 
-            <aside class="manual-doc-visual">
-              <div class="manual-doc-visual-frame">
+            <aside class="manuel-doc-visual">
+              <div class="manuel-doc-visual-frame">
                 <template v-if="!isImageMissing(section.id)">
                   <img
                     :src="getSectionImageSrc(section.id)"
                     :alt="`${section.title} - capture d'ecran`"
-                    class="manual-doc-visual-image"
+                    class="manuel-doc-visual-image"
                     loading="lazy"
                     decoding="async"
                     @click="openImagePreview(section.id, section.title)"
                     @error="markImageMissing(section.id)"
                   >
-                  <div class="manual-doc-visual-caption">
-                    <span>{{ section.imageTitle }}</span>
-                    <small>{{ section.imageHint }}</small>
-                  </div>
                 </template>
-                <template v-else>
-                  <div class="manual-doc-visual-placeholder">
-                    <span>{{ section.imageTitle }}</span>
-                    <small>{{ section.imageHint }}</small>
-                  </div>
-                </template>
-                <p class="manual-doc-visual-file">
-                  {{ currentContent.images.fileLabel }} <code>{{ getSectionImageFileName(section.id) }}</code>
-                </p>
               </div>
             </aside>
           </div>
         </section>
 
-        <section id="images" class="manual-doc-section">
-          <p class="manual-doc-kicker">{{ currentContent.images.kicker }}</p>
-          <h2>{{ currentContent.images.title }}</h2>
-          <p>{{ currentContent.images.description }}</p>
-
-          <div class="manual-doc-note-grid">
-            <div class="manual-doc-note-card">
-              <h3>{{ currentContent.images.noteOneTitle }}</h3>
-              <p>{{ currentContent.images.noteOneText }}</p>
-            </div>
-            <div class="manual-doc-note-card">
-              <h3>{{ currentContent.images.noteTwoTitle }}</h3>
-              <p>{{ currentContent.images.noteTwoText }}</p>
-            </div>
-          </div>
-
-          <div class="manual-doc-file-list">
-            <span
-              v-for="imageFile in manualImageFiles"
-              :key="imageFile"
-              class="manual-doc-file-chip"
-            >
-              {{ imageFile }}
-            </span>
-          </div>
-        </section>
       </main>
     </div>
 
     <div
       v-if="activeImagePreview"
-      class="manual-doc-lightbox"
+      class="manuel-doc-lightbox"
       role="dialog"
       aria-modal="true"
       :aria-label="activeImagePreview.title"
@@ -140,20 +101,20 @@
     >
       <button
         type="button"
-        class="manual-doc-lightbox-close"
+        class="manuel-doc-lightbox-close"
         aria-label="Fermer l'image"
         @click="closeImagePreview"
       >
         ×
       </button>
 
-      <figure class="manual-doc-lightbox-figure">
+      <figure class="manuel-doc-lightbox-figure">
         <img
           :src="activeImagePreview.src"
           :alt="`${activeImagePreview.title} - capture d'ecran agrandie`"
-          class="manual-doc-lightbox-image"
+          class="manuel-doc-lightbox-image"
         >
-        <figcaption class="manual-doc-lightbox-caption">
+        <figcaption class="manuel-doc-lightbox-caption">
           {{ activeImagePreview.title }}
         </figcaption>
       </figure>
@@ -164,23 +125,23 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 
-type ManualStep = {
+type ManuelStep = {
   number: string
   title: string
   text: string
 }
 
-type ManualSection = {
+type ManuelSection = {
   id: string
   kicker: string
   title: string
   description: string
   imageTitle: string
   imageHint: string
-  steps: ManualStep[]
+  steps: ManuelStep[]
 }
 
-type ManualContent = {
+type ManuelContent = {
   sidebarLabel: string
   sidebarTitle: string
   sidebarIntro: string
@@ -192,20 +153,11 @@ type ManualContent = {
     calloutTitle: string
     calloutText: string
   }
-  manualSections: ManualSection[]
-  images: {
-    kicker: string
-    title: string
-    description: string
-    fileLabel: string
-    noteOneTitle: string
-    noteOneText: string
-    noteTwoTitle: string
-    noteTwoText: string
-  }
+  manuelSections: ManuelSection[]
+  imageFileLabel: string
 }
 
-const frenchContent: ManualContent = {
+const frenchContent: ManuelContent = {
   sidebarLabel: 'Documentation',
   sidebarTitle: "Manuel d'utilisation",
   sidebarIntro: "Guide complet des principales fonctions de Kizuna, de la connexion jusqu'aux listes partagées.",
@@ -230,7 +182,7 @@ const frenchContent: ManualContent = {
     calloutTitle: 'Parcours recommandé',
     calloutText: "Commencez par créer un compte, liez AniList, explorez votre tableau de bord, puis passez à la recherche, aux amis et aux listes partagées."
   },
-  manualSections: [
+  manuelSections: [
     {
       id: 'account',
       kicker: 'Étape 1',
@@ -387,7 +339,7 @@ const frenchContent: ManualContent = {
   }
 }
 
-const portugueseContent: ManualContent = {
+const portugueseContent: ManuelContent = {
   sidebarLabel: 'Documentação',
   sidebarTitle: 'Manual de utilização',
   sidebarIntro: 'Guia completo das principais funções do Kizuna, desde a ligação da conta até às listas partilhadas.',
@@ -412,7 +364,7 @@ const portugueseContent: ManualContent = {
     calloutTitle: 'Percurso recomendado',
     calloutText: 'Comece por criar uma conta, ligue o AniList, explore o painel principal e depois avance para a pesquisa, amigos e listas partilhadas.'
   },
-  manualSections: [
+  manuelSections: [
     {
       id: 'account',
       kicker: 'Passo 1',
@@ -572,7 +524,7 @@ const portugueseContent: ManualContent = {
 const currentLanguage = ref<'fr' | 'pt'>('fr')
 const imageAvailability = reactive<Record<string, boolean>>({})
 const activeImagePreview = ref<{ src: string; title: string } | null>(null)
-const manualImageFiles = [
+const manuelImageFiles = [
   'account.webp',
   'anilist.webp',
   'dashboard.webp',
@@ -591,7 +543,7 @@ const currentContent = computed(() =>
 
 const getSectionImageFileName = (sectionId: string) => `${sectionId}.webp`
 
-const getSectionImageSrc = (sectionId: string) => `/img/manual/${getSectionImageFileName(sectionId)}`
+const getSectionImageSrc = (sectionId: string) => `/img/manuel/${getSectionImageFileName(sectionId)}`
 
 const markImageMissing = (sectionId: string) => {
   imageAvailability[sectionId] = false
@@ -630,4 +582,4 @@ const toggleLanguage = () => {
 }
 </script>
 
-<style scoped src="~/assets/css/pages/manual.css"></style>
+<style scoped src="~/assets/css/pages/manuel.css"></style>

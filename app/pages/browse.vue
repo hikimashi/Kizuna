@@ -264,20 +264,20 @@ const seasonOptions: FilterOption[] = [
   { value: '', label: 'Toutes les saisons' },
   { value: 'WINTER', label: 'Hiver' },
   { value: 'SPRING', label: 'Printemps' },
-  { value: 'SUMMER', label: 'Ete' },
+  { value: 'SUMMER', label: 'Été' },
   { value: 'FALL', label: 'Automne' }
 ]
 
 const statusOptions: FilterOption[] = [
   { value: '', label: 'Tous les statuts' },
   { value: 'RELEASING', label: 'En diffusion' },
-  { value: 'FINISHED', label: 'Termine' },
+  { value: 'FINISHED', label: 'Terminé' },
   { value: 'NOT_YET_RELEASED', label: 'Pas encore sorti' },
-  { value: 'CANCELLED', label: 'Annule' }
+  { value: 'CANCELLED', label: 'Annulé' }
 ]
 
 const yearOptions = computed<FilterOption[]>(() => [
-  { value: '', label: 'Toutes les annees' },
+  { value: '', label: 'Toutes les années' },
   ...Array.from({ length: 4 }, (_, index) => ({
     value: String(currentYear - index),
     label: String(currentYear - index)
@@ -349,7 +349,7 @@ const genrePillLabel = computed(() => {
   return remainingGenres.length > 0 ? `Genres: ${firstGenre} +${remainingGenres.length}` : `Genres: ${firstGenre}`
 })
 
-const yearPillLabel = computed(() => year.value ? `Annee : ${year.value}` : 'Annee')
+const yearPillLabel = computed(() => year.value ? `Année : ${year.value}` : 'Année')
 const seasonPillLabel = computed(() => season.value ? `Saison : ${currentSeasonLabel.value}` : 'Saison')
 const formatPillLabel = computed(() => format.value !== 'ALL' ? `Format : ${currentFormatLabel.value}` : 'Format')
 const statusPillLabel = computed(() => status.value ? `Statut : ${currentStatusLabel.value}` : 'Statut')
@@ -387,7 +387,7 @@ const activeFilters = computed<ActiveFilter[]>(() => {
       key: `year:${year.value}`,
       type: 'year',
       value: year.value,
-      label: `Annee : ${year.value}`
+      label: `Année : ${year.value}`
     })
   }
 

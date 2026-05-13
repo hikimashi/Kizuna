@@ -241,7 +241,7 @@
               </div>
               <div class="friend-stat-chip">
                 <span class="friend-stat-value">{{ targetFollowersCount }}</span>
-                <span class="friend-stat-label">Abonnes</span>
+                <span class="friend-stat-label">Abonnés</span>
               </div>
               <div class="friend-stat-chip">
                 <span class="friend-stat-value">{{ targetFriendUsers.length }}</span>
@@ -576,9 +576,9 @@ const followersQuery = `
 
 const STATUS_LABELS: Record<ListStatusKey, string> = {
   CURRENT: 'En cours',
-  COMPLETED: 'Termine',
+  COMPLETED: 'Terminé',
   PAUSED: 'En pause',
-  DROPPED: 'Abandonne',
+  DROPPED: 'Abandonné',
   PLANNING: 'A voir'
 }
 

@@ -111,7 +111,7 @@
           <div class="legend-item"><div class="legend-dot legend-me"></div>Votre note</div>
           <div class="legend-item"><div class="legend-dot legend-them"></div>Sa note</div>
         </div>
-        <div v-if="sharedEntries.length === 0" class="placeholder-panel">Aucun anime en commun dans En cours/Termine.</div>
+        <div v-if="sharedEntries.length === 0" class="placeholder-panel">Aucun anime en commun dans En cours/Terminé.</div>
         <div v-else class="shared-grid">
           <div v-for="item in sharedEntries" :key="item.mediaId" class="shared-card">
             <img
@@ -292,7 +292,7 @@ const formatScore = (score: number) => {
   return score % 1 === 0 ? String(score) : score.toFixed(1)
 }
 
-const statusLabel = (status: 'CURRENT' | 'COMPLETED') => (status === 'CURRENT' ? 'En cours' : 'Termine')
+const statusLabel = (status: 'CURRENT' | 'COMPLETED') => (status === 'CURRENT' ? 'En cours' : 'Terminé')
 
 const selfMap = computed(() => {
   const map = new Map<number, CompareEntry>()

@@ -165,39 +165,46 @@
                   </div>
                 </div>
 
-                <button
-                  v-if="canAddAnime"
-                  class="sidebar-primary"
-                  type="button"
-                  @click="isAnimePickerOpen = !isAnimePickerOpen"
-                >
-                  {{ isAnimePickerOpen ? 'Fermer le panneau d\'ajout' : 'Ajouter un anime' }}
-                </button>
               </aside>
             </div>
 
             <section class="main">
               <div class="view-bar">
-                <button class="view-btn" :class="{ active: viewMode === 'grid' }" type="button" title="Grid" @click="viewMode = 'grid'">
-                  <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 0h7v7h-7z" /></svg>
-                </button>
-                <button class="view-btn" :class="{ active: viewMode === 'list' }" type="button" title="List" @click="viewMode = 'list'">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M9 6h13M9 12h13M9 18h13M4 6h.01M4 12h.01M4 18h.01" /></svg>
-                </button>
-                <button class="view-btn" :class="{ active: viewMode === 'compact' }" type="button" title="Compacte" @click="viewMode = 'compact'">
-                  <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M3 5h18v2H3zm0 6h18v2H3zm0 6h18v2H3z" /></svg>
+                <div class="view-mode-group">
+                  <button class="view-btn" :class="{ active: viewMode === 'grid' }" type="button" title="Grid" @click="viewMode = 'grid'">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 0h7v7h-7z" /></svg>
+                  </button>
+                  <button class="view-btn" :class="{ active: viewMode === 'list' }" type="button" title="List" @click="viewMode = 'list'">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M9 6h13M9 12h13M9 18h13M4 6h.01M4 12h.01M4 18h.01" /></svg>
+                  </button>
+                  <button class="view-btn" :class="{ active: viewMode === 'compact' }" type="button" title="Compacte" @click="viewMode = 'compact'">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M3 5h18v2H3zm0 6h18v2H3zm0 6h18v2H3z" /></svg>
+                  </button>
+                </div>
+
+                <button
+                  v-if="canAddAnime"
+                  class="view-primary"
+                  type="button"
+                  @click="isAnimePickerOpen = !isAnimePickerOpen"
+                >
+                  {{ isAnimePickerOpen ? 'Fermer le panneau d\'ajout' : 'Ajouter un anime' }}
                 </button>
               </div>
 
-              <div v-if="canAddAnime && isAnimePickerOpen" class="panel-card add-anime-panel">
-                <div class="panel-head">
-                  <div>
-                    <h2 class="panel-title">Ajouter un anime</h2>
+              <div v-if="canAddAnime && isAnimePickerOpen" class="add-anime-overlay" @click.self="isAnimePickerOpen = false">
+                <aside class="add-anime-modal" role="dialog" aria-modal="true" aria-labelledby="add-anime-title">
+                  <div class="add-anime-head">
+                    <div>
+                      <div class="add-anime-kicker">Ajouter un anime</div>
+                      <h2 id="add-anime-title">Rechercher et ajouter un titre</h2>
+                    </div>
                     <p class="panel-copy">Recherchez sur AniList et ajoutez un titre directement à cette liste partagée.</p>
+                    <button class="add-anime-close" type="button" aria-label="Fermer l'ajout d'anime" @click="isAnimePickerOpen = false">x</button>
                   </div>
-                </div>
 
-                <div class="add-state-row">
+                  <div class="add-anime-body">
+                    <div class="add-state-row">
                   <label class="add-state-field">
                     <span>Statut</span>
                     <select v-model="draftAddStatus" class="editor-input">
@@ -234,6 +241,11 @@
                     v-for="item in animeResults"
                     :key="item.mediaId"
                     class="anime-search-item"
+                    role="link"
+                    tabindex="0"
+                    @click="navigateTo(item.fetchLink)"
+                    @keydown.enter.prevent="navigateTo(item.fetchLink)"
+                    @keydown.space.prevent="navigateTo(item.fetchLink)"
                   >
                     <div class="anime-search-cover">
                       <img v-if="item.cover" :src="item.cover" :alt="item.title" />
@@ -254,12 +266,15 @@
                       :class="{ 'is-disabled': item.alreadyAdded }"
                       type="button"
                       :disabled="item.alreadyAdded || pendingAnimeMediaId === String(item.mediaId)"
-                      @click="addAnime(item)"
+                      @click.stop="addAnime(item)"
                     >
                       {{ item.alreadyAdded ? 'Ajoute' : pendingAnimeMediaId === String(item.mediaId) ? 'Ajout...' : 'Ajouter' }}
                     </button>
                   </article>
                 </div>
+              </div>
+
+                </aside>
               </div>
 
               <div v-if="!visibleAnimeSections.length" class="empty-state">
@@ -1528,10 +1543,16 @@ const deleteGroup = async () => {
 
 const animeCoverLabel = (title: string) => title.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 3) || 'AN'
 const isAnimeEditorOpen = computed(() => canManageAnime.value && Boolean(selectedAnimeEntry.value))
+const isAnimePickerModalOpen = computed(() => canAddAnime.value && isAnimePickerOpen.value)
 
 const handleAnimeEditorKeydown = (event: KeyboardEvent) => {
   if (event.key !== 'Escape' || !isAnimeEditorOpen.value) return
   closeAnimeEditor()
+}
+
+const handleAnimePickerKeydown = (event: KeyboardEvent) => {
+  if (event.key !== 'Escape' || !isAnimePickerModalOpen.value) return
+  isAnimePickerOpen.value = false
 }
 
 watch(listId, () => {
@@ -1561,11 +1582,13 @@ onBeforeUnmount(() => {
   revokePreviewUrl(settingsBannerPreview.value)
   if (typeof window !== 'undefined') {
     window.removeEventListener('keydown', handleAnimeEditorKeydown)
+    window.removeEventListener('keydown', handleAnimePickerKeydown)
   }
 })
 
 if (typeof window !== 'undefined') {
   window.addEventListener('keydown', handleAnimeEditorKeydown)
+  window.addEventListener('keydown', handleAnimePickerKeydown)
 }
 </script>
 
@@ -1652,7 +1675,7 @@ if (typeof window !== 'undefined') {
 .ghost-btn,
 .danger-btn,
 .search-result-action,
-.sidebar-primary,
+.view-primary,
 .drawer-btn {
   cursor: pointer;
 }
@@ -1660,7 +1683,7 @@ if (typeof window !== 'undefined') {
 .back-btn,
 .ghost-btn,
 .danger-btn,
-.sidebar-primary,
+.view-primary,
 .search-result-action,
 .settings-input,
 .search-box,
@@ -2033,13 +2056,6 @@ if (typeof window !== 'undefined') {
   font-size: 11px;
 }
 
-.sidebar-primary {
-  border: 1px solid rgba(61,180,242,.3);
-  background: rgba(61,180,242,.14);
-  color: #3db4f2;
-  padding: 0 14px;
-}
-
 .main {
   min-width: 0;
 }
@@ -2047,8 +2063,15 @@ if (typeof window !== 'undefined') {
 .view-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 14px;
+}
+
+.view-mode-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .view-btn {
@@ -2075,6 +2098,20 @@ if (typeof window !== 'undefined') {
   color: #3db4f2;
 }
 
+.view-primary {
+  margin-left: auto;
+  border: 1px solid rgba(61,180,242,.3);
+  background: rgba(61,180,242,.14);
+  color: #3db4f2;
+  padding: 0 14px;
+  height: 30px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Overpass', sans-serif;
+  white-space: nowrap;
+}
+
 .panel-card,
 .editor-panel,
 .member-card,
@@ -2087,31 +2124,77 @@ if (typeof window !== 'undefined') {
   border-radius: 12px;
 }
 
-.add-anime-panel {
-  padding: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 16px;
+.add-anime-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(8, 12, 24, 0.72);
+  backdrop-filter: blur(14px);
 }
 
-.panel-head {
+.add-anime-modal {
+  width: min(820px, 100%);
+  max-height: min(88vh, 920px);
+  overflow: auto;
+  border-radius: 28px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: linear-gradient(180deg, rgba(13, 18, 31, 0.98) 0%, rgba(8, 12, 22, 0.98) 100%);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+}
+
+.add-anime-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
+  padding: 24px 24px 0;
 }
 
-.panel-title {
-  margin: 0;
-  font-size: 16px;
-  color: var(--kz-text-primary);
+.add-anime-kicker {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(173, 216, 255, 0.72);
+}
+
+.add-anime-head h2 {
+  margin: 8px 0 0;
+  font-size: 1.6rem;
+  line-height: 1.15;
+  color: #f8fbff;
 }
 
 .panel-copy {
-  margin: 4px 0 0;
+  flex: 1 1 240px;
+  margin: 10px 0 0;
   font-size: 12px;
   color: var(--kz-text-dim);
+  line-height: 1.55;
+}
+
+.add-anime-close {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 999px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8fbff;
+  cursor: pointer;
+}
+
+.add-anime-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
 }
 
 .search-box {
@@ -2152,6 +2235,22 @@ if (typeof window !== 'undefined') {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.anime-search-item {
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s, transform 0.12s;
+}
+
+.anime-search-item:hover,
+.anime-search-item:focus-visible {
+  border-color: rgba(61,180,242,.28);
+  background: rgba(61,180,242,.05);
+}
+
+.anime-search-item:focus-visible {
+  outline: 1px solid rgba(61,180,242,.45);
+  outline-offset: 1px;
 }
 
 .anime-search-cover {
@@ -2940,20 +3039,17 @@ if (typeof window !== 'undefined') {
   inset: 0;
   background: rgba(8, 12, 24, 0.72);
   z-index: 60;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  backdrop-filter: blur(14px);
+  display: flex;
+  justify-content: flex-end;
 }
 
 .settings-drawer {
-  width: min(760px, 100%);
-  max-height: min(88vh, 920px);
+  width: min(100%, 540px);
+  height: 100%;
   overflow: auto;
   background: linear-gradient(180deg, rgba(13, 18, 31, 0.98) 0%, rgba(8, 12, 22, 0.98) 100%);
-  border: 1px solid rgba(255,255,255,.08);
-  border-radius: 28px;
-  box-shadow: 0 30px 80px rgba(0,0,0,.4);
+  border-left: 1px solid rgba(255,255,255,.08);
+  box-shadow: -12px 0 40px rgba(0,0,0,.28);
   display: flex;
   flex-direction: column;
 }
@@ -3419,6 +3515,14 @@ if (typeof window !== 'undefined') {
 
   .settings-drawer {
     width: 100%;
+  }
+
+  .add-anime-overlay {
+    padding: 12px;
+  }
+
+  .add-anime-modal {
+    width: 100%;
     max-height: min(92vh, 100%);
     border-radius: 22px;
   }
@@ -3443,13 +3547,12 @@ if (typeof window !== 'undefined') {
     flex-direction: column-reverse;
   }
 
-  .sidebar-primary {
+  .view-primary {
     width: 100%;
-    justify-content: center;
+    margin-left: 0;
   }
 
   .panel-card,
-  .add-anime-panel,
   .editor-panel,
   .member-card,
   .empty-state {
@@ -3487,6 +3590,14 @@ if (typeof window !== 'undefined') {
   .settings-drawer-body {
     padding: 18px;
   }
+
+  .add-anime-head {
+    padding: 18px 18px 0;
+  }
+
+  .add-anime-body {
+    padding: 18px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -3494,7 +3605,7 @@ if (typeof window !== 'undefined') {
   .ghost-btn,
   .danger-btn,
   .drawer-btn,
-  .sidebar-primary {
+  .view-primary {
     font-size: 12px;
   }
 

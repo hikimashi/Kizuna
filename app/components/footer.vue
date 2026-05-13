@@ -29,7 +29,7 @@
           <div class="footer-group">
             <h3>Contact</h3>
             <a href="mailto:support.kizuna@gmail.com" class="footer-link">support.kizuna@gmail.com</a>
-            <span class="footer-note">Discord : bientôt</span>
+            <span class="footer-note">Discord : bientôt disponible</span>
           </div>
         </div>
       </div>
@@ -72,7 +72,7 @@ const navigationLinks: FooterLink[] = [
   { label: "Liste d'animes", to: '/animeList', requiresAuth: true },
   { label: 'Explorer', to: '/browse', requiresAuth: true },
   { label: 'Amis', to: '/friends', requiresAuth: true },
-  { label: 'Manuel', to: '/manual' },
+  { label: 'Manuel', to: '/manuel' },
   { label: 'Listes partagées', to: '/sharedLists', requiresAuth: true },
 ]
 

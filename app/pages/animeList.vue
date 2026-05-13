@@ -280,10 +280,10 @@ type MediaListEntry = {
 
 const STATUS_LABELS: Record<ListStatusKey, string> = {
   CURRENT: 'En cours',
-  COMPLETED: 'Termine',
+  COMPLETED: 'Terminé',
   PAUSED: 'En pause',
-  DROPPED: 'Abandonne',
-  PLANNING: 'Prevu'
+  DROPPED: 'Abandonné',
+  PLANNING: 'Prévu'
 }
 
 const STATUS_ORDER: ListStatusKey[] = ['CURRENT', 'COMPLETED', 'PAUSED', 'DROPPED', 'PLANNING']

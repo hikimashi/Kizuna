@@ -241,7 +241,7 @@
               </div>
               <div class="friend-stat-chip">
                 <span class="friend-stat-value">{{ targetFollowersCount }}</span>
-                <span class="friend-stat-label">Abonnes</span>
+                <span class="friend-stat-label">Abonnés</span>
               </div>
               <div class="friend-stat-chip">
                 <span class="friend-stat-value">{{ targetFriendUsers.length }}</span>

@@ -29,7 +29,7 @@
           <div class="footer-group">
             <h3>Contact</h3>
             <a href="mailto:support.kizuna@gmail.com" class="footer-link">support.kizuna@gmail.com</a>
-            <span class="footer-note">Discord : bientôt</span>
+            <span class="footer-note">Discord : bientôt disponible</span>
           </div>
         </div>
       </div>

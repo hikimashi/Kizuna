@@ -576,9 +576,9 @@ const followersQuery = `
 
 const STATUS_LABELS: Record<ListStatusKey, string> = {
   CURRENT: 'En cours',
-  COMPLETED: 'Termine',
+  COMPLETED: 'Terminé',
   PAUSED: 'En pause',
-  DROPPED: 'Abandonne',
+  DROPPED: 'Abandonné',
   PLANNING: 'A voir'
 }
 

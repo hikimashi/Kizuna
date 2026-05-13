@@ -72,7 +72,7 @@ const navigationLinks: FooterLink[] = [
   { label: "Liste d'animes", to: '/animeList', requiresAuth: true },
   { label: 'Explorer', to: '/browse', requiresAuth: true },
   { label: 'Amis', to: '/friends', requiresAuth: true },
-  { label: 'Manuel', to: '/manual' },
+  { label: 'Manuel', to: '/manuel' },
   { label: 'Listes partagées', to: '/sharedLists', requiresAuth: true },
 ]
 

@@ -4,7 +4,7 @@ import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 import { useMyAuthStore } from '~/composables/useMyAuthStore'
 import { useToastStore } from '~/composables/useToastStore'
 
-const PUBLIC_PATHS = new Set(['/', '/auth/callback', '/manual'])
+const PUBLIC_PATHS = new Set(['/', '/auth/callback', '/manuel'])
 const PUBLIC_PATH_PATTERNS = [/^\/social\/user\/[^/]+$/]
 
 export default defineNuxtRouteMiddleware(async (to) => {

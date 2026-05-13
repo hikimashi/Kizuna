@@ -2940,20 +2940,17 @@ if (typeof window !== 'undefined') {
   inset: 0;
   background: rgba(8, 12, 24, 0.72);
   z-index: 60;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  backdrop-filter: blur(14px);
+  display: flex;
+  justify-content: flex-end;
 }
 
 .settings-drawer {
-  width: min(760px, 100%);
-  max-height: min(88vh, 920px);
+  width: min(100%, 540px);
+  height: 100%;
   overflow: auto;
   background: linear-gradient(180deg, rgba(13, 18, 31, 0.98) 0%, rgba(8, 12, 22, 0.98) 100%);
-  border: 1px solid rgba(255,255,255,.08);
-  border-radius: 28px;
-  box-shadow: 0 30px 80px rgba(0,0,0,.4);
+  border-left: 1px solid rgba(255,255,255,.08);
+  box-shadow: -12px 0 40px rgba(0,0,0,.28);
   display: flex;
   flex-direction: column;
 }
@@ -3419,8 +3416,6 @@ if (typeof window !== 'undefined') {
 
   .settings-drawer {
     width: 100%;
-    max-height: min(92vh, 100%);
-    border-radius: 22px;
   }
 
   .anime-editor-modal-layer {

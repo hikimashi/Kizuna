@@ -607,7 +607,7 @@ const STATUS_TRANSLATIONS: Record<string, string> = {
   TV: 'TV',
   TV_SHORT: 'TV courte',
   MOVIE: 'Film',
-  SPECIAL: 'Special',
+  SPECIAL: 'Spécial',
   OVA: 'OVA',
   ONA: 'ONA',
   MUSIC: 'Musique',
@@ -616,7 +616,7 @@ const STATUS_TRANSLATIONS: Record<string, string> = {
   ONE_SHOT: 'One-shot',
   LIGHT_NOVEL: 'Light novel',
   VISUAL_NOVEL: 'Visual novel',
-  VIDEO_GAME: 'Jeu video',
+  VIDEO_GAME: 'Jeu vidéo',
   OTHER: 'Autre',
   ORIGINAL: 'Original',
   DOUJINSHI: 'Doujinshi',
@@ -688,7 +688,7 @@ function formatSeason(season?: string | null, year?: number | null) {
   const seasonMap: Record<string, string> = {
     WINTER: 'Hiver',
     SPRING: 'Printemps',
-    SUMMER: 'Ete',
+    SUMMER: 'Été',
     FALL: 'Automne'
   }
   return season && year ? `${seasonMap[String(season).toUpperCase()] || formatStatus(season)} ${year}` : 'Inconnu'
@@ -931,7 +931,7 @@ async function saveListStatus(status: EditableAniListStatus) {
 
   actionBusy.value = 'list'
   listMenuOpen.value = false
-  const previousStatus = currentListStatus.value || media.value.mediaListEntry?.status || ''
+  const previousStatus: EditableAniListStatus | '' = (currentListStatus.value || media.value.mediaListEntry?.status || '') as EditableAniListStatus | ''
   currentListStatus.value = status
 
   try {
@@ -945,7 +945,7 @@ async function saveListStatus(status: EditableAniListStatus) {
       id: Number(savedEntry.id),
       status: String(savedEntry.status || status)
     }
-  } catch {
+  } catch (error) {
     currentListStatus.value = previousStatus
   } finally {
     actionBusy.value = null
@@ -1180,7 +1180,7 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                       :key="option.value"
                       type="button"
                       class="list-option"
-                      :class="{ active: (currentListStatus || media.mediaListEntry?.status) === option.value }"
+                      :class="{ active: media.mediaListEntry?.status === option.value }"
                       @click="saveListStatus(option.value)"
                     >
                       {{ option.label }}
@@ -1672,7 +1672,7 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                         <div class="activity-actions">
                           <span class="activity-action">Reponses {{ activity.replyCount || 0 }}</span>
                           <span class="activity-action">J'aime {{ activity.likeCount || 0 }}</span>
-                          <span v-if="activity.isSubscribed" class="activity-action accent">Abonne</span>
+                          <span v-if="activity.isSubscribed" class="activity-action accent">Abonné</span>
                         </div>
                       </article>
                     </div>

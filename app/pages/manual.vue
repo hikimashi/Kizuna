@@ -72,8 +72,30 @@
 
             <aside class="manual-doc-visual">
               <div class="manual-doc-visual-frame">
-                <span>{{ section.imageTitle }}</span>
-                <small>{{ section.imageHint }}</small>
+                <template v-if="!isImageMissing(section.id)">
+                  <img
+                    :src="getSectionImageSrc(section.id)"
+                    :alt="`${section.title} - capture d'ecran`"
+                    class="manual-doc-visual-image"
+                    loading="lazy"
+                    decoding="async"
+                    @click="openImagePreview(section.id, section.title)"
+                    @error="markImageMissing(section.id)"
+                  >
+                  <div class="manual-doc-visual-caption">
+                    <span>{{ section.imageTitle }}</span>
+                    <small>{{ section.imageHint }}</small>
+                  </div>
+                </template>
+                <template v-else>
+                  <div class="manual-doc-visual-placeholder">
+                    <span>{{ section.imageTitle }}</span>
+                    <small>{{ section.imageHint }}</small>
+                  </div>
+                </template>
+                <p class="manual-doc-visual-file">
+                  {{ currentContent.images.fileLabel }} <code>{{ getSectionImageFileName(section.id) }}</code>
+                </p>
               </div>
             </aside>
           </div>
@@ -94,14 +116,53 @@
               <p>{{ currentContent.images.noteTwoText }}</p>
             </div>
           </div>
+
+          <div class="manual-doc-file-list">
+            <span
+              v-for="imageFile in manualImageFiles"
+              :key="imageFile"
+              class="manual-doc-file-chip"
+            >
+              {{ imageFile }}
+            </span>
+          </div>
         </section>
       </main>
+    </div>
+
+    <div
+      v-if="activeImagePreview"
+      class="manual-doc-lightbox"
+      role="dialog"
+      aria-modal="true"
+      :aria-label="activeImagePreview.title"
+      @click.self="closeImagePreview"
+    >
+      <button
+        type="button"
+        class="manual-doc-lightbox-close"
+        aria-label="Fermer l'image"
+        @click="closeImagePreview"
+      >
+        ×
+      </button>
+
+      <figure class="manual-doc-lightbox-figure">
+        <img
+          :src="activeImagePreview.src"
+          :alt="`${activeImagePreview.title} - capture d'ecran agrandie`"
+          class="manual-doc-lightbox-image"
+        >
+        <figcaption class="manual-doc-lightbox-caption">
+          {{ activeImagePreview.title }}
+        </figcaption>
+      </figure>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 
 type ManualStep = {
   number: string
@@ -136,6 +197,7 @@ type ManualContent = {
     kicker: string
     title: string
     description: string
+    fileLabel: string
     noteOneTitle: string
     noteOneText: string
     noteTwoTitle: string
@@ -228,16 +290,16 @@ const frenchContent: ManualContent = {
     {
       id: 'anime-list',
       kicker: 'Fonction',
-      title: "Gérer sa liste d'animes",
-      description: "La page de liste anime permet de consulter votre bibliothèque AniList synchronisée et d'interagir avec votre suivi.",
+      title: "Consulter sa liste d'animes",
+      description: "La page animeList permet surtout de voir votre bibliothèque AniList synchronisée, de passer d'une catégorie à l'autre et de mettre à jour le suivi d'un anime.",
       imageTitle: 'Capture à placer ici',
       imageHint: 'Exemple : page animeList avec filtres, cartes ou statuts.',
       steps: [
-        { number: '01', title: "Ouvrir la liste d'animes", text: 'Passez par la navigation principale pour accéder à votre liste synchronisée.' },
-        { number: '02', title: 'Filtrer les entrées', text: 'Utilisez les catégories, statuts ou recherches disponibles pour réduire les résultats.' },
-        { number: '03', title: 'Ajouter un anime à sa liste', text: "Depuis une fiche anime ou les résultats d'exploration, ajoutez un anime à votre suivi AniList." },
-        { number: '04', title: 'Changer le statut', text: 'Mettez à jour un anime en regardé, en cours, planifié ou autre selon votre progression.' },
-        { number: '05', title: 'Mettre à jour la progression', text: "Augmentez le nombre d'épisodes vus lorsque vous avancez dans une série." }
+        { number: '01', title: "Ouvrir la liste d'animes", text: "Passez par la navigation principale pour accéder à votre liste AniList synchronisée." },
+        { number: '02', title: 'Parcourir les catégories', text: 'Utilisez les catégories de la barre latérale pour passer entre tous les animes, ceux en cours, terminés, en pause, prévus ou abandonnés.' },
+        { number: '03', title: 'Filtrer et changer la vue', text: 'Servez-vous de la recherche, du tri et des modes grille, liste ou compact pour consulter votre bibliothèque plus facilement.' },
+        { number: '04', title: 'Mettre à jour un anime', text: "Cliquez sur une entrée pour ouvrir l'éditeur et modifier son statut, sa progression ou sa note." },
+        { number: '05', title: 'Ajouter un anime si la liste est vide', text: "Si vous n'avez encore aucun anime, utilisez le bouton d'ajout pour ouvrir la page Explorer et ajouter un titre à votre liste." }
       ]
     },
     {
@@ -316,6 +378,7 @@ const frenchContent: ManualContent = {
   images: {
     kicker: 'Captures',
     title: 'Ajouter des images au manuel',
+    fileLabel: 'Fichier attendu :',
     description: "Chaque zone visuelle peut accueillir une capture d'écran correspondant à la fonction décrite : connexion, profil, recherche, fiche anime, shared list ou paramètres.",
     noteOneTitle: 'Captures utiles',
     noteOneText: 'Connexion, dashboard, recherche, page anime, création de shared list, paramètres.',
@@ -409,16 +472,16 @@ const portugueseContent: ManualContent = {
     {
       id: 'anime-list',
       kicker: 'Função',
-      title: 'Gerir a sua lista de anime',
-      description: 'A página da lista de anime permite consultar a biblioteca AniList sincronizada e interagir com o seu acompanhamento.',
+      title: 'Consultar a sua lista de anime',
+      description: 'A página animeList serve sobretudo para ver a biblioteca AniList sincronizada, mudar entre categorias e atualizar o acompanhamento de um anime.',
       imageTitle: 'Inserir captura aqui',
       imageHint: 'Exemplo: página animeList com filtros, cartões ou estados.',
       steps: [
-        { number: '01', title: 'Abrir a lista de anime', text: 'Use a navegação principal para abrir a sua lista sincronizada.' },
-        { number: '02', title: 'Filtrar entradas', text: 'Utilize categorias, estados ou pesquisas para reduzir os resultados.' },
-        { number: '03', title: 'Adicionar um anime à lista', text: 'A partir de uma ficha de anime ou da exploração, adicione um anime ao seu acompanhamento AniList.' },
-        { number: '04', title: 'Mudar o estado', text: 'Atualize um anime para visto, em curso, planeado ou outro estado conforme a progressão.' },
-        { number: '05', title: 'Atualizar o progresso', text: 'Aumente o número de episódios vistos à medida que avança na série.' }
+        { number: '01', title: 'Abrir a lista de anime', text: 'Use a navegação principal para abrir a sua lista AniList sincronizada.' },
+        { number: '02', title: 'Percorrer as categorias', text: 'Utilize as categorias da barra lateral para alternar entre todos os animes, em curso, terminados, em pausa, planeados ou abandonados.' },
+        { number: '03', title: 'Filtrar e mudar a vista', text: 'Use a pesquisa, a ordenação e os modos grelha, lista ou compacto para consultar a biblioteca mais facilmente.' },
+        { number: '04', title: 'Atualizar um anime', text: 'Clique numa entrada para abrir o editor e alterar o estado, o progresso ou a nota.' },
+        { number: '05', title: 'Adicionar um anime se a lista estiver vazia', text: 'Se ainda não tiver nenhum anime, use o botão de adição para abrir a página Explorar e adicionar um título à sua lista.' }
       ]
     },
     {
@@ -497,6 +560,7 @@ const portugueseContent: ManualContent = {
   images: {
     kicker: 'Capturas',
     title: 'Adicionar imagens ao manual',
+    fileLabel: 'Ficheiro esperado:',
     description: 'Cada zona visual pode receber uma captura correspondente à função descrita: ligação, perfil, pesquisa, ficha de anime, shared list ou definições.',
     noteOneTitle: 'Capturas úteis',
     noteOneText: 'Ligação, dashboard, pesquisa, página de anime, criação de shared list e definições.',
@@ -506,10 +570,60 @@ const portugueseContent: ManualContent = {
 }
 
 const currentLanguage = ref<'fr' | 'pt'>('fr')
+const imageAvailability = reactive<Record<string, boolean>>({})
+const activeImagePreview = ref<{ src: string; title: string } | null>(null)
+const manualImageFiles = [
+  'account.webp',
+  'anilist.webp',
+  'dashboard.webp',
+  'search.webp',
+  'anime-list.webp',
+  'anime-page.webp',
+  'social.webp',
+  'shared-lists.webp',
+  'profile-settings.webp',
+  'notifications.webp'
+]
 
 const currentContent = computed(() =>
   currentLanguage.value === 'fr' ? frenchContent : portugueseContent
 )
+
+const getSectionImageFileName = (sectionId: string) => `${sectionId}.webp`
+
+const getSectionImageSrc = (sectionId: string) => `/img/manual/${getSectionImageFileName(sectionId)}`
+
+const markImageMissing = (sectionId: string) => {
+  imageAvailability[sectionId] = false
+}
+
+const isImageMissing = (sectionId: string) => imageAvailability[sectionId] === false
+
+const openImagePreview = (sectionId: string, title: string) => {
+  if (isImageMissing(sectionId)) return
+  activeImagePreview.value = {
+    src: getSectionImageSrc(sectionId),
+    title
+  }
+}
+
+const closeImagePreview = () => {
+  activeImagePreview.value = null
+}
+
+const handleKeydown = (event: KeyboardEvent) => {
+  if (event.key === 'Escape') {
+    closeImagePreview()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 
 const toggleLanguage = () => {
   currentLanguage.value = currentLanguage.value === 'fr' ? 'pt' : 'fr'

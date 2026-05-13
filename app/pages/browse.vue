@@ -244,10 +244,10 @@ type FilterOption = {
 const currentYear = new Date().getFullYear()
 
 const sortOptions: FilterOption[] = [
-  { value: 'POPULARITY_DESC', label: 'Popularite' },
+  { value: 'POPULARITY_DESC', label: 'Popularité' },
   { value: 'SCORE_DESC', label: 'Note' },
   { value: 'TRENDING_DESC', label: 'Tendance' },
-  { value: 'START_DATE_DESC', label: 'Plus recents' },
+  { value: 'START_DATE_DESC', label: 'Plus récents' },
   { value: 'TITLE_ROMAJI', label: 'Titre A-Z' }
 ]
 

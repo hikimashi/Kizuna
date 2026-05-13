@@ -78,7 +78,7 @@
         <template v-else>
           <div class="nav-actions">
             <!-- Icône de recherche -->
-            <button class="icon-btn" type="button" aria-label="Ouvrir la recherche" @click="openSearchModal">
+            <button class="icon-btn" type="button" aria-label="Ouvrir la recherche" @click="openSearchModal()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="11" cy="11" r="8"/>
                 <path d="M21 21l-4.35-4.35"/>
@@ -372,6 +372,11 @@ const openSearchModal = async () => {
   searchInputRef.value?.focus()
 }
 
+const openUserSearchModal = async () => {
+  searchModalTab.value = 'users'
+  await openSearchModal()
+}
+
 const closeSearchModal = () => {
   isSearchModalOpen.value = false
   searchModalQuery.value = ''
@@ -440,6 +445,10 @@ const handleEscapeKey = (event: KeyboardEvent) => {
     }
     closeMobileMenu()
   }
+}
+
+const handleOpenUserSearchEvent = () => {
+  openUserSearchModal()
 }
 
 const makeFallback = (value: string, type: 'anime' | 'user') => {
@@ -588,6 +597,7 @@ watch(showFullNav, (value) => {
 onMounted(() => {
   document.addEventListener('click', handleOutsideClick)
   document.addEventListener('keydown', handleEscapeKey)
+  window.addEventListener('kizuna:open-search-users', handleOpenUserSearchEvent)
   if (showFullNav.value) {
     notificationStore.loadUnreadCount()
   }
@@ -596,6 +606,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleOutsideClick)
   document.removeEventListener('keydown', handleEscapeKey)
+  window.removeEventListener('kizuna:open-search-users', handleOpenUserSearchEvent)
   if (searchModalTimer) clearTimeout(searchModalTimer)
 })
 </script>

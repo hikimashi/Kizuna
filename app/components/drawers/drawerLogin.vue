@@ -17,10 +17,13 @@
       <h2 class="mb-4 text-center text-xl font-bold text-primary sm:mb-6 sm:text-2xl">Connexion a votre compte</h2>
 
       <div class="my-4 rounded-2xl border border-base-300/60 bg-base-100/50 px-4 py-3 text-center shadow-sm sm:my-6">
-        <span class="flex flex-wrap justify-center text-center text-sm sm:text-base">Pas encore de compte ?&nbsp;<a @click="createAccount()" class="cursor-pointer font-semibold text-primary transition hover:underline">Créer un compte</a></span>
+        <span class="flex flex-wrap justify-center text-center text-sm sm:text-base">
+          Pas encore de compte ?&nbsp;
+          <a @click="createAccount()" class="cursor-pointer font-semibold text-primary transition hover:underline">Créer un compte</a>
+        </span>
       </div>
 
-      <form ref="loginForm" class="space-y-3" @submit.prevent="doLogin()">
+      <form class="space-y-3" @submit.prevent="doLogin()">
         <div>
           <div class="fieldset-legend mt-2" for="email">Email</div>
         </div>
@@ -31,7 +34,7 @@
               <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
             </g>
           </svg>
-          <input v-model="email" type="email" placeholder="yourmail@mail.com" required />
+          <input v-model="email" type="email" placeholder="example@mail.com" autocomplete="email" required />
         </label>
         <div class="validator-hint hidden">Saisissez une adresse e-mail valide</div>
 
@@ -49,23 +52,15 @@
               <circle cx="16.5" cy="7.5" r=".5" fill="currentColor" />
             </g>
           </svg>
-          <input
-            v-model="password"
-            type="password"
-            required
-            placeholder="Mot de passe"
-            minlength="8"
-            pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
-            title="Doit contenir au moins 8 caracteres, avec un chiffre, une minuscule et une majuscule"
-          />
+          <input v-model="password" type="password" autocomplete="current-password" required placeholder="Mot de passe" />
         </label>
-        <p class="validator-hint hidden">
-          Doit contenir au moins 8 caracteres, avec
-          <br />Au moins un chiffre <br />Au moins une lettre minuscule <br />Au moins une lettre majuscule
+
+        <p v-if="loginError" class="rounded-xl border border-error/40 bg-error/10 px-3 py-2 text-sm text-error">
+          {{ loginError }}
         </p>
 
         <div class="mb-4 flex items-center justify-between p-2 sm:mb-6">
-          <a href="#" class="text-sm text-blue-500 hover:underline sm:text-base">Mot de passe oublie ?</a>
+          <a href="#" class="text-sm text-blue-500 hover:underline sm:text-base">Mot de passe oublié?</a>
         </div>
 
         <button type="submit" class="btn btn-primary w-full">
@@ -75,6 +70,7 @@
       <div class="divider my-5 sm:my-8">OU</div>
       <div class="flex flex-col space-y-4">
         <button
+          type="button"
           class="btn btn-primary w-full shadow-sm transition duration-300 hover:-translate-y-0.5 focus:outline-none"
           @click="doGoogleLogin()">
           <img src="https://authjs.dev/img/providers/google.svg" alt="Google" class="mr-2 h-6 w-6" />
@@ -82,6 +78,7 @@
         </button>
 
         <button
+          type="button"
           class="btn btn-primary w-full shadow-sm transition duration-300 hover:-translate-y-0.5 focus:outline-none"
           @click="doGithubLogin()">
           <img src="https://authjs.dev/img/providers/github.svg" alt="GitHub" class="mr-2 h-6 w-6" />
@@ -111,7 +108,7 @@ const handleClose = () => emits('close');
 
 const email = ref<string>('');
 const password = ref<string>('');
-const loginForm = ref<HTMLFormElement | null>(null);
+const loginError = ref<string>('');
 
 const close = () => {
   emits('close');
@@ -119,16 +116,18 @@ const close = () => {
 };
 
 const doLogin = async () => {
+  loginError.value = '';
+
   try {
     await authStore.login(email.value, password.value);
     toast.openToast({ type: 'success', message: 'Bienvenue.' });
   } catch (e: any) {
-    if (loginForm.value) {
-      loginForm.value.reset();
-    }
-    toast.openToast({ type: 'error', message: e.message || 'Identifiants invalides.' });
+    password.value = '';
+    loginError.value = e?.message || 'Identifiants invalides.';
+    toast.openToast({ type: 'error', message: loginError.value });
     return;
   }
+
   themeStore.setTheme();
   close();
 };
@@ -138,12 +137,10 @@ const doGoogleLogin = async () => {
     await authStore.loginWithGoogle();
     toast.openToast({ type: 'success', message: 'Bienvenue.' });
   } catch (e: any) {
-    if (loginForm.value) {
-      loginForm.value.reset();
-    }
-    toast.openToast({ type: 'error', message: e.message || 'La connexion Google a echoue.' });
+    toast.openToast({ type: 'error', message: e?.message || 'La connexion Google a echoue.' });
     return;
   }
+
   close();
   await navigateTo('/');
 };
@@ -153,12 +150,10 @@ const doGithubLogin = async () => {
     await authStore.loginWithGithub();
     toast.openToast({ type: 'success', message: 'Bienvenue.' });
   } catch (e: any) {
-    if (loginForm.value) {
-      loginForm.value.reset();
-    }
-    toast.openToast({ type: 'error', message: e.message || 'La connexion GitHub a echoue.' });
+    toast.openToast({ type: 'error', message: e?.message || 'La connexion GitHub a echoue.' });
     return;
   }
+
   close();
   await navigateTo('/');
 };

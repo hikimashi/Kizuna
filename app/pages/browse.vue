@@ -257,7 +257,7 @@ const formatOptions: FilterOption[] = [
   { value: 'MOVIE', label: 'Film' },
   { value: 'OVA', label: 'OVA' },
   { value: 'ONA', label: 'ONA' },
-  { value: 'SPECIAL', label: 'Special' }
+  { value: 'SPECIAL', label: 'Spécial' }
 ]
 
 const seasonOptions: FilterOption[] = [

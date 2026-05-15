@@ -35,8 +35,8 @@ const success = ref(false);
 
 const statusMessage = computed(() => {
   if (!processed.value) return "Traitement de l'autorisation AniList..."
-  if (success.value) return 'Compte AniList lie avec succes. Redirection...'
-  return 'Erreur lors de la liaison du compte AniList. Veuillez reessayer.'
+  if (success.value) return 'Compte AniList lié avec succès. Redirection...'
+  return 'Erreur lors de la liaison du compte AniList. Veuillez réessayer.'
 })
 
 onMounted(async () => {

@@ -28,7 +28,11 @@ type ValkeyClientLike = {
 
 const MAX_CHUNK_LENGTH = 1600
 const DEFAULT_TTL_MS = 1000 * 60 * 60 * 24 * 14
-const TRANSLATION_TIMEOUT_MS = 2500
+const TRANSLATION_TIMEOUT_MS = 6000
+const GOOGLE_TRANSLATE_ENDPOINTS = [
+  'https://translate.googleapis.com/translate_a/single',
+  'https://clients5.google.com/translate_a/t'
+]
 
 const normalizeDescription = (value: string) => value
   .replace(/<br\s*\/?>/gi, '\n')
@@ -71,40 +75,82 @@ const splitIntoChunks = (text: string, maxLength = MAX_CHUNK_LENGTH) => {
   return chunks.filter(Boolean)
 }
 
+const extractGoogleTranslatedText = (payload: any) => {
+  if (Array.isArray(payload?.[0])) {
+    return payload[0]
+      .map((part: any) => typeof part?.[0] === 'string' ? part[0] : '')
+      .join('')
+  }
+
+  if (Array.isArray(payload?.sentences)) {
+    return payload.sentences
+      .map((part: any) => typeof part?.trans === 'string' ? part.trans : '')
+      .join('')
+  }
+
+  if (typeof payload?.translation === 'string') {
+    return payload.translation
+  }
+
+  return ''
+}
+
+const requestGoogleTranslation = async (chunk: string, targetLang: string) => {
+  let lastError: unknown = null
+
+  for (const endpoint of GOOGLE_TRANSLATE_ENDPOINTS) {
+    try {
+      const query = new URLSearchParams({
+        client: endpoint.includes('clients5.google.com') ? 'dict-chrome-ex' : 'gtx',
+        sl: 'auto',
+        tl: targetLang,
+        dt: 't',
+        dj: '1',
+        q: chunk
+      })
+
+      const response = await fetch(`${endpoint}?${query.toString()}`, {
+        headers: {
+          Accept: 'application/json',
+          'User-Agent': 'Mozilla/5.0'
+        },
+        signal: AbortSignal.timeout(TRANSLATION_TIMEOUT_MS)
+      })
+
+      if (!response.ok) {
+        throw createError({
+          statusCode: response.status,
+          statusMessage: `Translation provider returned HTTP ${response.status}`
+        })
+      }
+
+      const payload = await response.json()
+      const translated = extractGoogleTranslatedText(payload)
+      if (translated) {
+        return translated
+      }
+
+      throw createError({
+        statusCode: 502,
+        statusMessage: 'Translation provider returned an empty payload'
+      })
+    } catch (error) {
+      lastError = error
+    }
+  }
+
+  throw lastError ?? createError({
+    statusCode: 502,
+    statusMessage: 'Translation provider request failed'
+  })
+}
+
 const translateWithGoogleGtx = async (text: string, targetLang: string) => {
   const chunks = splitIntoChunks(text)
   const translatedChunks: string[] = []
 
   for (const chunk of chunks) {
-    const query = new URLSearchParams({
-      client: 'gtx',
-      sl: 'auto',
-      tl: targetLang,
-      dt: 't',
-      q: chunk
-    })
-
-    const response = await fetch(`https://translate.googleapis.com/translate_a/single?${query.toString()}`, {
-      headers: {
-        Accept: 'application/json'
-      },
-      signal: AbortSignal.timeout(TRANSLATION_TIMEOUT_MS)
-    })
-
-    if (!response.ok) {
-      throw createError({
-        statusCode: response.status,
-        statusMessage: `Translation provider returned HTTP ${response.status}`
-      })
-    }
-
-    const payload = await response.json()
-    const translated = Array.isArray(payload?.[0])
-      ? payload[0]
-          .map((part: any) => typeof part?.[0] === 'string' ? part[0] : '')
-          .join('')
-      : ''
-
+    const translated = await requestGoogleTranslation(chunk, targetLang)
     translatedChunks.push(translated || chunk)
   }
 

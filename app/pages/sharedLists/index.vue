@@ -306,10 +306,12 @@ const draftBannerPreview = ref('')
 const lists = ref<SharedListSummary[]>([])
 
 const revokePreviewUrl = (value: string) => {
+  // Les previews locales creent des object URLs; il faut les liberer a chaque remplacement.
   if (value.startsWith('blob:')) URL.revokeObjectURL(value)
 }
 
 const setPreview = (target: typeof draftGroupImagePreview, file: File | null) => {
+  // Centralise l'ancien nettoyage avant de poser une nouvelle image de preview.
   revokePreviewUrl(target.value)
   target.value = file ? URL.createObjectURL(file) : ''
 }
@@ -320,6 +322,7 @@ const memberAvatarStyle = (member: Pick<SharedListMember, 'avatar' | 'color'> | 
 const visibleLists = computed(() => {
   const needle = searchTerm.value.toLowerCase()
   const filtered = lists.value.filter((list) => {
+    // Les filtres de role s'appliquent avant la recherche texte.
     if (activeFilter.value === 'owned' && !list.isOwner) return false
     if (activeFilter.value === 'joined' && list.isOwner) return false
     if (!needle) return true
@@ -327,6 +330,7 @@ const visibleLists = computed(() => {
   })
 
   return [...filtered].sort((a, b) => {
+    // On trie une copie pour ne jamais reordonner la source PocketBase.
     if (sortBy.value === 'title') return a.title.localeCompare(b.title)
     if (sortBy.value === 'animeCount') return b.animeCount - a.animeCount
     if (sortBy.value === 'members') return b.memberCount - a.memberCount
@@ -335,17 +339,20 @@ const visibleLists = computed(() => {
 })
 
 const sections = computed(() => [
+  // Deux sections fixes gardent la lecture claire meme apres recherche ou tri.
   { key: 'owned', label: 'Mes listes', items: visibleLists.value.filter(list => list.isOwner) },
   { key: 'joined', label: 'Listes rejointes', items: visibleLists.value.filter(list => !list.isOwner) }
 ])
 
 const filters = computed(() => [
+  // Les compteurs utilisent la liste complete pour ne pas changer quand la recherche est active.
   { key: 'all' as FilterKey, label: 'Toutes', count: lists.value.length },
   { key: 'owned' as FilterKey, label: 'Mes listes', count: lists.value.filter(list => list.isOwner).length },
   { key: 'joined' as FilterKey, label: 'Listes rejointes', count: lists.value.filter(list => !list.isOwner).length }
 ])
 
 const stripForPrivacy = (privacy: SharedListPrivacy, owned: boolean) => {
+  // Fallback visuel quand aucune banniere n'est encore stockee sur PocketBase.
   if (privacy === 'private') return 'linear-gradient(135deg,#7f1d1d,#be185d)'
   if (privacy === 'public') return 'linear-gradient(135deg,#2563eb,#22d3ee)'
   return owned ? 'linear-gradient(135deg,#3db4f2,#1dd3b0)' : 'linear-gradient(135deg,#f77f00,#ffbe0b)'
@@ -363,6 +370,7 @@ const imageSrcFor = (list: SharedListSummary) => String(list.imageUrl || '').tri
 
 const loadPage = async () => {
   if (!currentUserId.value) {
+    // Sans session PocketBase, on vide la page pour eviter d'afficher des donnees obsoletes.
     lists.value = []
     loadError.value = ''
     isLoading.value = false
@@ -383,6 +391,7 @@ const loadPage = async () => {
 }
 
 const resetCreateForm = () => {
+  // Remet tous les champs de creation, y compris les previews de fichiers.
   draftName.value = ''
   draftPrivacy.value = 'friends'
   draftMemberQuery.value = ''
@@ -398,12 +407,14 @@ const resetCreateForm = () => {
 
 const toggleCreatePanel = () => {
   createPanelOpen.value = !createPanelOpen.value
+  // Fermer le panneau annule un brouillon incomplet.
   if (!createPanelOpen.value) resetCreateForm()
 }
 
 const handleDraftGroupImageChange = (event: Event) => {
   const input = event.target as HTMLInputElement | null
   const file = input?.files?.[0] || null
+  // Le fichier reste en memoire jusqu'a la soumission FormData.
   draftGroupImageFile.value = file
   setPreview(draftGroupImagePreview, file)
 }
@@ -420,6 +431,7 @@ let createSearchTimer: ReturnType<typeof setTimeout> | null = null
 const handleCreateMemberSearch = () => {
   if (createSearchTimer) clearTimeout(createSearchTimer)
 
+  // Debounce + seuil minimal pour eviter des requetes PocketBase a chaque frappe.
   if (draftMemberQuery.value.trim().length < 2) {
     draftMemberResults.value = []
     isSearchingMembers.value = false
@@ -443,6 +455,7 @@ const handleCreateMemberSearch = () => {
 }
 
 const selectMember = (user: SearchableUser) => {
+  // Evite les doublons si l'utilisateur clique deux fois sur le meme resultat.
   if (selectedMembers.value.some(member => member.id === user.id)) return
   selectedMembers.value.push(user)
   draftMemberQuery.value = ''
@@ -460,6 +473,7 @@ const handleCreate = async () => {
   actionError.value = ''
 
   try {
+    // Creation en deux temps: liste d'abord, memberships ensuite car ils dependent de l'id liste.
     const created = await createSharedList({
       name: draftName.value,
       privacy: draftPrivacy.value,
@@ -468,6 +482,7 @@ const handleCreate = async () => {
     })
 
     if (selectedMembers.value.length) {
+      // Les ajouts de membres sont independants une fois la liste creee.
       await Promise.all(selectedMembers.value.map(member => addMemberToList(created.id, member.id)))
     }
 
@@ -483,10 +498,12 @@ const handleCreate = async () => {
 }
 
 watch(currentUserId, () => {
+  // Recharge la page quand la session change, y compris a l'initialisation.
   loadPage()
 }, { immediate: true })
 
 onBeforeUnmount(() => {
+  // Nettoyage final des previews blob encore actives.
   revokePreviewUrl(draftGroupImagePreview.value)
   revokePreviewUrl(draftBannerPreview.value)
 })

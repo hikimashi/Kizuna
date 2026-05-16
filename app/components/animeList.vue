@@ -212,6 +212,7 @@ const genreStyleMap: Record<string, { background: string; color?: string }> = {
   Music: { background: '#ffbe0b', color: '#0b1622' }
 }
 
+// Les props arrivent de la page browse; ces computed donnent des defaults stables au composant.
 const currentSort = computed(() => props.sortBy || 'POPULARITY_DESC')
 const currentFormat = computed(() => props.format || 'ALL')
 const currentSearch = computed(() => props.search?.trim() || '')
@@ -301,6 +302,7 @@ const genreTagStyle = (genre: string) => {
 const resolveYearRange = (yearFilter: string) => {
   if (!yearFilter) return {} as { startDateGreater?: number; startDateLesser?: number }
 
+  // AniList filtre les dates au format FuzzyDateInt YYYYMMDD, pas avec une simple annee.
   if (/^\d{4}$/.test(yearFilter)) {
     const startYear = Number(yearFilter)
     return {
@@ -309,6 +311,7 @@ const resolveYearRange = (yearFilter: string) => {
     }
   }
 
+  // Les filtres par decennie sont convertis en bornes exclusives pour garder une seule query.
   if (yearFilter.endsWith('0s') && yearFilter.length === 5) {
     const startYear = Number(yearFilter.slice(0, 4))
     if (!Number.isNaN(startYear)) {
@@ -320,6 +323,7 @@ const resolveYearRange = (yearFilter: string) => {
   }
 
   if (yearFilter === 'older') {
+    // "older" regroupe tout ce qui commence avant 2000.
     return {
       startDateLesser: 2000 * 10000
     }
@@ -331,6 +335,7 @@ const resolveYearRange = (yearFilter: string) => {
 const fetchAnimeList = async (page: number, perPage: number): Promise<BrowseAnime[]> => {
   const { startDateGreater, startDateLesser } = resolveYearRange(currentYearFilter.value)
 
+  // Query locale au composant: elle depend directement des filtres affiches sur /browse.
   const query = `
     query (
       $page: Int
@@ -399,9 +404,11 @@ const fetchAnimeList = async (page: number, perPage: number): Promise<BrowseAnim
     variables.format = currentFormat.value
   }
 
+  // Sur la premiere page on remet le compteur a zero pour eviter un ancien total pendant le refresh.
   loadError.value = ''
   if (page === 1) totalResults.value = 0
 
+  // Avec token, AniList renvoie aussi mediaListEntry; sans token, la carte reste publique.
   const data = await anilistGraphql.request<any>(
     query,
     variables,
@@ -425,6 +432,7 @@ const {
   setItems,
   reset
 } = useInfiniteScroll<BrowseAnime>(fetchAnimeList, {
+  // Le threshold charge la page suivante avant que l'utilisateur atteigne vraiment le bas.
   threshold: 300,
   initialPage: 1,
   perPage: 20,
@@ -435,6 +443,7 @@ const addToPlanning = async (anime: BrowseAnime) => {
   if (!anime?.id || addingMediaId.value === anime.id || anime.mediaListEntry?.id) return
 
   try {
+    // Sauvegarde directement dans la liste AniList de l'utilisateur, puis patch l'item localement.
     addingMediaId.value = anime.id
     const savedEntry = await anilistSync.saveEntry({
       mediaId: anime.id,
@@ -461,6 +470,7 @@ const addToPlanning = async (anime: BrowseAnime) => {
   }
 }
 
+// Signature compacte de tous les filtres: un seul watcher suffit pour relancer le scroll infini.
 const filterSignature = computed(() => JSON.stringify({
   sort: currentSort.value,
   format: currentFormat.value,

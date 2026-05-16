@@ -436,11 +436,13 @@ function handleActivityAnimeLinkClick(event: MouseEvent, animeId?: number | null
 }
 
 function shouldHandleClientNavigation(event: MouseEvent): boolean {
+  // Laisse le navigateur gerer ctrl/cmd/shift-click, clic milieu, etc.
   return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey
 }
 
 function waitForPaint(): Promise<void> {
   if (!import.meta.client) return Promise.resolve()
+  // Attend un frame pour mesurer les tags une fois les styles appliques.
   return new Promise((resolve) => {
     requestAnimationFrame(() => resolve())
   })
@@ -469,6 +471,7 @@ function activityCoverSrcSet(activity: any): string | undefined {
 const authRecord = computed<Record<string, any>>(() => unref(pocketbaseStore.authRecord) ?? {})
 const authUserId = computed(() => Number(authRecord.value.anilist_user_id ?? 0))
 const authUsername = computed(() => String(authRecord.value.anilist_username ?? ''))
+// Cle de cache locale: change si l'utilisateur lie un autre compte AniList.
 const authUserKey = computed(() => `${authUserId.value}:${authUsername.value}`)
 const username = computed(() => authRecord.value.anilist_username ?? "Nom d'utilisateur")
 const anilistIdDisplay = computed(() => authRecord.value.anilist_user_id ?? '-')
@@ -485,6 +488,7 @@ const joinedDisplay = computed(() => {
 const topGenres = computed(() => genres.value.slice(0, 5))
 const barGenres = computed(() => {
   if (!genres.value.length) return []
+  // Ajoute un genre de plus que les tags visibles pour que le graphique garde du contexte.
   const visibleCount = visibleTopGenres.value.length || topGenres.value.length
   const limit = Math.min(visibleCount + 1, genres.value.length)
   return genres.value.slice(0, limit)
@@ -500,6 +504,7 @@ const barGenreTotal = computed(() => {
 })
 
 const progressStep = computed(() => {
+  // Les marqueurs s'adaptent au volume de la liste pour eviter une barre bloquee a 100.
   const perSegment = Math.max(10, Math.ceil((totalAnimes.value || 0) / 3))
   if (perSegment <= 25) return 25
   if (perSegment <= 50) return 50
@@ -520,6 +525,7 @@ const progressFillPercent = computed(() => Math.min((totalAnimes.value / progres
 
 function setGenreMeasureRef(genreName: string): VNodeRef {
   return (el: Element | ComponentPublicInstance | null) => {
+    // Vue peut fournir un HTMLElement direct ou l'instance du composant; on normalise les deux.
     if (el instanceof HTMLElement) {
       genreMeasureRefs.value[genreName] = el
       return
@@ -544,6 +550,7 @@ async function computeVisibleGenres() {
   const availableWidth = container.clientWidth
   const nextVisible: { genre: string; count: number }[] = []
   let used = 0
+  // Mesure les tags dans l'ordre et s'arrete au premier qui ne rentre plus.
   for (const genre of topGenres.value) {
     const el = genreMeasureRefs.value[genre.genre]
     if (!el) continue
@@ -579,6 +586,7 @@ const syncProfilePageData = async (
 
   profileSyncPending.value = true
   try {
+    // Les stats/favoris passent par le store; l'activite est paginee separement par la page.
     await profileStore.loadProfile(Boolean(options.forceProfile))
 
     if (options.forceActivity || !activityItems.value.length) {
@@ -594,6 +602,7 @@ const syncProfilePageData = async (
 const handlePageShow = async (event: PageTransitionEvent) => {
   resetNavigationStates()
 
+  // Quand la page revient du bfcache, les donnees visuelles peuvent avoir besoin d'une resynchro.
   if (event.persisted || !activityItems.value.length) {
     await syncProfilePageData({ forceActivity: true })
   }
@@ -608,6 +617,7 @@ watch(authUserKey, async (next, previous) => {
   if (!authUserId.value && !authUsername.value) return
 
   const userChanged = next !== previous
+  // Changement de compte AniList: on force stats et activite pour ne pas melanger deux profils.
   await syncProfilePageData({
     forceProfile: userChanged,
     forceActivity: userChanged || !activityItems.value.length

@@ -5,11 +5,12 @@ import { useMyAuthStore } from '~/composables/useMyAuthStore'
 import { useToastStore } from '~/composables/useToastStore'
 
 const PUBLIC_PATHS = new Set(['/', '/auth/callback', '/manuel'])
+// Les profils sociaux publics restent accessibles sans session locale.
 const PUBLIC_PATH_PATTERNS = [/^\/social\/user\/[^/]+$/]
 
 export default defineNuxtRouteMiddleware(async (to) => {
   // L'auth PocketBase est cote client (localStorage), on ignore donc le guard SSR pour eviter de faux redirects au refresh.
-  if (process.server) return
+  if (import.meta.server) return
 
   if (PUBLIC_PATHS.has(to.path) || PUBLIC_PATH_PATTERNS.some((pattern) => pattern.test(to.path))) return
 
@@ -27,6 +28,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   if (isLoggedIn && isAniListLinked) return
 
+  // Un compte local sans AniList lie reste bloque sur l'accueil, qui affiche l'etat de liaison requis.
   if (isLoggedIn && !isAniListLinked) {
     if (to.path !== '/') {
       return navigateTo('/')

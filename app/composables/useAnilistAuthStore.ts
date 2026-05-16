@@ -53,6 +53,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
       }
       localStorage.removeItem('anilist_oauth_state');
 
+      // Le secret AniList reste cote serveur: le client ne donne que le code au endpoint Nitro.
       const response = await $fetch<{ access_token: string; expires_in?: number }>('/api/anilist/exchangeToken', {
         method: 'POST',
         body: { code, redirect_uri: useRuntimeConfig().public.anilistRedirectUri }
@@ -75,6 +76,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
       }
 
       const anilistId = Number(viewer.id);
+      // Un compte AniList ne doit etre lie qu'a un seul compte PocketBase local.
       const existingUsers = await pocketbaseStore.pb.collection('user').getFullList({
         filter: `anilist_user_id = ${anilistId} && id != '${userId}'`
       });
@@ -146,6 +148,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
         throw new Error('Impossible de recuperer le profil AniList.');
       }
 
+      // On met uniquement a jour les champs derives d'AniList pour ne pas toucher au profil local.
       await pocketbaseStore.pb.collection('user').update(userId, {
         anilist_user_id: Number(viewer.id),
         anilist_username: viewer.name,

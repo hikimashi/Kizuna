@@ -4,6 +4,7 @@ import PocketBase from 'pocketbase';
 
 export const usePocketbaseStore = defineStore('usePocketBaseStore', () => {
   const config = useRuntimeConfig();
+  // Instance PocketBase unique exposee par Pinia pour eviter plusieurs authStore concurrents.
   const pb = new PocketBase(config.public.pocketbaseUrl as string);
   
   // Crée des refs reactives pour l'etat d'authentification.
@@ -20,6 +21,7 @@ export const usePocketbaseStore = defineStore('usePocketBaseStore', () => {
 
     // Ecoute les changements d'etat auth.
     pb.authStore.onChange((token, model) => {
+      // Synchronise le store reactif avec le authStore interne de PocketBase.
       authRecord.value = model;
       authToken.value = token;
       isAuthValid.value = pb.authStore.isValid;

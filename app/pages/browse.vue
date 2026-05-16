@@ -364,6 +364,7 @@ type ActiveFilter = {
 const activeFilters = computed<ActiveFilter[]>(() => {
   const nextFilters: ActiveFilter[] = []
 
+  // Les chips visibles sont reconstruites depuis l'etat source pour rester toujours synchrones.
   if (searchTerm.value) {
     nextFilters.push({
       key: `search:${searchTerm.value}`,
@@ -450,12 +451,14 @@ const setStatus = (value: string) => {
 }
 
 const toggleGenre = (genreValue: string) => {
+  // Les genres sont multi-selection; les autres filtres sont mono-selection.
   selectedGenres.value = selectedGenres.value.includes(genreValue)
     ? selectedGenres.value.filter((entry) => entry !== genreValue)
     : [...selectedGenres.value, genreValue]
 }
 
 const removeFilter = (filterItem: ActiveFilter) => {
+  // Chaque chip sait quel etat source elle doit nettoyer.
   if (filterItem.type === 'search') {
     searchInput.value = ''
     searchTerm.value = ''
@@ -486,6 +489,7 @@ const removeFilter = (filterItem: ActiveFilter) => {
 }
 
 const clearAllFilters = () => {
+  // Remet les filtres aux valeurs attendues par le composant animeList.
   searchInput.value = ''
   searchTerm.value = ''
   selectedGenres.value = []
@@ -513,6 +517,7 @@ const handleDocumentClick = () => {
 
 watch(searchInput, (value) => {
   if (searchTimer) clearTimeout(searchTimer)
+  // Debounce local: la query AniList ne part qu'apres une pause de saisie.
   searchTimer = setTimeout(() => {
     searchTerm.value = value.trim()
   }, 250)

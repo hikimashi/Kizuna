@@ -358,6 +358,7 @@ const socialState = await useAsyncData(
       perPage: socialPageSize.value
     }
 
+    // Charge les flux publics, suivis, personnels et forums en parallele pour composer l'onglet social.
     const [globalResponse, followingResponse, selfResponse, threadsResponse] = await Promise.all([
       anilistGraphql.request<AniListGraphqlResponse<{ Page?: { activities?: Activity[] | null } }>>(
         socialActivitiesQuery,
@@ -404,6 +405,7 @@ const reviewsState = await useAsyncData(
     const aggregated: Review[] = []
     let hasNextPage = false
 
+    // reviewPage represente "combien de pages afficher"; on agrege depuis la premiere pour garder l'ordre.
     for (let page = 1; page <= reviewPage.value; page += 1) {
       const response = await anilistGraphql.request<AniListGraphqlResponse<{
         Page?: {
@@ -438,6 +440,7 @@ const translatedDescriptionState = await useAsyncData(
     }
 
     try {
+      // La traduction passe par Nitro pour beneficier du cache et masquer les details du provider.
       return await $fetch<AnimeDescriptionTranslationResponse>('/api/translate/animeDescription', {
         method: 'POST',
         body: {
@@ -524,6 +527,7 @@ const streamingLinks = computed(() => {
 const allRecommendations = computed(() => (media.value?.recommendations?.nodes || []).filter((item) => item?.mediaRecommendation))
 const recommendationBaseLimit = computed(() => {
   const width = recommendationViewportWidth.value
+  // La limite suit les colonnes visibles pour eviter une rangee incomplete trop longue.
   if (width >= 1600) return 10
   if (width >= 1280) return 8
   if (width >= 900) return 6
@@ -541,6 +545,7 @@ const overviewReviews = computed(() => reviews.value.slice(0, 3))
 const hasMoreReviews = computed(() => Boolean(reviewsBundle.value.hasNextPage))
 const canUsePersonalFeeds = computed(() => Boolean(anilistToken.value && anilistUserId.value))
 const activeSocialActivities = computed(() => {
+  // L'onglet social partage le meme rendu; seul le tableau source change selon le filtre.
   if (socialFeedType.value === 'SELF') return selfActivities.value
   if (socialFeedType.value === 'FOLLOWING') return followingActivities.value
   return globalActivities.value
@@ -555,6 +560,7 @@ const followingLatestByUser = computed(() => {
   const seen = new Set<string>()
   return followingActivities.value.filter((activity) => {
     const name = activity.user?.name || ''
+    // Garde seulement la derniere activite par utilisateur pour le resume lateral.
     if (!name || seen.has(name)) return false
     seen.add(name)
     return true
@@ -564,6 +570,7 @@ const followingUserCount = computed(() => followingLatestByUser.value.length)
 const followingStatusCounts = computed(() => {
   const counts = new Map<string, number>()
 
+  // Les statuts bruts AniList sont traduits avant regroupement pour eviter les doublons d'affichage.
   for (const activity of followingLatestByUser.value) {
     const key = formatStatus(activity.status)
     counts.set(key, (counts.get(key) || 0) + 1)
@@ -576,6 +583,7 @@ const followingTimelineItems = computed(() => {
   const items: Array<{ type: 'activity'; activity: Activity } | { type: 'gap'; label: string }> = []
   let previousTimestamp = 0
 
+  // Insere des separateurs quand l'activite des suivis saute plusieurs semaines.
   for (const activity of sorted) {
     const currentTimestamp = activity.createdAt || 0
     if (previousTimestamp) {
@@ -593,11 +601,13 @@ const followingTimelineItems = computed(() => {
 const createThreadUrl = computed(() => `https://anilist.co/forum/thread/editor/new?mediaId=${animeId.value}`)
 
 watch(canUsePersonalFeeds, (available) => {
+  // Les flux Moi/Suivis dependent du token AniList; on force un onglet valide si le token disparait.
   if (!available) {
     socialFeedType.value = 'GLOBAL'
     return
   }
 
+  // Une fois connecte, l'utilisateur arrive directement sur son activite personnelle.
   if (socialFeedType.value === 'GLOBAL') {
     socialFeedType.value = 'SELF'
   }
@@ -665,6 +675,7 @@ function formatStatus(value?: string | null) {
   const raw = String(value).trim()
   const lower = raw.toLowerCase()
   const upper = raw.toUpperCase().replace(/\s+/g, '_')
+  // AniList melange enums, phrases d'activite et valeurs deja lisibles; on tente les trois formes.
   return STATUS_TRANSLATIONS[raw]
     || STATUS_TRANSLATIONS[lower]
     || STATUS_TRANSLATIONS[upper]
@@ -726,6 +737,7 @@ function activitySummary(activity: Activity) {
   const status = activity.status
     ? `${activity.status.charAt(0).toUpperCase()}${activity.status.slice(1)}`
     : 'Mise a jour'
+  // "progress" contient deja le numero/texte d'episode renvoye par AniList.
   return activity.progress ? `${formatStatus(status)} ${activity.progress} de` : formatStatus(status)
 }
 
@@ -779,21 +791,23 @@ const statusDistribution = computed(() => {
     DROPPED: '#e85d75'
   }
 
+  // Trie du plus frequent au moins frequent pour que la barre commence par le statut dominant.
   return [...(media.value?.stats?.statusDistribution || [])]
     .sort((a, b) => (b.amount || 0) - (a.amount || 0))
     .map((item) => ({
-    key: item.status || 'UNKNOWN',
-    label: formatStatus(item.status),
-    value: item.amount || 0,
-    width: `${((item.amount || 0) / total) * 100}%`,
-    share: `${Math.round(((item.amount || 0) / total) * 100)}%`,
-    color: colors[item.status || ''] || '#3db4f2'
-  }))
+      key: item.status || 'UNKNOWN',
+      label: formatStatus(item.status),
+      value: item.amount || 0,
+      width: `${((item.amount || 0) / total) * 100}%`,
+      share: `${Math.round(((item.amount || 0) / total) * 100)}%`,
+      color: colors[item.status || ''] || '#3db4f2'
+    }))
 })
 
 const scoreDistribution = computed(() => {
   const buckets = [...(media.value?.stats?.scoreDistribution || [])].sort((a, b) => (a.score || 0) - (b.score || 0))
   const max = Math.max(...buckets.map((item) => item.amount || 0), 1)
+  // Chaque barre est normalisee sur le bucket le plus rempli pour garder un graphe lisible.
   return buckets.map((item) => ({
     score: item.score || 0,
     amount: item.amount || 0,
@@ -897,9 +911,10 @@ const currentListLabel = computed(() => {
   return listOptions.find((option) => option.value === status)?.label || formatStatus(status)
 })
 
-const sharedListOptions = computed(() =>
-  sharedLists.value.filter(list => list.isOwner || list.isMember)
-)
+const sharedListOptions = computed(() => {
+  // On ne propose que les listes ou l'utilisateur a une appartenance effective.
+  return sharedLists.value.filter(list => list.isOwner || list.isMember)
+})
 
 async function toggleFavorite() {
   if (!media.value?.id || !anilistToken.value || actionBusy.value) return
@@ -908,6 +923,7 @@ async function toggleFavorite() {
   const next = !media.value.isFavourite
   const prevCount = media.value.favourites || 0
 
+  // Mise a jour optimiste: l'UI repond tout de suite, puis rollback en cas d'erreur AniList.
   media.value.isFavourite = next
   media.value.favourites = Math.max(0, prevCount + (next ? 1 : -1))
 
@@ -931,6 +947,7 @@ async function saveListStatus(status: EditableAniListStatus) {
 
   actionBusy.value = 'list'
   listMenuOpen.value = false
+  // Conserve l'ancien statut pour revenir a l'etat exact si la sauvegarde echoue.
   const previousStatus: EditableAniListStatus | '' = (currentListStatus.value || media.value.mediaListEntry?.status || '') as EditableAniListStatus | ''
   currentListStatus.value = status
 
@@ -957,6 +974,7 @@ const ensureSharedListsLoaded = async () => {
   if (sharedLists.value.length > 0) return
 
   try {
+    // Chargement paresseux: les listes partagees ne sont demandees que quand le picker s'ouvre.
     isSharedListsLoading.value = true
     sharedListError.value = ''
     sharedLists.value = await sharedListsStore.loadSummaries()
@@ -981,6 +999,7 @@ const toggleSharedListPicker = async () => {
 const addSelectedAnimeToSharedList = async (listId: string) => {
   if (!media.value?.id || !listId || isAddingToSharedList.value) return
 
+  // Si l'utilisateur n'a pas encore de statut AniList, on ajoute l'anime en planifie par defaut.
   const status = (currentListStatus.value || media.value.mediaListEntry?.status || 'PLANNING') as EditableAniListStatus
 
   try {
@@ -1010,6 +1029,7 @@ function providerNameFromUrl(url?: string | null) {
   if (!url) return 'Regarder'
   try {
     const hostname = new URL(url).hostname.replace(/^www\./, '')
+    // Les liens AniList ne donnent pas toujours un "site" propre, donc on deduit le fournisseur par domaine.
     if (hostname.includes('crunchyroll')) return 'Crunchyroll'
     if (hostname.includes('netflix')) return 'Netflix'
     if (hostname.includes('hidive')) return 'HIDIVE'
@@ -1036,6 +1056,7 @@ function reviewText(review: Review) {
 function reviewPreview(review: Review) {
   const text = reviewText(review)
   if (text.length <= 280) return text
+  // Coupe les longues critiques uniquement pour la carte; le texte complet reste disponible au clic.
   return `${text.slice(0, 280).trim()}...`
 }
 
@@ -1060,6 +1081,7 @@ function hasReviewOverflow(review: Review) {
 
 function handleDocumentClick(event: MouseEvent) {
   const target = event.target as Node | null
+  // Un seul listener document ferme les deux menus contextuels quand le clic sort de leur zone.
   if (listMenuOpen.value && listActionRef.value && target && !listActionRef.value.contains(target)) {
     listMenuOpen.value = false
   }
@@ -1074,6 +1096,7 @@ function loadMoreReviews() {
 }
 
 watch(animeId, () => {
+  // Changement de route dynamique: remet les etats locaux pour ne pas melanger deux fiches anime.
   reviewPage.value = 1
   expandedReviews.value = {}
   currentListStatus.value = ''
@@ -1082,6 +1105,7 @@ watch(animeId, () => {
 })
 
 onMounted(() => {
+  // Les recommandations dependent de la largeur reelle du viewport, indisponible pendant le rendu serveur.
   syncRecommendationViewportWidth()
   document.addEventListener('click', handleDocumentClick)
   window.addEventListener('resize', syncRecommendationViewportWidth)

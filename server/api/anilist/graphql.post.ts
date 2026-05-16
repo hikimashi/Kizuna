@@ -39,6 +39,7 @@ export default defineEventHandler(async (event) => {
   const query = String(body.query)
   const variables = body.variables ?? {}
   const token = body.token ? String(body.token) : ''
+  // Les mutations doivent toujours traverser AniList pour ne pas servir un etat obsolete.
   const isMutation = /^\s*mutation\b/i.test(query)
   const skipCache = Boolean(body.skipCache) || isMutation
 
@@ -54,12 +55,14 @@ export default defineEventHandler(async (event) => {
   const cache = globalState.__anilistCache ?? new Map<string, CacheEntry>()
   const inFlight = globalState.__anilistInFlight ?? new Map<string, Promise<{ statusCode: number; payload: any }>>()
   const rateLimit = globalState.__anilistRateLimit ?? new Map<string, RateLimitEntry>()
+  // Les maps sont accrochees a globalThis pour survivre entre deux handlers Nitro dans le meme process.
   globalState.__anilistCache = cache
   globalState.__anilistInFlight = inFlight
   globalState.__anilistRateLimit = rateLimit
 
   const now = Date.now()
   if (cache.size > 2000) {
+    // Nettoyage opportuniste: on evite un timer global Nitro juste pour purger les entrees expirees.
     for (const [key, entry] of cache) {
       if (entry.expiresAt <= now) cache.delete(key)
     }
@@ -82,6 +85,7 @@ export default defineEventHandler(async (event) => {
     const rateKey = getClientIp()
     if (isRateLimitedIpExempt(rateKey)) return 0
 
+    // Limite cote serveur pour proteger AniList en plus de ses propres limites upstream.
     const windowMs = 10_000
     const maxRequestsPerWindow = 120
     const requestNow = Date.now()
@@ -103,15 +107,18 @@ export default defineEventHandler(async (event) => {
   const tokenHash = (() => {
     if (!token) return 'anon'
     let h = 0
+    // Hash non cryptographique: il separe les caches prives sans exposer le bearer token.
     for (let i = 0; i < token.length; i += 1) h = ((h << 5) - h) + token.charCodeAt(i)
     return String(Math.abs(h))
   })()
 
+  // Le token complet ne va jamais dans les cles de cache; seul un hash local separe les reponses privees.
   const cacheKey = JSON.stringify({ query, variables, tokenHash })
   const valkeyCacheKey = `kizuna:anilist:gql:${cacheKey}`
 
   const defaultTtlMs = token ? 15_000 : 120_000
   const requestedTtl = Number(body.cacheTtlMs)
+  // Le client peut reduire/augmenter le TTL, mais jamais au-dela de 10 minutes.
   const ttlMs = Number.isFinite(requestedTtl)
     ? Math.max(0, Math.min(600_000, requestedTtl))
     : defaultTtlMs
@@ -131,8 +138,10 @@ export default defineEventHandler(async (event) => {
     if (!valkeyUrl || globalState.__anilistValkeyDisabled) return null
 
     if (!globalState.__anilistValkeyClientPromise) {
+      // Une seule promesse de connexion evite plusieurs clients Valkey concurrents au demarrage.
       globalState.__anilistValkeyClientPromise = (async () => {
         try {
+          // Import dynamique pour que le projet fonctionne aussi sans dependance Valkey configuree.
           const importer = new Function('moduleName', 'return import(moduleName)') as (moduleName: string) => Promise<any>
           const valkeyModule = await importer('iovalkey')
           const Valkey = valkeyModule?.default ?? valkeyModule?.Redis
@@ -168,6 +177,7 @@ export default defineEventHandler(async (event) => {
     const valkeyClient = await getValkeyClient()
     if (valkeyClient) {
       try {
+        // Valkey est lu avant la memoire pour partager le cache entre instances.
         const valkeyRaw = await valkeyClient.get(valkeyCacheKey)
         if (valkeyRaw) {
           const valkeyParsed = JSON.parse(valkeyRaw) as { statusCode: number; payload: any }
@@ -195,6 +205,7 @@ export default defineEventHandler(async (event) => {
   const requestKey = cacheKey
   const pending = inFlight.get(requestKey)
   if (pending) {
+    // Deduplication des appels identiques: plusieurs composants peuvent demander la meme query au meme rendu.
     const deduped = await pending
     setHeader(event, 'X-Request-Dedup', 'HIT')
     setResponseStatus(event, deduped.statusCode)
@@ -216,6 +227,7 @@ export default defineEventHandler(async (event) => {
       Accept: 'application/json'
     }
     if (token) {
+      // Le proxy accepte aussi les requetes authentifiees pour les donnees liees au viewer.
       headers.Authorization = `Bearer ${token}`
     }
 
@@ -225,6 +237,7 @@ export default defineEventHandler(async (event) => {
 
     for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
       try {
+        // AniList renvoie parfois 429; on conserve les headers utiles pour le client et on retente avec jitter.
         const response = await fetch('https://graphql.anilist.co', {
           method: 'POST',
           headers,
@@ -262,6 +275,7 @@ export default defineEventHandler(async (event) => {
         }
 
         const retryAfterSeconds = retryAfter
+        // Respecte Retry-After quand AniList le fournit, sinon backoff exponentiel borne.
         const baseDelay = retryAfterSeconds > 0
           ? retryAfterSeconds * 1000
           : Math.min(1000 * (2 ** attempt), 8000)
@@ -273,6 +287,7 @@ export default defineEventHandler(async (event) => {
         if (attempt === maxAttempts - 1) {
           return { statusCode: lastStatus, payload: lastPayload }
         }
+        // Erreurs reseau: backoff plus court que le 429, car aucun Retry-After n'est disponible.
         const backoff = Math.min(500 * (2 ** attempt), 4000)
         const jitter = Math.floor(Math.random() * 300)
         await wait(backoff + jitter)
@@ -283,6 +298,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const requestPromise = performRequest()
+  // L'appel est enregistre avant await pour que les requetes identiques suivantes attendent celle-ci.
   inFlight.set(requestKey, requestPromise)
 
   try {
@@ -292,6 +308,7 @@ export default defineEventHandler(async (event) => {
       const valkeyClient = await getValkeyClient()
       if (valkeyClient) {
         try {
+          // Valkey est prioritaire en production, la Map memoire reste le fallback local/dev.
           await valkeyClient.set(valkeyCacheKey, JSON.stringify({
             statusCode: result.statusCode,
             payload: result.payload

@@ -325,6 +325,7 @@ const rawSections = ref<Record<ListStatusKey, MediaListEntry[]>>({
   PLANNING: []
 })
 
+// La page est personnelle: chaque lecture AniList depend du token et du username stockes dans PocketBase.
 const authRecord = computed(() => (unref(pocketbaseStore.authRecord) ?? {}) as Record<string, any>)
 const token = computed(() => String(authRecord.value.anilist_token ?? ''))
 const username = computed(() => String(authRecord.value.anilist_username ?? ''))
@@ -349,6 +350,7 @@ const coverImageSrcSet = (entry: MediaListEntry) =>
   getAnilistCoverSrcSet(entry.media.coverImage, currentCoverVariant.value)
 
 const normalizeDate = (entry: MediaListEntry): number => {
+  // AniList renvoie des dates floues; on fabrique une cle numerique triable YYYYMMDD.
   const y = entry.startedAt?.year ?? 0
   const m = entry.startedAt?.month ?? 0
   const d = entry.startedAt?.day ?? 0
@@ -369,6 +371,7 @@ const statusDotClass = (status: ListStatusKey) => {
 }
 
 const listFilterItems = computed(() => {
+  // Les compteurs de la sidebar sont recalcules depuis les sections brutes, avant filtre texte.
   const allCount = STATUS_ORDER.reduce((sum, key) => sum + rawSections.value[key].length, 0)
   return [
     { key: 'ALL' as FilterKey, label: 'Toutes', count: allCount },
@@ -382,6 +385,7 @@ const listFilterItems = computed(() => {
 
 const sortedAndFilteredSections = computed(() => {
   const needle = searchTerm.value.toLowerCase()
+  // Un seul sorter couvre tous les modes de tri pour conserver la meme logique par section.
   const sorter = (a: MediaListEntry, b: MediaListEntry) => {
     if (sortBy.value === 'title') return displayTitle(a).localeCompare(displayTitle(b))
     if (sortBy.value === 'score') return (b.score || 0) - (a.score || 0)
@@ -405,6 +409,7 @@ const sortedAndFilteredSections = computed(() => {
 })
 
 const visibleSections = computed(() => {
+  // En mode "Toutes", on masque les sections vides pour garder une page compacte.
   if (activeFilter.value === 'ALL') {
     return sortedAndFilteredSections.value.filter((section) => section.items.length > 0)
   }
@@ -423,15 +428,17 @@ const selectedEntryCoverSrcSet = computed(() =>
   getAnilistCoverSrcSet(selectedEntryCover.value, 'thumb')
 )
 
-const sharedListOptions = computed(() =>
-  sharedLists.value.filter(list => list.isOwner || list.isMember)
-)
+const sharedListOptions = computed(() => {
+  // Le picker n'affiche que les listes ou l'utilisateur participe deja.
+  return sharedLists.value.filter(list => list.isOwner || list.isMember)
+})
 
 const ensureSharedListsLoaded = async () => {
   if (isSharedListsLoading.value) return
   if (sharedLists.value.length > 0) return
 
   try {
+    // Chargement paresseux: les listes partagees ne sont demandees que si l'utilisateur ouvre le picker.
     isSharedListsLoading.value = true
     sharedListError.value = ''
     sharedLists.value = await sharedListsStore.loadSummaries()
@@ -444,6 +451,7 @@ const ensureSharedListsLoaded = async () => {
 }
 
 const openEntryEditor = (entry: MediaListEntry, status: ListStatusKey) => {
+  // On copie les champs editables dans des refs pour pouvoir annuler sans muter la liste affichee.
   selectedEntryId.value = entry.id
   selectedEntryMediaId.value = Number(entry.media.id || 0)
   selectedEntryTitle.value = displayTitle(entry)
@@ -490,6 +498,7 @@ const toggleSharedListPicker = async () => {
 const addSelectedAnimeToSharedList = async (listId: string) => {
   if (!selectedEntryMediaId.value || !listId || isAddingToSharedList.value) return
 
+  // Les champs vides restent acceptes cote UI mais deviennent des valeurs neutres pour PocketBase.
   const progress = editProgress.value === '' ? 0 : Number(editProgress.value)
   const score = editScore.value === '' ? 0 : Number(editScore.value)
 
@@ -517,6 +526,7 @@ const saveSelectedEntry = async () => {
   if (!selectedEntryId.value || isSavingEntry.value) return
 
   try {
+    // Apres mutation AniList, on recharge la collection pour recuperer l'etat serveur exact.
     isSavingEntry.value = true
     await anilistSync.saveEntry({
       entryId: selectedEntryId.value,
@@ -537,6 +547,7 @@ const saveSelectedEntry = async () => {
 const deleteSelectedEntry = async () => {
   if (!selectedEntryId.value || isDeletingEntry.value) return
 
+  // La suppression AniList est destructive, donc elle passe par l'alert store.
   const confirmed = await alertStore.openAlert({
     type: 'warning',
     message: `Supprimer "${selectedEntryTitle.value}" de votre liste AniList ?`
@@ -560,6 +571,7 @@ watch([editStatus, selectedEntryEpisodes], () => {
   if (editStatus.value !== 'COMPLETED') return
   const episodes = Number(selectedEntryEpisodes.value || 0) || 0
   if (!episodes) return
+  // Quand on marque termine, la progression se cale automatiquement sur le nombre total d'episodes.
   editProgress.value = String(episodes)
 })
 
@@ -614,6 +626,7 @@ const fetchAnimeList = async () => {
     isLoading.value = true
     errorMessage.value = ''
 
+    // MediaListCollection regroupe deja les entrees par statut; on les remappe dans STATUS_ORDER.
     const response = await anilistGraphql.request<any>(
       query,
       { userName: username.value },

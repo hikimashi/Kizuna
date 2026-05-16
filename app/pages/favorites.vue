@@ -260,12 +260,14 @@ const loadNextPage = async () => {
 
   const isAnime = activeTab.value === 'anime'
   const page = isAnime ? animePage.value : characterPage.value
+  // Avec token, Viewer contourne les problemes de pseudo; sans token, on utilise User public.
   const query = hasToken
     ? (isAnime ? viewerFavoriteAnimePageQuery : viewerFavoriteCharacterPageQuery)
     : (isAnime ? favoriteAnimePageQuery : favoriteCharacterPageQuery)
   const field = isAnime ? 'anime' : 'characters'
   const isFirst = page === 1
 
+  // Deux flags differents permettent de distinguer chargement initial et pagination.
   if (isFirst) initialLoading.value = true
   else loadingMore.value = true
   errorMessage.value = ''
@@ -293,6 +295,7 @@ const loadNextPage = async () => {
     const pageInfo = connection?.pageInfo ?? {}
 
     if (isAnime) {
+      // Chaque onglet garde sa pagination pour reprendre ou l'utilisateur l'a laisse.
       animeItems.value.push(...nodes.map(normalizeAnime))
       animeHasNext.value = Boolean(pageInfo?.hasNextPage)
       animePage.value = Number(pageInfo?.currentPage ?? page) + 1
@@ -312,6 +315,7 @@ const loadNextPage = async () => {
 }
 
 const ensureActiveTabLoaded = async () => {
+  // Chargement paresseux: l'onglet non visite ne consomme aucune requete AniList.
   if (activeTab.value === 'anime' && !animeLoaded.value) {
     await loadNextPage()
     return
@@ -327,6 +331,7 @@ const bindObserver = () => {
   observer?.disconnect()
   if (!sentinelRef.value) return
 
+  // La sentinelle declenche la page suivante avant d'atteindre le bas visuel.
   observer = new IntersectionObserver((entries) => {
     if (entries.some(entry => entry.isIntersecting)) {
       loadNextPage()
@@ -344,6 +349,7 @@ const handleFavoriteLinkClick = (event: MouseEvent, item: FavoriteCard) => {
     }
     if (!shouldHandleClientNavigation(event)) return
     event.preventDefault()
+    // Les animes restent dans l'app Nuxt; les personnages partent vers AniList via siteUrl.
     void openAnimeFavorite(item.id)
     return
   }
@@ -370,12 +376,14 @@ const shouldHandleClientNavigation = (event: MouseEvent) =>
 
 const waitForPaint = () => {
   if (!import.meta.client) return Promise.resolve()
+  // Laisse le navigateur peindre l'etat "navigation en cours" avant le changement de route.
   return new Promise<void>((resolve) => {
     requestAnimationFrame(() => resolve())
   })
 }
 
 watch(activeTab, async () => {
+  // Changer d'onglet peut demander un premier chargement et rebinder la sentinelle.
   await ensureActiveTabLoaded()
   await nextTick()
   bindObserver()

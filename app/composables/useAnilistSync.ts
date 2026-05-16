@@ -88,6 +88,7 @@ const DELETE_MEDIA_LIST_ENTRY_MUTATION = `
 const normalizePositiveInt = (value: unknown, fieldName: string) => {
   if (value == null || value === '') return undefined
   const normalized = Number(value)
+  // AniList attend des ids strictement positifs pour les entrees et les medias.
   if (!Number.isInteger(normalized) || normalized <= 0) {
     throw new Error(`${fieldName} must be a positive integer.`)
   }
@@ -97,6 +98,7 @@ const normalizePositiveInt = (value: unknown, fieldName: string) => {
 const normalizeNonNegativeInt = (value: unknown, fieldName: string) => {
   if (value == null || value === '') return undefined
   const normalized = Number(value)
+  // La progression peut etre 0, mais jamais negative.
   if (!Number.isInteger(normalized) || normalized < 0) {
     throw new Error(`${fieldName} must be a non-negative integer.`)
   }
@@ -107,6 +109,7 @@ const normalizeScore = (value: unknown) => {
   if (value === '') return null
   if (value == null) return undefined
   const normalized = Number(value)
+  // Le projet utilise l'echelle AniList 0-100 pour eviter les conversions ambigues.
   if (!Number.isFinite(normalized)) {
     throw new Error('La note doit être un nombre valide.')
   }
@@ -134,10 +137,12 @@ export const useAnilistSync = () => {
     const entryId = normalizePositiveInt(input.entryId, 'Entry id')
     const mediaId = normalizePositiveInt(input.mediaId, 'Media id')
 
+    // Une mise a jour passe par entryId; une creation peut passer seulement par mediaId.
     if (!entryId && !mediaId) {
       throw new Error('Entry id or media id is required.')
     }
 
+    // AniList accepte soit l'id d'entree existante, soit le mediaId pour creer/mettre a jour une entree.
     const response = await anilistGraphql.request<any>(
       SAVE_MEDIA_LIST_ENTRY_MUTATION,
       {
@@ -160,6 +165,7 @@ export const useAnilistSync = () => {
     }
 
     const savedEntry = response?.data?.SaveMediaListEntry
+    // Sans id, l'UI ne peut pas reutiliser cette entree pour les prochaines modifications.
     if (!savedEntry?.id) {
       throw new Error('AniList n\'a pas renvoyé l\'entrée mise à jour.')
     }
@@ -173,6 +179,7 @@ export const useAnilistSync = () => {
       throw new Error('Entry id is required.')
     }
 
+    // Les mutations contournent le cache du proxy afin de voir l'etat AniList le plus recent.
     const response = await anilistGraphql.request<any>(
       DELETE_MEDIA_LIST_ENTRY_MUTATION,
       { id: normalizedEntryId },
@@ -187,6 +194,7 @@ export const useAnilistSync = () => {
     }
 
     const deleted = Boolean(response?.data?.DeleteMediaListEntry?.deleted)
+    // AniList peut renvoyer une reponse GraphQL valide mais sans confirmation de suppression.
     if (!deleted) {
       throw new Error('AniList n\'a pas confirme la suppression.')
     }

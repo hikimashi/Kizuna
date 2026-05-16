@@ -295,12 +295,14 @@ const formatScore = (score: number) => {
 const statusLabel = (status: 'CURRENT' | 'COMPLETED') => (status === 'CURRENT' ? 'En cours' : 'Terminé')
 
 const selfMap = computed(() => {
+  // Map par mediaId pour rendre les intersections O(1) pendant les calculs UI.
   const map = new Map<number, CompareEntry>()
   for (const entry of selfEntries.value) map.set(entry.mediaId, entry)
   return map
 })
 
 const friendMap = computed(() => {
+  // Meme index cote ami: les computed suivants peuvent comparer sans boucles imbriquees.
   const map = new Map<number, CompareEntry>()
   for (const entry of friendEntries.value) map.set(entry.mediaId, entry)
   return map
@@ -310,6 +312,7 @@ const compareCounts = computed(() => {
   const selfIds = new Set(selfEntries.value.map(entry => entry.mediaId))
   const friendIds = new Set(friendEntries.value.map(entry => entry.mediaId))
 
+  // Intersection des deux listes AniList, limitee aux statuts CURRENT/COMPLETED charges plus bas.
   let common = 0
   for (const mediaId of selfIds) {
     if (friendIds.has(mediaId)) common += 1
@@ -336,14 +339,15 @@ const onlySelfCountLabel = computed(() => countLabel(compareCounts.value.onlySel
 const onlyFriendCountLabel = computed(() => countLabel(compareCounts.value.onlyFriend))
 
 const sharedEntries = computed(() => {
-    const rows: Array<{
-      mediaId: number
-      title: string
-      coverSrc: string
-      coverSrcSet?: string
-      selfScore: number
-      friendScore: number
-      selfGenres: string[]
+  // Garde seulement les titres presents chez les deux utilisateurs.
+  const rows: Array<{
+    mediaId: number
+    title: string
+    coverSrc: string
+    coverSrcSet?: string
+    selfScore: number
+    friendScore: number
+    selfGenres: string[]
     friendGenres: string[]
     updatedAt: number
   }> = []
@@ -381,12 +385,14 @@ const onlyFriendEntries = computed(() =>
 
 const scoreDiffRows = computed(() =>
   sharedEntries.value
+    // Les entrees sans note sont ignorees pour ne pas biaiser l'ecart moyen.
     .filter((row) => row.selfScore > 0 && row.friendScore > 0)
     .map((row) => ({ ...row, diff: Number((row.selfScore - row.friendScore).toFixed(1)) }))
     .sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff))
 )
 
 const genreRows = computed(() => {
+  // Compte les genres uniquement sur les animes en commun pour mesurer les affinites partagees.
   const selfGenreCounts = new Map<string, number>()
   const friendGenreCounts = new Map<string, number>()
   for (const row of sharedEntries.value) {
@@ -441,6 +447,7 @@ const avgScoreDiffColor = computed(() => {
 })
 
 const compatibilityPercent = computed(() => {
+  // Score de Jaccard: commun / union, plus parlant que commun / liste personnelle.
   const selfTotal = compareCounts.value.selfTotal
   const friendTotal = compareCounts.value.friendTotal
   const common = compareCounts.value.common
@@ -586,6 +593,7 @@ const fetchCompareEntries = async () => {
   const mapEntries = (response: any): CompareEntry[] => {
     const lists = Array.isArray(response?.data?.MediaListCollection?.lists) ? response.data.MediaListCollection.lists : []
     const result = new Map<number, CompareEntry>()
+    // Si AniList renvoie le meme media dans plusieurs listes, on garde l'entree la plus recente.
     for (const list of lists) {
       const status = String(list?.status || '')
       if (status !== 'CURRENT' && status !== 'COMPLETED') continue
@@ -618,6 +626,7 @@ const fetchCompareEntries = async () => {
     isEntriesLoading.value = true
     hasEntriesLoaded.value = false
     compareError.value = ''
+    // Les deux listes peuvent etre chargees en parallele: elles ne dependent pas l'une de l'autre.
     const [selfRes, friendRes] = await Promise.all([
       anilistGraphql.request<any>(query, { userId: selfUserId }, { token: token.value, cacheTtlMs: 60_000 }),
       anilistGraphql.request<any>(query, { userId: friendUserId.value }, { token: token.value, cacheTtlMs: 60_000 })

@@ -24,6 +24,7 @@ export const useAnilistGraphql = () => {
 
       return response as T
     } catch (error: any) {
+      // Le proxy renvoie parfois les erreurs GraphQL dans error.data; les appelants les interpretent eux-memes.
       if (error?.data !== undefined) {
         return error.data as T
       }

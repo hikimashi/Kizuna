@@ -803,6 +803,7 @@ const settingsBannerPreview = ref('')
 
 const listId = computed(() => String(route.params.id || ''))
 const currentMember = computed(() => detail.value?.members.find(member => member.isCurrentUser) || null)
+// Les permissions viennent du detail deja normalise par useSharedLists.
 const canManageAnime = computed(() => {
   if (!detail.value) return false
   if (detail.value.isOwner) return true
@@ -827,6 +828,7 @@ const tabs = [
 ]
 
 const coverGradient = computed(() => {
+  // Fallback deterministe: une meme liste garde la meme couleur meme sans image.
   const gradients = [
     'linear-gradient(135deg, #ec4899 0%, #f472b6 100%)',
     'linear-gradient(135deg, #3db4f2 0%, #2e8bc0 100%)',
@@ -850,6 +852,7 @@ const heroOverlayStyle = computed(() => {
   const defaultBannerUrl = '/img/banner.webp'
   const resolvedBanner = bannerUrl || defaultBannerUrl
   if (resolvedBanner) {
+    // La banniere reste dans l'overlay pour conserver le degradé lisible au-dessus.
     return {
       backgroundImage: `linear-gradient(180deg, rgba(11,22,34,.12) 0%, rgba(11,22,34,.72) 100%), url("${resolvedBanner}")`,
       backgroundPosition: 'center',
@@ -875,6 +878,7 @@ const memberAvatarStyle = (member: Pick<SharedListMember, 'avatar' | 'color'> | 
   member.avatar ? undefined : { background: member.color }
 
 const revokePreviewUrl = (value: string) => {
+  // Les previews fichier creent des blob: URLs; on les libere pour eviter les fuites memoire.
   if (value.startsWith('blob:')) URL.revokeObjectURL(value)
 }
 
@@ -891,6 +895,7 @@ const resetSettingsMediaDrafts = () => {
 }
 
 const syncSettingsDraft = (source: SharedListDetail) => {
+  // Les champs du drawer sont des brouillons; fermer le drawer remet l'etat serveur.
   settingsName.value = source.title
   settingsPrivacy.value = source.privacy
   resetSettingsMediaDrafts()
@@ -900,6 +905,7 @@ const settingsGroupImageDisplay = computed(() => settingsGroupImagePreview.value
 const settingsBannerDisplay = computed(() => settingsBannerPreview.value || detail.value?.bannerUrl || '')
 const hasSettingsChanges = computed(() => {
   if (!detail.value) return false
+  // Les fichiers sont compares par presence car leur contenu n'est pas relu depuis PocketBase.
   return settingsName.value.trim() !== detail.value.title
     || settingsPrivacy.value !== detail.value.privacy
     || Boolean(settingsGroupImageFile.value)
@@ -907,6 +913,7 @@ const hasSettingsChanges = computed(() => {
 })
 
 const rawAnimeSections = computed<Record<SharedListAnimeStatus, SharedListAnimeEntry[]>>(() => {
+  // Les entrees PocketBase sont groupees par statut pour reutiliser l'affichage de liste AniList.
   const sections = {
     PLANNING: [],
     CURRENT: [],
@@ -925,6 +932,7 @@ const rawAnimeSections = computed<Record<SharedListAnimeStatus, SharedListAnimeE
 })
 
 const animeFilterItems = computed(() => {
+  // Les compteurs restent bases sur les sections non filtrees par recherche texte.
   const allCount = STATUS_ORDER.reduce((sum, key) => sum + rawAnimeSections.value[key].length, 0)
   return [
     { key: 'ALL' as AnimeFilterKey, label: 'Tout', count: allCount },
@@ -939,6 +947,7 @@ const animeFilterItems = computed(() => {
 const sortedAnimeSections = computed(() => {
   const needle = animeQuery.value.trim().toLowerCase()
 
+  // Filtre texte puis tri local: aucune requete PocketBase supplementaire pendant la saisie.
   return STATUS_ORDER.map((status) => {
     const filtered = (rawAnimeSections.value[status] || []).filter((entry) => {
       if (!needle) return true
@@ -961,6 +970,7 @@ const sortedAnimeSections = computed(() => {
 })
 
 const visibleAnimeSections = computed(() => {
+  // En vue globale, les statuts vides disparaissent pour garder une lecture plus dense.
   if (activeAnimeFilter.value === 'ALL') {
     return sortedAnimeSections.value.filter(section => section.items.length > 0)
   }
@@ -1015,6 +1025,7 @@ const loadAnimeMedia = async (entries: SharedListAnimeEntry[]) => {
   }
 
   try {
+    // Les records PocketBase gardent l'id AniList; on recupere les metadonnees fraiches en une requete groupee.
     const response = await anilistGraphql.request<AniListGraphqlResponse<{
       Page?: {
         media?: SharedAnimeMedia[] | null
@@ -1079,6 +1090,7 @@ const loadPage = async () => {
     let result = await loadDetail(listId.value)
 
     if (result.isOwner) {
+      // Le proprietaire peut reparer a l'ouverture les memberships crees avant le modele de permissions actuel.
       const migration = await migrateLegacyMemberships(listId.value)
       if (!result.ownMembershipId || migration.changed) {
         result = await loadDetail(listId.value)
@@ -1117,6 +1129,7 @@ const privacyLabel = (privacy: SharedListPrivacy) => privacy === 'private' ? 'Pr
 
 const openSettings = () => {
   if (!detail.value || (!detail.value.isOwner && !detail.value.isMember)) return
+  // Ouvrir les parametres recopie toujours l'etat courant pour eviter un ancien brouillon.
   syncSettingsDraft(detail.value)
   isSettingsOpen.value = true
 }
@@ -1157,6 +1170,7 @@ const saveSettings = async () => {
   actionError.value = ''
 
   try {
+    // updateSharedList gere FormData et les champs fichiers optionnels cote composable.
     await updateSharedList(detail.value.id, {
       name: settingsName.value,
       privacy: settingsPrivacy.value,
@@ -1186,6 +1200,7 @@ const handleSearchInput = () => {
     return
   }
 
+  // Debounce pour eviter de frapper PocketBase a chaque caractere dans le drawer membres.
   memberSearchTimer = setTimeout(async () => {
     if (!detail.value) return
     isSearchingUsers.value = true
@@ -1214,6 +1229,7 @@ const addMember = async (userId: string) => {
   actionError.value = ''
 
   try {
+    // Apres ajout, on recharge pour recuperer permission, membershipId et avatar normalises.
     await addMemberToList(detail.value.id, userId)
     memberQuery.value = ''
     userResults.value = []
@@ -1242,6 +1258,7 @@ const formatMediaFormat = (value?: string | null) => {
 }
 
 const searchAnime = async (query: string) => {
+  // Recherche AniList publique: la liste partagee garde seulement l'id media et les champs d'etat locaux.
   const response = await anilistGraphql.request<AniListGraphqlResponse<{
     Page?: {
       media?: AniListSearchMedia[] | null
@@ -1280,6 +1297,7 @@ const searchAnime = async (query: string) => {
   return items
     .map((media) => {
       const mediaId = Number(media.id || 0)
+      // alreadyAdded desactive le bouton avant meme d'appeler PocketBase.
       return {
         mediaId,
         title: formatAnimeSearchTitle(media),
@@ -1303,6 +1321,7 @@ const handleAnimeSearchInput = () => {
     return
   }
 
+  // Debounce separe de la recherche membres: les deux panneaux peuvent evoluer independamment.
   animeSearchTimer = setTimeout(async () => {
     isSearchingAnime.value = true
 
@@ -1326,6 +1345,7 @@ const addAnime = async (item: AnimeSearchResult) => {
 
   const resolvedEpisodes = Number(item.episodes || 0) || null
   const resolvedStatus = draftAddStatus.value
+  // Si l'utilisateur ajoute directement en "termine", la progression suit le nombre d'episodes connu.
   const resolvedProgress = resolvedStatus === 'COMPLETED' && resolvedEpisodes
     ? resolvedEpisodes
     : Number(draftAddProgress.value || 0) || 0
@@ -1379,6 +1399,7 @@ const entryEpisodes = (entry: SharedListAnimeEntry) =>
 
 const openAnimeEditor = (entry: SharedListAnimeEntry) => {
   if (!canManageAnime.value) return
+  // Copie l'entree selectionnee dans le formulaire pour pouvoir annuler sans modifier l'affichage.
   selectedAnimeRelationId.value = entry.relationId
   editAnimeStatus.value = entry.status
   editAnimeProgress.value = String(entry.progress ?? 0)
@@ -1405,6 +1426,7 @@ const saveAnimeEntry = async () => {
   try {
     const nextProgressRaw = Number(editAnimeProgress.value)
     const nextScore = Number(editAnimeScore.value)
+    // En statut termine, l'episode total connu l'emporte sur une saisie manuelle plus basse.
     const completedEpisodes = editAnimeStatus.value === 'COMPLETED'
       ? Number(selectedAnimeEpisodes.value || 0) || 0
       : 0
@@ -1427,11 +1449,13 @@ watch([editAnimeStatus, selectedAnimeEpisodes], () => {
   if (editAnimeStatus.value !== 'COMPLETED') return
   const episodes = Number(selectedAnimeEpisodes.value || 0) || 0
   if (!episodes) return
+  // Meme comportement que la liste AniList personnelle: "termine" remplit la progression.
   editAnimeProgress.value = String(episodes)
 })
 
 watch(draftAddStatus, () => {
   if (draftAddStatus.value !== 'COMPLETED') return
+  // Lors de l'ajout, on attend de connaitre les episodes du resultat choisi avant de remplir vraiment.
   draftAddProgress.value = '0'
 })
 
@@ -1469,6 +1493,7 @@ const removeMember = async (membershipId: string) => {
   actionError.value = ''
 
   try {
+    // removeMembership refait les checks d'autorisation dans le composable avant suppression.
     await removeMembership(membershipId)
     await loadPage()
   } catch (error: any) {
@@ -1479,6 +1504,7 @@ const removeMember = async (membershipId: string) => {
 }
 
 const updateMemberPermission = async (membershipId: string, permissionRaw: string) => {
+  // Le select vient du DOM: on le resserre sur les trois permissions supportees.
   const permission = (permissionRaw === 'admin' || permissionRaw === 'editor' || permissionRaw === 'viewer')
     ? permissionRaw
     : 'viewer'
@@ -1511,6 +1537,7 @@ const leaveGroup = async () => {
   actionError.value = ''
 
   try {
+    // Quitter une liste revient a supprimer son propre record user_shared_list.
     await removeMembership(detail.value.ownMembershipId)
     closeSettings()
     await navigateTo('/sharedLists')
@@ -1523,6 +1550,7 @@ const leaveGroup = async () => {
 
 const deleteGroup = async () => {
   if (!detail.value) return
+  // Suppression complete: le composable nettoie les relations anime/membres avant shared_list.
   if (typeof window !== 'undefined' && !window.confirm(`Supprimer "${detail.value.title}" ? Cette action est irréversible.`)) {
     return
   }
@@ -1531,6 +1559,7 @@ const deleteGroup = async () => {
   actionError.value = ''
 
   try {
+    // deleteSharedList verifie le proprietaire puis supprime les dependances PocketBase.
     await deleteSharedList(detail.value.id)
     closeSettings()
     await navigateTo('/sharedLists')
@@ -1556,6 +1585,7 @@ const handleAnimePickerKeydown = (event: KeyboardEvent) => {
 }
 
 watch(listId, () => {
+  // Changement de route dynamique: tous les panneaux et recherches reviennent a leur etat initial.
   memberQuery.value = ''
   animeQuery.value = ''
   animeSearchTerm.value = ''
@@ -1572,10 +1602,12 @@ watch(listId, () => {
 })
 
 watch(currentUserId, () => {
+  // Le detail depend de l'utilisateur courant car les droits et visibilites changent avec la session.
   loadPage()
 }, { immediate: true })
 
 onBeforeUnmount(() => {
+  // Nettoyage des timers et previews creees par les recherches/drawers.
   if (memberSearchTimer) clearTimeout(memberSearchTimer)
   if (animeSearchTimer) clearTimeout(animeSearchTimer)
   revokePreviewUrl(settingsGroupImagePreview.value)

@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    // Exchange authorization code for access token
+    // Echange le code OAuth contre un token sans exposer le client_secret au navigateur.
     const response = await $fetch<AniListTokenResponse>('https://anilist.co/api/v2/oauth/token', {
       method: 'POST',
       headers: {

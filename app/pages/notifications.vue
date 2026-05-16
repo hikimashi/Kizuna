@@ -141,6 +141,7 @@ const notificationTitle = (item: AniListNotificationItem) => {
   const actorName = item.actor?.name || 'utilisateur AniList'
   const mediaTitle = item.media?.title || 'ce titre'
 
+  // Les types AniList sont techniques; on les transforme en phrases lisibles cote UI.
   switch (item.type) {
     case 'AIRING':
       return `L'episode ${item.episode || '?'} de ${mediaTitle} vient d'etre diffuse.`
@@ -182,6 +183,7 @@ const notificationTitle = (item: AniListNotificationItem) => {
 }
 
 const notificationDetail = (item: AniListNotificationItem) => {
+  // Detail secondaire: raison AniList, titre de thread ou acteur selon le type disponible.
   if (item.type === 'MEDIA_MERGE' && item.deletedMediaTitles.length) {
     return `Fusionne depuis : ${item.deletedMediaTitles.join(', ')}`
   }
@@ -221,6 +223,7 @@ const timeAgo = (timestamp: number) => {
 }
 
 const openNotification = async (item: AniListNotificationItem) => {
+  // Priorite media > thread > acteur, car c'est generalement la cible la plus utile.
   if (item.media?.id) {
     await navigateTo(`/anime/${item.media.id}`)
     return
@@ -237,6 +240,7 @@ const openNotification = async (item: AniListNotificationItem) => {
 }
 
 const refreshNotifications = async () => {
+  // Rafraichissement manuel sans marquer comme lu.
   await notificationStore.loadNotifications({
     page: 1,
     perPage: 20,
@@ -247,6 +251,7 @@ const refreshNotifications = async () => {
 
 onMounted(async () => {
   if (!isAniListLinked.value) return
+  // Premiere ouverture de la page: AniList remet le compteur non lu a zero.
   await notificationStore.loadNotifications({
     page: 1,
     perPage: 20,

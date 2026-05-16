@@ -34,6 +34,7 @@ const GOOGLE_TRANSLATE_ENDPOINTS = [
   'https://clients5.google.com/translate_a/t'
 ]
 
+// AniList descriptions contiennent souvent du HTML simple; on normalise avant cache et traduction.
 const normalizeDescription = (value: string) => value
   .replace(/<br\s*\/?>/gi, '\n')
   .replace(/<\/?[^>]+>/g, '')
@@ -46,6 +47,7 @@ const splitIntoChunks = (text: string, maxLength = MAX_CHUNK_LENGTH) => {
 
   const chunks: string[] = []
   let buffer = ''
+  // On coupe d'abord sur les paragraphes pour garder des segments lisibles par le traducteur.
   const segments = text.split(/(\n\n+)/)
 
   for (const segment of segments) {
@@ -98,6 +100,7 @@ const extractGoogleTranslatedText = (payload: any) => {
 const requestGoogleTranslation = async (chunk: string, targetLang: string) => {
   let lastError: unknown = null
 
+  // Deux endpoints non officiels sont essayes car ils ne renvoient pas toujours le meme format.
   for (const endpoint of GOOGLE_TRANSLATE_ENDPOINTS) {
     try {
       const query = new URLSearchParams({
@@ -201,6 +204,7 @@ export default defineEventHandler(async (event) => {
 
   const now = Date.now()
   if (cache.size > 500) {
+    // Purge opportuniste pour garder le cache memoire borne sans tache de fond.
     for (const [key, entry] of cache) {
       if (entry.expiresAt <= now) cache.delete(key)
     }
@@ -226,6 +230,7 @@ export default defineEventHandler(async (event) => {
     if (!globalState.__translationValkeyClientPromise) {
       globalState.__translationValkeyClientPromise = (async () => {
         try {
+          // Import dynamique: l'API reste disponible meme quand Valkey/iovalkey ne sont pas configures.
           const importer = new Function('moduleName', 'return import(moduleName)') as (moduleName: string) => Promise<any>
           const valkeyModule = await importer('iovalkey')
           const Valkey = valkeyModule?.default ?? valkeyModule?.Redis
@@ -275,6 +280,7 @@ export default defineEventHandler(async (event) => {
 
   const pending = inFlight.get(cacheKey)
   if (pending) {
+    // Evite de traduire plusieurs fois la meme description pendant un meme rendu.
     return await pending
   }
 
@@ -284,6 +290,7 @@ export default defineEventHandler(async (event) => {
         ? await translateWithGoogleGtx(description, targetLang)
         : description
 
+      // En cas de provider desactive ou vide, on renvoie toujours la description originale.
       const payload = {
         description: translatedDescription || description,
         translated: Boolean(translatedDescription) && translatedDescription !== description,

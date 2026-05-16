@@ -96,9 +96,11 @@ const formatJoined = (timestamp?: number) => {
 
 const hashColor = (id: number) => palette[Math.abs(id) % palette.length] ?? palette[0] ?? '#4F378A'
 const normalizeRelationValue = (value?: string | string[]) => Array.isArray(value) ? String(value[0] || '') : String(value || '')
+// Les valeurs injectees dans les filtres PocketBase doivent echapper guillemets et antislashs.
 const escapeFilterValue = (value: string) => value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
 
 const mapUser = (user: AniListUserNode): SocialUser => ({
+  // Forme commune consommee par les pages dashboard, social et profil public.
   id: Number(user.id),
   username: user.name || 'Inconnu',
   joined: formatJoined(user.createdAt),
@@ -129,10 +131,12 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
   const followPendingIds = ref<number[]>([])
   const loadedForKey = ref('')
 
+  // Synchronise la table locale user_friend avec les relations mutuelles AniList.
   const syncUserFriends = async (mutuals: SocialUser[]) => {
     const currentPocketbaseUserId = String(authRecord.value.id || '')
     if (!currentPocketbaseUserId) return
 
+    // On de-duplique les ids AniList avant de chercher les utilisateurs PocketBase correspondants.
     const mutualAniListIds = Array.from(new Set(
       mutuals
         .map(user => Number(user.id || 0))
@@ -142,6 +146,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
     const desiredPocketbaseFriendIds = new Set<string>()
     const chunkSize = 40
 
+    // Les filtres PocketBase tres longs deviennent fragiles, donc les ids sont resolus par paquets.
     for (let start = 0; start < mutualAniListIds.length; start += chunkSize) {
       const chunk = mutualAniListIds.slice(start, start + chunkSize)
       if (!chunk.length) continue
@@ -160,6 +165,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
       }
     }
 
+    // On compare l'etat desire avec l'etat existant pour eviter les creations/suppressions inutiles.
     const existingRelations = await pocketbaseStore.pb.collection('user_friend').getFullList<UserFriendRecord>({
       filter: `fk_user_id="${escapeFilterValue(currentPocketbaseUserId)}"`,
       requestKey: null
@@ -191,6 +197,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
   }
 
   const reset = (keepError = false) => {
+    // Nettoie les tableaux derives quand le compte change ou que le chargement echoue.
     followingUsers.value = []
     followerUsers.value = []
     friendUsers.value = []
@@ -207,6 +214,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
       skipCache?: boolean
     } = {}
   ) => {
+    // Tous les appels passent par le proxy Nitro pour beneficier du cache et des retries serveur.
     const payload = await anilistGraphql.request<any>(
       query,
       variables,
@@ -221,6 +229,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
   }
 
   const graphqlFetch = async (query: string, variables: Record<string, any>) => {
+    // AniList peut refuser certaines donnees privees avec le token; on retente en public si possible.
     const parseErrors = (response: any) => {
       if (!response?.errors?.length) return ''
       return response.errors.map((error: any) => error?.message).filter(Boolean).join(' | ')
@@ -255,6 +264,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
     const perPage = 50
     let hasNextPage = true
 
+    // Garde-fou a 100 pages pour eviter une boucle infinie si AniList renvoie une pagination incoherente.
     while (hasNextPage && page <= 100) {
       const response = await graphqlFetch(query, { userId: anilistUserId.value, page, perPage })
 
@@ -281,6 +291,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
     loadError.value = ''
 
     try {
+      // Les deux listes sont independantes; Promise.allSettled permet d'afficher les donnees partielles.
       const [followingResult, followersResult] = await Promise.allSettled([
         fetchPagedUsers(followingQuery, 'following'),
         fetchPagedUsers(followersQuery, 'followers')
@@ -297,6 +308,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
       const followersIds = new Set(followersRaw.map(user => Number(user.id)))
       const followingIds = new Set(followingRaw.map(user => Number(user.id)))
 
+      // Le premier mapping annote chaque following avec son statut follower/ami.
       followingUsers.value = followingRaw.map((user) => {
         const mapped = mapUser(user)
         mapped.following = true
@@ -305,6 +317,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
         return mapped
       })
 
+      // Le second mapping fait l'inverse pour afficher aussi les abonnes non suivis.
       followerUsers.value = followersRaw.map((user) => {
         const mapped = mapUser(user)
         mapped.isFollower = true
@@ -314,12 +327,14 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
       })
 
       const friendMap = new Map<number, SocialUser>()
+      // Map par id AniList pour fusionner les doublons venant des deux listes.
       for (const user of [...followingUsers.value, ...followerUsers.value]) {
         if (user.isFriend) friendMap.set(user.id, user)
       }
       friendUsers.value = Array.from(friendMap.values())
 
       try {
+        // La synchro PocketBase ne doit pas empecher l'affichage des relations AniList.
         await syncUserFriends(friendUsers.value)
       } catch (error) {
         console.warn('[anilistSocial] user_friend sync failed', error)
@@ -349,6 +364,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
     }
     if (isFollowPending(userId)) return
 
+    // Evite les doubles clics qui enverraient plusieurs ToggleFollow pour le meme utilisateur.
     followPendingIds.value = [...followPendingIds.value, userId]
 
     try {
@@ -368,6 +384,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
         throw new Error(errorMessage)
       }
 
+      // Recharge l'etat complet apres ToggleFollow, car AniList decide si l'action a suivi ou unfollow.
       await loadSocial(true)
     } catch (error: any) {
       const message = error?.data?.errors?.[0]?.message || error?.message || 'Impossible de mettre a jour le suivi AniList.'

@@ -256,10 +256,12 @@ const bannerSrc = computed(() => authRecord.value.anilist_banner || '')
 const joinedDisplay = computed(() => formatDate(authRecord.value.created))
 const anilistTokenExpiryDisplay = computed(() => {
   if (!authRecord.value.anilist_token) return '-'
+  // Certains anciens tokens n'ont pas de date d'expiration stockee en base.
   if (authRecord.value.anilist_token_expires_at) return formatDateShort(authRecord.value.anilist_token_expires_at)
   return 'Indisponible (non stocke)'
 })
 const passwordChangeError = computed(() => {
+  // Validation reactive: le bouton peut rester simple et afficher l'erreur courante.
   if (!currentPassword.value && !newPassword.value && !confirmPassword.value) return ''
   if (!currentPassword.value || !newPassword.value || !confirmPassword.value) return 'Tous les champs sont obligatoires.'
   if (newPassword.value.length < 8) return 'Le nouveau mot de passe doit contenir au moins 8 caracteres.'
@@ -323,6 +325,7 @@ function setupScrollSpy() {
 
   sectionObserver = new IntersectionObserver(
     (entries) => {
+      // La section la plus visible devient l'entree active dans la navigation laterale.
       const visible = entries
         .filter(entry => entry.isIntersecting)
         .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
@@ -333,6 +336,7 @@ function setupScrollSpy() {
     },
     {
       root: null,
+      // Fenetre centrale virtuelle: evite de changer d'onglet pour une section a peine visible.
       rootMargin: '-30% 0px -55% 0px',
       threshold: [0.1, 0.25, 0.5]
     }
@@ -344,6 +348,7 @@ function setupScrollSpy() {
 }
 
 const previewTheme = (theme: 'forest' | 'winter') => {
+  // Apercu immediat; la persistance PocketBase attend le bouton enregistrer.
   selectedTheme.value = theme
   themeStore.setThemeByName(theme)
 }
@@ -360,6 +365,7 @@ const refreshAnilistData = async () => {
 
 const unlinkAniList = async () => {
   if (isUnlinking.value) return
+  // Delier AniList ne supprime pas le compte local PocketBase.
   const ok = await alertStore.openAlert({ type: 'warning', message: 'Delier le compte AniList de Kizuna ?' })
   if (!ok) return
 
@@ -368,6 +374,7 @@ const unlinkAniList = async () => {
     const userId = pocketbaseStore.pb.authStore.model?.id
     if (!userId) throw new Error('Non authentifie.')
 
+    // Nettoie uniquement les champs derives d'AniList.
     await pocketbaseStore.pb.collection('user').update(userId, {
       anilist_user_id: null,
       anilist_username: null,
@@ -395,6 +402,7 @@ const saveTheme = async () => {
     const userId = pocketbaseStore.pb.authStore.model?.id
     if (!userId) throw new Error('Non authentifie.')
 
+    // Le theme est stocke en base puis reapplique localement apres refresh auth.
     await pocketbaseStore.pb.collection('user').update(userId, { theme: selectedTheme.value })
     await myAuthStore.authRefresh()
     themeStore.setThemeByName(selectedTheme.value)
@@ -420,6 +428,7 @@ const submitEmailChange = async () => {
 
   isChangingEmail.value = true
   try {
+    // PocketBase envoie un email de confirmation, l'adresse active ne change pas immediatement.
     await myAuthStore.emailChange(nextEmail)
     toastStore.openToast({ type: 'success', message: "E-mail de confirmation envoye pour le changement d'adresse." })
     showEmailChange.value = false
@@ -450,6 +459,7 @@ const updatePasswordDirectly = async () => {
     const userId = pocketbaseStore.pb.authStore.model?.id
     if (!userId) throw new Error('Non authentifie.')
 
+    // PocketBase exige l'ancien mot de passe et la confirmation dans la meme requete.
     await pocketbaseStore.pb.collection('user').update(userId, {
       oldPassword: currentPassword.value,
       password: newPassword.value,
@@ -471,6 +481,7 @@ const updatePasswordDirectly = async () => {
 
 const deleteAccount = async () => {
   if (isDeleting.value) return
+  // Suppression locale definitive; l'identite AniList externe n'est pas modifiee.
   const ok = await alertStore.openAlert({
     type: 'error',
     message: 'Supprimer votre compte definitivement ? Cette action est irreversible.'

@@ -893,3 +893,344 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Extracted from app/pages/index.vue */
+.dashboard-empty-state {
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.dashboard-error-state {
+  color: #fda4af;
+}
+
+.list-item-copy {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.list-item-name {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #f7fbff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.list-item-meta {
+  font-size: 12px;
+  color: rgba(244, 249, 254, 0.82);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.list-item-owner {
+  font-size: 11px;
+  color: rgba(244, 249, 254, 0.66);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.friend-card {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.18s ease;
+}
+
+.friend-card:hover {
+  transform: translateY(-2px);
+}
+
+.friend-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 8px;
+}
+
+.friend-avatar span {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.follow-modal-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: color-mix(in srgb, var(--kz-page-navy) 28%, transparent);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.follow-modal {
+  width: min(100%, 720px);
+  max-height: min(82vh, 760px);
+  overflow: auto;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--kz-card-bg) 96%, white 4%), color-mix(in srgb, var(--kz-card-bg) 100%, transparent)),
+    color-mix(in srgb, var(--kz-card-bg) 92%, transparent);
+  box-shadow: 0 24px 80px color-mix(in srgb, var(--kz-page-navy) 24%, transparent);
+  padding: 24px;
+}
+
+.follow-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.follow-modal-kicker {
+  margin: 0 0 6px;
+  font-size: 11px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--teal);
+}
+
+.follow-modal-head h2 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.15;
+}
+
+.follow-modal-close {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--kz-soft-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.follow-search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--kz-card-input);
+  padding: 0 14px;
+}
+
+.follow-search-box input {
+  flex: 1;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 15px;
+  font-family: var(--font-main);
+}
+
+.follow-search-box input::placeholder {
+  color: var(--text-dim);
+}
+
+.follow-search-state {
+  padding: 18px 4px 6px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.follow-results {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.follow-result-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--kz-soft-bg);
+  padding: 14px;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.follow-result-card:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--kz-accent) 28%, var(--border));
+  background: var(--kz-soft-bg-hover);
+}
+
+.follow-result-card:focus-visible {
+  outline: 2px solid rgba(61, 180, 242, 0.65);
+  outline-offset: 2px;
+}
+
+.follow-result-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.follow-result-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.follow-result-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.follow-result-avatar span {
+  color: #fff;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.follow-result-copy {
+  min-width: 0;
+}
+
+.follow-result-name {
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.follow-result-subtitle {
+  color: var(--text-dim);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.follow-result-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.follow-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--kz-hover-fill);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.follow-badge-kizuna {
+  background: rgba(61, 180, 242, 0.16);
+  color: #87dbff;
+}
+
+.follow-badge-friend {
+  background: rgba(34, 197, 94, 0.16);
+  color: #8ef0a8;
+}
+
+.follow-result-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.follow-action-btn {
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-main);
+  cursor: pointer;
+}
+
+.follow-action-secondary {
+  background: var(--kz-soft-bg);
+  color: var(--text-primary);
+}
+
+.follow-action-primary {
+  background: linear-gradient(135deg, var(--cyan), #5ac4ff);
+  color: var(--navy);
+  border-color: transparent;
+}
+
+.follow-action-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.follow-modal-note {
+  margin: 18px 0 0;
+  color: var(--text-dim);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .follow-modal {
+    padding: 18px;
+  }
+
+  .follow-modal-head h2 {
+    font-size: 22px;
+  }
+
+  .follow-result-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .follow-result-actions {
+    width: 100%;
+  }
+
+  .follow-action-btn {
+    flex: 1;
+  }
+}

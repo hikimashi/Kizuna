@@ -338,6 +338,7 @@ const dashboardFriendLimit = ref(8)
 
 const authRecord = computed(() => {
   const authRefOrRecord = pocketbaseStore.authRecord as any
+  // Compatibilite avec les cas ou authRecord est expose comme ref ou comme objet brut.
   return (authRefOrRecord?.value ?? authRefOrRecord ?? {}) as Record<string, any>
 })
 
@@ -350,6 +351,7 @@ const friendIds = computed(() => new Set(socialStore.friendUsers.map(friend => N
 const pendingFollowIds = computed(() => new Set((socialStore.followPendingIds ?? []).map(id => Number(id))))
 
 const dashboardListLimit = computed(() => {
+  // La colonne des listes garde un nombre d'items adapte a la hauteur disponible.
   if (viewportHeight.value < 700) return 3
   if (viewportHeight.value < 820) return 4
   if (viewportHeight.value < 980) return 5
@@ -358,6 +360,7 @@ const dashboardListLimit = computed(() => {
 
 const filteredDashboardLists = computed(() => {
   const needle = dashboardListSearch.value.toLowerCase()
+  // Le dashboard montre un extrait rapide; la page dediee garde la liste complete.
   const source = dashboardLists.value.slice(0, 12)
   if (!needle) return source.slice(0, dashboardListLimit.value)
   return source
@@ -367,6 +370,7 @@ const filteredDashboardLists = computed(() => {
 
 const filteredDashboardFriends = computed<SocialUser[]>(() => {
   const needle = dashboardFriendSearch.value.toLowerCase()
+  // La tuile "Amis" affiche uniquement les relations mutuelles.
   const source = socialStore.friendUsers.filter(friend => friend.isFollower && friend.following)
   if (!needle) return source.slice(0, dashboardFriendLimit.value)
   return source
@@ -386,6 +390,7 @@ const featureVisible = reactive<Record<number, boolean>>({
 })
 
 function setCardRef(el: unknown, index: number) {
+  // Les refs du v-for servent ensuite a l'IntersectionObserver des cartes marketing.
   if (el instanceof HTMLElement) cardEls[index] = el
 }
 
@@ -435,6 +440,7 @@ const connectAniList = async () => {
 }
 
 const friendInitials = (value: string) => {
+  // Fallback d'avatar: deux initiales maximum, puis "FR" si le nom est vide.
   return value
     .split(/\s+/)
     .filter(Boolean)
@@ -454,6 +460,7 @@ const openFollowModal = () => {
 }
 
 const closeFollowModal = () => {
+  // Fermer la modale annule aussi le debounce pour eviter une recherche tardive apres fermeture.
   isFollowModalOpen.value = false
   followSearchQuery.value = ''
   followSearchError.value = ''
@@ -502,6 +509,7 @@ type AniListSearchUser = {
 }
 
 const buildHue = (value: string) => {
+  // Couleur stable par pseudo pour les avatars sans image.
   return Array.from(value).reduce((sum, char) => sum + char.charCodeAt(0), 0) % 360
 }
 
@@ -509,6 +517,7 @@ const fetchPocketBaseMatches = async (anilistIds: number[]) => {
   const uniqueIds = Array.from(new Set(anilistIds.filter(id => Number.isFinite(id) && id > 0)))
   if (!uniqueIds.length) return new Map<number, Record<string, any>>()
 
+  // Enrichit les resultats AniList avec les comptes Kizuna locaux, quand ils existent.
   const filter = uniqueIds.map(id => `anilist_user_id=${id}`).join(' || ')
   const users = await pocketbaseStore.pb.collection('user').getFullList<Record<string, any>>({
     filter
@@ -524,6 +533,7 @@ const fetchPocketBaseMatches = async (anilistIds: number[]) => {
 const handleFollowSearch = () => {
   if (followSearchTimer) clearTimeout(followSearchTimer)
 
+  // Moins de deux caracteres donne trop de resultats et consomme inutilement l'API AniList.
   if (followSearchQuery.value.trim().length < 2) {
     followSearchError.value = ''
     followSearchResults.value = []
@@ -531,6 +541,7 @@ const handleFollowSearch = () => {
     return
   }
 
+  // Debounce court pour ne pas envoyer une requete AniList a chaque frappe.
   followSearchTimer = setTimeout(async () => {
     isSearchingUsers.value = true
     followSearchError.value = ''
@@ -551,9 +562,11 @@ const handleFollowSearch = () => {
       }
 
       const rawUsers: AniListSearchUser[] = Array.isArray(payload?.data?.Page?.users) ? payload.data.Page.users : []
+      // On retire le profil courant pour eviter de proposer "se suivre soi-meme".
       const filteredUsers = rawUsers.filter((user: AniListSearchUser) => Number(user?.id || 0) !== Number(authRecord.value?.anilist_user_id || 0))
       const pocketbaseMatches = await fetchPocketBaseMatches(filteredUsers.map((user: AniListSearchUser) => Number(user?.id || 0)))
 
+      // Fusionne les infos AniList et PocketBase pour afficher le statut Kizuna dans la modale.
       followSearchResults.value = filteredUsers
         .map((user: AniListSearchUser) => {
           const anilistUserId = Number(user?.id || 0)
@@ -601,6 +614,7 @@ const followUserFromSearch = async (user: { anilistUserId: number }) => {
 
   try {
     await socialStore.toggleFollowUser(user.anilistUserId)
+    // Met a jour la carte locale sans attendre un rechargement complet du store social.
     followSearchResults.value = followSearchResults.value.map((entry) =>
       entry.anilistUserId === user.anilistUserId
         ? { ...entry, alreadyFriend: true, inKizuna: true }
@@ -613,6 +627,7 @@ const followUserFromSearch = async (user: { anilistUserId: number }) => {
 
 const loadDashboardLists = async () => {
   if (!isAniListLinked.value) {
+    // Si AniList est delie, les donnees du dashboard ne doivent pas rester visibles.
     dashboardLists.value = []
     dashboardListsError.value = ''
     dashboardListsLoading.value = false
@@ -663,6 +678,7 @@ const measureDashboardFriendLimit = () => {
   const searchStyles = friendsSearchRef.value ? window.getComputedStyle(friendsSearchRef.value) : null
   const spacingBelowHeader = Number.parseFloat(headerStyles?.marginBottom || '0')
   const spacingBelowSearch = Number.parseFloat(searchStyles?.marginBottom || '0')
+  // La place utile exclut le header, la recherche et leurs marges pour calculer les cartes visibles.
   const availableHeight = Math.max(
     0,
     contentHeight - headerHeight - searchHeight - spacingBelowHeader - spacingBelowSearch
@@ -676,6 +692,7 @@ const measureDashboardFriendLimit = () => {
   const rowGap = gridStyles ? Number.parseFloat(gridStyles.rowGap || gridStyles.gap || '16') : 16
   const firstCard = grid?.querySelector<HTMLElement>('.friend-card')
   const cardHeight = firstCard?.offsetHeight ?? 94
+  // Le nombre final respecte les colonnes CSS reelles, pas seulement une estimation de largeur.
   const rows = Math.max(1, Math.floor((availableHeight + rowGap) / (cardHeight + rowGap)))
   const maxCards = Math.max(columns, columns * rows)
 
@@ -688,6 +705,7 @@ onMounted(() => {
   nextTick(() => {
     measureDashboardFriendLimit()
     if (typeof ResizeObserver !== 'undefined' && friendsPanelRef.value) {
+      // Le panneau peut changer de taille sans resize global, par exemple via contenu ou breakpoint CSS.
       friendsPanelObserver = new ResizeObserver(() => {
         measureDashboardFriendLimit()
       })
@@ -699,6 +717,7 @@ onMounted(() => {
       (entries) => {
         entries.forEach((entry) => {
           if (!entry.isIntersecting) return
+          // Retrouve l'index de carte depuis la table de refs pour stagger l'animation.
           const idx = Object.keys(cardEls).find(
             (k) => cardEls[Number(k)] === entry.target
           )
@@ -728,6 +747,7 @@ onUnmounted(() => {
 
 watch(isAniListLinked, async (linked) => {
   if (!linked) {
+    // Nettoyage complet quand l'utilisateur n'a pas encore relie son compte AniList.
     dashboardLists.value = []
     socialStore.reset()
     closeFollowModal()
@@ -740,6 +760,7 @@ watch(isAniListLinked, async (linked) => {
 watch(
   () => [socialStore.friendUsers.length, dashboardFriendSearch.value, viewportHeight.value],
   () => {
+    // Recherche et resize peuvent modifier le nombre de cartes qui tient dans la tuile.
     nextTick(() => {
       measureDashboardFriendLimit()
     })
@@ -748,344 +769,3 @@ watch(
 </script>
 
 <style scoped src="~/assets/css/pages/index.css"></style>
-
-<style scoped>
-.dashboard-empty-state {
-  min-height: 120px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  color: var(--text-secondary);
-  font-size: 14px;
-  border: 1px dashed var(--border);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.02);
-}
-
-.dashboard-error-state {
-  color: #fda4af;
-}
-
-.list-item-copy {
-  position: relative;
-  z-index: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.list-item-name {
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1.2;
-  color: #f7fbff;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.list-item-meta {
-  font-size: 12px;
-  color: rgba(244, 249, 254, 0.82);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.list-item-owner {
-  font-size: 11px;
-  color: rgba(244, 249, 254, 0.66);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.friend-card {
-  border: 0;
-  background: transparent;
-  padding: 0;
-  cursor: pointer;
-  transition: transform 0.18s ease;
-}
-
-.friend-card:hover {
-  transform: translateY(-2px);
-}
-
-.friend-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  border-radius: 8px;
-}
-
-.friend-avatar span {
-  color: #fff;
-  font-size: 18px;
-  font-weight: 800;
-}
-
-.follow-modal-layer {
-  position: fixed;
-  inset: 0;
-  z-index: 90;
-  background: color-mix(in srgb, var(--kz-page-navy) 28%, transparent);
-  backdrop-filter: blur(10px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.follow-modal {
-  width: min(100%, 720px);
-  max-height: min(82vh, 760px);
-  overflow: auto;
-  border-radius: 18px;
-  border: 1px solid var(--border);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--kz-card-bg) 96%, white 4%), color-mix(in srgb, var(--kz-card-bg) 100%, transparent)),
-    color-mix(in srgb, var(--kz-card-bg) 92%, transparent);
-  box-shadow: 0 24px 80px color-mix(in srgb, var(--kz-page-navy) 24%, transparent);
-  padding: 24px;
-}
-
-.follow-modal-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 18px;
-}
-
-.follow-modal-kicker {
-  margin: 0 0 6px;
-  font-size: 11px;
-  letter-spacing: 1.6px;
-  text-transform: uppercase;
-  color: var(--teal);
-}
-
-.follow-modal-head h2 {
-  margin: 0;
-  font-size: 28px;
-  line-height: 1.15;
-}
-
-.follow-modal-close {
-  width: 38px;
-  height: 38px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--kz-soft-bg);
-  color: var(--text-primary);
-  cursor: pointer;
-  font-size: 24px;
-  line-height: 1;
-}
-
-.follow-search-box {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 52px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--kz-card-input);
-  padding: 0 14px;
-}
-
-.follow-search-box input {
-  flex: 1;
-  border: 0;
-  outline: none;
-  background: transparent;
-  color: var(--text-primary);
-  font-size: 15px;
-  font-family: var(--font-main);
-}
-
-.follow-search-box input::placeholder {
-  color: var(--text-dim);
-}
-
-.follow-search-state {
-  padding: 18px 4px 6px;
-  color: var(--text-secondary);
-  font-size: 14px;
-}
-
-.follow-results {
-  display: grid;
-  gap: 12px;
-  margin-top: 18px;
-}
-
-.follow-result-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--kz-soft-bg);
-  padding: 14px;
-  cursor: pointer;
-  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
-}
-
-.follow-result-card:hover {
-  transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--kz-accent) 28%, var(--border));
-  background: var(--kz-soft-bg-hover);
-}
-
-.follow-result-card:focus-visible {
-  outline: 2px solid rgba(61, 180, 242, 0.65);
-  outline-offset: 2px;
-}
-
-.follow-result-main {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-
-.follow-result-avatar {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.follow-result-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.follow-result-avatar span {
-  color: #fff;
-  font-size: 17px;
-  font-weight: 800;
-}
-
-.follow-result-copy {
-  min-width: 0;
-}
-
-.follow-result-name {
-  color: var(--text-primary);
-  font-size: 15px;
-  font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.follow-result-subtitle {
-  color: var(--text-dim);
-  font-size: 12px;
-  margin-top: 4px;
-}
-
-.follow-result-badges {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 8px;
-}
-
-.follow-badge {
-  display: inline-flex;
-  align-items: center;
-  min-height: 22px;
-  padding: 0 8px;
-  border-radius: 999px;
-  background: var(--kz-hover-fill);
-  color: var(--text-secondary);
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.follow-badge-kizuna {
-  background: rgba(61, 180, 242, 0.16);
-  color: #87dbff;
-}
-
-.follow-badge-friend {
-  background: rgba(34, 197, 94, 0.16);
-  color: #8ef0a8;
-}
-
-.follow-result-actions {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.follow-action-btn {
-  min-height: 38px;
-  padding: 0 14px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  font-size: 12px;
-  font-weight: 700;
-  font-family: var(--font-main);
-  cursor: pointer;
-}
-
-.follow-action-secondary {
-  background: var(--kz-soft-bg);
-  color: var(--text-primary);
-}
-
-.follow-action-primary {
-  background: linear-gradient(135deg, var(--cyan), #5ac4ff);
-  color: var(--navy);
-  border-color: transparent;
-}
-
-.follow-action-btn:disabled {
-  opacity: 0.55;
-  cursor: default;
-}
-
-.follow-modal-note {
-  margin: 18px 0 0;
-  color: var(--text-dim);
-  font-size: 12px;
-  line-height: 1.6;
-}
-
-@media (max-width: 768px) {
-  .follow-modal {
-    padding: 18px;
-  }
-
-  .follow-modal-head h2 {
-    font-size: 22px;
-  }
-
-  .follow-result-card {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .follow-result-actions {
-    width: 100%;
-  }
-
-  .follow-action-btn {
-    flex: 1;
-  }
-}
-</style>

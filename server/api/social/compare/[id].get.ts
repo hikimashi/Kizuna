@@ -32,6 +32,7 @@ const requestAnilist = async (query: string, variables: Record<string, any>) => 
 
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     try {
+      // AniList peut rate-limit ou renvoyer des 5xx temporaires; ce proxy absorbe les retries courts.
       const response = await fetch('https://graphql.anilist.co', {
         method: 'POST',
         headers: {
@@ -62,6 +63,7 @@ const requestAnilist = async (query: string, variables: Record<string, any>) => 
       )
 
       if (isTemporaryUpstreamFailure && attempt < maxAttempts - 1) {
+        // Respecte Retry-After si fourni, sinon backoff exponentiel avec jitter.
         const retryAfterSeconds = Number(response.headers.get('retry-after') || '0')
         const baseDelay = retryAfterSeconds > 0
           ? retryAfterSeconds * 1000
@@ -121,6 +123,7 @@ const requestAnilist = async (query: string, variables: Record<string, any>) => 
 
 const fetchUserMediaIds = async (opts: { userId?: number; userName?: string }) => {
   const ids = new Set<number>()
+  // La comparaison ne garde que les animes en cours/termines pour eviter les plans a regarder.
   const payload = await requestAnilist(LIST_QUERY, {
     userId: opts.userId || null,
     userName: opts.userId ? null : (opts.userName || null),
@@ -189,6 +192,7 @@ export default defineEventHandler(async (event) => {
       fetchFriendIds()
     ])
 
+    // Intersection simple entre deux Set: plus lisible et moins couteux qu'un tableau filtre complet.
     let common = 0
     for (const id of selfIds) {
       if (friendIds.has(id)) common += 1

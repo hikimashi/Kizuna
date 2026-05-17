@@ -643,6 +643,7 @@ const currentPocketbaseUserId = computed(() => String(authRecord.value.id || '')
 const friendUserId = computed(() => Number(route.params.id ?? 0))
 const isOwnProfile = computed(() => currentAniListUserId.value > 0 && currentAniListUserId.value === friendUserId.value)
 const isTargetFriend = computed(() => friendUsers.value.some(user => user.id === friendUserId.value))
+// Le bouton de suivi n'apparait que pour un autre profil et avec un token AniList utilisable.
 const showFollowButton = computed(() => Boolean(token.value) && friendUserId.value > 0 && !isOwnProfile.value)
 const isFollowingFriend = computed(() => followingUsers.value.some(user => user.id === friendUserId.value))
 const isFollowBusy = computed(() => followPendingIds.value.includes(friendUserId.value))
@@ -655,6 +656,7 @@ const currentCoverVariant = computed<AnilistCoverVariant>(() =>
 )
 
 const normalizeFriendTab = (value: unknown): FriendPageTab => {
+  // La query peut arriver en string ou tableau selon le routeur; on garde un onglet par defaut stable.
   const normalized = String(Array.isArray(value) ? value[0] : (value || '')).trim().toLowerCase()
   if (normalized === 'favorites') return 'favorites'
   if (normalized === 'friends') return 'friends'
@@ -685,6 +687,7 @@ const requestAniList = async (query: string, variables: Record<string, any>, cac
     return await anilistGraphql.request<any>(query, variables, { token: requestToken, cacheTtlMs })
   }
 
+  // Certaines pages publiques echouent avec un token invalide/expire; on retente alors sans token.
   let response = await run(token.value)
   let errorMessage = extractAniListError(response)
 
@@ -698,6 +701,7 @@ const requestAniList = async (query: string, variables: Record<string, any>, cac
   )
 
   if (shouldRetryWithoutToken) {
+    // Les profils publics doivent rester lisibles meme si le token local est expire.
     response = await run('')
     errorMessage = extractAniListError(response)
     if (!errorMessage) return response
@@ -754,6 +758,7 @@ const listFilterItems = computed(() => {
 const sortedAndFilteredSections = computed(() => {
   const needle = searchTerm.value.toLowerCase()
   const sorter = (a: MediaListEntry, b: MediaListEntry) => {
+    // Un seul comparateur pilote tous les modes de tri de la liste anime.
     if (sortBy.value === 'title') return displayTitle(a).localeCompare(displayTitle(b))
     if (sortBy.value === 'score') return (b.score || 0) - (a.score || 0)
     if (sortBy.value === 'progress') return (b.progress || 0) - (a.progress || 0)
@@ -764,6 +769,7 @@ const sortedAndFilteredSections = computed(() => {
   return STATUS_ORDER.map((status) => {
     const baseItems = rawSections.value[status] ?? []
     const filtered = baseItems.filter((entry) => {
+      // La recherche reste volontairement limitee au titre pour garder un comportement previsible.
       if (!needle) return true
       return displayTitle(entry).toLowerCase().includes(needle)
     })
@@ -777,6 +783,7 @@ const sortedAndFilteredSections = computed(() => {
 
 const visibleAnimeSections = computed(() => {
   if (activeFilter.value === 'ALL') {
+    // En mode global, on masque les sections vides pour reduire le bruit visuel.
     return sortedAndFilteredSections.value.filter((section) => section.items.length > 0)
   }
   const selected = sortedAndFilteredSections.value.find((section) => section.key === activeFilter.value)
@@ -795,6 +802,7 @@ const mapListsToSections = (lists: any[]) => {
 
   for (const list of lists ?? []) {
     const key = list?.status as ListStatusKey
+    // AniList peut renvoyer d'autres listes; seules celles supportees par l'UI sont conservees.
     if (!STATUS_ORDER.includes(key)) continue
     const entries = Array.isArray(list.entries) ? list.entries : []
     nextSections[key].push(...entries)
@@ -810,6 +818,7 @@ const normalizeAnimeFavorite = (node: any): FavoriteCard => {
   const score = node?.meanScore ? `${Number(node.meanScore)}%` : 'Pas de note'
 
   return {
+    // Le modele FavoriteCard unifie navigation interne anime et liens externes personnages.
     id: Number(node?.id ?? 0),
     kind: 'anime',
     title,
@@ -837,6 +846,7 @@ const normalizeCharacterFavorite = (node: any): FavoriteCard => {
 const favoriteHref = (item: FavoriteCard) => item.kind === 'anime' ? `/anime/${item.id}` : (item.siteUrl || '#')
 
 const shouldHandleClientNavigation = (event: MouseEvent) =>
+  // Respecte les clics navigateur standards: nouvel onglet, nouvelle fenetre, etc.
   event.button === 0
   && !event.defaultPrevented
   && !(event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
@@ -853,6 +863,7 @@ const openFavoriteAnime = async (animeId: number) => {
 
 const handleFavoriteItemClick = (event: MouseEvent, item: FavoriteCard) => {
   if (item.kind === 'anime') {
+    // Les favoris anime naviguent via Nuxt pour garder l'etat SPA.
     if (!item.id) {
       event.preventDefault()
       return
@@ -915,6 +926,7 @@ const profileTabRoute = (tab: FriendPageTab) => ({
 })
 
 const resetAnimeState = () => {
+  // Etat principal de la liste anime, remis a zero a chaque changement de profil.
   isLoading.value = true
   errorMessage.value = ''
   viewMode.value = 'grid'
@@ -931,6 +943,7 @@ const resetAnimeState = () => {
 }
 
 const resetExtraState = () => {
+  // Les onglets secondaires ont chacun leur cache/loader pour le chargement a la demande.
   favoriteTab.value = 'anime'
   favoritesLoading.value = false
   favoritesLoaded.value = false
@@ -963,6 +976,7 @@ const resetProfileHeader = () => {
 const fetchFriendProfileAndList = async () => {
   const requestedUserId = friendUserId.value
 
+  // Snapshot de route utilise plus bas pour ignorer les reponses devenues obsoletes.
   if (!requestedUserId) {
     errorMessage.value = 'Profil ami invalide.'
     isLoading.value = false
@@ -973,11 +987,13 @@ const fetchFriendProfileAndList = async () => {
     isLoading.value = true
     errorMessage.value = ''
 
+    // Profil et liste anime sont independants; on les charge ensemble pour reduire le temps percu.
     const [profileRes, listRes] = await Promise.all([
       requestAniList(profileQuery, { userId: requestedUserId }, 60_000),
       requestAniList(listQuery, { userId: requestedUserId }, 60_000)
     ])
 
+    // Si l'utilisateur change de profil avant la fin, on ignore la reponse devenue obsolete.
     if (requestedUserId !== friendUserId.value) return
 
     const user = profileRes?.data?.User
@@ -1006,8 +1022,10 @@ const fetchAllFavoriteNodes = async (field: FavoriteTab) => {
   let page = 1
   let hasNextPage = true
 
+  // AniList pagine les favoris; 100 pages servent de limite de securite.
   while (hasNextPage && page <= 100) {
     const response = await requestAniList(query, { userId: requestedUserId, page, perPage: 50 }, 120_000)
+    // Si la route change pendant la pagination, on abandonne le resultat courant.
     if (requestedUserId !== friendUserId.value) return []
 
     const connection = response?.data?.User?.favourites?.[responseField]
@@ -1030,6 +1048,7 @@ const loadTargetFavorites = async (force = false) => {
   favoritesError.value = ''
 
   try {
+    // Anime et personnages favoris sont charges en parallele, puis normalises separement.
     const [animeNodes, characterNodes] = await Promise.all([
       fetchAllFavoriteNodes('anime'),
       fetchAllFavoriteNodes('characters')
@@ -1056,6 +1075,7 @@ const fetchPagedTargetUsers = async (query: string, field: 'following' | 'follow
   let page = 1
   let hasNextPage = true
 
+  // Charge toutes les pages follow/followers pour pouvoir calculer les amis mutuels.
   while (hasNextPage && page <= 100) {
     const response = await requestAniList(query, { userId: requestedUserId, page, perPage: 50 }, 60_000)
     if (requestedUserId !== friendUserId.value) return []
@@ -1079,6 +1099,7 @@ const loadTargetFriends = async (force = false) => {
   friendSocialError.value = ''
 
   try {
+    // allSettled garde une partie des donnees si followers ou following echoue seul.
     const [followingResult, followersResult] = await Promise.allSettled([
       fetchPagedTargetUsers(followingQuery, 'following'),
       fetchPagedTargetUsers(followersQuery, 'followers')
@@ -1098,6 +1119,7 @@ const loadTargetFriends = async (force = false) => {
     targetFollowersCount.value = followersRaw.length
 
     const followersIds = new Set(followersRaw.map(user => Number(user.id)))
+    // Ami mutuel = present a la fois dans les follows et les followers du profil cible.
     targetFriendUsers.value = followingRaw
       .filter(user => followersIds.has(Number(user.id)))
       .map((user) => {
@@ -1123,6 +1145,7 @@ const resolveTargetPocketbaseUserId = async () => {
   const requestedUserId = friendUserId.value
   if (!requestedUserId) return ''
 
+  // Pont AniList -> PocketBase pour retrouver les listes partagees Kizuna du profil public.
   const result = await pocketbaseStore.pb.collection('user').getList<PocketbaseUserRecord>(1, 1, {
     filter: `anilist_user_id=${requestedUserId}`,
     requestKey: null
@@ -1152,11 +1175,13 @@ const loadTargetSharedLists = async (force = false) => {
 
     targetPocketbaseUserId.value = targetUserRecordId
     if (!targetUserRecordId) {
+      // L'utilisateur existe sur AniList mais pas dans Kizuna.
       targetSharedLists.value = []
       sharedListsLoaded.value = true
       return
     }
 
+    // Le parametre viewerIsFriend ouvre les listes "amis" quand la relation AniList est mutuelle.
     const summaries = await sharedListsStore.loadProfileSummaries({
       targetUserId: targetUserRecordId,
       viewerIsFriend: isTargetFriend.value
@@ -1176,6 +1201,7 @@ const loadTargetSharedLists = async (force = false) => {
 }
 
 const ensureActiveTabData = async () => {
+  // Les onglets secondaires sont charges a la demande pour ne pas saturer AniList au premier rendu.
   if (activeTab.value === 'favorites') {
     await loadTargetFavorites()
     return
@@ -1212,6 +1238,7 @@ const toggleFollowFromBanner = async () => {
   if (!showFollowButton.value || isFollowBusy.value) return
 
   try {
+    // Le store social gere le pending id et le basculement follow/unfollow AniList.
     await socialStore.toggleFollowUser(friendUserId.value)
   } catch (error: any) {
     errorMessage.value = error?.message || 'Impossible de mettre a jour le suivi AniList.'
@@ -1229,21 +1256,25 @@ const toggleViewerFollow = async (targetId: number) => {
 }
 
 watch(activeTab, () => {
+  // Les donnees d'onglet sont chargees au moment ou l'utilisateur y accede.
   void ensureActiveTabData()
 })
 
 watch(isTargetFriend, (next, previous) => {
   if (next === previous || activeTab.value !== 'shared-lists') return
+  // Devenir ami peut rendre visibles des listes supplementaires.
   sharedListsLoaded.value = false
   void loadTargetSharedLists(true)
 })
 
 watch(friendUserId, async () => {
+  // Route dynamique: on repart d'un etat vide avant de charger le nouveau profil.
   resetAnimeState()
   resetExtraState()
   resetProfileHeader()
 
   const socialPromise = socialStore.loadSocial().catch(() => undefined)
+  // Profil et relations du viewer chargent en parallele pour calculer ensuite les droits sociaux.
   await Promise.all([
     fetchFriendProfileAndList(),
     socialPromise
@@ -1255,278 +1286,3 @@ watch(friendUserId, async () => {
 
 <style scoped src="~/assets/css/pages/animeList.css"></style>
 <style scoped src="~/assets/css/pages/socialUser.css"></style>
-
-<style scoped>
-.friend-profile-page .banner-wrap {
-  width: 100%;
-  height: clamp(230px, 28vw, 340px);
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(135deg, rgba(20, 30, 50, 0.95) 0%, rgba(10, 18, 35, 0.98) 100%);
-}
-
-.friend-profile-page .banner-image {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  image-rendering: auto;
-  image-rendering: -webkit-optimize-contrast;
-  z-index: 0;
-}
-
-.friend-profile-page .banner-wrap::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 60% 80% at 70% 50%, rgba(61, 180, 242, 0.18) 0%, transparent 70%),
-    radial-gradient(ellipse 40% 60% at 30% 60%, rgba(146, 86, 243, 0.15) 0%, transparent 60%);
-}
-
-.friend-profile-page .banner-wrap::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(255, 255, 255, 0.012) 20px, rgba(255, 255, 255, 0.012) 21px);
-}
-
-.friend-profile-page .banner-wrap.has-image::before {
-  background: linear-gradient(
-    180deg,
-    rgba(5, 10, 20, 0.12) 0%,
-    rgba(8, 12, 22, 0.34) 75%,
-    rgba(8, 12, 22, 0.5) 100%
-  );
-}
-
-.friend-profile-page .banner-wrap.has-image::after {
-  display: none;
-}
-
-.friend-profile-page .sub-tabs-bar {
-  position: relative;
-  z-index: 6;
-}
-
-.friend-profile-page .sub-tabs {
-  position: relative;
-  z-index: 1;
-}
-
-.friend-profile-page .sub-tab {
-  cursor: pointer;
-  position: relative;
-  z-index: 1;
-}
-
-.friend-profile-page .banner-content {
-  position: absolute;
-  bottom: 0;
-  left: clamp(16px, 2.4vw, 40px);
-  z-index: 2;
-  display: flex;
-  align-items: flex-end;
-  gap: 18px;
-}
-
-.friend-profile-page .banner-follow-action {
-  position: absolute;
-  right: clamp(16px, 2.4vw, 40px);
-  bottom: 22px;
-  z-index: 3;
-}
-
-.friend-profile-page .banner-follow-btn {
-  min-width: 132px;
-  height: 42px;
-  border: 1px solid rgba(61, 180, 242, 0.45);
-  border-radius: 999px;
-  background: rgba(61, 180, 242, 0.14);
-  color: #8edcff;
-  font-size: 13px;
-  font-weight: 800;
-  font-family: 'Overpass', sans-serif;
-  letter-spacing: 0.02em;
-  cursor: pointer;
-  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
-}
-
-.friend-profile-page .banner-follow-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  background: rgba(61, 180, 242, 0.24);
-}
-
-.friend-profile-page .banner-follow-btn.following {
-  background: rgba(239, 68, 68, 0.16);
-  border-color: rgba(239, 68, 68, 0.5);
-  color: #ff9d9d;
-}
-
-.friend-profile-page .banner-follow-btn.following:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.24);
-}
-
-.friend-profile-page .banner-follow-btn:disabled {
-  opacity: 0.72;
-  cursor: default;
-  transform: none;
-}
-
-.friend-profile-page .banner-meta {
-  transform: translateY(-16px);
-}
-
-.friend-profile-page .banner-avatar {
-  position: relative;
-  left: auto;
-  bottom: auto;
-  width: 132px;
-  height: 132px;
-  border-radius: 8px;
-  background: transparent;
-  border: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  flex-shrink: 0;
-  z-index: 2;
-}
-
-.friend-profile-page .banner-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: center;
-  display: block;
-}
-
-.friend-profile-page .banner-avatar svg {
-  width: 46px;
-  height: 46px;
-  stroke: rgba(255, 255, 255, 0.3);
-  stroke-width: 1.2;
-}
-
-.friend-profile-page .banner-username {
-  font-family: 'Overpass', sans-serif;
-  font-size: clamp(30px, 3.6vw, 46px);
-  font-weight: 700;
-  color: #fff;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
-  margin-bottom: 0;
-}
-
-.friend-profile-page .banner-joined {
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.45);
-  letter-spacing: 0.3px;
-  transform: translateY(-12px);
-}
-
-.compare-box {
-  margin-right: auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.compare-btn {
-  height: 30px;
-  border-radius: 5px;
-  border: 1px solid rgba(61, 180, 242, 0.35);
-  background: rgba(61, 180, 242, 0.12);
-  color: #3db4f2;
-  padding: 0 12px;
-  font-size: 12px;
-  font-weight: 700;
-  font-family: 'Overpass', sans-serif;
-  cursor: pointer;
-}
-
-.compare-btn:hover:not(:disabled) {
-  background: rgba(61, 180, 242, 0.22);
-}
-
-.compare-btn:disabled {
-  opacity: 0.72;
-  cursor: not-allowed;
-}
-
-[data-theme="winter"] .compare-btn {
-  background: rgba(61, 180, 242, 0.2);
-  border-color: rgba(61, 180, 242, 0.42);
-  color: #1f88cb;
-}
-
-@media (max-width: 700px) {
-  .friend-profile-page .banner-wrap {
-    height: 220px;
-  }
-
-  .friend-profile-page .banner-content {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-
-  .friend-profile-page .banner-follow-action {
-    right: 16px;
-    bottom: 16px;
-  }
-
-  .friend-profile-page .banner-meta {
-    transform: none;
-    padding-bottom: 12px;
-  }
-
-  .friend-profile-page .banner-avatar {
-    left: auto;
-    bottom: auto;
-    width: 102px;
-    height: 102px;
-  }
-
-  .friend-profile-page .banner-username {
-    font-size: clamp(24px, 6vw, 32px);
-    margin-bottom: 4px;
-  }
-
-  .friend-profile-page .banner-joined {
-    font-size: 13px;
-  }
-
-  .friend-profile-page .banner-follow-btn {
-    min-width: 118px;
-    height: 38px;
-    font-size: 12px;
-  }
-
-  .compare-box {
-    width: 100%;
-    flex-wrap: wrap;
-  }
-
-  .compare-btn {
-    width: 100%;
-    justify-content: center;
-  }
-}
-
-[data-theme="winter"] .friend-profile-page .banner-wrap.has-image::before {
-  background: linear-gradient(
-    180deg,
-    rgba(8, 12, 22, 0.2) 0%,
-    rgba(8, 12, 22, 0.45) 75%,
-    rgba(8, 12, 22, 0.58) 100%
-  );
-}
-
-[data-theme="winter"] .friend-profile-page .banner-username {
-  color: #ffffff;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.42);
-}
-</style>

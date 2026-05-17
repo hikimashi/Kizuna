@@ -325,6 +325,7 @@ const rawSections = ref<Record<ListStatusKey, MediaListEntry[]>>({
   PLANNING: []
 })
 
+// La page est personnelle: chaque lecture AniList depend du token et du username stockes dans PocketBase.
 const authRecord = computed(() => (unref(pocketbaseStore.authRecord) ?? {}) as Record<string, any>)
 const token = computed(() => String(authRecord.value.anilist_token ?? ''))
 const username = computed(() => String(authRecord.value.anilist_username ?? ''))
@@ -349,6 +350,7 @@ const coverImageSrcSet = (entry: MediaListEntry) =>
   getAnilistCoverSrcSet(entry.media.coverImage, currentCoverVariant.value)
 
 const normalizeDate = (entry: MediaListEntry): number => {
+  // AniList renvoie des dates floues; on fabrique une cle numerique triable YYYYMMDD.
   const y = entry.startedAt?.year ?? 0
   const m = entry.startedAt?.month ?? 0
   const d = entry.startedAt?.day ?? 0
@@ -369,6 +371,7 @@ const statusDotClass = (status: ListStatusKey) => {
 }
 
 const listFilterItems = computed(() => {
+  // Les compteurs de la sidebar sont recalcules depuis les sections brutes, avant filtre texte.
   const allCount = STATUS_ORDER.reduce((sum, key) => sum + rawSections.value[key].length, 0)
   return [
     { key: 'ALL' as FilterKey, label: 'Toutes', count: allCount },
@@ -382,6 +385,7 @@ const listFilterItems = computed(() => {
 
 const sortedAndFilteredSections = computed(() => {
   const needle = searchTerm.value.toLowerCase()
+  // Un seul sorter couvre tous les modes de tri pour conserver la meme logique par section.
   const sorter = (a: MediaListEntry, b: MediaListEntry) => {
     if (sortBy.value === 'title') return displayTitle(a).localeCompare(displayTitle(b))
     if (sortBy.value === 'score') return (b.score || 0) - (a.score || 0)
@@ -405,6 +409,7 @@ const sortedAndFilteredSections = computed(() => {
 })
 
 const visibleSections = computed(() => {
+  // En mode "Toutes", on masque les sections vides pour garder une page compacte.
   if (activeFilter.value === 'ALL') {
     return sortedAndFilteredSections.value.filter((section) => section.items.length > 0)
   }
@@ -423,15 +428,17 @@ const selectedEntryCoverSrcSet = computed(() =>
   getAnilistCoverSrcSet(selectedEntryCover.value, 'thumb')
 )
 
-const sharedListOptions = computed(() =>
-  sharedLists.value.filter(list => list.isOwner || list.isMember)
-)
+const sharedListOptions = computed(() => {
+  // Le picker n'affiche que les listes ou l'utilisateur participe deja.
+  return sharedLists.value.filter(list => list.isOwner || list.isMember)
+})
 
 const ensureSharedListsLoaded = async () => {
   if (isSharedListsLoading.value) return
   if (sharedLists.value.length > 0) return
 
   try {
+    // Chargement paresseux: les listes partagees ne sont demandees que si l'utilisateur ouvre le picker.
     isSharedListsLoading.value = true
     sharedListError.value = ''
     sharedLists.value = await sharedListsStore.loadSummaries()
@@ -444,6 +451,7 @@ const ensureSharedListsLoaded = async () => {
 }
 
 const openEntryEditor = (entry: MediaListEntry, status: ListStatusKey) => {
+  // On copie les champs editables dans des refs pour pouvoir annuler sans muter la liste affichee.
   selectedEntryId.value = entry.id
   selectedEntryMediaId.value = Number(entry.media.id || 0)
   selectedEntryTitle.value = displayTitle(entry)
@@ -490,6 +498,7 @@ const toggleSharedListPicker = async () => {
 const addSelectedAnimeToSharedList = async (listId: string) => {
   if (!selectedEntryMediaId.value || !listId || isAddingToSharedList.value) return
 
+  // Les champs vides restent acceptes cote UI mais deviennent des valeurs neutres pour PocketBase.
   const progress = editProgress.value === '' ? 0 : Number(editProgress.value)
   const score = editScore.value === '' ? 0 : Number(editScore.value)
 
@@ -517,6 +526,7 @@ const saveSelectedEntry = async () => {
   if (!selectedEntryId.value || isSavingEntry.value) return
 
   try {
+    // Apres mutation AniList, on recharge la collection pour recuperer l'etat serveur exact.
     isSavingEntry.value = true
     await anilistSync.saveEntry({
       entryId: selectedEntryId.value,
@@ -537,6 +547,7 @@ const saveSelectedEntry = async () => {
 const deleteSelectedEntry = async () => {
   if (!selectedEntryId.value || isDeletingEntry.value) return
 
+  // La suppression AniList est destructive, donc elle passe par l'alert store.
   const confirmed = await alertStore.openAlert({
     type: 'warning',
     message: `Supprimer "${selectedEntryTitle.value}" de votre liste AniList ?`
@@ -560,6 +571,7 @@ watch([editStatus, selectedEntryEpisodes], () => {
   if (editStatus.value !== 'COMPLETED') return
   const episodes = Number(selectedEntryEpisodes.value || 0) || 0
   if (!episodes) return
+  // Quand on marque termine, la progression se cale automatiquement sur le nombre total d'episodes.
   editProgress.value = String(episodes)
 })
 
@@ -614,6 +626,7 @@ const fetchAnimeList = async () => {
     isLoading.value = true
     errorMessage.value = ''
 
+    // MediaListCollection regroupe deja les entrees par statut; on les remappe dans STATUS_ORDER.
     const response = await anilistGraphql.request<any>(
       query,
       { userName: username.value },
@@ -662,217 +675,3 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped src="~/assets/css/pages/animeList.css"></style>
-<style scoped>
-.anime-editor-modal-layer {
-  position: fixed;
-  inset: 0;
-  z-index: 80;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: rgba(7, 12, 20, 0.72);
-  backdrop-filter: blur(14px);
-}
-
-.anime-editor-modal {
-  width: min(760px, 100%);
-  max-height: min(88vh, 920px);
-  overflow: auto;
-  border-radius: 28px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: linear-gradient(180deg, rgba(13, 18, 31, 0.98) 0%, rgba(8, 12, 22, 0.98) 100%);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
-  padding: 24px;
-}
-
-.anime-editor-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.anime-editor-media {
-  display: flex;
-  gap: 18px;
-  min-width: 0;
-}
-
-.anime-editor-thumb {
-  width: 92px;
-  height: 128px;
-  border-radius: 18px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.06);
-  flex: 0 0 auto;
-}
-
-.anime-editor-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.anime-editor-copy {
-  min-width: 0;
-}
-
-.anime-editor-kicker {
-  font-size: 0.75rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(173, 216, 255, 0.72);
-  margin-bottom: 8px;
-}
-
-.anime-editor-title {
-  margin: 0;
-  font-size: 1.6rem;
-  line-height: 1.15;
-  color: #f8fbff;
-}
-
-.anime-editor-subtitle {
-  margin-top: 10px;
-  color: rgba(224, 233, 245, 0.78);
-}
-
-.anime-editor-close {
-  width: 40px;
-  height: 40px;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #f8fbff;
-  cursor: pointer;
-  flex: 0 0 auto;
-}
-
-.anime-editor-fields {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  margin-top: 24px;
-}
-
-.anime-editor-field {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  color: rgba(232, 239, 248, 0.92);
-}
-
-.anime-editor-input {
-  width: 100%;
-  min-height: 46px;
-  appearance: none;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(19, 28, 44, 0.92);
-  color: #f8fbff;
-  padding: 0 14px;
-}
-
-select.anime-editor-input option {
-  background: #0f1724;
-  color: #f8fbff;
-}
-
-.anime-editor-quick-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 24px;
-}
-
-.anime-editor-inline-error {
-  margin-top: 14px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: rgba(255, 107, 107, 0.12);
-  border: 1px solid rgba(255, 107, 107, 0.24);
-  color: #ffd7d7;
-}
-
-.anime-editor-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 24px;
-}
-
-.editor-btn-blue {
-  background: linear-gradient(135deg, #3db4f2 0%, #1d8fe1 100%);
-  color: #04111d;
-}
-
-.anime-editor-list-picker {
-  margin-top: 16px;
-}
-
-.anime-editor-list-picker-state {
-  padding: 14px 16px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(232, 239, 248, 0.82);
-}
-
-.anime-editor-list-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.anime-editor-list-option {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-  padding: 14px 16px;
-  border: 1px solid rgba(61, 180, 242, 0.24);
-  border-radius: 16px;
-  background: rgba(61, 180, 242, 0.12);
-  color: #f8fbff;
-  text-align: left;
-  cursor: pointer;
-}
-
-.anime-editor-list-option-title {
-  font-weight: 700;
-}
-
-.anime-editor-list-option-meta {
-  color: rgba(224, 233, 245, 0.76);
-  font-size: 0.92rem;
-}
-
-@media (max-width: 720px) {
-  .anime-editor-modal-layer {
-    padding: 12px;
-  }
-
-  .anime-editor-modal {
-    padding: 18px;
-    border-radius: 22px;
-  }
-
-  .anime-editor-media,
-  .anime-editor-quick-actions,
-  .anime-editor-actions {
-    flex-direction: column;
-  }
-
-  .anime-editor-fields {
-    grid-template-columns: 1fr;
-  }
-
-  .anime-editor-list-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .anime-editor-close {
-    width: 36px;
-    height: 36px;
-  }
-}
-</style>

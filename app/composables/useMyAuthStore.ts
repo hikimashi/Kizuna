@@ -19,6 +19,7 @@ export const useMyAuthStore = defineStore('auth', () => {
       .map((value) => String(value || '').trim())
       .filter(Boolean);
 
+    // Normalise les messages PocketBase pour afficher des erreurs utiles en francais.
     const rawMessage = candidateMessages[0] || fallback;
     const normalizedMessage = rawMessage.toLowerCase();
 
@@ -105,6 +106,7 @@ export const useMyAuthStore = defineStore('auth', () => {
     let lastError: any = null;
 
     try {
+      // Essaie les variantes normalisees de l'email pour absorber les differences de casse/alias.
       for (const candidateEmail of authEmailCandidates(email)) {
         try {
           const authData = await pocketbaseStore.pb.collection('user').authWithPassword(candidateEmail, password);

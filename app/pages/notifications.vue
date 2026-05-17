@@ -141,6 +141,7 @@ const notificationTitle = (item: AniListNotificationItem) => {
   const actorName = item.actor?.name || 'utilisateur AniList'
   const mediaTitle = item.media?.title || 'ce titre'
 
+  // Les types AniList sont techniques; on les transforme en phrases lisibles cote UI.
   switch (item.type) {
     case 'AIRING':
       return `L'episode ${item.episode || '?'} de ${mediaTitle} vient d'etre diffuse.`
@@ -182,6 +183,7 @@ const notificationTitle = (item: AniListNotificationItem) => {
 }
 
 const notificationDetail = (item: AniListNotificationItem) => {
+  // Detail secondaire: raison AniList, titre de thread ou acteur selon le type disponible.
   if (item.type === 'MEDIA_MERGE' && item.deletedMediaTitles.length) {
     return `Fusionne depuis : ${item.deletedMediaTitles.join(', ')}`
   }
@@ -221,6 +223,7 @@ const timeAgo = (timestamp: number) => {
 }
 
 const openNotification = async (item: AniListNotificationItem) => {
+  // Priorite media > thread > acteur, car c'est generalement la cible la plus utile.
   if (item.media?.id) {
     await navigateTo(`/anime/${item.media.id}`)
     return
@@ -237,6 +240,7 @@ const openNotification = async (item: AniListNotificationItem) => {
 }
 
 const refreshNotifications = async () => {
+  // Rafraichissement manuel sans marquer comme lu.
   await notificationStore.loadNotifications({
     page: 1,
     perPage: 20,
@@ -247,6 +251,7 @@ const refreshNotifications = async () => {
 
 onMounted(async () => {
   if (!isAniListLinked.value) return
+  // Premiere ouverture de la page: AniList remet le compteur non lu a zero.
   await notificationStore.loadNotifications({
     page: 1,
     perPage: 20,
@@ -256,392 +261,4 @@ onMounted(async () => {
 })
 </script>
 
-<style scoped>
-.notifications-page {
-  min-height: calc(100vh - 64px);
-  background: var(--kz-page-bg);
-  color: var(--kz-text-primary);
-}
-
-.page {
-  display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
-  gap: 24px;
-  width: min(1320px, calc(100% - 32px));
-  margin: 0 auto;
-  padding: 24px 0 40px;
-}
-
-.sidebar {
-  position: sticky;
-  top: 18px;
-  align-self: start;
-  display: grid;
-  gap: 14px;
-  padding: 18px;
-  border: 1px solid var(--kz-border);
-  border-radius: 20px;
-  background: var(--kz-card-bg);
-}
-
-.sidebar-heading {
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-}
-
-.sidebar-copy {
-  margin: 0;
-  color: var(--kz-text-secondary);
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.sidebar-card {
-  display: grid;
-  gap: 4px;
-  padding: 14px;
-  border: 1px solid var(--kz-border);
-  border-radius: 16px;
-  background: var(--kz-soft-bg);
-}
-
-.sidebar-card-label {
-  color: var(--kz-text-secondary);
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-}
-
-.sidebar-card-value {
-  font-size: 28px;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.sidebar-action,
-.sidebar-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  border: 1px solid var(--kz-border);
-  border-radius: 14px;
-  background: var(--kz-soft-bg);
-  color: var(--kz-text-primary);
-  font-size: 14px;
-  font-weight: 700;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
-}
-
-.sidebar-action:hover,
-.sidebar-link:hover {
-  background: var(--kz-soft-bg-hover);
-  border-color: var(--kz-hover-border);
-  transform: translateY(-1px);
-}
-
-.sidebar-action:disabled {
-  cursor: default;
-  opacity: 0.7;
-  transform: none;
-}
-
-.main {
-  display: grid;
-  gap: 18px;
-}
-
-.top-bar {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 18px;
-  padding: 6px 4px 2px;
-}
-
-.page-title {
-  font-size: 34px;
-  font-weight: 800;
-  letter-spacing: -0.04em;
-}
-
-.page-subtitle {
-  margin: 8px 0 0;
-  color: var(--kz-text-secondary);
-  font-size: 14px;
-}
-
-.notification-list {
-  display: grid;
-  gap: 14px;
-}
-
-.notification-card,
-.state-card {
-  border: 1px solid var(--kz-border);
-  border-radius: 18px;
-  background: var(--kz-card-bg);
-}
-
-.notification-card {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 16px;
-  width: 100%;
-  padding: 14px;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
-}
-
-.notification-card:hover {
-  border-color: color-mix(in srgb, var(--kz-accent) 28%, var(--kz-border));
-  background: color-mix(in srgb, var(--kz-card-bg) 90%, var(--kz-soft-bg-hover));
-  transform: translateY(-1px);
-}
-
-.notification-card.is-skeleton {
-  cursor: default;
-}
-
-.notification-media {
-  width: 62px;
-  height: 82px;
-  border-radius: 14px;
-  overflow: hidden;
-  background: var(--kz-hover-fill);
-  flex-shrink: 0;
-}
-
-.notification-media.is-avatar {
-  width: 62px;
-  height: 62px;
-  border-radius: 18px;
-}
-
-.notification-media img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.notification-fallback {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  color: var(--kz-text-primary);
-  font-size: 16px;
-  font-weight: 800;
-}
-
-.notification-copy {
-  min-width: 0;
-}
-
-.notification-meta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-
-.notification-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 24px;
-  padding: 0 8px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--kz-accent) 16%, transparent);
-  color: var(--kz-accent);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.notification-time {
-  color: var(--kz-text-secondary);
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.notification-title {
-  color: var(--kz-text-primary);
-  font-size: 16px;
-  font-weight: 800;
-  line-height: 1.4;
-}
-
-.notification-detail {
-  margin-top: 6px;
-  color: var(--kz-text-secondary);
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.notification-arrow {
-  color: var(--kz-text-secondary);
-  font-size: 26px;
-  line-height: 1;
-}
-
-.state-card {
-  padding: 22px;
-}
-
-.error-card {
-  color: #f87171;
-}
-
-.empty-card {
-  text-align: center;
-}
-
-.empty-title {
-  font-size: 22px;
-  font-weight: 800;
-}
-
-.empty-copy {
-  margin: 8px 0 0;
-  color: var(--kz-text-secondary);
-  font-size: 14px;
-}
-
-.load-more {
-  min-height: 48px;
-  border: 1px solid var(--kz-border);
-  border-radius: 16px;
-  background: var(--kz-card-bg);
-  color: var(--kz-text-primary);
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.18s ease, border-color 0.18s ease;
-}
-
-.load-more:hover {
-  background: var(--kz-soft-bg-hover);
-  border-color: color-mix(in srgb, var(--kz-accent) 24%, var(--kz-border));
-}
-
-.load-more:disabled {
-  opacity: 0.7;
-  cursor: default;
-}
-
-.skeleton-block,
-.skeleton-line {
-  background: linear-gradient(90deg, var(--kz-soft-bg) 0%, color-mix(in srgb, var(--kz-card-bg) 70%, white 30%) 50%, var(--kz-soft-bg) 100%);
-  background-size: 200% 100%;
-  animation: notifications-shimmer 1.4s ease-in-out infinite;
-}
-
-.skeleton-line {
-  height: 14px;
-  border-radius: 999px;
-}
-
-.skeleton-line.short {
-  width: 58%;
-  margin-top: 10px;
-}
-
-.skeleton-line.tiny {
-  width: 34%;
-  margin-top: 10px;
-}
-
-@keyframes notifications-shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-@media (max-width: 980px) {
-  .page {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebar {
-    position: static;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    align-items: stretch;
-  }
-
-  .sidebar-heading,
-  .sidebar-copy {
-    grid-column: 1 / -1;
-  }
-
-  .sidebar-action,
-  .sidebar-link {
-    grid-column: span 2;
-  }
-}
-
-@media (max-width: 700px) {
-  .page {
-    width: min(100%, calc(100% - 20px));
-    padding-top: 14px;
-  }
-
-  .sidebar {
-    grid-template-columns: 1fr 1fr;
-    padding: 14px;
-  }
-
-  .top-bar {
-    padding: 0;
-  }
-
-  .page-title {
-    font-size: 28px;
-  }
-
-  .notification-card {
-    grid-template-columns: auto minmax(0, 1fr);
-  }
-
-  .notification-arrow {
-    display: none;
-  }
-}
-
-@media (max-width: 520px) {
-  .sidebar {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebar-action,
-  .sidebar-link {
-    grid-column: auto;
-  }
-
-  .notification-card {
-    gap: 12px;
-    padding: 12px;
-  }
-
-  .notification-media {
-    width: 54px;
-    height: 72px;
-  }
-
-  .notification-media.is-avatar {
-    width: 54px;
-    height: 54px;
-  }
-}
-</style>
+<style scoped src="~/assets/css/pages/notifications.css"></style>

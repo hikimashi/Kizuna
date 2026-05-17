@@ -87,6 +87,7 @@ export function useInfiniteScroll<T>(
   const sentinelIsVisible = () => {
     if (!sentinelRef.value) return false
 
+    // Check manuel utilise apres chaque chargement si la page ne remplit pas encore le viewport.
     const rect = sentinelRef.value.getBoundingClientRect()
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight
     const triggerOffset = Math.max(threshold, 0)
@@ -99,6 +100,7 @@ export function useInfiniteScroll<T>(
       clearTimeout(checkViewportTimer)
     }
 
+    // Decale le check au prochain tour pour laisser Vue poser les nouveaux items dans le DOM.
     checkViewportTimer = setTimeout(async () => {
       checkViewportTimer = null
 
@@ -115,9 +117,11 @@ export function useInfiniteScroll<T>(
     loading.value = true
 
     try {
+      // loadFn decide quoi charger; le composable ne connait que page/perPage.
       const newItems = await loadFn(currentPage.value, perPage)
 
       if (newItems.length < perPage) {
+        // Moins d'elements que perPage indique normalement la derniere page.
         hasMore.value = false
       }
 
@@ -164,6 +168,7 @@ export function useInfiniteScroll<T>(
     if (!sentinelRef.value) return
 
     if (observer) {
+      // Un seul observer actif a la fois, surtout apres reset ou changement de filtres.
       observer.disconnect()
     }
 
@@ -177,6 +182,7 @@ export function useInfiniteScroll<T>(
       },
       {
         root: null,
+        // rootMargin permet d'anticiper le chargement avant que la sentinelle soit visible.
         rootMargin: `${threshold}px`,
         threshold: 0
       }

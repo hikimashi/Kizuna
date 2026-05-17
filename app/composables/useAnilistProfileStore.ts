@@ -85,6 +85,7 @@ async function fetchAllFavoriteAnime(
   const perPage = 50
   let hasNextPage = true
 
+  // AniList pagine les favoris; le garde-fou a 100 pages evite une boucle si pageInfo est incoherent.
   while (hasNextPage && page <= 100) {
     const response = await graphqlRequest<any>(
       favoriteAnimePageQuery,
@@ -113,6 +114,7 @@ async function fetchAllFavoriteCharacters(
   const perPage = 50
   let hasNextPage = true
 
+  // Meme strategie que les animes favoris pour garder les deux listes synchrones dans le store.
   while (hasNextPage && page <= 100) {
     const response = await graphqlRequest<any>(
       favoriteCharacterPageQuery,
@@ -172,6 +174,7 @@ export const useAnilistProfileStore = defineStore('anilistProfile', () => {
 
     isLoading.value = true
     try {
+      // Stats et favoris sont independants; allSettled permet de garder les favoris si les stats echouent.
       const statsPromise = anilistGraphql.request<any>(
         statsQuery,
         { userId: userId.value || null, userName: username.value || null },
@@ -190,6 +193,7 @@ export const useAnilistProfileStore = defineStore('anilistProfile', () => {
 
       const animeStats = statsRes?.data?.User?.statistics?.anime
       if (animeStats) {
+        // minutesWatched est converti en jours pour l'affichage profil.
         totalAnimes.value = animeStats.count ?? 0
         daysWatched.value = ((animeStats.minutesWatched ?? 0) / 1440).toFixed(1)
         meanScore.value = Number(animeStats.meanScore ?? 0).toFixed(1)
@@ -215,6 +219,7 @@ export const useAnilistProfileStore = defineStore('anilistProfile', () => {
   const fetchActivityPage = async (page: number, perPage: number) => {
     if (!userId.value) return []
 
+    // Activites chargees a part pour permettre l'infinite scroll de la page profil.
     const response = await anilistGraphql.request<any>(
       activityQuery,
       { userId: userId.value, page, perPage },

@@ -18,14 +18,6 @@ node_modules/
 !.env.example
 !.env.test
 
-# Ai generated files
-QWEN.md
-GEMINI.md
-AGENTS.md
-IMPLEMENTATION_DIFFICULTES_ET_SOLUTIONS.md
-RAPPORT_TECHNIQUE_KIZUNA_PAP.md
-MANUEL_INSTALLATION_KIZUNA.md
-
 # Logs
 *.log
 npm-debug.log*
@@ -55,5 +47,3 @@ docker-compose.override.yaml
 # Docs
 docs/pocketbase-setup.md
 
-# TXT
-DEPENDANCES_INSTALLEES.txt

@@ -8,6 +8,12 @@ export const useMyAuthStore = defineStore('auth', () => {
   const userStore = useUserStore();
   const unverifiedEmailMessage = 'Veuillez verifier votre adresse e-mail avant de vous connecter.';
   const invalidLoginMessage = 'Identifiants invalides. Verifiez votre email et votre mot de passe.';
+  const accountCreationMessage = 'La création du compte a échoué. Veuillez réessayer.';
+  const googleLoginMessage = 'La connexion Google a échoué. Veuillez réessayer.';
+  const githubLoginMessage = 'La connexion GitHub a échoué. Veuillez réessayer.';
+  const emailChangeMessage = "La demande de changement d'adresse e-mail a échoué. Veuillez réessayer.";
+  const passwordResetMessage = 'La demande de réinitialisation du mot de passe a échoué. Veuillez réessayer.';
+  const accountDeletionMessage = 'La suppression du compte a échoué. Veuillez réessayer.';
 
   const getAuthErrorMessage = (error: any, fallback: string) => {
     const candidateMessages = [
@@ -43,6 +49,77 @@ export const useMyAuthStore = defineStore('auth', () => {
     }
 
     return rawMessage || fallback;
+  };
+
+  const getUserFacingErrorMessage = (error: any, fallback: string) => {
+    const message = String(error?.response?.data?.message || error?.response?.message || error?.data?.message || error?.message || '').trim();
+    const normalized = message.toLowerCase();
+
+    if (
+      normalized.includes('verify') ||
+      normalized.includes('verif') ||
+      normalized.includes('unverified')
+    ) {
+      return unverifiedEmailMessage;
+    }
+
+    if (
+      normalized.includes('auth') ||
+      normalized.includes('credential') ||
+      normalized.includes('invalid') ||
+      normalized.includes('password') ||
+      normalized.includes('not found') ||
+      normalized.includes('wrong')
+    ) {
+      return invalidLoginMessage;
+    }
+
+    if (
+      normalized.includes('google login failed') ||
+      normalized.includes('google auth failed') ||
+      normalized.includes('oauth2') && normalized.includes('google')
+    ) {
+      return googleLoginMessage;
+    }
+
+    if (
+      normalized.includes('github login failed') ||
+      normalized.includes('github auth failed') ||
+      normalized.includes('oauth2') && normalized.includes('github')
+    ) {
+      return githubLoginMessage;
+    }
+
+    if (
+      normalized.includes('account creation failed') ||
+      normalized.includes('failed to create') ||
+      normalized.includes('create failed')
+    ) {
+      return accountCreationMessage;
+    }
+
+    if (
+      normalized.includes('email change failed') ||
+      normalized.includes('failed to change email')
+    ) {
+      return emailChangeMessage;
+    }
+
+    if (
+      normalized.includes('password reset request failed') ||
+      normalized.includes('failed to request password reset')
+    ) {
+      return passwordResetMessage;
+    }
+
+    if (
+      normalized.includes('account deletion failed') ||
+      normalized.includes('failed to delete account')
+    ) {
+      return accountDeletionMessage;
+    }
+
+    return message || fallback;
   };
 
   // Convertit les données PocketBase vers le format UserType utilise par l'app.
@@ -96,8 +173,7 @@ export const useMyAuthStore = defineStore('auth', () => {
         verificationSent: true
       };
     } catch (error: any) {
-      const errorMsg = error.response?.data?.message || error.message || 'Account creation failed. Please try again.';
-      throw new Error(errorMsg);
+      throw new Error(getUserFacingErrorMessage(error, accountCreationMessage));
     }
   };
 
@@ -146,7 +222,7 @@ export const useMyAuthStore = defineStore('auth', () => {
       userStore.saveUserData(mapAuthDataToUser(authData));
       return authData;
     } catch (error: any) {
-      throw new Error(error?.message || 'Google login failed. Please try again.');
+      throw new Error(getUserFacingErrorMessage(error, googleLoginMessage));
     }
   };
 
@@ -157,7 +233,7 @@ export const useMyAuthStore = defineStore('auth', () => {
       userStore.saveUserData(mapAuthDataToUser(authData));
       return authData;
     } catch (error: any) {
-      throw new Error(error?.message || 'GitHub login failed. Please try again.');
+      throw new Error(getUserFacingErrorMessage(error, githubLoginMessage));
     }
   };
 
@@ -208,7 +284,7 @@ export const useMyAuthStore = defineStore('auth', () => {
     try {
       await pocketbaseStore.pb.collection('user').requestEmailChange(normalizeAuthEmail(newEmail));
     } catch (error: any) {
-      throw new Error(error?.message || 'Email change failed. Please try again.');
+      throw new Error(getUserFacingErrorMessage(error, emailChangeMessage));
     }
   };
 
@@ -216,7 +292,7 @@ export const useMyAuthStore = defineStore('auth', () => {
     try {
       await pocketbaseStore.pb.collection('user').requestPasswordReset(email);
     } catch (error: any) {
-      throw new Error(error?.message || 'Password reset request failed. Please try again.');
+      throw new Error(getUserFacingErrorMessage(error, passwordResetMessage));
     }
   };
 
@@ -224,12 +300,12 @@ export const useMyAuthStore = defineStore('auth', () => {
     try {
       const userId = userStore.userData?.id;
       if (!userId) {
-        throw new Error('No authenticated user found.');
+        throw new Error('Aucun utilisateur connecte n\'a été trouvé.');
       }
 
       await pocketbaseStore.pb.collection('user').delete(userId);
     } catch (error: any) {
-      throw new Error(error?.message || 'Account deletion failed. Please try again.');
+      throw new Error(getUserFacingErrorMessage(error, accountDeletionMessage));
     }
   };
 

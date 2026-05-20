@@ -37,7 +37,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
   const loginWithAniListWithWarning = async () => {
     await alertStore.openAlert({
       type: 'warning',
-      message: 'Si vous etes déjà connecte a AniList.co, la connexion sera automatique. Deconnectez-vous d\'AniList pour lier un autre compte.',
+      message: 'Si vous êtes déjà connecte a AniList.co, la connexion sera automatique. Deconnectez-vous d\'AniList pour lier un autre compte.',
       showDeny: false
     });
 

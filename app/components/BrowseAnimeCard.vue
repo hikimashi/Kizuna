@@ -32,7 +32,7 @@ const formatScore = (score?: number | null) => {
 }
 
 const episodesLabel = (episodes?: number | null) => {
-  if (!episodes) return 'Episodes inconnus'
+  if (!episodes) return 'Épisodes inconnus'
   return `${episodes} eps`
 }
 

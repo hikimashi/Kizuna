@@ -351,7 +351,7 @@ const normalizeNotification = (node: RawNotificationNode): AniListNotificationIt
   const id = Number(node?.id || 0)
   if (!Number.isFinite(id) || id <= 0) return null
 
-  // Toutes les notifications AniList ne possedent pas un acteur, un media ou un thread.
+  // Toutes les notifications AniList ne possèdent pas un acteur, un média ou un thread.
   const actor = node?.user?.id
     ? {
         id: Number(node.user.id),
@@ -376,7 +376,7 @@ const normalizeNotification = (node: RawNotificationNode): AniListNotificationIt
     : undefined
 
   return {
-    // La cle combine type et id pour eviter les collisions entre fragments de notification.
+    // La clé combine type et id pour éviter les collisions entre fragments de notification.
     key: `${String(node?.type || node?.__typename || 'notification').toLowerCase()}:${id}`,
     id,
     type: String(node?.type || node?.__typename || 'UNKNOWN'),
@@ -453,7 +453,7 @@ export const useAnilistNotificationsStore = defineStore('anilistNotifications', 
       return
     }
 
-    // Si la liste complete est deja chargee pour ce compte, le compteur courant suffit.
+    // Si la liste complète est déjà chargée pour ce compte, le compteur courant suffit.
     if (!force && loadedForKey.value === userKey.value && items.value.length) return
     if (isLoadingUnread.value) return
 
@@ -486,7 +486,7 @@ export const useAnilistNotificationsStore = defineStore('anilistNotifications', 
     const resetNotificationCount = Boolean(options.resetNotificationCount)
     const isFirstPage = page === 1
 
-    // Evite de recharger la premiere page si elle correspond deja au compte courant.
+    // Évite de recharger la première page si elle correspond déjà au compte courant.
     if (isLoading.value) return
     if (!options.force && isFirstPage && loadedForKey.value === userKey.value && items.value.length && !resetNotificationCount) {
       return
@@ -517,7 +517,7 @@ export const useAnilistNotificationsStore = defineStore('anilistNotifications', 
       if (isFirstPage) {
         items.value = normalizedItems
       } else {
-        // Les pages peuvent se recouvrir si AniList change entre deux appels; la Map deduplique.
+        // Les pages peuvent se recouvrir si AniList change entre deux appels; la Map déduplique.
         const merged = new Map<string, AniListNotificationItem>()
         for (const item of [...items.value, ...normalizedItems]) {
           merged.set(item.key, item)

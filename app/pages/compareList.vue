@@ -48,7 +48,7 @@
         <div class="vs-divider"></div>
 
         <div class="hero-center">
-          <div class="compat-label">Compatibilite</div>
+          <div class="compat-label">Compatibilité</div>
           <div class="compat-score">{{ compatibilityPercent }}<span>%</span></div>
           <div class="compat-bar"><div class="compat-fill" :style="{ width: compatBarWidth }"></div></div>
           <div class="compat-desc">{{ compatibilityLabel }}</div>
@@ -83,12 +83,12 @@
         <div class="qs-card shadow-sm">
           <div class="qs-label">Seulement vous</div>
           <div class="qs-value">{{ onlySelfCountLabel }}</div>
-          <div class="qs-sub">anime a recommander</div>
+          <div class="qs-sub">anime à recommander</div>
         </div>
         <div class="qs-card shadow-sm">
           <div class="qs-label">Seulement l'autre</div>
           <div class="qs-value">{{ onlyFriendCountLabel }}</div>
-          <div class="qs-sub">anime a decouvrir</div>
+          <div class="qs-sub">anime à découvrir</div>
         </div>
       </div>
       <div v-if="compareError" class="placeholder-panel" style="margin-bottom:14px;">
@@ -159,7 +159,7 @@
       </div>
 
       <div v-else-if="activeTab === 'only'">
-        <div class="section-title">Animes vus seulement par vous - a recommander</div>
+        <div class="section-title">Animes vus seulement par vous - à recommander</div>
         <div v-if="onlySelfEntries.length === 0" class="placeholder-panel">Aucun anime exclusif.</div>
         <div v-else class="only-list">
           <div v-for="item in onlySelfEntries" :key="item.mediaId" class="only-item">
@@ -181,7 +181,7 @@
       </div>
 
       <div v-else-if="activeTab === 'discover'">
-        <div class="section-title">Animes vus seulement par l'autre - a decouvrir</div>
+        <div class="section-title">Animes vus seulement par l'autre - à découvrir</div>
         <div v-if="onlyFriendEntries.length === 0" class="placeholder-panel">Aucun anime exclusif.</div>
         <div v-else class="only-list">
           <div v-for="item in onlyFriendEntries" :key="item.mediaId" class="only-item">
@@ -302,7 +302,7 @@ const selfMap = computed(() => {
 })
 
 const friendMap = computed(() => {
-  // Meme index cote ami: les computed suivants peuvent comparer sans boucles imbriquees.
+  // Même index côté ami: les computed suivants peuvent comparer sans boucles imbriquées.
   const map = new Map<number, CompareEntry>()
   for (const entry of friendEntries.value) map.set(entry.mediaId, entry)
   return map
@@ -385,7 +385,7 @@ const onlyFriendEntries = computed(() =>
 
 const scoreDiffRows = computed(() =>
   sharedEntries.value
-    // Les entrees sans note sont ignorees pour ne pas biaiser l'ecart moyen.
+    // Les entrées sans note sont ignorées pour ne pas biaiser l'écart moyen.
     .filter((row) => row.selfScore > 0 && row.friendScore > 0)
     .map((row) => ({ ...row, diff: Number((row.selfScore - row.friendScore).toFixed(1)) }))
     .sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff))
@@ -436,7 +436,7 @@ const avgScoreDiffSub = computed(() => {
   if (avgScoreDiffValue.value == null) return '--'
   if (avgScoreDiffValue.value > 0) return 'vous notez plus haut'
   if (avgScoreDiffValue.value < 0) return "l'autre note plus haut"
-  return 'meme moyenne'
+  return 'même moyenne'
 })
 
 const avgScoreDiffColor = computed(() => {
@@ -500,7 +500,7 @@ const fetchSelfProfile = async () => {
   `
 
   try {
-    // Prefere Viewer quand un token existe, sinon bascule sur une requete User explicite.
+    // Préfère Viewer quand un token existe, sinon bascule sur une requête User explicite.
     let response: any = null
     if (token.value) {
       response = await anilistGraphql.request<any>(
@@ -523,7 +523,7 @@ const fetchSelfProfile = async () => {
     const rawMeanScore = Number(stats.meanScore ?? NaN)
     selfMeanScore.value = Number.isFinite(rawMeanScore) ? rawMeanScore.toFixed(1) : '--'
   } catch {
-    // Garde les valeurs d'attente si la recuperation du profil echoue.
+    // Garde les valeurs d'attente si la récupération du profil échoue.
   }
 }
 
@@ -561,7 +561,7 @@ const fetchFriendProfile = async () => {
     const rawMeanScore = Number(animeStats?.meanScore ?? NaN)
     friendMeanScore.value = Number.isFinite(rawMeanScore) ? rawMeanScore.toFixed(1) : '--'
   } catch {
-    // Garde les valeurs d'attente si la recuperation du profil echoue.
+    // Garde les valeurs d'attente si la récupération du profil échoue.
   }
 }
 
@@ -593,7 +593,7 @@ const fetchCompareEntries = async () => {
   const mapEntries = (response: any): CompareEntry[] => {
     const lists = Array.isArray(response?.data?.MediaListCollection?.lists) ? response.data.MediaListCollection.lists : []
     const result = new Map<number, CompareEntry>()
-    // Si AniList renvoie le meme media dans plusieurs listes, on garde l'entree la plus recente.
+    // Si AniList renvoie le même média dans plusieurs listes, on garde l'entrée la plus récente.
     for (const list of lists) {
       const status = String(list?.status || '')
       if (status !== 'CURRENT' && status !== 'COMPLETED') continue
@@ -626,7 +626,7 @@ const fetchCompareEntries = async () => {
     isEntriesLoading.value = true
     hasEntriesLoaded.value = false
     compareError.value = ''
-    // Les deux listes peuvent etre chargees en parallele: elles ne dependent pas l'une de l'autre.
+    // Les deux listes peuvent être chargées en parallèle: elles ne dépendent pas l'une de l'autre.
     const [selfRes, friendRes] = await Promise.all([
       anilistGraphql.request<any>(query, { userId: selfUserId }, { token: token.value, cacheTtlMs: 60_000 }),
       anilistGraphql.request<any>(query, { userId: friendUserId.value }, { token: token.value, cacheTtlMs: 60_000 })
@@ -635,7 +635,7 @@ const fetchCompareEntries = async () => {
     friendEntries.value = mapEntries(friendRes)
   } catch (error) {
     console.error('[compareList] entries failed', error)
-    compareError.value = error instanceof Error ? error.message : 'La comparaison a echoue.'
+    compareError.value = error instanceof Error ? error.message : 'La comparaison a échoué.'
   } finally {
     isEntriesLoading.value = false
     hasEntriesLoaded.value = true

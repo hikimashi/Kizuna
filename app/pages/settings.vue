@@ -38,7 +38,7 @@
           <section id="section-anilist" ref="anilistSectionRef" class="settings-section">
             <div class="section-header">
               <div class="section-title">AniList</div>
-              <div class="section-subtitle">Parametres du profil AniList lie</div>
+              <div class="section-subtitle">Paramètres du profil AniList lié</div>
             </div>
             <section class="card shadow-xl backdrop-blur-sm">
               <div class="card-header"><span class="card-title">Informations du profil</span></div>
@@ -54,7 +54,7 @@
                   </div>
                 </div>
                 <div class="readonly-note">
-                  <span>L'avatar et la banniere sont en lecture seule. Modifiez-les sur AniList puis actualisez.</span>
+                  <span>L'avatar et la bannière sont en lecture seule. Modifiez-les sur AniList puis actualisez.</span>
                   <a class="anilist-settings-link" href="https://anilist.co/settings" target="_blank" rel="noopener noreferrer">
                     <svg viewBox="0 0 100 100" width="14" height="14" aria-hidden="true">
                       <circle cx="50" cy="50" r="50" fill="currentColor" />
@@ -62,7 +62,7 @@
                       <rect x="45" y="20" width="16" height="60" fill="#0B1622" />
                       <rect x="64" y="35" width="16" height="45" fill="#0B1622" />
                     </svg>
-                    Parametres AniList
+                    Paramètres AniList
                   </a>
                 </div>
                 <div class="profile-hero">
@@ -74,10 +74,10 @@
                     </div>
                   </div>
                   <div class="profile-banner-col">
-                    <div class="profile-banner-label">Banniere</div>
+                    <div class="profile-banner-label">Bannière</div>
                     <div class="profile-banner-img">
-                      <img v-if="bannerSrc" :src="bannerSrc" alt="Banniere AniList" />
-                      <div v-else class="profile-banner-placeholder">Aucune banniere definie sur AniList</div>
+                      <img v-if="bannerSrc" :src="bannerSrc" alt="Bannière AniList" />
+                      <div v-else class="profile-banner-placeholder">Aucune bannière définie sur AniList</div>
                     </div>
                   </div>
                 </div>
@@ -88,7 +88,7 @@
                 {{ isRefreshing ? 'Actualisation...' : 'Actualiser depuis AniList' }}
               </button>
               <button class="btn-danger inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60" :disabled="isUnlinking" @click="unlinkAniList">
-                {{ isUnlinking ? 'Deliaison...' : 'Delier AniList' }}
+                {{ isUnlinking ? 'Déliage...' : 'Délier AniList' }}
               </button>
             </div>
           </section>
@@ -99,7 +99,7 @@
               <div class="section-subtitle">Informations de votre compte</div>
             </div>
             <section class="card shadow-xl backdrop-blur-sm">
-              <div class="card-header"><span class="card-title">Details du profil</span></div>
+              <div class="card-header"><span class="card-title">Détails du profil</span></div>
               <div class="card-body">
                 <div class="fields-grid">
                   <div class="field"><span class="field-label">Email</span><div class="field-value">{{ emailDisplay }}</div></div>
@@ -114,8 +114,8 @@
 
           <section id="section-security" ref="securitySectionRef" class="settings-section">
             <div class="section-header">
-              <div class="section-title">Securite</div>
-              <div class="section-subtitle">Mot de passe et securite du compte</div>
+              <div class="section-title">Sécurité</div>
+              <div class="section-subtitle">Mot de passe et sécurité du compte</div>
             </div>
 
             <section class="card shadow-xl backdrop-blur-sm">
@@ -159,7 +159,7 @@
                   <p v-if="passwordChangeError" class="security-error">{{ passwordChangeError }}</p>
                   <div class="action-buttons">
                     <button class="btn-edit inline-flex items-center justify-center rounded-md px-3.5 py-2 text-xs font-semibold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60" :disabled="isUpdatingPassword" type="button" @click="updatePasswordDirectly">
-                      {{ isUpdatingPassword ? 'Mise a jour...' : 'Mettre a jour le mot de passe' }}
+                      {{ isUpdatingPassword ? 'Mise à jour...' : 'Mettre à jour le mot de passe' }}
                     </button>
                   </div>
                 </div>
@@ -261,7 +261,7 @@ const anilistTokenExpiryDisplay = computed(() => {
   return 'Indisponible (non stocke)'
 })
 const passwordChangeError = computed(() => {
-  // Validation reactive: le bouton peut rester simple et afficher l'erreur courante.
+  // Validation réactive: le bouton peut rester simple et afficher l'erreur courante.
   if (!currentPassword.value && !newPassword.value && !confirmPassword.value) return ''
   if (!currentPassword.value || !newPassword.value || !confirmPassword.value) return 'Tous les champs sont obligatoires.'
   if (newPassword.value.length < 8) return 'Le nouveau mot de passe doit contenir au moins 8 caracteres.'
@@ -325,7 +325,7 @@ function setupScrollSpy() {
 
   sectionObserver = new IntersectionObserver(
     (entries) => {
-      // La section la plus visible devient l'entree active dans la navigation laterale.
+      // La section la plus visible devient l'entrée active dans la navigation latérale.
       const visible = entries
         .filter(entry => entry.isIntersecting)
         .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
@@ -336,7 +336,7 @@ function setupScrollSpy() {
     },
     {
       root: null,
-      // Fenetre centrale virtuelle: evite de changer d'onglet pour une section a peine visible.
+      // Fenêtre centrale virtuelle: évite de changer d'onglet pour une section à peine visible.
       rootMargin: '-30% 0px -55% 0px',
       threshold: [0.1, 0.25, 0.5]
     }
@@ -348,7 +348,7 @@ function setupScrollSpy() {
 }
 
 const previewTheme = (theme: 'forest' | 'winter') => {
-  // Apercu immediat; la persistance PocketBase attend le bouton enregistrer.
+  // Aperçu immédiat; la persistance PocketBase attend le bouton enregistrer.
   selectedTheme.value = theme
   themeStore.setThemeByName(theme)
 }
@@ -365,7 +365,7 @@ const refreshAnilistData = async () => {
 
 const unlinkAniList = async () => {
   if (isUnlinking.value) return
-  // Delier AniList ne supprime pas le compte local PocketBase.
+  // Délier AniList ne supprime pas le compte local PocketBase.
   const ok = await alertStore.openAlert({ type: 'warning', message: 'Delier le compte AniList de Kizuna ?' })
   if (!ok) return
 
@@ -386,7 +386,7 @@ const unlinkAniList = async () => {
     })
 
     await myAuthStore.authRefresh()
-    toastStore.openToast({ type: 'success', message: 'AniList a ete delie.' })
+    toastStore.openToast({ type: 'success', message: 'AniList a été délié.' })
     await navigateTo('/')
   } catch (error: any) {
     toastStore.openToast({ type: 'error', message: error?.message || 'Impossible de delier AniList.' })
@@ -402,7 +402,7 @@ const saveTheme = async () => {
     const userId = pocketbaseStore.pb.authStore.model?.id
     if (!userId) throw new Error('Non authentifie.')
 
-    // Le theme est stocke en base puis reapplique localement apres refresh auth.
+    // Le thème est stocké en base puis réappliqué localement après refresh auth.
     await pocketbaseStore.pb.collection('user').update(userId, { theme: selectedTheme.value })
     await myAuthStore.authRefresh()
     themeStore.setThemeByName(selectedTheme.value)
@@ -430,7 +430,7 @@ const submitEmailChange = async () => {
   try {
     // PocketBase envoie un email de confirmation, l'adresse active ne change pas immediatement.
     await myAuthStore.emailChange(nextEmail)
-    toastStore.openToast({ type: 'success', message: "E-mail de confirmation envoye pour le changement d'adresse." })
+    toastStore.openToast({ type: 'success', message: "E-mail de confirmation envoyé pour le changement d'adresse." })
     showEmailChange.value = false
   } catch (error: any) {
     toastStore.openToast({ type: 'error', message: error?.message || "Impossible de demander le changement d'adresse e-mail." })
@@ -459,7 +459,7 @@ const updatePasswordDirectly = async () => {
     const userId = pocketbaseStore.pb.authStore.model?.id
     if (!userId) throw new Error('Non authentifie.')
 
-    // PocketBase exige l'ancien mot de passe et la confirmation dans la meme requete.
+    // PocketBase exige l'ancien mot de passe et la confirmation dans la même requête.
     await pocketbaseStore.pb.collection('user').update(userId, {
       oldPassword: currentPassword.value,
       password: newPassword.value,
@@ -467,13 +467,13 @@ const updatePasswordDirectly = async () => {
     })
 
     await myAuthStore.authRefresh()
-    toastStore.openToast({ type: 'success', message: 'Mot de passe mis a jour.' })
+    toastStore.openToast({ type: 'success', message: 'Mot de passe mis à jour.' })
     currentPassword.value = ''
     newPassword.value = ''
     confirmPassword.value = ''
     showPasswordReset.value = false
   } catch (error: any) {
-    toastStore.openToast({ type: 'error', message: error?.message || 'Impossible de mettre a jour le mot de passe.' })
+    toastStore.openToast({ type: 'error', message: error?.message || 'Impossible de mettre à jour le mot de passe.' })
   } finally {
     isUpdatingPassword.value = false
   }
@@ -492,7 +492,7 @@ const deleteAccount = async () => {
   try {
     await myAuthStore.deleteAccount()
     await myAuthStore.logout()
-    toastStore.openToast({ type: 'success', message: 'Compte supprime.' })
+    toastStore.openToast({ type: 'success', message: 'Compte supprimé.' })
     await navigateTo('/')
   } catch (error: any) {
     toastStore.openToast({ type: 'error', message: error?.message || 'Impossible de supprimer le compte.' })

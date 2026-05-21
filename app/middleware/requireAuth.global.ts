@@ -9,7 +9,7 @@ const PUBLIC_PATHS = new Set(['/', '/auth/callback', '/manuel'])
 const PUBLIC_PATH_PATTERNS = [/^\/social\/user\/[^/]+$/]
 
 export default defineNuxtRouteMiddleware(async (to) => {
-  // L'auth PocketBase est cote client (localStorage), on ignore donc le guard SSR pour eviter de faux redirects au refresh.
+  // L'auth PocketBase est côté client (localStorage), on ignore donc le guard SSR pour éviter de faux redirects au refresh.
   if (import.meta.server) return
 
   if (PUBLIC_PATHS.has(to.path) || PUBLIC_PATH_PATTERNS.some((pattern) => pattern.test(to.path))) return
@@ -28,7 +28,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   if (isLoggedIn && isAniListLinked) return
 
-  // Un compte local sans AniList lie reste bloque sur l'accueil, qui affiche l'etat de liaison requis.
+  // Un compte local sans AniList lié reste bloqué sur l'accueil, qui affiche l'état de liaison requis.
   if (isLoggedIn && !isAniListLinked) {
     if (to.path !== '/') {
       return navigateTo('/')
@@ -42,7 +42,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     const toastStore = useToastStore()
     toastStore.openToast({
       type: 'warning',
-      message: 'Tu dois te connecter pour acceder a cette page.'
+      message: 'Tu dois te connecter pour accéder à cette page.'
     })
   }
 

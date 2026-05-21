@@ -96,7 +96,7 @@ const formatJoined = (timestamp?: number) => {
 
 const hashColor = (id: number) => palette[Math.abs(id) % palette.length] ?? palette[0] ?? '#4F378A'
 const normalizeRelationValue = (value?: string | string[]) => Array.isArray(value) ? String(value[0] || '') : String(value || '')
-// Les valeurs injectees dans les filtres PocketBase doivent echapper guillemets et antislashs.
+// Les valeurs injectées dans les filtres PocketBase doivent échapper guillemets et antislashs.
 const escapeFilterValue = (value: string) => value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
 
 const mapUser = (user: AniListUserNode): SocialUser => ({
@@ -165,7 +165,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
       }
     }
 
-    // On compare l'etat desire avec l'etat existant pour eviter les creations/suppressions inutiles.
+    // On compare l'état désiré avec l'état existant pour éviter les créations/suppressions inutiles.
     const existingRelations = await pocketbaseStore.pb.collection('user_friend').getFullList<UserFriendRecord>({
       filter: `fk_user_id="${escapeFilterValue(currentPocketbaseUserId)}"`,
       requestKey: null
@@ -197,7 +197,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
   }
 
   const reset = (keepError = false) => {
-    // Nettoie les tableaux derives quand le compte change ou que le chargement echoue.
+    // Nettoie les tableaux dérivés quand le compte change ou que le chargement échoue.
     followingUsers.value = []
     followerUsers.value = []
     friendUsers.value = []
@@ -229,7 +229,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
   }
 
   const graphqlFetch = async (query: string, variables: Record<string, any>) => {
-    // AniList peut refuser certaines donnees privees avec le token; on retente en public si possible.
+    // AniList peut refuser certaines données privées avec le token; on retente en public si possible.
     const parseErrors = (response: any) => {
       if (!response?.errors?.length) return ''
       return response.errors.map((error: any) => error?.message).filter(Boolean).join(' | ')
@@ -264,7 +264,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
     const perPage = 50
     let hasNextPage = true
 
-    // Garde-fou a 100 pages pour eviter une boucle infinie si AniList renvoie une pagination incoherente.
+    // Garde-fou à 100 pages pour éviter une boucle infinie si AniList renvoie une pagination incohérente.
     while (hasNextPage && page <= 100) {
       const response = await graphqlFetch(query, { userId: anilistUserId.value, page, perPage })
 
@@ -291,7 +291,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
     loadError.value = ''
 
     try {
-      // Les deux listes sont independantes; Promise.allSettled permet d'afficher les donnees partielles.
+      // Les deux listes sont indépendantes; Promise.allSettled permet d'afficher les données partielles.
       const [followingResult, followersResult] = await Promise.allSettled([
         fetchPagedUsers(followingQuery, 'following'),
         fetchPagedUsers(followersQuery, 'followers')
@@ -357,14 +357,14 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
       throw new Error('Utilisateur AniList invalide.')
     }
     if (!anilistUserId.value || !token.value) {
-      throw new Error('Le compte AniList n\'est pas lie.')
+      throw new Error('Le compte AniList n\'est pas lié.')
     }
     if (userId === anilistUserId.value) {
       throw new Error('Vous ne pouvez pas suivre votre propre compte AniList.')
     }
     if (isFollowPending(userId)) return
 
-    // Evite les doubles clics qui enverraient plusieurs ToggleFollow pour le meme utilisateur.
+    // Évite les doubles clics qui enverraient plusieurs ToggleFollow pour le même utilisateur.
     followPendingIds.value = [...followPendingIds.value, userId]
 
     try {
@@ -384,10 +384,10 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
         throw new Error(errorMessage)
       }
 
-      // Recharge l'etat complet apres ToggleFollow, car AniList decide si l'action a suivi ou unfollow.
+      // Recharge l'état complet après ToggleFollow, car AniList décide si l'action a suivi ou unfollow.
       await loadSocial(true)
     } catch (error: any) {
-      const message = error?.data?.errors?.[0]?.message || error?.message || 'Impossible de mettre a jour le suivi AniList.'
+      const message = error?.data?.errors?.[0]?.message || error?.message || 'Impossible de mettre à jour le suivi AniList.'
       loadError.value = message
       throw new Error(message)
     } finally {

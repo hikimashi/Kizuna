@@ -37,23 +37,23 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
   const loginWithAniListWithWarning = async () => {
     await alertStore.openAlert({
       type: 'warning',
-      message: 'Si vous etes déjà connecte a AniList.co, la connexion sera automatique. Deconnectez-vous d\'AniList pour lier un autre compte.',
+      message: 'Si vous êtes déjà connecté à AniList.co, la connexion sera automatique. Déconnectez-vous d\'AniList pour lier un autre compte.',
       showDeny: false
     });
 
     loginWithAniList();
   };
 
-  // Gere le callback OAuth : echange de token, controle de doublon et synchronisation utilisateur.
+  // Gère le callback OAuth : échange de token, contrôle de doublon et synchronisation utilisateur.
   const handleCallback = async (code: string, state?: string) => {
     try {
       const storedState = localStorage.getItem('anilist_oauth_state');
       if (state && storedState && storedState !== state) {
-        throw new Error('Alerte de securite : parametre state invalide');
+        throw new Error('Alerte de sécurité : paramètre state invalide');
       }
       localStorage.removeItem('anilist_oauth_state');
 
-      // Le secret AniList reste cote serveur: le client ne donne que le code au endpoint Nitro.
+      // Le secret AniList reste côté serveur: le client ne donne que le code au endpoint Nitro.
       const response = await $fetch<{ access_token: string; expires_in?: number }>('/api/anilist/exchangeToken', {
         method: 'POST',
         body: { code, redirect_uri: useRuntimeConfig().public.anilistRedirectUri }
@@ -72,11 +72,11 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
       const viewer = anilistUserData.data.Viewer;
       const userId = pocketbaseStore.pb.authStore.model?.id;
       if (!userId) {
-        throw new Error('Vous devez etre connecte pour lier un compte');
+        throw new Error('Vous devez être connecté pour lier un compte');
       }
 
       const anilistId = Number(viewer.id);
-      // Un compte AniList ne doit etre lie qu'a un seul compte PocketBase local.
+      // Un compte AniList ne doit être lié qu'à un seul compte PocketBase local.
       const existingUsers = await pocketbaseStore.pb.collection('user').getFullList({
         filter: `anilist_user_id = ${anilistId} && id != '${userId}'`
       });
@@ -114,7 +114,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
       if (error.message === 'anilist_duplicate' || pbErrors?.anilist_user_id) {
         toastStore.openToast({
           type: 'error',
-          message: 'Ce compte AniList est déjà utilise par un autre utilisateur.'
+          message: 'Ce compte AniList est déjà utilisé par un autre utilisateur.'
         });
       } else {
         toastStore.openToast({
@@ -127,14 +127,14 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
     }
   };
 
-  // Resynchronise les champs lies a AniList (pseudo/avatar/banniere) dans PocketBase.
+  // Resynchronise les champs liés à AniList (pseudo/avatar/bannière) dans PocketBase.
   const refreshLinkedAniListProfile = async () => {
     try {
       const token = pocketbaseStore.authRecord?.anilist_token;
       const userId = pocketbaseStore.pb.authStore.model?.id;
 
       if (!token || !userId) {
-        throw new Error('Le compte AniList n\'est pas lie.');
+        throw new Error('Le compte AniList n\'est pas lié.');
       }
 
       const anilistUserData = await anilistGraphql.request<any>(
@@ -145,10 +145,10 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
 
       const viewer = anilistUserData?.data?.Viewer;
       if (!viewer?.id) {
-        throw new Error('Impossible de recuperer le profil AniList.');
+        throw new Error('Impossible de récupérer le profil AniList.');
       }
 
-      // On met uniquement a jour les champs derives d'AniList pour ne pas toucher au profil local.
+      // On met uniquement à jour les champs dérivés d'AniList pour ne pas toucher au profil local.
       await pocketbaseStore.pb.collection('user').update(userId, {
         anilist_user_id: Number(viewer.id),
         anilist_username: viewer.name,
@@ -161,7 +161,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
 
       toastStore.openToast({
         type: 'success',
-        message: 'Données AniList rafraichies.'
+        message: 'Données AniList rafraîchies.'
       });
 
       return true;

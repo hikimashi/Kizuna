@@ -296,7 +296,7 @@ const loadMoreActivity = async () => {
 
     activityPage.value += 1
   } catch (error) {
-    console.error("Echec du chargement de la page d'activite :", error)
+    console.error("Échec du chargement de la page d'activité :", error)
     activityHasMore.value = false
   } finally {
     activityLoading.value = false
@@ -436,7 +436,7 @@ function handleActivityAnimeLinkClick(event: MouseEvent, animeId?: number | null
 }
 
 function shouldHandleClientNavigation(event: MouseEvent): boolean {
-  // Laisse le navigateur gerer ctrl/cmd/shift-click, clic milieu, etc.
+  // Laisse le navigateur gérer ctrl/cmd/shift-click, clic milieu, etc.
   return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey
 }
 
@@ -471,7 +471,7 @@ function activityCoverSrcSet(activity: any): string | undefined {
 const authRecord = computed<Record<string, any>>(() => unref(pocketbaseStore.authRecord) ?? {})
 const authUserId = computed(() => Number(authRecord.value.anilist_user_id ?? 0))
 const authUsername = computed(() => String(authRecord.value.anilist_username ?? ''))
-// Cle de cache locale: change si l'utilisateur lie un autre compte AniList.
+// Clé de cache locale: change si l'utilisateur lie un autre compte AniList.
 const authUserKey = computed(() => `${authUserId.value}:${authUsername.value}`)
 const username = computed(() => authRecord.value.anilist_username ?? "Nom d'utilisateur")
 const anilistIdDisplay = computed(() => authRecord.value.anilist_user_id ?? '-')
@@ -504,7 +504,7 @@ const barGenreTotal = computed(() => {
 })
 
 const progressStep = computed(() => {
-  // Les marqueurs s'adaptent au volume de la liste pour eviter une barre bloquee a 100.
+  // Les marqueurs s'adaptent au volume de la liste pour éviter une barre bloquée à 100.
   const perSegment = Math.max(10, Math.ceil((totalAnimes.value || 0) / 3))
   if (perSegment <= 25) return 25
   if (perSegment <= 50) return 50
@@ -586,7 +586,7 @@ const syncProfilePageData = async (
 
   profileSyncPending.value = true
   try {
-    // Les stats/favoris passent par le store; l'activite est paginee separement par la page.
+    // Les stats/favoris passent par le store; l'activité est paginée séparément par la page.
     await profileStore.loadProfile(Boolean(options.forceProfile))
 
     if (options.forceActivity || !activityItems.value.length) {
@@ -602,7 +602,7 @@ const syncProfilePageData = async (
 const handlePageShow = async (event: PageTransitionEvent) => {
   resetNavigationStates()
 
-  // Quand la page revient du bfcache, les donnees visuelles peuvent avoir besoin d'une resynchro.
+  // Quand la page revient du bfcache, les données visuelles peuvent avoir besoin d'une resynchro.
   if (event.persisted || !activityItems.value.length) {
     await syncProfilePageData({ forceActivity: true })
   }
@@ -617,7 +617,7 @@ watch(authUserKey, async (next, previous) => {
   if (!authUserId.value && !authUsername.value) return
 
   const userChanged = next !== previous
-  // Changement de compte AniList: on force stats et activite pour ne pas melanger deux profils.
+  // Changement de compte AniList: on force stats et activité pour ne pas mélanger deux profils.
   await syncProfilePageData({
     forceProfile: userChanged,
     forceActivity: userChanged || !activityItems.value.length

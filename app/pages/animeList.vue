@@ -35,8 +35,8 @@
             <option value="title">Titre</option>
             <option value="score">Note</option>
             <option value="progress">Progression</option>
-            <option value="updatedAt">Derniere mise a jour</option>
-            <option value="startDate">Date de debut</option>
+            <option value="updatedAt">Dernière mise à jour</option>
+            <option value="startDate">Date de début</option>
           </select>
         </div>
       </aside>
@@ -385,7 +385,7 @@ const listFilterItems = computed(() => {
 
 const sortedAndFilteredSections = computed(() => {
   const needle = searchTerm.value.toLowerCase()
-  // Un seul sorter couvre tous les modes de tri pour conserver la meme logique par section.
+  // Un seul sorter couvre tous les modes de tri pour conserver la même logique par section.
   const sorter = (a: MediaListEntry, b: MediaListEntry) => {
     if (sortBy.value === 'title') return displayTitle(a).localeCompare(displayTitle(b))
     if (sortBy.value === 'score') return (b.score || 0) - (a.score || 0)
@@ -429,7 +429,7 @@ const selectedEntryCoverSrcSet = computed(() =>
 )
 
 const sharedListOptions = computed(() => {
-  // Le picker n'affiche que les listes ou l'utilisateur participe deja.
+  // Le picker n'affiche que les listes où l'utilisateur participe déjà.
   return sharedLists.value.filter(list => list.isOwner || list.isMember)
 })
 
@@ -438,7 +438,7 @@ const ensureSharedListsLoaded = async () => {
   if (sharedLists.value.length > 0) return
 
   try {
-    // Chargement paresseux: les listes partagees ne sont demandees que si l'utilisateur ouvre le picker.
+    // Chargement paresseux: les listes partagées ne sont demandées que si l'utilisateur ouvre le picker.
     isSharedListsLoading.value = true
     sharedListError.value = ''
     sharedLists.value = await sharedListsStore.loadSummaries()
@@ -451,7 +451,7 @@ const ensureSharedListsLoaded = async () => {
 }
 
 const openEntryEditor = (entry: MediaListEntry, status: ListStatusKey) => {
-  // On copie les champs editables dans des refs pour pouvoir annuler sans muter la liste affichee.
+  // On copie les champs éditables dans des refs pour pouvoir annuler sans muter la liste affichée.
   selectedEntryId.value = entry.id
   selectedEntryMediaId.value = Number(entry.media.id || 0)
   selectedEntryTitle.value = displayTitle(entry)
@@ -498,7 +498,7 @@ const toggleSharedListPicker = async () => {
 const addSelectedAnimeToSharedList = async (listId: string) => {
   if (!selectedEntryMediaId.value || !listId || isAddingToSharedList.value) return
 
-  // Les champs vides restent acceptes cote UI mais deviennent des valeurs neutres pour PocketBase.
+  // Les champs vides restent acceptés côté UI mais deviennent des valeurs neutres pour PocketBase.
   const progress = editProgress.value === '' ? 0 : Number(editProgress.value)
   const score = editScore.value === '' ? 0 : Number(editScore.value)
 
@@ -513,10 +513,10 @@ const addSelectedAnimeToSharedList = async (listId: string) => {
       progress: Number.isFinite(progress) ? progress : 0,
       score: Number.isFinite(score) ? score : 0
     })
-    toastStore.openToast({ type: 'success', message: "L'anime a ete ajoute a la liste partagée." })
+    toastStore.openToast({ type: 'success', message: "L'anime a été ajouté à la liste partagée." })
     showSharedListPicker.value = false
   } catch (error: any) {
-    sharedListError.value = error?.message || "Impossible d'ajouter cet anime a la liste partagée."
+    sharedListError.value = error?.message || "Impossible d'ajouter cet anime à la liste partagée."
   } finally {
     isAddingToSharedList.value = false
   }
@@ -526,7 +526,7 @@ const saveSelectedEntry = async () => {
   if (!selectedEntryId.value || isSavingEntry.value) return
 
   try {
-    // Apres mutation AniList, on recharge la collection pour recuperer l'etat serveur exact.
+    // Après mutation AniList, on recharge la collection pour récupérer l'état serveur exact.
     isSavingEntry.value = true
     await anilistSync.saveEntry({
       entryId: selectedEntryId.value,
@@ -571,7 +571,7 @@ watch([editStatus, selectedEntryEpisodes], () => {
   if (editStatus.value !== 'COMPLETED') return
   const episodes = Number(selectedEntryEpisodes.value || 0) || 0
   if (!episodes) return
-  // Quand on marque termine, la progression se cale automatiquement sur le nombre total d'episodes.
+  // Quand on marque terminé, la progression se cale automatiquement sur le nombre total d'épisodes.
   editProgress.value = String(episodes)
 })
 
@@ -582,7 +582,7 @@ const handleEditorKeydown = (event: KeyboardEvent) => {
 
 const fetchAnimeList = async () => {
   if (!token.value || !username.value) {
-    errorMessage.value = 'Compte AniList non lie. Reconnectez-le dans les parametres.'
+    errorMessage.value = 'Compte AniList non lié. Reconnectez-le dans les paramètres.'
     isLoading.value = false
     return
   }
@@ -626,7 +626,7 @@ const fetchAnimeList = async () => {
     isLoading.value = true
     errorMessage.value = ''
 
-    // MediaListCollection regroupe deja les entrees par statut; on les remappe dans STATUS_ORDER.
+    // MediaListCollection regroupe déjà les entrées par statut; on les remappe dans STATUS_ORDER.
     const response = await anilistGraphql.request<any>(
       query,
       { userName: username.value },

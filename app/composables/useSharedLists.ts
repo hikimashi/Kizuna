@@ -1,4 +1,5 @@
 import { computed, unref } from 'vue'
+import { useAnilistSync, type EditableAniListStatus } from '~/composables/useAnilistSync'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 
 export type SharedListPrivacy = 'private' | 'friends' | 'public'
@@ -141,13 +142,13 @@ const normalizeRelationValue = (value?: string | string[]) => {
 }
 
 const normalizeRelationValues = (value?: string | string[]) => {
-  // Variante multi-valeurs pour les anciens schemas ou une relation etait stockee en tableau.
+  // Variante multi-valeurs pour les anciens schémas où une relation était stockée en tableau.
   if (Array.isArray(value)) return value.map(item => String(item || '')).filter(Boolean)
   const single = String(value || '')
   return single ? [single] : []
 }
 
-// Les filtres PocketBase sont construits en texte, donc les valeurs utilisateur sont toujours echappees.
+// Les filtres PocketBase sont construits en texte, donc les valeurs utilisateur sont toujours échappées.
 const escapeFilterValue = (value: string) => value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
 
 const buildOrIdFilter = (ids: string[], field = 'id') =>
@@ -191,7 +192,7 @@ const getAvatar = (user?: Partial<UserRecord> | null) => {
 }
 
 const getInitials = (value: string) => {
-  // Deux initiales lisibles pour les avatars generes, meme si le pseudo contient des symboles.
+  // Deux initiales lisibles pour les avatars générés, même si le pseudo contient des symboles.
   const parts = value
     .split(/\s+/)
     .map(part => part.trim())
@@ -206,7 +207,7 @@ const shortName = (value: string) => value.length <= 12 ? value : value.slice(0,
 const hueFromString = (value: string) => {
   let hash = 0
   for (let index = 0; index < value.length; index += 1) {
-    // Petit hash deterministe pour garder la meme couleur d'avatar entre deux rendus.
+  // Petit hash déterministe pour garder la même couleur d'avatar entre deux rendus.
     hash = (hash * 31 + value.charCodeAt(index)) % 360
   }
   return hash
@@ -235,7 +236,7 @@ const formatDateLabel = (value?: string) => {
 }
 
 const pocketbaseErrorDetails = (error: any) => {
-  // Regroupe les messages utiles de PocketBase pour produire une erreur actionnable cote UI.
+  // Regroupe les messages utiles de PocketBase pour produire une erreur actionnable côté UI.
   const responseData = error?.response?.data && typeof error.response.data === 'object'
     ? Object.values(error.response.data).map((value: any) => `${value?.code || ''} ${value?.message || ''}`.trim()).filter(Boolean).join(' | ')
     : ''
@@ -256,7 +257,7 @@ const fetchUsersByIds = async (pb: PocketBaseClient, ids: string[]) => {
   const uniqueIds = Array.from(new Set(ids.filter(Boolean)))
   if (!uniqueIds.length) return new Map<string, UserRecord>()
 
-  // Charge les profils en un appel groupe pour eviter un aller-retour PocketBase par membre.
+  // Charge les profils en un appel groupé pour éviter un aller-retour PocketBase par membre.
   const users = await pb.collection('user').getFullList<UserRecord>({
     filter: buildOrIdFilter(uniqueIds),
     ...noAutoCancel
@@ -275,7 +276,7 @@ const normalizeSharedListPermission = (value: unknown): SharedListPermission | n
 }
 
 const permissionDefaults = (permission: SharedListPermission) => ({
-  // Matrice de base cote UI; les flags PocketBase explicites peuvent ensuite la surcharger.
+  // Matrice de base côté UI; les flags PocketBase explicites peuvent ensuite la surcharger.
   canRead: true,
   canAddAnime: permission !== 'viewer',
   canEditAnime: permission !== 'viewer',
@@ -290,7 +291,7 @@ const getPermissionRecord = (membership?: UserSharedListRecord | null) => {
   return expanded
 }
 
-// Les anciennes donnees peuvent ne pas avoir de nom de permission; on reconstruit le role via les flags.
+// Les anciennes données peuvent ne pas avoir de nom de permission; on reconstruit le rôle via les flags.
 const inferPermissionFromRecord = (permissionRecord?: PermissionRecord | null) => {
   const namedPermission = normalizeSharedListPermission(permissionRecord?.name)
   if (namedPermission) return namedPermission
@@ -359,7 +360,7 @@ const permissionFlags = (permission: SharedListPermission) => {
   }
 
   if (permission === 'editor') {
-    // Editor: peut enrichir la liste mais pas supprimer ou gerer les membres.
+    // Editor: peut enrichir la liste mais pas supprimer ou gérer les membres.
     return {
       add: true,
       modify: true,
@@ -424,6 +425,7 @@ const buildMember = (
 
 export const useSharedLists = () => {
   const pocketbaseStore = usePocketbaseStore()
+  const anilistSync = useAnilistSync()
   const authRecord = computed(() => (unref(pocketbaseStore.authRecord) ?? {}) as Record<string, any>)
   const currentUserId = computed(() => String(authRecord.value.id || ''))
   const currentUserProfile = computed<Partial<UserRecord>>(() => ({
@@ -440,7 +442,7 @@ export const useSharedLists = () => {
   ) => {
     const fileName = String(field || '').trim()
     if (!record || !fileName) return undefined
-    // Delegue l'URL signee/thumbnail a PocketBase pour rester compatible avec ses regles fichiers.
+    // Délègue l'URL signée/thumbnail à PocketBase pour rester compatible avec ses règles fichiers.
     return pocketbaseStore.pb.files.getURL(record as Record<string, any>, fileName, options)
   }
 
@@ -459,7 +461,7 @@ export const useSharedLists = () => {
   ) => {
     const payload = new FormData()
 
-    // FormData est necessaire ici car les images et les champs texte partagent la meme requete.
+    // FormData est nécessaire ici car les images et les champs texte partagent la même requête.
     if (options.includeName !== false && typeof input.name === 'string') {
       payload.append('name', input.name.trim())
     }
@@ -524,7 +526,7 @@ export const useSharedLists = () => {
       try {
         await pocketbaseStore.pb.collection('permission').delete(permissionRecord.id)
       } catch {
-        // Nettoyage de secours si la creation de l'appartenance echoue apres la permission.
+        // Nettoyage de secours si la création de l'appartenance échoue après la permission.
       }
       throw error
     }
@@ -547,7 +549,7 @@ export const useSharedLists = () => {
 
   const buildUserMembershipFilter = (userId: string) => {
     const safeUserId = escapeFilterValue(userId)
-    // Supporte a la fois relation simple (=) et ancienne relation multiple (?=).
+    // Supporte à la fois relation simple (=) et ancienne relation multiple (?=).
     return `(fk_user_id ?= "${safeUserId}" || fk_user_id="${safeUserId}")`
   }
 
@@ -558,7 +560,7 @@ export const useSharedLists = () => {
 
   const buildTargetParticipationFilter = (userId: string) => {
     const safeUserId = escapeFilterValue(userId)
-    // Participation = proprietaire direct ou membre via la relation inverse PocketBase.
+    // Participation = propriétaire direct ou membre via la relation inverse PocketBase.
     return `(fk_owner_user_id="${safeUserId}" || user_shared_list_via_fk_shared_list_id.fk_user_id ?= "${safeUserId}")`
   }
 
@@ -567,7 +569,7 @@ export const useSharedLists = () => {
     records: SharedListRecord[],
     viewerUserId = String(currentUserId.value || '')
   ) => {
-    // De-duplique les listes qui peuvent arriver a la fois via proprietaire et via membership.
+    // Déduplique les listes qui peuvent arriver à la fois via propriétaire et via membership.
     const listRecords = Array.from(
       new Map(
         records
@@ -579,7 +581,7 @@ export const useSharedLists = () => {
     if (!listRecords.length) return []
 
     const accessibleListIds = listRecords.map(record => record.id)
-    // Les memberships et les compteurs anime sont optionnels pour l'affichage; un echec partiel ne bloque pas tout.
+    // Les memberships et les compteurs anime sont optionnels pour l'affichage; un échec partiel ne bloque pas tout.
     const [membershipResult, animeRelationsResult] = await Promise.allSettled([
       pocketbaseStore.pb.collection('user_shared_list').getFullList<UserSharedListRecord>({
         filter: buildOrIdFilter(accessibleListIds, 'fk_shared_list_id'),
@@ -601,7 +603,7 @@ export const useSharedLists = () => {
     for (const membership of membershipRecords) {
       const listId = normalizeRelationValue(membership.fk_shared_list_id)
       if (!listId) continue
-      // Regroupe les memberships par liste pour eviter de filtrer tout le tableau dans chaque carte.
+      // Regroupe les memberships par liste pour éviter de filtrer tout le tableau dans chaque carte.
       const current = membershipsByList.get(listId) ?? []
       current.push(membership)
       membershipsByList.set(listId, current)
@@ -626,7 +628,7 @@ export const useSharedLists = () => {
       }
     }
 
-    // Charge uniquement les utilisateurs visibles pour eviter un appel PocketBase par carte.
+    // Charge uniquement les utilisateurs visibles pour éviter un appel PocketBase par carte.
     const userMap = await fetchUsersByIds(pocketbaseStore.pb, Array.from(visibleUserIds))
 
     return listRecords.map((record) => {
@@ -718,7 +720,7 @@ export const useSharedLists = () => {
     const membership = await findMembership(listId, userId)
     const isOwner = ownerId === userId
 
-    // Centralise les infos d'acces pour que chaque assertion partage la meme lecture PocketBase.
+    // Centralise les infos d'accès pour que chaque assertion partage la même lecture PocketBase.
     return {
       userId,
       sharedList,
@@ -739,9 +741,9 @@ export const useSharedLists = () => {
 
   const assertSharedListOwner = async (listId: string) => {
     const access = await assertSharedListAccess(listId)
-    // Certaines actions restent reservees au proprietaire, meme si un admin peut gerer les membres.
+    // Certaines actions restent réservées au propriétaire, même si un admin peut gérer les membres.
     if (!access.isOwner) {
-      throw new Error('Seul le propriétaire peut gerer cette liste partagée.')
+      throw new Error('Seul le propriétaire peut gérer cette liste partagée.')
     }
     return access
   }
@@ -819,7 +821,7 @@ export const useSharedLists = () => {
       return await createMembershipRecord(listId, userId, permission)
     } catch (error: any) {
       if (!isUniqueConstraintError(error)) throw error
-      // Si deux appels creent la meme appartenance en parallele, on relit le record gagne par l'autre appel.
+      // Si deux appels créent la même appartenance en parallèle, on relit le record gagné par l'autre appel.
       const retried = await findMembership(listId, userId)
       return retried ? await repairMembershipRecord(retried, listId, userId) : retried
     }
@@ -859,7 +861,7 @@ export const useSharedLists = () => {
           await createMembershipRecord(listId, userId, previousPermission)
         }
       } catch {
-        // Retour arriere de secours si la recreation echoue avec la nouvelle permission.
+        // Retour arrière de secours si la recréation échoue avec la nouvelle permission.
       }
       throw error
     }
@@ -911,7 +913,7 @@ export const useSharedLists = () => {
     let changed = false
     const failedMembershipIds: string[] = []
 
-    // Les listes creees avant les permissions explicites peuvent ne pas avoir de membership proprietaire.
+    // Les listes créées avant les permissions explicites peuvent ne pas avoir de membership propriétaire.
     if (access.ownerId === access.userId && !access.membership) {
       await ensureMembership(listId, access.userId, 'admin')
       changed = true
@@ -960,7 +962,7 @@ export const useSharedLists = () => {
     let ownerId = ''
     let membership: UserSharedListRecord | null = null
 
-    // Ajoute du contexte fonctionnel aux erreurs PocketBase, souvent trop generiques cote API.
+    // Ajoute du contexte fonctionnel aux erreurs PocketBase, souvent trop génériques côté API.
     try {
       const sharedList = await getSharedListRecord(listId)
       ownerId = normalizeRelationValue(sharedList.fk_owner_user_id)
@@ -981,7 +983,7 @@ export const useSharedLists = () => {
     }
 
     if (ownerId === currentUserId.value) {
-      return new Error(`PocketBase a refuse la creation de l'anime pour le propriétaire. ${details || 'Creation de fiche impossible.'}`.trim())
+      return new Error(`PocketBase a refusé la création de l'anime pour le propriétaire. ${details || 'Création de fiche impossible.'}`.trim())
     }
 
     const permission = getPermissionName(membership)
@@ -992,14 +994,14 @@ export const useSharedLists = () => {
       )
     }
 
-    return new Error(`PocketBase a refuse la creation d'un anime sur cette liste partagée. ${details || 'Creation de fiche impossible.'}`.trim())
+    return new Error(`PocketBase a refusé la création d'un anime sur cette liste partagée. ${details || 'Création de fiche impossible.'}`.trim())
   }
 
   const loadSummaries = async () => {
     if (!currentUserId.value) return []
 
     const userId = requireCurrentUserId()
-    // Les listes visibles du viewer viennent de deux sources: proprietaire et memberships.
+    // Les listes visibles du viewer viennent de deux sources: propriétaire et memberships.
     const [ownedListRecords, ownMembershipRecords] = await Promise.all([
       pocketbaseStore.pb.collection('shared_list').getFullList<SharedListRecord>({
         filter: `fk_owner_user_id="${escapeFilterValue(userId)}"`,
@@ -1015,7 +1017,7 @@ export const useSharedLists = () => {
     ])
 
     const ownedListIds = new Set(ownedListRecords.map(record => record.id).filter(Boolean))
-    // Evite les doublons quand le proprietaire possede aussi un membership admin.
+    // Évite les doublons quand le propriétaire possède aussi un membership admin.
     const joinedListIds = Array.from(new Set(
       ownMembershipRecords
         .map(record => normalizeRelationValue(record.fk_shared_list_id))
@@ -1045,7 +1047,7 @@ export const useSharedLists = () => {
     const targetUserId = String(input.targetUserId || '').trim()
     if (!targetUserId) return []
 
-    // Commence par les listes deja visibles par la session pour respecter les droits personnels du viewer.
+    // Commence par les listes déjà visibles par la session pour respecter les droits personnels du viewer.
     const visibleFromSession = await loadSummaries()
     const overlappingLists = visibleFromSession.filter(list =>
       list.ownerId === targetUserId || list.members.some(member => member.id === targetUserId)
@@ -1053,7 +1055,7 @@ export const useSharedLists = () => {
     const overlapIds = new Set(overlappingLists.map(list => list.id))
 
     const publicRecordsPromise = pocketbaseStore.pb.collection('shared_list').getFullList<SharedListRecord>({
-      // Les listes publiques du profil cible peuvent etre montrees meme sans relation mutuelle.
+      // Les listes publiques du profil cible peuvent être montrées même sans relation mutuelle.
       filter: `privacy_level="public" && ${buildTargetParticipationFilter(targetUserId)}`,
       sort: '-updated',
       ...noAutoCancel
@@ -1078,7 +1080,7 @@ export const useSharedLists = () => {
       friendRecordsPromise
     ])
 
-    // Ajoute seulement les listes publiques/amis qui ne sont pas deja dans les listes de la session.
+    // Ajoute seulement les listes publiques/amis qui ne sont pas déjà dans les listes de la session.
     const supplementalSummaries = await loadSummaryRecords(
       [...publicRecords, ...friendRecords].filter(record => !overlapIds.has(record.id)),
       viewerUserId
@@ -1098,7 +1100,7 @@ export const useSharedLists = () => {
     const isOwner = ownerId === userId
     const isMember = isOwner || Boolean(ownMembership)
 
-    // Le detail a besoin des membres et des animes; allSettled laisse la page afficher ce qui est disponible.
+    // Le détail a besoin des membres et des animes; allSettled laisse la page afficher ce qui est disponible.
     const [membershipResult, animeRelationsResult] = await Promise.allSettled([
       pocketbaseStore.pb.collection('user_shared_list').getFullList<UserSharedListRecord>({
         filter: `fk_shared_list_id="${escapeFilterValue(listId)}"`,
@@ -1121,7 +1123,7 @@ export const useSharedLists = () => {
       ...membershipRecords.flatMap(membership => normalizeRelationValues(membership.fk_user_id))
     ].filter(Boolean)))
 
-    // Deux maps de lookup evitent de chercher les users/animes pendant chaque rendu d'entree.
+    // Deux maps de lookup évitent de chercher les users/animes pendant chaque rendu d'entrée.
     const animeIds = Array.from(new Set(animeRelations.map(relation => normalizeRelationValue(relation.fk_anime_id)).filter(Boolean)))
     const userIds = Array.from(new Set(memberIds.filter(Boolean)))
 
@@ -1135,7 +1137,7 @@ export const useSharedLists = () => {
         : Promise.resolve(new Map<string, AnimeRecord>())
     ])
 
-    // Les records relationnels sont convertis en modeles UI avec permissions et identite affichee.
+    // Les records relationnels sont convertis en modèles UI avec permissions et identité affichée.
     const members = memberIds.map((memberId) => {
       const membership = membershipRecords.find(item => membershipHasUser(item, memberId))
       return buildMember(
@@ -1156,7 +1158,7 @@ export const useSharedLists = () => {
     const animeEntries = animeRelations.map((relation) => {
       const animeId = normalizeRelationValue(relation.fk_anime_id)
       const anime = animeMap.get(animeId)
-      // L'id relationnel reste separe pour modifier/supprimer l'entree sans confondre avec l'id anime.
+      // L'id relationnel reste séparé pour modifier/supprimer l'entrée sans confondre avec l'id anime.
       return {
         id: animeId || relation.id,
         relationId: relation.id,
@@ -1224,7 +1226,7 @@ export const useSharedLists = () => {
         { includeMedia: true }
       )
       payload.append('fk_owner_user_id', userId)
-      // La liste est creee avant le membership proprietaire, car la relation a besoin de l'id liste.
+      // La liste est créée avant le membership propriétaire, car la relation a besoin de l'id liste.
       created = await pocketbaseStore.pb.collection('shared_list').create<SharedListRecord>(payload)
     } catch (error: any) {
       if (isUnknownFieldError(error) && (input.groupImageFile || input.bannerImageFile)) {
@@ -1233,7 +1235,7 @@ export const useSharedLists = () => {
       throw error
     }
 
-    // Le proprietaire doit aussi exister dans user_shared_list pour reutiliser les memes checks que les membres.
+    // Le propriétaire doit aussi exister dans user_shared_list pour réutiliser les mêmes checks que les membres.
     await ensureMembership(created.id, userId, 'admin')
 
     return created
@@ -1245,7 +1247,7 @@ export const useSharedLists = () => {
     groupImageFile?: File | null
     bannerImageFile?: File | null
   }) => {
-    // Meme permission que la gestion des membres: owner/admin uniquement.
+    // Même permission que la gestion des membres: owner/admin uniquement.
     await assertCanManageMembersInList(listId)
 
     try {
@@ -1268,7 +1270,7 @@ export const useSharedLists = () => {
   }
 
   const addMemberToList = async (listId: string, userId: string) => {
-    // ensureMembership gere le cas ou le membre existe deja et les anciennes relations a reparer.
+    // ensureMembership gère le cas où le membre existe déjà et les anciennes relations à réparer.
     await assertCanManageMembersInList(listId)
     return await ensureMembership(listId, userId)
   }
@@ -1283,7 +1285,7 @@ export const useSharedLists = () => {
     }
 
     const access = await assertSharedListAccess(listId)
-    // Un membre peut se retirer lui-meme; sinon il faut un droit de gestion des membres.
+    // Un membre peut se retirer lui-même; sinon il faut un droit de gestion des membres.
     if (!access.isOwner && memberId !== access.userId && !getPermissionCapabilities(access.membership).canManageMembers) {
       throw new Error('Vous n\'avez pas la permission de retirer d\'autres membres de cette liste partagée.')
     }
@@ -1310,7 +1312,7 @@ export const useSharedLists = () => {
     ])
 
     for (const relation of animeRelations) {
-      // Supprime d'abord les entrees anime pour eviter les relations orphelines.
+      // Supprime d'abord les entrées anime pour éviter les relations orphelines.
       await pocketbaseStore.pb.collection('anime_shared_list').delete(relation.id)
     }
 
@@ -1324,7 +1326,7 @@ export const useSharedLists = () => {
         try {
           await pocketbaseStore.pb.collection('permission').delete(permissionId)
         } catch {
-          // Sans gravite si la permission est deja supprimee ou protegee.
+          // Sans gravité si la permission est déjà supprimée ou protégée.
         }
       }
     }
@@ -1348,7 +1350,7 @@ export const useSharedLists = () => {
     if (current) return current
 
     try {
-      // Reutilise ou cree une fiche anime locale pour que les listes partagent le meme media AniList.
+      // Réutilise ou crée une fiche anime locale pour que les listes partagent le même média AniList.
       return await pocketbaseStore.pb.collection('anime').create<AnimeRecord>({
         anilist_media_id: mediaId,
         aniilist_media_name: input.title.trim() || `AniList #${mediaId}`,
@@ -1357,7 +1359,7 @@ export const useSharedLists = () => {
     } catch (error: any) {
       if (!isUniqueConstraintError(error)) throw error
 
-      // Gestion de course: un autre client a pu creer la fiche apres notre premiere lecture.
+      // Gestion de course: un autre client a pu créer la fiche après notre première lecture.
       const retry = await pocketbaseStore.pb.collection('anime').getList<AnimeRecord>(1, 1, {
         filter: `anilist_media_id=${mediaId}`,
         ...noAutoCancel
@@ -1366,6 +1368,39 @@ export const useSharedLists = () => {
       if (retried) return retried
       throw error
     }
+  }
+
+  const getAnimeRecord = async (animeRecordId: string) => {
+    if (!animeRecordId) {
+      throw new Error('Cette entrée anime n\'a pas de fiche anime associée.')
+    }
+
+    return await pocketbaseStore.pb.collection('anime').getOne<AnimeRecord>(animeRecordId, {
+      ...noAutoCancel
+    })
+  }
+
+  const syncSharedAnimeToAniList = async (
+    animeRecord: Pick<AnimeRecord, 'anilist_media_id'>,
+    input: {
+      status?: SharedListAnimeStatus
+      progress?: number
+      score?: number
+      mode: 'create' | 'update'
+    }
+  ) => {
+    const mediaId = Number(animeRecord.anilist_media_id || 0)
+    if (!Number.isFinite(mediaId) || mediaId <= 0) {
+      throw new Error('Identifiant AniList introuvable pour cette entrée partagée.')
+    }
+
+    return await anilistSync.syncSharedListEntry({
+      mediaId,
+      status: input.status as EditableAniListStatus | undefined,
+      progress: input.progress,
+      score: input.score,
+      mode: input.mode
+    })
   }
 
   const addAnimeToList = async (
@@ -1391,6 +1426,13 @@ export const useSharedLists = () => {
     if (existingRelation.items[0]) {
       throw new Error('Cet anime est déjà dans cette liste partagée.')
     }
+
+    await syncSharedAnimeToAniList(animeRecord, {
+      status: input.status || 'PLANNING',
+      progress: input.progress,
+      score: input.score,
+      mode: 'create'
+    })
 
     // withStateFields permet de rester compatible avec un schema anime_shared_list pas encore migre.
     const createRelation = async (withStateFields: boolean) => {
@@ -1459,8 +1501,17 @@ export const useSharedLists = () => {
 
     await assertCanEditAnimeInList(listId)
 
+    const animeRecordId = normalizeRelationValue(relation.fk_anime_id)
+    const animeRecord = await getAnimeRecord(animeRecordId)
+    await syncSharedAnimeToAniList(animeRecord, {
+      status: patch.status || relation.status || 'PLANNING',
+      progress: patch.progress,
+      score: patch.score,
+      mode: 'update'
+    })
+
     const payload: Record<string, any> = {}
-    // Patch partiel: seuls les champs vraiment changes sont envoyes a PocketBase.
+    // Patch partiel: seuls les champs vraiment changés sont envoyés à PocketBase.
     if (patch.status) payload.status = patch.status
     if (typeof patch.progress === 'number') payload.progress = patch.progress
     if (typeof patch.score === 'number') payload.score = patch.score
@@ -1493,10 +1544,10 @@ export const useSharedLists = () => {
       .map(id => `id != "${escapeFilterValue(id)}"`)
       .join(' && ')
     const textFilter = `anilist_username ~ "${escapeFilterValue(needle)}"`
-    // Le filtre combine recherche texte et exclusions deja presentes dans la liste.
+    // Le filtre combine recherche texte et exclusions déjà présentes dans la liste.
     const filter = exclusions ? `${textFilter} && ${exclusions}` : textFilter
 
-    // La creation de liste n'a besoin que de quelques resultats rapides pour le picker.
+    // La création de liste n'a besoin que de quelques résultats rapides pour le picker.
     const result = await pocketbaseStore.pb.collection('user').getList<UserRecord>(1, 8, {
       filter,
       sort: 'anilist_username'

@@ -14,7 +14,7 @@ export const normalizeAuthEmail = (email: string) => {
 
   if (GMAIL_DOMAINS.has(domain)) {
     domain = 'gmail.com';
-    // Gmail ignore les points et le suffixe +tag; on s'aligne pour eviter les doublons de compte.
+    // Gmail ignore les points et le suffixe +tag; on s'aligne pour éviter les doublons de compte.
     const baseLocalPart = localPart.split('+')[0] || '';
     localPart = baseLocalPart.replace(/\./g, '');
   }

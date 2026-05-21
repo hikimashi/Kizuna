@@ -14,7 +14,7 @@
       <div class="mb-4 flex justify-center sm:mb-6">
         <img src="/img/user.webp" alt="Logo" class="h-24 rounded-full border border-primary bg-base-100/70 p-1 shadow-lg sm:h-32 md:h-36" />
       </div>
-      <h2 class="mb-4 text-center text-xl font-bold text-primary sm:mb-6 sm:text-2xl">Connexion a votre compte</h2>
+      <h2 class="mb-4 text-center text-xl font-bold text-primary sm:mb-6 sm:text-2xl">Connexion à votre compte</h2>
 
       <div class="my-4 rounded-2xl border border-base-300/60 bg-base-100/50 px-4 py-3 text-center shadow-sm sm:my-6">
         <span class="flex flex-wrap justify-center text-center text-sm sm:text-base">
@@ -137,7 +137,7 @@ const doGoogleLogin = async () => {
     await authStore.loginWithGoogle();
     toast.openToast({ type: 'success', message: 'Bienvenue.' });
   } catch (e: any) {
-    toast.openToast({ type: 'error', message: e?.message || 'La connexion Google a echoue.' });
+    toast.openToast({ type: 'error', message: e?.message || 'La connexion Google a échoué.' });
     return;
   }
 
@@ -150,7 +150,7 @@ const doGithubLogin = async () => {
     await authStore.loginWithGithub();
     toast.openToast({ type: 'success', message: 'Bienvenue.' });
   } catch (e: any) {
-    toast.openToast({ type: 'error', message: e?.message || 'La connexion GitHub a echoue.' });
+    toast.openToast({ type: 'error', message: e?.message || 'La connexion GitHub a échoué.' });
     return;
   }
 

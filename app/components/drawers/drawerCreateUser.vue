@@ -160,7 +160,7 @@ const createUser = async () => {
       message: 'Compte crée . Verifiez votre boite mail avant de vous connecter.'
     });
   } catch (e: any) {
-    toast.openToast({ type: 'error', message: e.message || 'La creation du compte a echoue.' });
+    toast.openToast({ type: 'error', message: e.message || 'La création du compte a échoué.' });
     return;
   }
   clearForm();
@@ -172,7 +172,7 @@ const doGoogleLogin = async () => {
     await authStore.loginWithGoogle();
     toast.openToast({ type: 'success', message: 'Bienvenue.' });
   } catch (e: any) {
-    toast.openToast({ type: 'error', message: e.message || 'La connexion Google a echoue.' });
+    toast.openToast({ type: 'error', message: e.message || 'La connexion Google a échoué.' });
     return;
   }
   clearForm();
@@ -185,7 +185,7 @@ const doGithubLogin = async () => {
     await authStore.loginWithGithub();
     toast.openToast({ type: 'success', message: 'Bienvenue.' });
   } catch (e: any) {
-    toast.openToast({ type: 'error', message: e.message || 'La connexion GitHub a echoue.' });
+    toast.openToast({ type: 'error', message: e.message || 'La connexion GitHub a échoué.' });
     return;
   }
   clearForm();

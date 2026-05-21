@@ -14,7 +14,7 @@
           </h1>
 
           <p class="hero-subtitle fade-up">
-            Kizuna relie votre profil AniList a vos amis. Créez des listes communes,
+            Kizuna relie votre profil AniList à vos amis. Créez des listes communes,
             suivez votre progression ensemble et trouvez quoi regarder ensuite, en groupe.
           </p>
 
@@ -193,7 +193,7 @@
             <p class="anilist-link-label">Connexion AniList requise</p>
             <h2>Liez votre compte AniList pour continuer</h2>
             <p>
-              Connectez-le une fois pour synchroniser votre profil, votre banniere et vos données anime avant d'utiliser le tableau de bord.
+              Connectez-le une fois pour synchroniser votre profil, votre bannière et vos données anime avant d'utiliser le tableau de bord.
             </p>
             <button class="anilist-link-button" @click="connectAniList">
               Lier le compte AniList
@@ -209,7 +209,7 @@
           <div class="follow-modal-head">
             <div>
               <p class="follow-modal-kicker">Trouver des utilisateurs</p>
-              <h2>Rechercher des utilisateurs a suivre</h2>
+              <h2>Rechercher des utilisateurs à suivre</h2>
             </div>
             <button class="follow-modal-close" type="button" @click="closeFollowModal">X</button>
           </div>
@@ -259,7 +259,7 @@
                     {{ `AniList #${user.anilistUserId} - ${user.animeCount} anime - note ${user.meanScore || '-'}` }}
                   </div>
                   <div class="follow-result-badges">
-                    <span v-if="isFollowBusy(user.anilistUserId)" class="follow-badge">Mise a jour...</span>
+                    <span v-if="isFollowBusy(user.anilistUserId)" class="follow-badge">Mise à jour...</span>
                     <span v-if="user.alreadyFriend" class="follow-badge follow-badge-friend">Déjà ami</span>
                     <span v-else-if="user.inKizuna" class="follow-badge follow-badge-kizuna">Sur Kizuna</span>
                     <span v-else class="follow-badge">AniList uniquement</span>
@@ -274,14 +274,14 @@
                   :disabled="!user.anilistUserId || user.alreadyFriend || isFollowBusy(user.anilistUserId)"
                   @click.stop="followUserFromSearch(user)"
                 >
-                  {{ isFollowBusy(user.anilistUserId) ? 'Mise a jour...' : user.alreadyFriend ? 'Ami ajoute' : 'Suivre' }}
+                  {{ isFollowBusy(user.anilistUserId) ? 'Mise à jour...' : user.alreadyFriend ? 'Ami ajouté' : 'Suivre' }}
                 </button>
               </div>
             </div>
           </div>
 
           <p class="follow-modal-note">
-            La recherche vient maintenant directement d'AniList. Si le profil est déjà synchronisé sur Kizuna, cela apparait dans la carte de resultat.
+            La recherche vient maintenant directement d'AniList. Si le profil est déjà synchronisé sur Kizuna, cela apparaît dans la carte de résultat.
           </p>
         </div>
       </div>
@@ -338,7 +338,7 @@ const dashboardFriendLimit = ref(8)
 
 const authRecord = computed(() => {
   const authRefOrRecord = pocketbaseStore.authRecord as any
-  // Compatibilite avec les cas ou authRecord est expose comme ref ou comme objet brut.
+  // Compatibilité avec les cas où authRecord est exposé comme ref ou comme objet brut.
   return (authRefOrRecord?.value ?? authRefOrRecord ?? {}) as Record<string, any>
 })
 
@@ -351,7 +351,7 @@ const friendIds = computed(() => new Set(socialStore.friendUsers.map(friend => N
 const pendingFollowIds = computed(() => new Set((socialStore.followPendingIds ?? []).map(id => Number(id))))
 
 const dashboardListLimit = computed(() => {
-  // La colonne des listes garde un nombre d'items adapte a la hauteur disponible.
+  // La colonne des listes garde un nombre d'items adapté à la hauteur disponible.
   if (viewportHeight.value < 700) return 3
   if (viewportHeight.value < 820) return 4
   if (viewportHeight.value < 980) return 5
@@ -390,7 +390,7 @@ const featureVisible = reactive<Record<number, boolean>>({
 })
 
 function setCardRef(el: unknown, index: number) {
-  // Les refs du v-for servent ensuite a l'IntersectionObserver des cartes marketing.
+  // Les refs du v-for servent ensuite à l'IntersectionObserver des cartes marketing.
   if (el instanceof HTMLElement) cardEls[index] = el
 }
 
@@ -407,22 +407,22 @@ const features = [
   },
   {
     title: 'Suivi de progression',
-    description: 'Synchronisez automatiquement vos données AniList. Votre progression reste toujours a jour.',
+    description: 'Synchronisez automatiquement vos données AniList. Votre progression reste toujours à jour.',
     iconSvg: '<svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>'
   },
   {
     title: 'Explorer et decouvrir',
-    description: 'Explorez tout le catalogue AniList. Trouvez votre prochaine obsession grace a des recommandations utiles.',
+    description: 'Explorez tout le catalogue AniList. Trouvez votre prochaine obsession grâce à des recommandations utiles.',
     iconSvg: '<svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>'
   },
   {
     title: 'Notifications en temps reel',
-    description: 'Recevez une alerte quand vos amis mettent a jour leurs listes, terminent une serie ou partagent quelque chose de nouveau.',
+    description: 'Recevez une alerte quand vos amis mettent à jour leurs listes, terminent une série ou partagent quelque chose de nouveau.',
     iconSvg: '<svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>'
   },
   {
     title: 'Natif AniList',
-    description: 'Aucun nouveau compte necessaire. Connectez-vous directement avec AniList : vos données, votre controle.',
+    description: 'Aucun nouveau compte nécessaire. Connectez-vous directement avec AniList : vos données, votre contrôle.',
     iconSvg: '<svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>'
   }
 ]
@@ -460,7 +460,7 @@ const openFollowModal = () => {
 }
 
 const closeFollowModal = () => {
-  // Fermer la modale annule aussi le debounce pour eviter une recherche tardive apres fermeture.
+  // Fermer la modale annule aussi le debounce pour éviter une recherche tardive après fermeture.
   isFollowModalOpen.value = false
   followSearchQuery.value = ''
   followSearchError.value = ''
@@ -541,7 +541,7 @@ const handleFollowSearch = () => {
     return
   }
 
-  // Debounce court pour ne pas envoyer une requete AniList a chaque frappe.
+  // Debounce court pour ne pas envoyer une requête AniList à chaque frappe.
   followSearchTimer = setTimeout(async () => {
     isSearchingUsers.value = true
     followSearchError.value = ''
@@ -562,7 +562,7 @@ const handleFollowSearch = () => {
       }
 
       const rawUsers: AniListSearchUser[] = Array.isArray(payload?.data?.Page?.users) ? payload.data.Page.users : []
-      // On retire le profil courant pour eviter de proposer "se suivre soi-meme".
+      // On retire le profil courant pour éviter de proposer "se suivre soi-même".
       const filteredUsers = rawUsers.filter((user: AniListSearchUser) => Number(user?.id || 0) !== Number(authRecord.value?.anilist_user_id || 0))
       const pocketbaseMatches = await fetchPocketBaseMatches(filteredUsers.map((user: AniListSearchUser) => Number(user?.id || 0)))
 
@@ -614,20 +614,20 @@ const followUserFromSearch = async (user: { anilistUserId: number }) => {
 
   try {
     await socialStore.toggleFollowUser(user.anilistUserId)
-    // Met a jour la carte locale sans attendre un rechargement complet du store social.
+    // Met à jour la carte locale sans attendre un rechargement complet du store social.
     followSearchResults.value = followSearchResults.value.map((entry) =>
       entry.anilistUserId === user.anilistUserId
         ? { ...entry, alreadyFriend: true, inKizuna: true }
         : entry
     )
   } catch (error: any) {
-    followSearchError.value = error?.message || 'Impossible de mettre a jour le suivi AniList pour le moment.'
+    followSearchError.value = error?.message || 'Impossible de mettre à jour le suivi AniList pour le moment.'
   }
 }
 
 const loadDashboardLists = async () => {
   if (!isAniListLinked.value) {
-    // Si AniList est delie, les donnees du dashboard ne doivent pas rester visibles.
+    // Si AniList est délié, les données du dashboard ne doivent pas rester visibles.
     dashboardLists.value = []
     dashboardListsError.value = ''
     dashboardListsLoading.value = false
@@ -747,7 +747,7 @@ onUnmounted(() => {
 
 watch(isAniListLinked, async (linked) => {
   if (!linked) {
-    // Nettoyage complet quand l'utilisateur n'a pas encore relie son compte AniList.
+    // Nettoyage complet quand l'utilisateur n'a pas encore relié son compte AniList.
     dashboardLists.value = []
     socialStore.reset()
     closeFollowModal()

@@ -11,7 +11,7 @@ export const useToastStore = defineStore('useToastStore', () => {
     const key = `${type}:${message}`;
     const now = Date.now();
 
-    // Evite les toasts dupliques emis presque au meme moment (ex. clic + middleware).
+    // Évite les toasts dupliqués émis presque au même moment (ex. clic + middleware).
     if (lastToastKey.value === key && now - lastToastAt.value < 800) return;
     lastToastKey.value = key;
     lastToastAt.value = now;

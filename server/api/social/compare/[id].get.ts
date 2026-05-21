@@ -123,7 +123,7 @@ const requestAnilist = async (query: string, variables: Record<string, any>) => 
 
 const fetchUserMediaIds = async (opts: { userId?: number; userName?: string }) => {
   const ids = new Set<number>()
-  // La comparaison ne garde que les animes en cours/termines pour eviter les plans a regarder.
+  // La comparaison ne garde que les animes en cours/terminés pour éviter les plans à regarder.
   const payload = await requestAnilist(LIST_QUERY, {
     userId: opts.userId || null,
     userName: opts.userId ? null : (opts.userName || null),

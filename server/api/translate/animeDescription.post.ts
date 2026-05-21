@@ -100,7 +100,7 @@ const extractGoogleTranslatedText = (payload: any) => {
 const requestGoogleTranslation = async (chunk: string, targetLang: string) => {
   let lastError: unknown = null
 
-  // Deux endpoints non officiels sont essayes car ils ne renvoient pas toujours le meme format.
+  // Deux endpoints non officiels sont essayés car ils ne renvoient pas toujours le même format.
   for (const endpoint of GOOGLE_TRANSLATE_ENDPOINTS) {
     try {
       const query = new URLSearchParams({
@@ -204,7 +204,7 @@ export default defineEventHandler(async (event) => {
 
   const now = Date.now()
   if (cache.size > 500) {
-    // Purge opportuniste pour garder le cache memoire borne sans tache de fond.
+    // Purge opportuniste pour garder le cache mémoire borné sans tâche de fond.
     for (const [key, entry] of cache) {
       if (entry.expiresAt <= now) cache.delete(key)
     }
@@ -230,7 +230,7 @@ export default defineEventHandler(async (event) => {
     if (!globalState.__translationValkeyClientPromise) {
       globalState.__translationValkeyClientPromise = (async () => {
         try {
-          // Import dynamique: l'API reste disponible meme quand Valkey/iovalkey ne sont pas configures.
+          // Import dynamique: l'API reste disponible même quand Valkey/iovalkey ne sont pas configurés.
           const importer = new Function('moduleName', 'return import(moduleName)') as (moduleName: string) => Promise<any>
           const valkeyModule = await importer('iovalkey')
           const Valkey = valkeyModule?.default ?? valkeyModule?.Redis
@@ -280,7 +280,7 @@ export default defineEventHandler(async (event) => {
 
   const pending = inFlight.get(cacheKey)
   if (pending) {
-    // Evite de traduire plusieurs fois la meme description pendant un meme rendu.
+    // Évite de traduire plusieurs fois la même description pendant un même rendu.
     return await pending
   }
 
@@ -290,7 +290,7 @@ export default defineEventHandler(async (event) => {
         ? await translateWithGoogleGtx(description, targetLang)
         : description
 
-      // En cas de provider desactive ou vide, on renvoie toujours la description originale.
+      // En cas de provider désactivé ou vide, on renvoie toujours la description originale.
       const payload = {
         description: translatedDescription || description,
         translated: Boolean(translatedDescription) && translatedDescription !== description,

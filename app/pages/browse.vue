@@ -364,7 +364,7 @@ type ActiveFilter = {
 const activeFilters = computed<ActiveFilter[]>(() => {
   const nextFilters: ActiveFilter[] = []
 
-  // Les chips visibles sont reconstruites depuis l'etat source pour rester toujours synchrones.
+  // Les chips visibles sont reconstruites depuis l'état source pour rester toujours synchrones.
   if (searchTerm.value) {
     nextFilters.push({
       key: `search:${searchTerm.value}`,
@@ -458,7 +458,7 @@ const toggleGenre = (genreValue: string) => {
 }
 
 const removeFilter = (filterItem: ActiveFilter) => {
-  // Chaque chip sait quel etat source elle doit nettoyer.
+  // Chaque chip sait quel état source elle doit nettoyer.
   if (filterItem.type === 'search') {
     searchInput.value = ''
     searchTerm.value = ''
@@ -517,7 +517,7 @@ const handleDocumentClick = () => {
 
 watch(searchInput, (value) => {
   if (searchTimer) clearTimeout(searchTimer)
-  // Debounce local: la query AniList ne part qu'apres une pause de saisie.
+  // Debounce local: la query AniList ne part qu'après une pause de saisie.
   searchTimer = setTimeout(() => {
     searchTerm.value = value.trim()
   }, 250)

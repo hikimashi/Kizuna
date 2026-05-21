@@ -6,7 +6,7 @@ import { authEmailCandidates, normalizeAuthEmail } from '~/utils/authEmail';
 export const useMyAuthStore = defineStore('auth', () => {
   const pocketbaseStore = usePocketbaseStore();
   const userStore = useUserStore();
-  const unverifiedEmailMessage = 'Veuillez verifier votre adresse e-mail avant de vous connecter.';
+  const unverifiedEmailMessage = 'Veuillez vérifier votre adresse e-mail avant de vous connecter.';
   const invalidLoginMessage = 'Identifiants invalides. Verifiez votre email et votre mot de passe.';
 
   const getAuthErrorMessage = (error: any, fallback: string) => {
@@ -45,7 +45,7 @@ export const useMyAuthStore = defineStore('auth', () => {
     return rawMessage || fallback;
   };
 
-  // Convertit les données PocketBase vers le format UserType utilise par l'app.
+  // Convertit les données PocketBase vers le format UserType utilisé par l'app.
   const mapAuthDataToUser = (authData: { token: string; record: any }): UserType => {
     const { record } = authData;
 
@@ -187,7 +187,7 @@ export const useMyAuthStore = defineStore('auth', () => {
         message.includes('NetworkError') ||
         message.includes('fetch');
 
-      // Conserve la session locale courante si le refresh echoue a cause d'un souci reseau temporaire.
+      // Conserve la session locale courante si le refresh échoue à cause d'un souci réseau temporaire.
       if (hasLocalSession && isTransientNetworkError) {
         userStore.saveUserData(
           mapAuthDataToUser({

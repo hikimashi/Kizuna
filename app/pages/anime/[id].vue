@@ -405,7 +405,7 @@ const reviewsState = await useAsyncData(
     const aggregated: Review[] = []
     let hasNextPage = false
 
-    // reviewPage represente "combien de pages afficher"; on agrege depuis la premiere pour garder l'ordre.
+    // reviewPage représente "combien de pages afficher"; on agrège depuis la première pour garder l'ordre.
     for (let page = 1; page <= reviewPage.value; page += 1) {
       const response = await anilistGraphql.request<AniListGraphqlResponse<{
         Page?: {
@@ -527,7 +527,7 @@ const streamingLinks = computed(() => {
 const allRecommendations = computed(() => (media.value?.recommendations?.nodes || []).filter((item) => item?.mediaRecommendation))
 const recommendationBaseLimit = computed(() => {
   const width = recommendationViewportWidth.value
-  // La limite suit les colonnes visibles pour eviter une rangee incomplete trop longue.
+  // La limite suit les colonnes visibles pour éviter une rangée incomplète trop longue.
   if (width >= 1600) return 10
   if (width >= 1280) return 8
   if (width >= 900) return 6
@@ -545,7 +545,7 @@ const overviewReviews = computed(() => reviews.value.slice(0, 3))
 const hasMoreReviews = computed(() => Boolean(reviewsBundle.value.hasNextPage))
 const canUsePersonalFeeds = computed(() => Boolean(anilistToken.value && anilistUserId.value))
 const activeSocialActivities = computed(() => {
-  // L'onglet social partage le meme rendu; seul le tableau source change selon le filtre.
+  // L'onglet social partage le même rendu; seul le tableau source change selon le filtre.
   if (socialFeedType.value === 'SELF') return selfActivities.value
   if (socialFeedType.value === 'FOLLOWING') return followingActivities.value
   return globalActivities.value
@@ -560,7 +560,7 @@ const followingLatestByUser = computed(() => {
   const seen = new Set<string>()
   return followingActivities.value.filter((activity) => {
     const name = activity.user?.name || ''
-    // Garde seulement la derniere activite par utilisateur pour le resume lateral.
+    // Garde seulement la dernière activité par utilisateur pour le résumé latéral.
     if (!name || seen.has(name)) return false
     seen.add(name)
     return true
@@ -570,7 +570,7 @@ const followingUserCount = computed(() => followingLatestByUser.value.length)
 const followingStatusCounts = computed(() => {
   const counts = new Map<string, number>()
 
-  // Les statuts bruts AniList sont traduits avant regroupement pour eviter les doublons d'affichage.
+  // Les statuts bruts AniList sont traduits avant regroupement pour éviter les doublons d'affichage.
   for (const activity of followingLatestByUser.value) {
     const key = formatStatus(activity.status)
     counts.set(key, (counts.get(key) || 0) + 1)
@@ -583,7 +583,7 @@ const followingTimelineItems = computed(() => {
   const items: Array<{ type: 'activity'; activity: Activity } | { type: 'gap'; label: string }> = []
   let previousTimestamp = 0
 
-  // Insere des separateurs quand l'activite des suivis saute plusieurs semaines.
+  // Insère des séparateurs quand l'activité des suivis saute plusieurs semaines.
   for (const activity of sorted) {
     const currentTimestamp = activity.createdAt || 0
     if (previousTimestamp) {
@@ -607,7 +607,7 @@ watch(canUsePersonalFeeds, (available) => {
     return
   }
 
-  // Une fois connecte, l'utilisateur arrive directement sur son activite personnelle.
+  // Une fois connecté, l'utilisateur arrive directement sur son activité personnelle.
   if (socialFeedType.value === 'GLOBAL') {
     socialFeedType.value = 'SELF'
   }
@@ -657,12 +657,12 @@ const STATUS_TRANSLATIONS: Record<string, string> = {
   COMPILATION: 'Compilation',
   CONTAINS: 'Contient',
   CURRENT: 'En cours',
-  PLANNING: 'A voir',
+  PLANNING: 'À voir',
   COMPLETED: 'Terminé',
   REPEATING: 'Revisionnage',
   PAUSED: 'En pause',
   DROPPED: 'Abandonné',
-  'watched episode': 'a regarde l\'episode',
+  'watched episode': 'a regardé l\'épisode',
   'plans to watch': 'prevoit de regarder',
   completed: 'a terminé',
   dropped: 'a abandonné',
@@ -675,7 +675,7 @@ function formatStatus(value?: string | null) {
   const raw = String(value).trim()
   const lower = raw.toLowerCase()
   const upper = raw.toUpperCase().replace(/\s+/g, '_')
-  // AniList melange enums, phrases d'activite et valeurs deja lisibles; on tente les trois formes.
+  // AniList mélange enums, phrases d'activité et valeurs déjà lisibles; on tente les trois formes.
   return STATUS_TRANSLATIONS[raw]
     || STATUS_TRANSLATIONS[lower]
     || STATUS_TRANSLATIONS[upper]
@@ -722,7 +722,7 @@ function relativeTime(timestamp?: number | null) {
   if (delta > 86_400) return `il y a ${Math.floor(delta / 86_400)} j`
   if (delta > 3_600) return `il y a ${Math.floor(delta / 3_600)} h`
   if (delta > 60) return `il y a ${Math.floor(delta / 60)} min`
-  return 'a l\'instant'
+  return 'à l\'instant'
 }
 
 function formatProgress(activity: Activity) {
@@ -736,8 +736,8 @@ function activityMediaTitle(activity: Activity) {
 function activitySummary(activity: Activity) {
   const status = activity.status
     ? `${activity.status.charAt(0).toUpperCase()}${activity.status.slice(1)}`
-    : 'Mise a jour'
-  // "progress" contient deja le numero/texte d'episode renvoye par AniList.
+    : 'Mise à jour'
+  // "progress" contient déjà le numéro/texte d'épisode renvoyé par AniList.
   return activity.progress ? `${formatStatus(status)} ${activity.progress} de` : formatStatus(status)
 }
 
@@ -862,7 +862,7 @@ const statsSummaryCards = computed(() => [
     meta: 'Utilisateurs qui l\'ont mis en favori'
   },
   {
-    label: 'Episodes',
+    label: 'Épisodes',
     value: media.value?.episodes ? String(media.value.episodes) : '?',
     meta: media.value?.duration ? `${media.value.duration} min chacun` : 'Durée inconnue'
   },
@@ -876,7 +876,7 @@ const infoFacts = computed(() => [
   { label: 'Format', value: formatStatus(media.value?.format) },
   { label: 'Statut', value: formatStatus(media.value?.status) },
   { label: 'Saison', value: formatSeason(media.value?.season, media.value?.seasonYear) },
-  { label: 'Episodes', value: media.value?.episodes ? String(media.value.episodes) : '?' },
+  { label: 'Épisodes', value: media.value?.episodes ? String(media.value.episodes) : '?' },
   { label: 'Durée', value: media.value?.duration ? `${media.value.duration} min` : 'Inconnue' },
   { label: 'Source', value: formatStatus(media.value?.source) }
 ])
@@ -897,7 +897,7 @@ const tabs = [
 
 const listOptions: Array<{ value: EditableAniListStatus; label: string }> = [
   { value: 'CURRENT', label: 'En cours' },
-  { value: 'PLANNING', label: 'A voir' },
+  { value: 'PLANNING', label: 'À voir' },
   { value: 'COMPLETED', label: 'Terminé' },
   { value: 'REPEATING', label: 'Revisionnage' },
   { value: 'PAUSED', label: 'En pause' },
@@ -912,7 +912,7 @@ const currentListLabel = computed(() => {
 })
 
 const sharedListOptions = computed(() => {
-  // On ne propose que les listes ou l'utilisateur a une appartenance effective.
+  // On ne propose que les listes où l'utilisateur a une appartenance effective.
   return sharedLists.value.filter(list => list.isOwner || list.isMember)
 })
 
@@ -923,7 +923,7 @@ async function toggleFavorite() {
   const next = !media.value.isFavourite
   const prevCount = media.value.favourites || 0
 
-  // Mise a jour optimiste: l'UI repond tout de suite, puis rollback en cas d'erreur AniList.
+  // Mise à jour optimiste: l'UI répond tout de suite, puis rollback en cas d'erreur AniList.
   media.value.isFavourite = next
   media.value.favourites = Math.max(0, prevCount + (next ? 1 : -1))
 
@@ -933,7 +933,7 @@ async function toggleFavorite() {
       { animeId: media.value.id },
       { token: anilistToken.value, skipCache: true }
     )
-    if (response?.errors?.length) throw new Error(response.errors[0]?.message || 'Impossible de mettre a jour le favori.')
+    if (response?.errors?.length) throw new Error(response.errors[0]?.message || 'Impossible de mettre à jour le favori.')
   } catch {
     media.value.isFavourite = !next
     media.value.favourites = prevCount
@@ -947,7 +947,7 @@ async function saveListStatus(status: EditableAniListStatus) {
 
   actionBusy.value = 'list'
   listMenuOpen.value = false
-  // Conserve l'ancien statut pour revenir a l'etat exact si la sauvegarde echoue.
+  // Conserve l'ancien statut pour revenir à l'état exact si la sauvegarde échoue.
   const previousStatus: EditableAniListStatus | '' = (currentListStatus.value || media.value.mediaListEntry?.status || '') as EditableAniListStatus | ''
   currentListStatus.value = status
 
@@ -999,7 +999,7 @@ const toggleSharedListPicker = async () => {
 const addSelectedAnimeToSharedList = async (listId: string) => {
   if (!media.value?.id || !listId || isAddingToSharedList.value) return
 
-  // Si l'utilisateur n'a pas encore de statut AniList, on ajoute l'anime en planifie par defaut.
+  // Si l'utilisateur n'a pas encore de statut AniList, on ajoute l'anime en planifié par défaut.
   const status = (currentListStatus.value || media.value.mediaListEntry?.status || 'PLANNING') as EditableAniListStatus
 
   try {
@@ -1015,7 +1015,7 @@ const addSelectedAnimeToSharedList = async (listId: string) => {
     })
     showSharedListPicker.value = false
   } catch (error: any) {
-    sharedListError.value = error?.message || "Impossible d'ajouter cet anime a la liste partagée."
+    sharedListError.value = error?.message || "Impossible d'ajouter cet anime à la liste partagée."
   } finally {
     isAddingToSharedList.value = false
   }
@@ -1149,10 +1149,10 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
             <div class="sidebar-section">
               <div class="sidebar-title">Données</div>
               <div class="data-row"><span class="data-label">Format</span><span class="data-value">{{ formatStatus(media.format) }}</span></div>
-              <div class="data-row"><span class="data-label">Episodes</span><span class="data-value">{{ media.episodes || '?' }}</span></div>
-              <div class="data-row"><span class="data-label">Durée d'episode</span><span class="data-value">{{ media.duration ? `${media.duration} min` : 'Inconnue' }}</span></div>
+              <div class="data-row"><span class="data-label">Épisodes</span><span class="data-value">{{ media.episodes || '?' }}</span></div>
+              <div class="data-row"><span class="data-label">Durée d'épisode</span><span class="data-value">{{ media.duration ? `${media.duration} min` : 'Inconnue' }}</span></div>
               <div class="data-row"><span class="data-label">Statut</span><span class="data-value">{{ formatStatus(media.status) }}</span></div>
-              <div class="data-row"><span class="data-label">Date de debut</span><span class="data-value">{{ formatDate(media.startDate) }}</span></div>
+              <div class="data-row"><span class="data-label">Date de début</span><span class="data-value">{{ formatDate(media.startDate) }}</span></div>
               <div class="data-row"><span class="data-label">Date de fin</span><span class="data-value">{{ formatDate(media.endDate) }}</span></div>
               <div class="data-row"><span class="data-label">Saison</span><span class="data-value">{{ formatSeason(media.season, media.seasonYear) }}</span></div>
               <div class="data-row"><span class="data-label">Note moyenne</span><span class="data-value">{{ media.averageScore ? `${media.averageScore}%` : '-' }}</span></div>
@@ -1183,7 +1183,7 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                 <span class="media-meta-pill">{{ formatStatus(media.format) }}</span>
                 <span class="media-meta-pill">{{ formatSeason(media.season, media.seasonYear) }}</span>
                 <span class="media-meta-pill">{{ media.averageScore ? `${media.averageScore}% de note` : 'Pas de note pour le moment' }}</span>
-                <span class="media-meta-pill">{{ media.episodes ? `${media.episodes} eps` : 'Episodes a venir' }}</span>
+                <span class="media-meta-pill">{{ media.episodes ? `${media.episodes} eps` : 'Épisodes à venir' }}</span>
               </div>
               <h1 class="media-title">{{ pageTitle }}</h1>
               <div v-if="genres.length" class="media-genre-row">
@@ -1330,7 +1330,7 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                   >
                     <img :src="episode.thumbnail || ''" :alt="episode.title || pageTitle" class="watch-provider-image">
                     <div class="watch-provider-copy">
-                      <div class="watch-provider-name">{{ episode.title || 'Episode' }}</div>
+                      <div class="watch-provider-name">{{ episode.title || 'Épisode' }}</div>
                       <div class="watch-provider-label">{{ providerNameFromUrl(episode.url) }}</div>
                     </div>
                   </a>
@@ -1435,7 +1435,7 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                   >
                     <img :src="episode.thumbnail || ''" :alt="episode.title || pageTitle" class="watch-provider-image">
                     <div class="watch-provider-copy">
-                      <div class="watch-provider-name">{{ episode.title || 'Episode' }}</div>
+                      <div class="watch-provider-name">{{ episode.title || 'Épisode' }}</div>
                       <div class="watch-provider-label">{{ providerNameFromUrl(episode.url) }}</div>
                     </div>
                   </a>
@@ -1559,7 +1559,7 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
 
                 <div class="stats-info-grid">
                   <section class="info-card">
-                    <h3 class="info-card-title">Details du media</h3>
+                    <h3 class="info-card-title">Détails du média</h3>
                     <div class="info-card-list">
                       <div v-for="item in infoFacts" :key="item.label" class="info-card-row">
                         <span>{{ item.label }}</span>
@@ -1643,7 +1643,7 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                       Liez votre compte AniList pour debloquer les flux Moi et Suivis.
                     </p>
 
-                    <div v-if="socialLoading" class="social-empty">Chargement de l'activite...</div>
+                    <div v-if="socialLoading" class="social-empty">Chargement de l'activité...</div>
 
                     <div v-else-if="activeSocialActivities.length" class="activity-feed-list">
                       <article v-for="activity in activeSocialActivities" :key="`${activity.id}-feed`" class="activity-entry-card">
@@ -1702,7 +1702,7 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                     </div>
 
                     <div v-else class="social-empty">
-                      Aucune activite pour ce flux pour le moment.
+                      Aucune activité pour ce flux pour le moment.
                     </div>
 
                     <button
@@ -1766,7 +1766,7 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                     </div>
 
                     <div v-if="canUsePersonalFeeds && followingTimelineItems.length" class="timeline-block">
-                      <h3 class="mini-title">Chronologie de l'activite</h3>
+                      <h3 class="mini-title">Chronologie de l'activité</h3>
                       <div class="timeline-list">
                         <template v-for="(item, index) in followingTimelineItems" :key="`timeline-${index}`">
                           <div v-if="item.type === 'gap'" class="timeline-gap">{{ item.label }}</div>
@@ -1814,7 +1814,7 @@ useHead(() => ({ title: `${pageTitle.value} - Kizuna` }))
                           </div>
                           <div class="thread-metrics">
                             <span>{{ formatCompactNumber(thread.viewCount || 0) }} vues</span>
-                            <span>{{ thread.replyCount || 0 }} reponses</span>
+                            <span>{{ thread.replyCount || 0 }} réponses</span>
                           </div>
                         </div>
 

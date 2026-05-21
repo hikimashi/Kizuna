@@ -248,7 +248,7 @@ const formatScore = (score?: number | null) => {
 }
 
 const episodesLabel = (episodes?: number | null) => {
-  if (!episodes) return 'Episodes inconnus'
+  if (!episodes) return 'Épisodes inconnus'
   return `${episodes} eps`
 }
 
@@ -335,7 +335,7 @@ const resolveYearRange = (yearFilter: string) => {
 const fetchAnimeList = async (page: number, perPage: number): Promise<BrowseAnime[]> => {
   const { startDateGreater, startDateLesser } = resolveYearRange(currentYearFilter.value)
 
-  // Query locale au composant: elle depend directement des filtres affiches sur /browse.
+  // Query locale au composant: elle dépend directement des filtres affichés sur /browse.
   const query = `
     query (
       $page: Int
@@ -404,7 +404,7 @@ const fetchAnimeList = async (page: number, perPage: number): Promise<BrowseAnim
     variables.format = currentFormat.value
   }
 
-  // Sur la premiere page on remet le compteur a zero pour eviter un ancien total pendant le refresh.
+  // Sur la première page on remet le compteur à zéro pour éviter un ancien total pendant le refresh.
   loadError.value = ''
   if (page === 1) totalResults.value = 0
 

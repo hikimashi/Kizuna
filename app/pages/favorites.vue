@@ -260,7 +260,7 @@ const loadNextPage = async () => {
 
   const isAnime = activeTab.value === 'anime'
   const page = isAnime ? animePage.value : characterPage.value
-  // Avec token, Viewer contourne les problemes de pseudo; sans token, on utilise User public.
+  // Avec token, Viewer contourne les problèmes de pseudo; sans token, on utilise User public.
   const query = hasToken
     ? (isAnime ? viewerFavoriteAnimePageQuery : viewerFavoriteCharacterPageQuery)
     : (isAnime ? favoriteAnimePageQuery : favoriteCharacterPageQuery)
@@ -295,7 +295,7 @@ const loadNextPage = async () => {
     const pageInfo = connection?.pageInfo ?? {}
 
     if (isAnime) {
-      // Chaque onglet garde sa pagination pour reprendre ou l'utilisateur l'a laisse.
+      // Chaque onglet garde sa pagination pour reprendre où l'utilisateur l'a laissée.
       animeItems.value.push(...nodes.map(normalizeAnime))
       animeHasNext.value = Boolean(pageInfo?.hasNextPage)
       animePage.value = Number(pageInfo?.currentPage ?? page) + 1
@@ -315,7 +315,7 @@ const loadNextPage = async () => {
 }
 
 const ensureActiveTabLoaded = async () => {
-  // Chargement paresseux: l'onglet non visite ne consomme aucune requete AniList.
+  // Chargement paresseux: l'onglet non visité ne consomme aucune requête AniList.
   if (activeTab.value === 'anime' && !animeLoaded.value) {
     await loadNextPage()
     return
@@ -376,7 +376,7 @@ const shouldHandleClientNavigation = (event: MouseEvent) =>
 
 const waitForPaint = () => {
   if (!import.meta.client) return Promise.resolve()
-  // Laisse le navigateur peindre l'etat "navigation en cours" avant le changement de route.
+  // Laisse le navigateur peindre l'état "navigation en cours" avant le changement de route.
   return new Promise<void>((resolve) => {
     requestAnimationFrame(() => resolve())
   })

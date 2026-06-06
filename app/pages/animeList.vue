@@ -526,15 +526,16 @@ const saveSelectedEntry = async () => {
   if (!selectedEntryId.value || isSavingEntry.value) return
 
   try {
-    // Après mutation AniList, on recharge la collection pour récupérer l'état serveur exact.
     isSavingEntry.value = true
+    // Envoyer au serveur, qui appliquera la logique intelligente de changement de statut
     await anilistSync.saveEntry({
       entryId: selectedEntryId.value,
       status: editStatus.value,
       progress: editProgress.value === '' ? 0 : Number(editProgress.value),
       score: editScore.value === '' ? null : Number(editScore.value)
     })
-    await fetchAnimeList()
+    // Recharger en bypass du cache pour avoir l'état exact du serveur AniList
+    await fetchAnimeList(true)
     toastStore.openToast({ type: 'success', message: "L'entrée AniList a été mise à jour." })
     closeEntryEditor()
   } catch (error: any) {
@@ -557,7 +558,8 @@ const deleteSelectedEntry = async () => {
   try {
     isDeletingEntry.value = true
     await anilistSync.deleteEntry(selectedEntryId.value)
-    await fetchAnimeList()
+    // Recharger en bypass du cache pour avoir l'état exact du serveur AniList
+    await fetchAnimeList(true)
     toastStore.openToast({ type: 'success', message: "L'entrée AniList a été supprimée." })
     closeEntryEditor()
   } catch (error: any) {
@@ -580,7 +582,7 @@ const handleEditorKeydown = (event: KeyboardEvent) => {
   closeEntryEditor()
 }
 
-const fetchAnimeList = async () => {
+const fetchAnimeList = async (skipCache = false) => {
   if (!token.value || !username.value) {
     errorMessage.value = 'Compte AniList non lié. Reconnectez-le dans les paramètres.'
     isLoading.value = false
@@ -630,7 +632,7 @@ const fetchAnimeList = async () => {
     const response = await anilistGraphql.request<any>(
       query,
       { userName: username.value },
-      { token: token.value, cacheTtlMs: 30_000 }
+      { token: token.value, cacheTtlMs: skipCache ? 0 : 30_000, skipCache }
     )
 
     if (response?.errors?.length) {

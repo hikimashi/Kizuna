@@ -237,15 +237,29 @@ export const useAnilistSync = () => {
       throw new Error('Entry id or media id is required.')
     }
 
+    // Normaliser le statut et la progression
+    const targetStatus = normalizeEditableStatus(input.status, 'PLANNING')
+    const inputProgress = normalizeNonNegativeInt(input.progress, 'Progress')
+
+    // Logique intelligente de changement de statut basée sur la progression:
+    // - Si on a une progression > 0 avec statut PLANNING → passer en CURRENT
+    // - Si on a une progression = 0 avec statut CURRENT → passer en PLANNING
+    let finalStatus = targetStatus
+    if (targetStatus === 'PLANNING' && inputProgress !== undefined && inputProgress > 0) {
+      finalStatus = 'CURRENT'
+    } else if (targetStatus === 'CURRENT' && (inputProgress === 0 || inputProgress === undefined)) {
+      finalStatus = 'PLANNING'
+    }
+
     // AniList accepte soit l'id d'entrée existante, soit le mediaId pour créer/mettre à jour une entrée.
     const response = await anilistGraphql.request<any>(
       SAVE_MEDIA_LIST_ENTRY_MUTATION,
       {
         id: entryId,
         mediaId,
-        status: input.status,
+        status: finalStatus,
         score: normalizeScore(input.score),
-        progress: normalizeNonNegativeInt(input.progress, 'Progress'),
+        progress: inputProgress,
         startedAt: input.startedAt,
         completedAt: input.completedAt
       },

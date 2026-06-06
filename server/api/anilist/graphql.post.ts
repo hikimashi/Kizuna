@@ -1,10 +1,26 @@
+/**
+ *  ENDPOINT GRAPHQL ANILIST
+ * 
+ * Ce endpoint reçoit les requêtes GraphQL du client Vue et les transmet à AniList.
+ * Il gère aussi le cache (Redis/Valkey) et le rate limiting.
+ * 
+ * FLUX:
+ * 1. Client Vue appelle: POST /api/anilist/graphql { query, token }
+ * 2. Cet endpoint reçoit la requête
+ * 3. Vérifie le cache (Redis, puis mémoire)
+ * 4. Si pas en cache → envoie la requête à https://graphql.anilist.co
+ * 5. Reçoit le JSON brut d'AniList ⬅ C'EST ICI LE JSON BRUT
+ * 6. Stocke en cache
+ * 7. Retourne au client
+ */
 export default defineEventHandler(async (event) => {
+  // Type de données reçues du client
   type GraphqlBody = {
-    query?: string
-    variables?: Record<string, any>
-    token?: string
-    cacheTtlMs?: number
-    skipCache?: boolean
+    query?: string // La requête GraphQL (ex: "query { Viewer { id } }")
+    variables?: Record<string, any> // Variables GraphQL
+    token?: string // Token AniList du user (optionnel pour requêtes anonymes)
+    cacheTtlMs?: number // TTL du cache demandé par le client
+    skipCache?: boolean // Forcer à ignorer le cache
   }
 
   type CacheEntry = {
@@ -29,6 +45,7 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody<GraphqlBody>(event)
 
+  //  Validation: la requête est obligatoire
   if (!body?.query) {
     setResponseStatus(event, 400)
     return {
@@ -36,17 +53,20 @@ export default defineEventHandler(async (event) => {
     }
   }
 
+  //  Extraction des paramètres de la requête
   const query = String(body.query)
   const variables = body.variables ?? {}
-  const token = body.token ? String(body.token) : ''
+  const token = body.token ? String(body.token) : '' // Token du user si authentifié
+  //  Détecte si c'est une mutation (INSERT/UPDATE/DELETE)
   // Les mutations doivent toujours traverser AniList pour ne pas servir un état obsolète.
   const isMutation = /^\s*mutation\b/i.test(query)
   const skipCache = Boolean(body.skipCache) || isMutation
 
+  //  SYSTÈME DE CACHE - Stocké en mémoire pour survivre entre les requêtes
   const globalState = globalThis as typeof globalThis & {
-    __anilistCache?: Map<string, CacheEntry>
-    __anilistInFlight?: Map<string, Promise<{ statusCode: number; payload: any }>>
-    __anilistRateLimit?: Map<string, RateLimitEntry>
+    __anilistCache?: Map<string, CacheEntry> // Cache en mémoire
+    __anilistInFlight?: Map<string, Promise<{ statusCode: number; payload: any }>> // Déduplication
+    __anilistRateLimit?: Map<string, RateLimitEntry> // Rate limit par IP
     __anilistValkeyClientPromise?: Promise<ValkeyClientLike | null>
     __anilistValkeyDisabled?: boolean
     __anilistValkeyErrorLogged?: boolean
@@ -222,12 +242,14 @@ export default defineEventHandler(async (event) => {
   }
 
   const performRequest = async () => {
+    //  HEADERS POUR ANILIST
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       Accept: 'application/json'
     }
     if (token) {
-      // Le proxy accepte aussi les requêtes authentifiées pour les données liées au viewer.
+      // Si l'utilisateur est authentifié, on envoie son token à AniList
+      // AniList utilisera ce token pour identifier le "Viewer" (l'utilisateur actuel)
       headers.Authorization = `Bearer ${token}`
     }
 
@@ -237,13 +259,14 @@ export default defineEventHandler(async (event) => {
 
     for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
       try {
-        // AniList renvoie parfois 429; on conserve les headers utiles pour le client et on retente avec jitter.
+        //  POINT CLEF: C'EST ICI QU'ON ENVOIE LA REQUÊTE À ANILIST
         const response = await fetch('https://graphql.anilist.co', {
           method: 'POST',
           headers,
           body: JSON.stringify({ query, variables })
         })
 
+        // Lecture des headers de rate limit d'AniList
         const remaining = response.headers.get('x-ratelimit-remaining')
         const reset = response.headers.get('x-ratelimit-reset')
         const retryAfter = Number(response.headers.get('retry-after') || '0')
@@ -251,9 +274,23 @@ export default defineEventHandler(async (event) => {
         if (reset) setHeader(event, 'X-AniList-RateLimit-Reset', reset)
         if (retryAfter > 0) setHeader(event, 'Retry-After', retryAfter)
 
+        //  C'EST ICI QU'ON REÇOIT LE JSON BRUT D'ANILIST
+        // Exemple de réponse:
+        // {
+        //   "data": {
+        //     "Viewer": {
+        //       "id": 123456,
+        //       "name": "Username"
+        //     }
+        //   }
+        // }
+        // ou
+        // {
+        //   "errors": [{ "message": "Unauthorized" }]
+        // }
         let payload: any = null
         try {
-          payload = await response.json()
+          payload = await response.json() // Parse le JSON brut reçu
         } catch {
           payload = null
         }
@@ -269,13 +306,13 @@ export default defineEventHandler(async (event) => {
         lastStatus = response.status
         lastPayload = payload
 
-        const shouldRetry = response.status === 429
+        const shouldRetry = response.status === 429 // Rate limited? Retry
         if (!shouldRetry || attempt === maxAttempts - 1) {
           return { statusCode: response.status, payload }
         }
 
+        // Si rate limited, on attend avant de réessayer
         const retryAfterSeconds = retryAfter
-        // Respecte Retry-After quand AniList le fournit, sinon backoff exponentiel borne.
         const baseDelay = retryAfterSeconds > 0
           ? retryAfterSeconds * 1000
           : Math.min(1000 * (2 ** attempt), 8000)
@@ -287,7 +324,7 @@ export default defineEventHandler(async (event) => {
         if (attempt === maxAttempts - 1) {
           return { statusCode: lastStatus, payload: lastPayload }
         }
-        // Erreurs reseau: backoff plus court que le 429, car aucun Retry-After n'est disponible.
+        // Erreurs réseau: backoff plus court que le 429
         const backoff = Math.min(500 * (2 ** attempt), 4000)
         const jitter = Math.floor(Math.random() * 300)
         await wait(backoff + jitter)
@@ -304,18 +341,21 @@ export default defineEventHandler(async (event) => {
   try {
     const result = await requestPromise
 
+    //  STOCKAGE EN CACHE - Si c'est une requête réussie (200-299)
     if (!skipCache && ttlMs > 0 && result.statusCode >= 200 && result.statusCode < 300) {
       const valkeyClient = await getValkeyClient()
       if (valkeyClient) {
         try {
-          // Valkey est prioritaire en production, la Map mémoire reste le fallback local/dev.
+          // On stocke la réponse JSON complète en Redis/Valkey
+          // Format: { statusCode: 200, payload: { "data": { "Viewer": {...} } } }
           await valkeyClient.set(valkeyCacheKey, JSON.stringify({
             statusCode: result.statusCode,
             payload: result.payload
           }), 'EX', ttlSeconds)
-          setHeader(event, 'X-Cache', 'MISS-VALKEY')
+          setHeader(event, 'X-Cache', 'MISS-VALKEY') // Header pour debug
         } catch (error) {
           disableValkey(error)
+          // Fallback: cache en mémoire si Redis échoue
           cache.set(cacheKey, {
             expiresAt: Date.now() + ttlMs,
             payload: result.payload,
@@ -324,6 +364,7 @@ export default defineEventHandler(async (event) => {
           setHeader(event, 'X-Cache', 'MISS-MEMORY')
         }
       } else {
+        // Aucun Redis disponible: utilise la cache en mémoire
         cache.set(cacheKey, {
           expiresAt: Date.now() + ttlMs,
           payload: result.payload,
@@ -333,6 +374,8 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    //  RETOUR AU CLIENT
+    // On retourne le JSON brut d'AniList (ou les erreurs si erreur)
     setResponseStatus(event, result.statusCode)
     return result.payload
   } finally {

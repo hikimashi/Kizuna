@@ -53,6 +53,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
       }
       localStorage.removeItem('anilist_oauth_state');
 
+      //  ÉTAPE 1: Échange le code OAuth contre un token
       // Le secret AniList reste côté serveur: le client ne donne que le code au endpoint Nitro.
       const response = await $fetch<{ access_token: string; expires_in?: number }>('/api/anilist/exchangeToken', {
         method: 'POST',
@@ -63,12 +64,25 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
         throw new Error('Impossible d\'obtenir le token d\'acces');
       }
 
+      //  ÉTAPE 2: Utilise le token pour récupérer les infos du Viewer
+      // Cette requête GraphQL va passer par le serveur Nitro qui la transmet à AniList
       const anilistUserData = await anilistGraphql.request<any>(
         `query { Viewer { id name bannerImage avatar { medium large } } }`,
         {},
-        { token: response.access_token, cacheTtlMs: 0, skipCache: true }
+        { token: response.access_token, cacheTtlMs: 0, skipCache: true } // Pas de cache pour le login
       );
 
+      //  ON REÇOIT ICI LE JSON D'ANILIST:
+      // {
+      //   "data": {
+      //     "Viewer": {
+      //       "id": "123456",
+      //       "name": "Username",
+      //       "bannerImage": "https://...",
+      //       "avatar": { "medium": "https://...", "large": "https://..." }
+      //     }
+      //   }
+      // }
       const viewer = anilistUserData.data.Viewer;
       const userId = pocketbaseStore.pb.authStore.model?.id;
       if (!userId) {
@@ -76,7 +90,7 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
       }
 
       const anilistId = Number(viewer.id);
-      // Un compte AniList ne doit être lié qu'à un seul compte PocketBase local.
+      //  VÉRIFICATION: Un compte AniList ne doit être lié qu'à un seul compte PocketBase local.
       const existingUsers = await pocketbaseStore.pb.collection('user').getFullList({
         filter: `anilist_user_id = ${anilistId} && id != '${userId}'`
       });
@@ -90,14 +104,15 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
           ? new Date(Date.now() + response.expires_in * 1000).toISOString()
           : null;
 
+      //  STOCKAGE: Sauvegarde les données reçues d'AniList dans PocketBase
       await pocketbaseStore.pb.collection('user').update(userId, {
-        anilist_token: response.access_token,
+        anilist_token: response.access_token, // Le token pour les futures requêtes
         anilist_token_expires_at: tokenExpiresAt,
-        anilist_user_id: anilistId,
-        anilist_username: viewer.name,
-        anilist_avatar_url_medium: viewer.avatar.medium,
+        anilist_user_id: anilistId, // ID unique AniList
+        anilist_username: viewer.name, // Username depuis AniList
+        anilist_avatar_url_medium: viewer.avatar.medium, // Avatar depuis AniList
         anilist_avatar_url_large: viewer.avatar.large,
-        anilist_banner: viewer.bannerImage || null
+        anilist_banner: viewer.bannerImage || null // Bannière depuis AniList
       });
 
       await pocketbaseStore.pb.collection('user').authRefresh();

@@ -1,3 +1,7 @@
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 type AnilistPageResponse = {
   data?: {
     MediaListCollection?: {
@@ -12,6 +16,13 @@ type AnilistPageResponse = {
   errors?: Array<{ message?: string }>
 }
 
+/**
+ * Attend wait.
+ *
+ * @param ms - Valeur utilisée par le traitement « wait ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects gère une temporisation.
+ */
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 const LIST_QUERY = `
@@ -27,6 +38,14 @@ const LIST_QUERY = `
   }
 `
 
+/**
+ * Exécute anilist.
+ *
+ * @param query - Valeur utilisée par le traitement « request anilist ».
+ * @param variables - Valeur utilisée par le traitement « request anilist ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects effectue des appels réseau ou persistants.
+ */
 const requestAnilist = async (query: string, variables: Record<string, any>) => {
   const maxAttempts = 4
 
@@ -121,6 +140,13 @@ const requestAnilist = async (query: string, variables: Record<string, any>) => 
   })
 }
 
+/**
+ * Récupère user media ids.
+ *
+ * @param opts - Valeur utilisée par le traitement « fetch user media ids ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const fetchUserMediaIds = async (opts: { userId?: number; userName?: string }) => {
   const ids = new Set<number>()
   // La comparaison ne garde que les animes en cours/terminés pour éviter les plans à regarder.
@@ -160,6 +186,12 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
+    /**
+     * Récupère self ids.
+     *
+     * @returns Une promesse résolue avec le résultat du traitement.
+     * @sideEffects Aucun effet de bord direct identifié.
+     */
     const fetchSelfIds = async () => {
       try {
         return await fetchUserMediaIds({
@@ -175,6 +207,12 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    /**
+     * Récupère friend ids.
+     *
+     * @returns Une promesse résolue avec le résultat du traitement.
+     * @sideEffects Aucun effet de bord direct identifié.
+     */
     const fetchFriendIds = async () => {
       try {
         return await fetchUserMediaIds({ userId: friendId })

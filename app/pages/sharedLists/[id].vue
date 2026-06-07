@@ -675,6 +675,10 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { getAnilistCoverSrc, getAnilistCoverSrcSet, type AnilistCoverImage } from '~/composables/useAnilistCoverImage'
 import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
 import {
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
   useSharedLists,
   type SharedListAnimeEntry,
   type SharedListAnimeStatus,
@@ -868,25 +872,60 @@ const heroOverlayStyle = computed(() => {
 
 const coverLabel = computed(() => String(detail.value?.title || 'SL').replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 3) || 'SL')
 
+/**
+ * Calcule la valeur « badge class ».
+ *
+ * @param privacy - Valeur utilisée par le traitement « badge class ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const badgeClass = (privacy: SharedListPrivacy) => ({
   private: privacy === 'private',
   friends: privacy === 'friends',
   public: privacy === 'public'
 })
 
+/**
+ * Calcule la valeur « member avatar style ».
+ *
+ * @param member - Valeur utilisée par le traitement « member avatar style ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const memberAvatarStyle = (member: Pick<SharedListMember, 'avatar' | 'color'> | SearchableUser) =>
   member.avatar ? undefined : { background: member.color }
 
+/**
+ * Libère preview url.
+ *
+ * @param value - Valeur utilisée par le traitement « revoke preview url ».
+ * @returns Aucune valeur.
+ * @sideEffects interagit avec le navigateur ou le DOM.
+ */
 const revokePreviewUrl = (value: string) => {
   // Les previews fichier créent des blob: URLs; on les libère pour éviter les fuites mémoire.
   if (value.startsWith('blob:')) URL.revokeObjectURL(value)
 }
 
+/**
+ * Définit preview.
+ *
+ * @param target - Valeur utilisée par le traitement « set preview ».
+ * @param file - Valeur utilisée par le traitement « set preview ».
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const setPreview = (target: typeof settingsGroupImagePreview, file: File | null) => {
   revokePreviewUrl(target.value)
   target.value = file ? URL.createObjectURL(file) : ''
 }
 
+/**
+ * Réinitialise settings media drafts.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const resetSettingsMediaDrafts = () => {
   settingsGroupImageFile.value = null
   settingsBannerImageFile.value = null
@@ -894,6 +933,13 @@ const resetSettingsMediaDrafts = () => {
   setPreview(settingsBannerPreview, null)
 }
 
+/**
+ * Synchronise settings draft.
+ *
+ * @param source - Valeur utilisée par le traitement « sync settings draft ».
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const syncSettingsDraft = (source: SharedListDetail) => {
   // Les champs du drawer sont des brouillons; fermer le drawer remet l'état serveur.
   settingsName.value = source.title
@@ -1017,6 +1063,13 @@ const selectedAnimeEpisodes = computed(() => selectedAnimeMedia.value?.episodes 
 const selectedAnimeCoverSrc = computed(() => getAnilistCoverSrc(selectedAnimeMedia.value?.coverImage, 'thumb') || undefined)
 const selectedAnimeCoverSrcSet = computed(() => getAnilistCoverSrcSet(selectedAnimeMedia.value?.coverImage, 'thumb'))
 
+/**
+ * Charge anime media.
+ *
+ * @param entries - Valeur utilisée par le traitement « load anime media ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif, effectue des appels réseau ou persistants.
+ */
 const loadAnimeMedia = async (entries: SharedListAnimeEntry[]) => {
   const ids = Array.from(new Set(entries.map(entry => Number(entry.mediaId || 0)).filter(Boolean)))
   if (!ids.length) {
@@ -1071,6 +1124,12 @@ const loadAnimeMedia = async (entries: SharedListAnimeEntry[]) => {
   }
 }
 
+/**
+ * Charge page.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const loadPage = async () => {
   if (!listId.value) return
   if (!currentUserId.value) {
@@ -1125,8 +1184,21 @@ const loadPage = async () => {
   }
 }
 
+/**
+ * Calcule la valeur « privacy label ».
+ *
+ * @param privacy - Valeur utilisée par le traitement « privacy label ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const privacyLabel = (privacy: SharedListPrivacy) => privacy === 'private' ? 'Privée' : privacy === 'friends' ? 'Amis uniquement' : 'Publique'
 
+/**
+ * Ouvre settings.
+ *
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects modifie l'état réactif.
+ */
 const openSettings = () => {
   if (!detail.value || (!detail.value.isOwner && !detail.value.isMember)) return
   // Ouvrir les paramètres recopie toujours l'état courant pour éviter un ancien brouillon.
@@ -1134,6 +1206,12 @@ const openSettings = () => {
   isSettingsOpen.value = true
 }
 
+/**
+ * Ferme settings.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const closeSettings = () => {
   if (detail.value) {
     syncSettingsDraft(detail.value)
@@ -1145,6 +1223,13 @@ const closeSettings = () => {
   isSettingsOpen.value = false
 }
 
+/**
+ * Traite settings group image change.
+ *
+ * @param event - Valeur utilisée par le traitement « handle settings group image change ».
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const handleSettingsGroupImageChange = (event: Event) => {
   const input = event.target as HTMLInputElement | null
   const file = input?.files?.[0] || null
@@ -1152,6 +1237,13 @@ const handleSettingsGroupImageChange = (event: Event) => {
   setPreview(settingsGroupImagePreview, file)
 }
 
+/**
+ * Traite settings banner change.
+ *
+ * @param event - Valeur utilisée par le traitement « handle settings banner change ».
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const handleSettingsBannerChange = (event: Event) => {
   const input = event.target as HTMLInputElement | null
   const file = input?.files?.[0] || null
@@ -1159,6 +1251,12 @@ const handleSettingsBannerChange = (event: Event) => {
   setPreview(settingsBannerPreview, file)
 }
 
+/**
+ * Enregistre settings.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const saveSettings = async () => {
   if (!detail.value || (!detail.value.isOwner && !detail.value.canManageMembers)) return
   if (!settingsName.value.trim()) {
@@ -1189,6 +1287,12 @@ const saveSettings = async () => {
 let memberSearchTimer: ReturnType<typeof setTimeout> | null = null
 let animeSearchTimer: ReturnType<typeof setTimeout> | null = null
 
+/**
+ * Traite search input.
+ *
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects modifie l'état réactif, gère une temporisation.
+ */
 const handleSearchInput = () => {
   if (!detail.value) return
   if (!detail.value.canManageMembers) return
@@ -1218,6 +1322,13 @@ const handleSearchInput = () => {
   }, 200)
 }
 
+/**
+ * Ajoute member.
+ *
+ * @param userId - Valeur utilisée par le traitement « add member ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const addMember = async (userId: string) => {
   if (!detail.value) return
   if (!detail.value.canManageMembers) {
@@ -1241,10 +1352,24 @@ const addMember = async (userId: string) => {
   }
 }
 
+/**
+ * Formate anime search title.
+ *
+ * @param media - Valeur utilisée par le traitement « format anime search title ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const formatAnimeSearchTitle = (media: AniListSearchMedia) => {
   return String(media.title?.romaji || media.title?.english || media.title?.native || '').trim() || `AniList #${media.id || 0}`
 }
 
+/**
+ * Formate media format.
+ *
+ * @param value - Valeur utilisée par le traitement « format media format ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const formatMediaFormat = (value?: string | null) => {
   const label = String(value || '').trim().toLowerCase()
   if (!label) return 'Anime'
@@ -1257,6 +1382,13 @@ const formatMediaFormat = (value?: string | null) => {
     .join(' ')
 }
 
+/**
+ * Recherche anime.
+ *
+ * @param query - Valeur utilisée par le traitement « search anime ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects effectue des appels réseau ou persistants.
+ */
 const searchAnime = async (query: string) => {
   // Recherche AniList publique: la liste partagée garde seulement l'id media et les champs d'état locaux.
   const response = await anilistGraphql.request<AniListGraphqlResponse<{
@@ -1312,6 +1444,12 @@ const searchAnime = async (query: string) => {
     .filter(item => item.mediaId > 0)
 }
 
+/**
+ * Traite anime search input.
+ *
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects modifie l'état réactif, gère une temporisation.
+ */
 const handleAnimeSearchInput = () => {
   if (animeSearchTimer) clearTimeout(animeSearchTimer)
 
@@ -1336,6 +1474,13 @@ const handleAnimeSearchInput = () => {
   }, 220)
 }
 
+/**
+ * Ajoute anime.
+ *
+ * @param item - Valeur utilisée par le traitement « add anime ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const addAnime = async (item: AnimeSearchResult) => {
   if (!detail.value) return
   if (!canAddAnime.value) {
@@ -1374,11 +1519,25 @@ const addAnime = async (item: AnimeSearchResult) => {
   }
 }
 
+/**
+ * Formate anime score.
+ *
+ * @param score - Valeur utilisée par le traitement « format anime score ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const formatAnimeScore = (score: number) => {
   if (!score) return '-'
   return score % 1 === 0 ? String(score) : score.toFixed(1)
 }
 
+/**
+ * Calcule la valeur « status dot class ».
+ *
+ * @param status - Valeur utilisée par le traitement « status dot class ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const statusDotClass = (status: SharedListAnimeStatus) => {
   if (status === 'CURRENT') return 'dot-watching'
   if (status === 'COMPLETED') return 'dot-completed'
@@ -1388,15 +1547,43 @@ const statusDotClass = (status: SharedListAnimeStatus) => {
   return 'dot-planned'
 }
 
+/**
+ * Calcule la valeur « entry cover src ».
+ *
+ * @param entry - Valeur utilisée par le traitement « entry cover src ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects modifie l'état réactif.
+ */
 const entryCoverSrc = (entry: SharedListAnimeEntry) =>
   getAnilistCoverSrc(animeMediaMap.value[Number(entry.mediaId || 0)]?.coverImage, viewMode.value === 'grid' ? 'card' : 'thumb') || undefined
 
+/**
+ * Calcule la valeur « entry cover src set ».
+ *
+ * @param entry - Valeur utilisée par le traitement « entry cover src set ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects modifie l'état réactif.
+ */
 const entryCoverSrcSet = (entry: SharedListAnimeEntry) =>
   getAnilistCoverSrcSet(animeMediaMap.value[Number(entry.mediaId || 0)]?.coverImage, viewMode.value === 'grid' ? 'card' : 'thumb')
 
+/**
+ * Calcule la valeur « entry episodes ».
+ *
+ * @param entry - Valeur utilisée par le traitement « entry episodes ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const entryEpisodes = (entry: SharedListAnimeEntry) =>
   animeMediaMap.value[Number(entry.mediaId || 0)]?.episodes ?? null
 
+/**
+ * Ouvre anime editor.
+ *
+ * @param entry - Valeur utilisée par le traitement « open anime editor ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects modifie l'état réactif.
+ */
 const openAnimeEditor = (entry: SharedListAnimeEntry) => {
   if (!canManageAnime.value) return
   // Copie l'entrée sélectionnée dans le formulaire pour pouvoir annuler sans modifier l'affichage.
@@ -1406,6 +1593,12 @@ const openAnimeEditor = (entry: SharedListAnimeEntry) => {
   editAnimeScore.value = entry.score ? String(entry.score) : ''
 }
 
+/**
+ * Ferme anime editor.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const closeAnimeEditor = () => {
   selectedAnimeRelationId.value = ''
   editAnimeStatus.value = 'PLANNING'
@@ -1413,6 +1606,12 @@ const closeAnimeEditor = () => {
   editAnimeScore.value = ''
 }
 
+/**
+ * Enregistre anime entry.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const saveAnimeEntry = async () => {
   if (!selectedAnimeEntry.value) return
   if (!canManageAnime.value) {
@@ -1459,6 +1658,12 @@ watch(draftAddStatus, () => {
   draftAddProgress.value = '0'
 })
 
+/**
+ * Supprime anime entry.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif, interagit avec le navigateur ou le DOM.
+ */
 const deleteAnimeEntry = async () => {
   if (!selectedAnimeEntry.value) return
   if (!canDeleteAnime.value) {
@@ -1483,6 +1688,13 @@ const deleteAnimeEntry = async () => {
   }
 }
 
+/**
+ * Retire member.
+ *
+ * @param membershipId - Valeur utilisée par le traitement « remove member ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const removeMember = async (membershipId: string) => {
   if (!detail.value?.canManageMembers) {
     actionError.value = 'Vous n\'avez pas la permission de retirer des membres de cette liste partagée.'
@@ -1503,6 +1715,14 @@ const removeMember = async (membershipId: string) => {
   }
 }
 
+/**
+ * Met à jour member permission.
+ *
+ * @param membershipId - Valeur utilisée par le traitement « update member permission ».
+ * @param permissionRaw - Valeur utilisée par le traitement « update member permission ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const updateMemberPermission = async (membershipId: string, permissionRaw: string) => {
   // Le select vient du DOM: on le resserre sur les trois permissions supportees.
   const permission = (permissionRaw === 'admin' || permissionRaw === 'editor' || permissionRaw === 'viewer')
@@ -1527,6 +1747,12 @@ const updateMemberPermission = async (membershipId: string, permissionRaw: strin
   }
 }
 
+/**
+ * Calcule la valeur « leave group ».
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const leaveGroup = async () => {
   if (!detail.value?.ownMembershipId) {
     actionError.value = 'Votre fiche d\'appartenance est introuvable.'
@@ -1548,6 +1774,12 @@ const leaveGroup = async () => {
   }
 }
 
+/**
+ * Supprime group.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif, interagit avec le navigateur ou le DOM.
+ */
 const deleteGroup = async () => {
   if (!detail.value) return
   // Suppression complete: le composable nettoie les relations anime/membres avant shared_list.
@@ -1570,15 +1802,36 @@ const deleteGroup = async () => {
   }
 }
 
+/**
+ * Calcule la valeur « anime cover label ».
+ *
+ * @param title - Valeur utilisée par le traitement « anime cover label ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const animeCoverLabel = (title: string) => title.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 3) || 'AN'
 const isAnimeEditorOpen = computed(() => canManageAnime.value && Boolean(selectedAnimeEntry.value))
 const isAnimePickerModalOpen = computed(() => canAddAnime.value && isAnimePickerOpen.value)
 
+/**
+ * Traite anime editor keydown.
+ *
+ * @param event - Valeur utilisée par le traitement « handle anime editor keydown ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const handleAnimeEditorKeydown = (event: KeyboardEvent) => {
   if (event.key !== 'Escape' || !isAnimeEditorOpen.value) return
   closeAnimeEditor()
 }
 
+/**
+ * Traite anime picker keydown.
+ *
+ * @param event - Valeur utilisée par le traitement « handle anime picker keydown ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects modifie l'état réactif.
+ */
 const handleAnimePickerKeydown = (event: KeyboardEvent) => {
   if (event.key !== 'Escape' || !isAnimePickerModalOpen.value) return
   isAnimePickerOpen.value = false

@@ -3,12 +3,17 @@ import { navigateTo } from '#app'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 import { useMyAuthStore } from '~/composables/useMyAuthStore'
 import { useToastStore } from '~/composables/useToastStore'
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 const PUBLIC_PATHS = new Set(['/', '/auth/callback', '/manuel'])
 // Les profils sociaux publics restent accessibles sans session locale.
 const PUBLIC_PATH_PATTERNS = [/^\/social\/user\/[^/]+$/]
 
 export default defineNuxtRouteMiddleware(async (to) => {
+  // [IMPORTANT] : ce middleware contrôle à la fois la session PocketBase et la liaison AniList.
   // L'auth PocketBase est côté client (localStorage), on ignore donc le guard SSR pour éviter de faux redirects au refresh.
   if (import.meta.server) return
 

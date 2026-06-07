@@ -22,6 +22,10 @@
 <script setup lang="ts">
 import { useAnilistAuthStore } from '~/composables/useAnilistAuthStore';
 import { useRouter } from '#app';
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 const route = useRoute();
 const router = useRouter();

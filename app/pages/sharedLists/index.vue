@@ -264,6 +264,10 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useSharedLists, type SharedListMember, type SharedListPrivacy, type SharedListSummary } from '~/composables/useSharedLists'
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 type FilterKey = 'all' | 'owned' | 'joined'
 type SortKey = 'recent' | 'title' | 'animeCount' | 'members'
@@ -305,17 +309,39 @@ const draftGroupImagePreview = ref('')
 const draftBannerPreview = ref('')
 const lists = ref<SharedListSummary[]>([])
 
+/**
+ * Libère preview url.
+ *
+ * @param value - Valeur utilisée par le traitement « revoke preview url ».
+ * @returns Aucune valeur.
+ * @sideEffects interagit avec le navigateur ou le DOM.
+ */
 const revokePreviewUrl = (value: string) => {
   // Les previews locales créent des object URLs; il faut les libérer à chaque remplacement.
   if (value.startsWith('blob:')) URL.revokeObjectURL(value)
 }
 
+/**
+ * Définit preview.
+ *
+ * @param target - Valeur utilisée par le traitement « set preview ».
+ * @param file - Valeur utilisée par le traitement « set preview ».
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const setPreview = (target: typeof draftGroupImagePreview, file: File | null) => {
   // Centralise l'ancien nettoyage avant de poser une nouvelle image de preview.
   revokePreviewUrl(target.value)
   target.value = file ? URL.createObjectURL(file) : ''
 }
 
+/**
+ * Calcule la valeur « member avatar style ».
+ *
+ * @param member - Valeur utilisée par le traitement « member avatar style ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const memberAvatarStyle = (member: Pick<SharedListMember, 'avatar' | 'color'> | SearchableUser) =>
   member.avatar ? undefined : { background: member.color }
 
@@ -351,6 +377,14 @@ const filters = computed(() => [
   { key: 'joined' as FilterKey, label: 'Listes rejointes', count: lists.value.filter(list => !list.isOwner).length }
 ])
 
+/**
+ * Nettoie for privacy.
+ *
+ * @param privacy - Valeur utilisée par le traitement « strip for privacy ».
+ * @param owned - Valeur utilisée par le traitement « strip for privacy ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const stripForPrivacy = (privacy: SharedListPrivacy, owned: boolean) => {
   // Fallback visuel quand aucune bannière n'est encore stockée sur PocketBase.
   if (privacy === 'private') return 'linear-gradient(135deg,#7f1d1d,#be185d)'
@@ -358,16 +392,64 @@ const stripForPrivacy = (privacy: SharedListPrivacy, owned: boolean) => {
   return owned ? 'linear-gradient(135deg,#3db4f2,#1dd3b0)' : 'linear-gradient(135deg,#f77f00,#ffbe0b)'
 }
 
+/**
+ * Calcule la valeur « privacy label ».
+ *
+ * @param privacy - Valeur utilisée par le traitement « privacy label ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const privacyLabel = (privacy: SharedListPrivacy) => privacy === 'private' ? 'Privee' : privacy === 'friends' ? 'Amis uniquement' : 'Publique'
+/**
+ * Calcule la valeur « privacy chip class ».
+ *
+ * @param privacy - Valeur utilisée par le traitement « privacy chip class ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const privacyChipClass = (privacy: SharedListPrivacy) => ({ 'pc-private': privacy === 'private', 'pc-friends': privacy === 'friends', 'pc-public': privacy === 'public' })
+/**
+ * Calcule la valeur « emoji from title ».
+ *
+ * @param title - Valeur utilisée par le traitement « emoji from title ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const emojiFromTitle = (title: string) => title.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 3) || 'SL'
+/**
+ * Ouvre list.
+ *
+ * @param id - Valeur utilisée par le traitement « open list ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const openList = (id: string) => navigateTo(`/sharedLists/${id}`)
 const DEFAULT_SHARED_LIST_BANNER = '/img/banner.webp'
 const DEFAULT_SHARED_LIST_IMAGE = '/img/user.webp'
 
+/**
+ * Calcule la valeur « banner src for ».
+ *
+ * @param list - Valeur utilisée par le traitement « banner src for ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const bannerSrcFor = (list: SharedListSummary) => String(list.bannerUrl || '').trim() || DEFAULT_SHARED_LIST_BANNER
+/**
+ * Calcule la valeur « image src for ».
+ *
+ * @param list - Valeur utilisée par le traitement « image src for ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const imageSrcFor = (list: SharedListSummary) => String(list.imageUrl || '').trim() || DEFAULT_SHARED_LIST_IMAGE
 
+/**
+ * Charge page.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const loadPage = async () => {
   if (!currentUserId.value) {
     // Sans session PocketBase, on vide la page pour éviter d'afficher des données obsolètes.
@@ -390,6 +472,12 @@ const loadPage = async () => {
   }
 }
 
+/**
+ * Réinitialise create form.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const resetCreateForm = () => {
   // Remet tous les champs de creation, y compris les previews de fichiers.
   draftName.value = ''
@@ -405,12 +493,25 @@ const resetCreateForm = () => {
   actionError.value = ''
 }
 
+/**
+ * Bascule create panel.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const toggleCreatePanel = () => {
   createPanelOpen.value = !createPanelOpen.value
   // Fermer le panneau annule un brouillon incomplet.
   if (!createPanelOpen.value) resetCreateForm()
 }
 
+/**
+ * Traite draft group image change.
+ *
+ * @param event - Valeur utilisée par le traitement « handle draft group image change ».
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const handleDraftGroupImageChange = (event: Event) => {
   const input = event.target as HTMLInputElement | null
   const file = input?.files?.[0] || null
@@ -419,6 +520,13 @@ const handleDraftGroupImageChange = (event: Event) => {
   setPreview(draftGroupImagePreview, file)
 }
 
+/**
+ * Traite draft banner change.
+ *
+ * @param event - Valeur utilisée par le traitement « handle draft banner change ».
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const handleDraftBannerChange = (event: Event) => {
   const input = event.target as HTMLInputElement | null
   const file = input?.files?.[0] || null
@@ -428,6 +536,12 @@ const handleDraftBannerChange = (event: Event) => {
 
 let createSearchTimer: ReturnType<typeof setTimeout> | null = null
 
+/**
+ * Traite create member search.
+ *
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects modifie l'état réactif, gère une temporisation.
+ */
 const handleCreateMemberSearch = () => {
   if (createSearchTimer) clearTimeout(createSearchTimer)
 
@@ -454,6 +568,13 @@ const handleCreateMemberSearch = () => {
   }, 200)
 }
 
+/**
+ * Calcule la valeur « select member ».
+ *
+ * @param user - Valeur utilisée par le traitement « select member ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects modifie l'état réactif.
+ */
 const selectMember = (user: SearchableUser) => {
   // Évite les doublons si l'utilisateur clique deux fois sur le même résultat.
   if (selectedMembers.value.some(member => member.id === user.id)) return
@@ -462,10 +583,23 @@ const selectMember = (user: SearchableUser) => {
   draftMemberResults.value = []
 }
 
+/**
+ * Retire selected member.
+ *
+ * @param userId - Valeur utilisée par le traitement « remove selected member ».
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const removeSelectedMember = (userId: string) => {
   selectedMembers.value = selectedMembers.value.filter(member => member.id !== userId)
 }
 
+/**
+ * Traite create.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const handleCreate = async () => {
   if (!draftName.value) return
 

@@ -300,6 +300,10 @@ import { useMyAuthStore } from '~/composables/useMyAuthStore'
 import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
 import { useAnilistNotificationsStore } from '~/composables/useAnilistNotificationsStore'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 const themeStore = useThemeStore()
 const drawerStore = useDrawersStore()
@@ -362,10 +366,22 @@ const avatarUrl = computed(() => {
   return authRecord.value?.anilist_avatar_url_large || authRecord.value?.anilist_avatar_url_medium || '/img/user.webp'
 })
 
+/**
+ * Ouvre login drawer.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const openLoginDrawer = () => {
   drawerStore.openDrawer('drawerLogin')
 }
 
+/**
+ * Ouvre search modal.
+ *
+ * @returns Une promesse résolue une fois le traitement terminé.
+ * @sideEffects modifie l'état réactif.
+ */
 const openSearchModal = async () => {
   isSearchModalOpen.value = true
   closeMobileMenu()
@@ -374,11 +390,23 @@ const openSearchModal = async () => {
   searchInputRef.value?.focus()
 }
 
+/**
+ * Ouvre user search modal.
+ *
+ * @returns Une promesse résolue une fois le traitement terminé.
+ * @sideEffects modifie l'état réactif.
+ */
 const openUserSearchModal = async () => {
   searchModalTab.value = 'users'
   await openSearchModal()
 }
 
+/**
+ * Ferme search modal.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif, gère une temporisation.
+ */
 const closeSearchModal = () => {
   isSearchModalOpen.value = false
   searchModalQuery.value = ''
@@ -393,10 +421,23 @@ const closeSearchModal = () => {
   }
 }
 
+/**
+ * Ferme mobile menu.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const closeMobileMenu = () => {
   isMobileMenuOpen.value = false
 }
 
+/**
+ * Traite logo click.
+ *
+ * @param event - Valeur utilisée par le traitement « handle logo click ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects interagit avec le navigateur ou le DOM.
+ */
 const handleLogoClick = (event: MouseEvent) => {
   closeMobileMenu()
 
@@ -406,18 +447,43 @@ const handleLogoClick = (event: MouseEvent) => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
+/**
+ * Traite sign up.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const handleSignUp = () => {
   drawerStore.openDrawer('drawerCreateUser')
 }
 
+/**
+ * Traite logout.
+ *
+ * @returns Une promesse résolue une fois le traitement terminé.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const handleLogout = async () => {
   await authStore.logout()
 }
 
+/**
+ * Bascule mobile menu.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value
 }
 
+/**
+ * Traite outside click.
+ *
+ * @param event - Valeur utilisée par le traitement « handle outside click ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const handleOutsideClick = (event: MouseEvent) => {
   if (!isMobileMenuOpen.value) return
 
@@ -429,6 +495,13 @@ const handleOutsideClick = (event: MouseEvent) => {
   closeMobileMenu()
 }
 
+/**
+ * Traite escape key.
+ *
+ * @param event - Valeur utilisée par le traitement « handle escape key ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const handleEscapeKey = (event: KeyboardEvent) => {
   // Entrée ouvre le premier résultat si le focus est dans l'input de recherche.
   if (event.key === 'Enter' && isSearchModalOpen.value && !isSearchLoading.value && activeSearchResults.value.length) {
@@ -452,10 +525,24 @@ const handleEscapeKey = (event: KeyboardEvent) => {
   }
 }
 
+/**
+ * Traite open user search event.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const handleOpenUserSearchEvent = () => {
   openUserSearchModal()
 }
 
+/**
+ * Produit fallback.
+ *
+ * @param value - Valeur utilisée par le traitement « make fallback ».
+ * @param type - Valeur utilisée par le traitement « make fallback ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const makeFallback = (value: string, type: 'anime' | 'user') => {
   const clean = value.trim()
   if (!clean) return type === 'anime' ? 'AN' : 'US'
@@ -503,6 +590,12 @@ query ($search: String) {
 }
 `
 
+/**
+ * Traite global search.
+ *
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects modifie l'état réactif, effectue des appels réseau ou persistants, gère une temporisation.
+ */
 const handleGlobalSearch = () => {
   if (searchModalTimer) clearTimeout(searchModalTimer)
 
@@ -574,6 +667,13 @@ const handleGlobalSearch = () => {
   }, 220)
 }
 
+/**
+ * Ouvre search result.
+ *
+ * @param item - Valeur utilisée par le traitement « open search result ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const openSearchResult = (item: { type: 'anime' | 'user'; id: number }) => {
   closeSearchModal()
   if (item.type === 'anime') {

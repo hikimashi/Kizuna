@@ -1,6 +1,10 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import PocketBase from 'pocketbase';
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 export const usePocketbaseStore = defineStore('usePocketBaseStore', () => {
   const config = useRuntimeConfig();
@@ -13,6 +17,12 @@ export const usePocketbaseStore = defineStore('usePocketBaseStore', () => {
   const isAuthValid = ref(pb.authStore.isValid);
 
   // Initialise les refs réactives et configure l'écoute des changements.
+  /**
+   * Calcule la valeur « initialize auth state ».
+   *
+   * @returns Aucune valeur.
+   * @sideEffects modifie l'état réactif.
+   */
   const initializeAuthState = () => {
     // Definit les valeurs initiales.
     authRecord.value = pb.authStore.model;

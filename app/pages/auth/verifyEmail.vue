@@ -27,6 +27,10 @@
 
 <script setup lang="ts">
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore';
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 const route = useRoute();
 const router = useRouter();
@@ -46,6 +50,12 @@ const token = computed(() => {
   return typeof value === 'string' ? value : '';
 });
 
+/**
+ * Calcule la valeur « go home ».
+ *
+ * @returns Une promesse résolue une fois le traitement terminé.
+ * @sideEffects modifie l'état réactif.
+ */
 const goHome = async () => {
   await router.push('/');
 };

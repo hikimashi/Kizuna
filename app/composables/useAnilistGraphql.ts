@@ -1,3 +1,7 @@
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 /**
  *  COMPOSABLE GRAPHQL ANILIST (CLIENT SIDE)
  * 
@@ -18,6 +22,12 @@ type AniListGraphqlOptions = {
   skipCache?: boolean // Ignorer le cache et forcer une requête à AniList
 }
 
+/**
+ * Calcule la valeur « anilist graphql ».
+ *
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects effectue des appels réseau ou persistants.
+ */
 export const useAnilistGraphql = () => {
   /**
    * @param query - La requête GraphQL (string)

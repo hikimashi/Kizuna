@@ -119,6 +119,10 @@ import { computed, onMounted, unref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAnilistNotificationsStore, type AniListNotificationItem } from '~/composables/useAnilistNotificationsStore'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 const notificationStore = useAnilistNotificationsStore()
 const pocketbaseStore = usePocketbaseStore()
@@ -127,6 +131,13 @@ const { unreadCount, items, isLoading, loadError, hasNextPage } = storeToRefs(no
 const authRecord = computed<Record<string, any>>(() => (unref(pocketbaseStore.authRecord) ?? {}) as Record<string, any>)
 const isAniListLinked = computed(() => Boolean(authRecord.value?.anilist_user_id && authRecord.value?.anilist_token))
 
+/**
+ * Calcule la valeur « notification label ».
+ *
+ * @param type - Valeur utilisée par le traitement « notification label ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const notificationLabel = (type: string) => {
   if (type === 'AIRING') return 'Diffusion'
   if (type.startsWith('MEDIA_')) return 'Media'
@@ -137,6 +148,13 @@ const notificationLabel = (type: string) => {
   return 'Mise à jour'
 }
 
+/**
+ * Calcule la valeur « notification title ».
+ *
+ * @param item - Valeur utilisée par le traitement « notification title ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const notificationTitle = (item: AniListNotificationItem) => {
   const actorName = item.actor?.name || 'utilisateur AniList'
   const mediaTitle = item.media?.title || 'ce titre'
@@ -182,6 +200,13 @@ const notificationTitle = (item: AniListNotificationItem) => {
   }
 }
 
+/**
+ * Calcule la valeur « notification detail ».
+ *
+ * @param item - Valeur utilisée par le traitement « notification detail ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const notificationDetail = (item: AniListNotificationItem) => {
   // Détail secondaire: raison AniList, titre de thread ou acteur selon le type disponible.
   if (item.type === 'MEDIA_MERGE' && item.deletedMediaTitles.length) {
@@ -194,17 +219,52 @@ const notificationDetail = (item: AniListNotificationItem) => {
   return ''
 }
 
+/**
+ * Calcule la valeur « notification preview ».
+ *
+ * @param item - Valeur utilisée par le traitement « notification preview ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const notificationPreview = (item: AniListNotificationItem) => item.media?.cover || item.actor?.avatar || ''
 
+/**
+ * Calcule la valeur « notification preview alt ».
+ *
+ * @param item - Valeur utilisée par le traitement « notification preview alt ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const notificationPreviewAlt = (item: AniListNotificationItem) => item.media?.title || item.actor?.name || 'Aperçu de notification'
 
+/**
+ * Calcule la valeur « notification fallback ».
+ *
+ * @param item - Valeur utilisée par le traitement « notification fallback ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const notificationFallback = (item: AniListNotificationItem) => {
   const seed = item.media?.title || item.actor?.name || item.thread?.title || 'NT'
   return seed.slice(0, 2).toUpperCase()
 }
 
+/**
+ * Calcule la valeur « avatar preview ».
+ *
+ * @param item - Valeur utilisée par le traitement « avatar preview ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const useAvatarPreview = (item: AniListNotificationItem) => !item.media?.cover && Boolean(item.actor?.avatar)
 
+/**
+ * Calcule la valeur « time ago ».
+ *
+ * @param timestamp - Valeur utilisée par le traitement « time ago ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const timeAgo = (timestamp: number) => {
   if (!timestamp) return 'Heure inconnue'
 
@@ -222,6 +282,13 @@ const timeAgo = (timestamp: number) => {
   }).format(date)
 }
 
+/**
+ * Ouvre notification.
+ *
+ * @param item - Valeur utilisée par le traitement « open notification ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const openNotification = async (item: AniListNotificationItem) => {
   // Priorité média > thread > acteur, car c'est généralement la cible la plus utile.
   if (item.media?.id) {
@@ -239,6 +306,12 @@ const openNotification = async (item: AniListNotificationItem) => {
   }
 }
 
+/**
+ * Calcule la valeur « refresh notifications ».
+ *
+ * @returns Une promesse résolue une fois le traitement terminé.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const refreshNotifications = async () => {
   // Rafraichissement manuel sans marquer comme lu.
   await notificationStore.loadNotifications({

@@ -297,6 +297,10 @@ import { useAnilistAuthStore } from '~/composables/useAnilistAuthStore'
 import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
 import { useSharedLists, type SharedListSummary } from '~/composables/useSharedLists'
 import { useAnilistSocialStore, type SocialUser } from '~/composables/useAnilistSocialStore'
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 const pocketbaseStore = usePocketbaseStore()
 const drawerStore = useDrawersStore()
@@ -381,7 +385,21 @@ const filteredDashboardFriends = computed<SocialUser[]>(() => {
 const DEFAULT_SHARED_LIST_BANNER = '/img/banner.webp'
 const DEFAULT_SHARED_LIST_IMAGE = '/img/user.webp'
 
+/**
+ * Calcule la valeur « dashboard list banner src ».
+ *
+ * @param list - Valeur utilisée par le traitement « dashboard list banner src ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const dashboardListBannerSrc = (list: SharedListSummary) => String(list.bannerUrl || '').trim() || DEFAULT_SHARED_LIST_BANNER
+/**
+ * Calcule la valeur « dashboard list image src ».
+ *
+ * @param list - Valeur utilisée par le traitement « dashboard list image src ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const dashboardListImageSrc = (list: SharedListSummary) => String(list.imageUrl || '').trim() || DEFAULT_SHARED_LIST_IMAGE
 
 const cardEls: Record<number, HTMLElement> = {}
@@ -389,6 +407,14 @@ const featureVisible = reactive<Record<number, boolean>>({
   0: false, 1: false, 2: false, 3: false, 4: false, 5: false
 })
 
+/**
+ * Définit card ref.
+ *
+ * @param el - Valeur utilisée par le traitement « set card ref ».
+ * @param index - Valeur utilisée par le traitement « set card ref ».
+ * @returns Aucune valeur.
+ * @sideEffects interagit avec le navigateur ou le DOM.
+ */
 function setCardRef(el: unknown, index: number) {
   // Les refs du v-for servent ensuite à l'IntersectionObserver des cartes marketing.
   if (el instanceof HTMLElement) cardEls[index] = el
@@ -427,18 +453,43 @@ const features = [
   }
 ]
 
+/**
+ * Ouvre login drawer.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const openLoginDrawer = () => {
   drawerStore.openDrawer('drawerLogin')
 }
 
+/**
+ * Fait défiler to features.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const scrollToFeatures = () => {
   featuresSection.value?.scrollIntoView({ behavior: 'smooth' })
 }
 
+/**
+ * Calcule la valeur « connect ani list ».
+ *
+ * @returns Une promesse résolue une fois le traitement terminé.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const connectAniList = async () => {
   await anilistAuthStore.loginWithAniListWithWarning()
 }
 
+/**
+ * Calcule la valeur « friend initials ».
+ *
+ * @param value - Valeur utilisée par le traitement « friend initials ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const friendInitials = (value: string) => {
   // Fallback d'avatar: deux initiales maximum, puis "FR" si le nom est vide.
   return value
@@ -449,16 +500,35 @@ const friendInitials = (value: string) => {
     .join('') || 'FR'
 }
 
+/**
+ * Ouvre friend profile.
+ *
+ * @param friendId - Valeur utilisée par le traitement « open friend profile ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const openFriendProfile = (friendId: number) => {
   const id = Number(friendId)
   if (!Number.isFinite(id) || id <= 0) return
   navigateTo(`/social/user/${id}`)
 }
 
+/**
+ * Ouvre follow modal.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const openFollowModal = () => {
   isFollowModalOpen.value = true
 }
 
+/**
+ * Ferme follow modal.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif, gère une temporisation.
+ */
 const closeFollowModal = () => {
   // Fermer la modale annule aussi le debounce pour éviter une recherche tardive après fermeture.
   isFollowModalOpen.value = false
@@ -508,11 +578,25 @@ type AniListSearchUser = {
   } | null
 }
 
+/**
+ * Construit hue.
+ *
+ * @param value - Valeur utilisée par le traitement « build hue ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const buildHue = (value: string) => {
   // Couleur stable par pseudo pour les avatars sans image.
   return Array.from(value).reduce((sum, char) => sum + char.charCodeAt(0), 0) % 360
 }
 
+/**
+ * Récupère pocket base matches.
+ *
+ * @param anilistIds - Valeur utilisée par le traitement « fetch pocket base matches ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects effectue des appels réseau ou persistants.
+ */
 const fetchPocketBaseMatches = async (anilistIds: number[]) => {
   const uniqueIds = Array.from(new Set(anilistIds.filter(id => Number.isFinite(id) && id > 0)))
   if (!uniqueIds.length) return new Map<number, Record<string, any>>()
@@ -530,6 +614,12 @@ const fetchPocketBaseMatches = async (anilistIds: number[]) => {
   )
 }
 
+/**
+ * Traite follow search.
+ *
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects modifie l'état réactif, effectue des appels réseau ou persistants, gère une temporisation.
+ */
 const handleFollowSearch = () => {
   if (followSearchTimer) clearTimeout(followSearchTimer)
 
@@ -598,14 +688,35 @@ const handleFollowSearch = () => {
   }, 220)
 }
 
+/**
+ * Ouvre user from search.
+ *
+ * @param user - Valeur utilisée par le traitement « open user from search ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const openUserFromSearch = (user: { anilistUserId: number }) => {
   if (!user.anilistUserId) return
   closeFollowModal()
   navigateTo(`/social/user/${user.anilistUserId}`)
 }
 
+/**
+ * Indique si follow busy.
+ *
+ * @param userId - Valeur utilisée par le traitement « is follow busy ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const isFollowBusy = (userId: number) => pendingFollowIds.value.has(Number(userId))
 
+/**
+ * Calcule la valeur « follow user from search ».
+ *
+ * @param user - Valeur utilisée par le traitement « follow user from search ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const followUserFromSearch = async (user: { anilistUserId: number }) => {
   if (!user.anilistUserId) return
   if (isFollowBusy(user.anilistUserId)) return
@@ -625,6 +736,12 @@ const followUserFromSearch = async (user: { anilistUserId: number }) => {
   }
 }
 
+/**
+ * Charge dashboard lists.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const loadDashboardLists = async () => {
   if (!isAniListLinked.value) {
     // Si AniList est délié, les données du dashboard ne doivent pas rester visibles.
@@ -647,6 +764,12 @@ const loadDashboardLists = async () => {
   }
 }
 
+/**
+ * Charge dashboard social.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const loadDashboardSocial = async () => {
   if (!isAniListLinked.value) return
   await socialStore.loadSocial()
@@ -654,11 +777,23 @@ const loadDashboardSocial = async () => {
 
 let observer: IntersectionObserver | null = null
 let friendsPanelObserver: ResizeObserver | null = null
+/**
+ * Synchronise viewport height.
+ *
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects modifie l'état réactif, interagit avec le navigateur ou le DOM.
+ */
 const syncViewportHeight = () => {
   if (typeof window === 'undefined') return
   viewportHeight.value = window.innerHeight
 }
 
+/**
+ * Mesure dashboard friend limit.
+ *
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects modifie l'état réactif, interagit avec le navigateur ou le DOM.
+ */
 const measureDashboardFriendLimit = () => {
   if (typeof window === 'undefined') return
 

@@ -1,6 +1,10 @@
 import { computed, unref } from 'vue'
 import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 export type EditableAniListStatus =
   | 'CURRENT'
@@ -60,6 +64,10 @@ const EDITABLE_STATUS_SET = new Set<EditableAniListStatus>([
   'PLANNING',
   'REPEATING'
 ])
+
+// ─────────────────────────────────────────
+// SECTION : Validation des entrées AniList
+// ─────────────────────────────────────────
 
 const SAVE_MEDIA_LIST_ENTRY_MUTATION = `
   mutation (
@@ -135,6 +143,14 @@ const DELETE_MEDIA_LIST_ENTRY_MUTATION = `
   }
 `
 
+/**
+ * Normalise positive int.
+ *
+ * @param value - Valeur utilisée par le traitement « normalize positive int ».
+ * @param fieldName - Valeur utilisée par le traitement « normalize positive int ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const normalizePositiveInt = (value: unknown, fieldName: string) => {
   if (value == null || value === '') return undefined
   const normalized = Number(value)
@@ -145,6 +161,14 @@ const normalizePositiveInt = (value: unknown, fieldName: string) => {
   return normalized
 }
 
+/**
+ * Normalise non negative int.
+ *
+ * @param value - Valeur utilisée par le traitement « normalize non negative int ».
+ * @param fieldName - Valeur utilisée par le traitement « normalize non negative int ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const normalizeNonNegativeInt = (value: unknown, fieldName: string) => {
   if (value == null || value === '') return undefined
   const normalized = Number(value)
@@ -155,6 +179,13 @@ const normalizeNonNegativeInt = (value: unknown, fieldName: string) => {
   return normalized
 }
 
+/**
+ * Normalise score.
+ *
+ * @param value - Valeur utilisée par le traitement « normalize score ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const normalizeScore = (value: unknown) => {
   if (value === '') return null
   if (value == null) return undefined
@@ -169,26 +200,60 @@ const normalizeScore = (value: unknown) => {
   return normalized
 }
 
+/**
+ * Normalise editable status.
+ *
+ * @param value - Valeur utilisée par le traitement « normalize editable status ».
+ * @param fallback - Valeur utilisée par le traitement « normalize editable status ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const normalizeEditableStatus = (value: unknown, fallback: EditableAniListStatus) => {
   const normalized = String(value || '').trim().toUpperCase() as EditableAniListStatus
   return EDITABLE_STATUS_SET.has(normalized) ? normalized : fallback
 }
 
+/**
+ * Calcule la valeur « to finite number ».
+ *
+ * @param value - Valeur utilisée par le traitement « to finite number ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const toFiniteNumber = (value: unknown) => {
   if (value == null || value === '') return undefined
   const normalized = Number(value)
   return Number.isFinite(normalized) ? normalized : undefined
 }
 
+/**
+ * Indique si rewatch candidate status.
+ *
+ * @param status - Valeur utilisée par le traitement « is rewatch candidate status ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const isRewatchCandidateStatus = (status: EditableAniListStatus) =>
   status === 'CURRENT' || status === 'PLANNING' || status === 'REPEATING'
 
+/**
+ * Calcule la valeur « anilist sync ».
+ *
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects effectue des appels réseau ou persistants.
+ */
 export const useAnilistSync = () => {
   const pocketbaseStore = usePocketbaseStore()
   const anilistGraphql = useAnilistGraphql()
 
   const authRecord = computed(() => (unref(pocketbaseStore.authRecord) ?? {}) as Record<string, any>)
 
+  /**
+   * Retourne token.
+   *
+   * @returns Le résultat calculé par la fonction.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const getToken = () => {
     const token = String(authRecord.value.anilist_token ?? '')
     if (!token) {
@@ -197,6 +262,13 @@ export const useAnilistSync = () => {
     return token
   }
 
+  /**
+   * Retourne media list entry.
+   *
+   * @param mediaIdInput - Valeur utilisée par le traitement « get media list entry ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const getMediaListEntry = async (mediaIdInput: number) => {
     const mediaId = normalizePositiveInt(mediaIdInput, 'Media id')
     if (!mediaId) {
@@ -228,6 +300,13 @@ export const useAnilistSync = () => {
     }
   }
 
+  /**
+   * Enregistre entry.
+   *
+   * @param input - Valeur utilisée par le traitement « save entry ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const saveEntry = async (input: SaveAniListEntryInput) => {
     const entryId = normalizePositiveInt(input.entryId, 'Entry id')
     const mediaId = normalizePositiveInt(input.mediaId, 'Media id')
@@ -241,6 +320,7 @@ export const useAnilistSync = () => {
     const targetStatus = normalizeEditableStatus(input.status, 'PLANNING')
     const inputProgress = normalizeNonNegativeInt(input.progress, 'Progress')
 
+    // [ATTENTION] : le statut demandé peut être corrigé selon la progression avant envoi à AniList.
     // Logique intelligente de changement de statut basée sur la progression:
     // - Si on a une progression > 0 avec statut PLANNING → passer en CURRENT
     // - Si on a une progression = 0 avec statut CURRENT → passer en PLANNING
@@ -282,7 +362,17 @@ export const useAnilistSync = () => {
     return savedEntry
   }
 
+  /**
+   * Synchronise shared list entry.
+   *
+   * @param input - Valeur utilisée par le traitement « sync shared list entry ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const syncSharedListEntry = async (input: SyncSharedListEntryInput) => {
+    // ─────────────────────────────────────────
+    // SECTION : Fusion liste partagée / entrée AniList
+    // ─────────────────────────────────────────
     const mode: SyncSharedListEntryMode = input.mode === 'update' ? 'update' : 'create'
     const lookup = await getMediaListEntry(input.mediaId)
     const existingEntry = lookup.entry
@@ -327,6 +417,13 @@ export const useAnilistSync = () => {
     })
   }
 
+  /**
+   * Supprime entry.
+   *
+   * @param entryId - Valeur utilisée par le traitement « delete entry ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const deleteEntry = async (entryId: number) => {
     const normalizedEntryId = normalizePositiveInt(entryId, 'Entry id')
     if (!normalizedEntryId) {

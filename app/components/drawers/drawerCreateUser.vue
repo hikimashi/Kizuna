@@ -122,6 +122,10 @@
 import { useDrawersStore } from '~/composables/useDrawersStore';
 import { useMyAuthStore } from '~/composables/useMyAuthStore';
 import { useToastStore } from '~/composables/useToastStore';
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 const drawerStore = useDrawersStore();
 const authStore = useMyAuthStore();
@@ -131,6 +135,12 @@ defineProps({
   open: { type: Boolean, default: false },
 });
 const emits = defineEmits(['close']);
+/**
+ * Traite close.
+ *
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const handleClose = () => emits('close');
 
 const newUser = ref<NewUserType>({
@@ -139,11 +149,23 @@ const newUser = ref<NewUserType>({
   passwordConfirm: '',
 });
 
+/**
+ * Ferme close.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const close = () => {
   emits('close');
   drawerStore.closeDrawer();
 };
 
+/**
+ * Efface form.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const clearForm = () => {
   newUser.value = {
     email: '',
@@ -152,6 +174,12 @@ const clearForm = () => {
   };
 };
 
+/**
+ * Crée user.
+ *
+ * @returns Une promesse résolue une fois le traitement terminé.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const createUser = async () => {
   try {
     await authStore.createAccount(newUser.value);
@@ -167,6 +195,12 @@ const createUser = async () => {
   close();
 };
 
+/**
+ * Calcule la valeur « do google login ».
+ *
+ * @returns Une promesse résolue une fois le traitement terminé.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const doGoogleLogin = async () => {
   try {
     await authStore.loginWithGoogle();
@@ -180,6 +214,12 @@ const doGoogleLogin = async () => {
   await navigateTo('/');
 };
 
+/**
+ * Calcule la valeur « do github login ».
+ *
+ * @returns Une promesse résolue une fois le traitement terminé.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const doGithubLogin = async () => {
   try {
     await authStore.loginWithGithub();
@@ -193,11 +233,23 @@ const doGithubLogin = async () => {
   await navigateTo('/');
 };
 
+/**
+ * Authentifie login.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const login = () => {
   close();
   drawerStore.openDrawer('drawerLogin');
 };
 
+/**
+ * Calcule la valeur « password mis match ».
+ *
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const passwordMisMatch = () => {
   if (newUser.value.passwordConfirm.length >= 7)
     return newUser.value.password !== newUser.value.passwordConfirm;

@@ -216,6 +216,10 @@ import { useThemeStore } from '~/composables/useThemeStore'
 import { useMyAuthStore } from '~/composables/useMyAuthStore'
 import { useToastStore } from '~/composables/useToastStore'
 import { useAlertStore } from '~/composables/useAlertStore'
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 type SectionKey = 'anilist' | 'profile' | 'security' | 'appearance'
 
@@ -269,6 +273,13 @@ const passwordChangeError = computed(() => {
   return ''
 })
 
+/**
+ * Formate date time.
+ *
+ * @param value - Valeur utilisée par le traitement « format date time ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function formatDateTime(value: unknown): string {
   if (!value) return '-'
   const date = new Date(String(value))
@@ -282,6 +293,13 @@ function formatDateTime(value: unknown): string {
   }).format(date)
 }
 
+/**
+ * Formate date.
+ *
+ * @param value - Valeur utilisée par le traitement « format date ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function formatDate(value: unknown): string {
   if (!value) return '-'
   const date = new Date(String(value))
@@ -293,6 +311,13 @@ function formatDate(value: unknown): string {
   }).format(date)
 }
 
+/**
+ * Formate date short.
+ *
+ * @param value - Valeur utilisée par le traitement « format date short ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function formatDateShort(value: unknown): string {
   if (!value) return '-'
   const date = new Date(String(value))
@@ -303,6 +328,13 @@ function formatDateShort(value: unknown): string {
   return `${day}/${month}/${year}`
 }
 
+/**
+ * Retourne section ref.
+ *
+ * @param key - Valeur utilisée par le traitement « get section ref ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function getSectionRef(key: SectionKey): HTMLElement | null {
   if (key === 'anilist') return anilistSectionRef.value
   if (key === 'profile') return profileSectionRef.value
@@ -310,11 +342,24 @@ function getSectionRef(key: SectionKey): HTMLElement | null {
   return appearanceSectionRef.value
 }
 
+/**
+ * Fait défiler to section.
+ *
+ * @param key - Valeur utilisée par le traitement « scroll to section ».
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 function scrollToSection(key: SectionKey) {
   activeSection.value = key
   getSectionRef(key)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
+/**
+ * Définit up scroll spy.
+ *
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects modifie l'état réactif, interagit avec le navigateur ou le DOM.
+ */
 function setupScrollSpy() {
   const sections: Array<{ key: SectionKey; el: HTMLElement | null }> = [
     { key: 'anilist', el: anilistSectionRef.value },
@@ -347,12 +392,25 @@ function setupScrollSpy() {
   }
 }
 
+/**
+ * Prévisualise theme.
+ *
+ * @param theme - Valeur utilisée par le traitement « preview theme ».
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const previewTheme = (theme: 'forest' | 'winter') => {
   // Aperçu immédiat; la persistance PocketBase attend le bouton enregistrer.
   selectedTheme.value = theme
   themeStore.setThemeByName(theme)
 }
 
+/**
+ * Calcule la valeur « refresh anilist data ».
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const refreshAnilistData = async () => {
   if (isRefreshing.value) return
   isRefreshing.value = true
@@ -363,6 +421,12 @@ const refreshAnilistData = async () => {
   }
 }
 
+/**
+ * Calcule la valeur « unlink ani list ».
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif, effectue des appels réseau ou persistants.
+ */
 const unlinkAniList = async () => {
   if (isUnlinking.value) return
   // Délier AniList ne supprime pas le compte local PocketBase.
@@ -395,6 +459,12 @@ const unlinkAniList = async () => {
   }
 }
 
+/**
+ * Enregistre theme.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif, effectue des appels réseau ou persistants.
+ */
 const saveTheme = async () => {
   if (isSavingTheme.value) return
   isSavingTheme.value = true
@@ -414,11 +484,23 @@ const saveTheme = async () => {
   }
 }
 
+/**
+ * Bascule email change.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const toggleEmailChange = () => {
   showEmailChange.value = !showEmailChange.value
   if (showEmailChange.value) pendingEmail.value = String(authRecord.value.email ?? '')
 }
 
+/**
+ * Calcule la valeur « submit email change ».
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const submitEmailChange = async () => {
   const nextEmail = pendingEmail.value.trim()
   if (!nextEmail) {
@@ -439,6 +521,12 @@ const submitEmailChange = async () => {
   }
 }
 
+/**
+ * Bascule password reset.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const togglePasswordReset = () => {
   showPasswordReset.value = !showPasswordReset.value
   if (!showPasswordReset.value) {
@@ -448,6 +536,12 @@ const togglePasswordReset = () => {
   }
 }
 
+/**
+ * Met à jour password directly.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif, effectue des appels réseau ou persistants.
+ */
 const updatePasswordDirectly = async () => {
   if (passwordChangeError.value) {
     toastStore.openToast({ type: 'error', message: passwordChangeError.value })
@@ -479,6 +573,12 @@ const updatePasswordDirectly = async () => {
   }
 }
 
+/**
+ * Supprime account.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const deleteAccount = async () => {
   if (isDeleting.value) return
   // Suppression locale definitive; l'identite AniList externe n'est pas modifiee.

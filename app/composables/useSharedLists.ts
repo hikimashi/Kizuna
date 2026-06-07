@@ -1,6 +1,10 @@
 import { computed, unref } from 'vue'
 import { useAnilistSync, type EditableAniListStatus } from '~/composables/useAnilistSync'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 export type SharedListPrivacy = 'private' | 'friends' | 'public'
 export type SharedListRole = 'owner' | 'member'
@@ -135,12 +139,30 @@ export type SharedListDetail = SharedListSummary & {
   animeEntries: SharedListAnimeEntry[]
 }
 
+// ─────────────────────────────────────────
+// SECTION : Normalisation et modèles UI
+// ─────────────────────────────────────────
+
+/**
+ * Normalise relation value.
+ *
+ * @param value - Valeur utilisée par le traitement « normalize relation value ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const normalizeRelationValue = (value?: string | string[]) => {
   // PocketBase peut exposer une relation simple comme string ou comme tableau selon l'expand.
   if (Array.isArray(value)) return String(value[0] || '')
   return String(value || '')
 }
 
+/**
+ * Normalise relation values.
+ *
+ * @param value - Valeur utilisée par le traitement « normalize relation values ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const normalizeRelationValues = (value?: string | string[]) => {
   // Variante multi-valeurs pour les anciens schémas où une relation était stockée en tableau.
   if (Array.isArray(value)) return value.map(item => String(item || '')).filter(Boolean)
@@ -149,17 +171,53 @@ const normalizeRelationValues = (value?: string | string[]) => {
 }
 
 // Les filtres PocketBase sont construits en texte, donc les valeurs utilisateur sont toujours échappées.
+/**
+ * Calcule la valeur « escape filter value ».
+ *
+ * @param value - Valeur utilisée par le traitement « escape filter value ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const escapeFilterValue = (value: string) => value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
 
+/**
+ * Construit or id filter.
+ *
+ * @param ids - Valeur utilisée par le traitement « build or id filter ».
+ * @param field - Valeur utilisée par le traitement « build or id filter ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const buildOrIdFilter = (ids: string[], field = 'id') =>
   // Construit un filtre OR PocketBase reutilisable pour les lots d'ids.
   ids.map(id => `${field}="${escapeFilterValue(id)}"`).join(' || ')
+/**
+ * Calcule la valeur « shared list content is publicly readable ».
+ *
+ * @param privacy - Valeur utilisée par le traitement « shared list content is publicly readable ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const sharedListContentIsPubliclyReadable = (privacy?: SharedListPrivacy) => privacy === 'public' || privacy === 'friends'
+/**
+ * Indique si unique constraint error.
+ *
+ * @param error - Valeur utilisée par le traitement « is unique constraint error ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const isUniqueConstraintError = (error: any) => {
   const message = String(error?.message || '').toLowerCase()
   // PocketBase, SQLite et certains proxies ne nomment pas toujours l'erreur d'unicite pareil.
   return message.includes('unique') || message.includes('duplicate') || message.includes('already exists')
 }
+/**
+ * Indique si unknown field error.
+ *
+ * @param error - Valeur utilisée par le traitement « is unknown field error ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const isUnknownFieldError = (error: any) => {
   const message = String(error?.message || '').toLowerCase()
   const responseMessage = String(error?.response?.message || '').toLowerCase()
@@ -173,13 +231,42 @@ const isUnknownFieldError = (error: any) => {
     || haystack.includes('failed to find field')
     || haystack.includes('validation_unknown')
 }
+/**
+ * Indique si pocketbase validation error.
+ *
+ * @param error - Valeur utilisée par le traitement « is pocketbase validation error ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const isPocketbaseValidationError = (error: any) => Number(error?.status || error?.response?.status || 0) === 400
+/**
+ * Indique si pocketbase access error.
+ *
+ * @param error - Valeur utilisée par le traitement « is pocketbase access error ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const isPocketbaseAccessError = (error: any) => {
   const status = Number(error?.status || error?.response?.status || 0)
   return status === 401 || status === 403
 }
+/**
+ * Indique si pocketbase not found error.
+ *
+ * @param error - Valeur utilisée par le traitement « is pocketbase not found error ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const isPocketbaseNotFoundError = (error: any) => Number(error?.status || error?.response?.status || 0) === 404
 
+/**
+ * Retourne display name.
+ *
+ * @param user - Valeur utilisée par le traitement « get display name ».
+ * @param fallbackId - Valeur utilisée par le traitement « get display name ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const getDisplayName = (user?: Partial<UserRecord> | null, fallbackId = '') => {
   const label = String(user?.anilist_username || '').trim()
   if (label) return label
@@ -187,10 +274,24 @@ const getDisplayName = (user?: Partial<UserRecord> | null, fallbackId = '') => {
   return fallbackId ? `Utilisateur ${fallbackId.slice(0, 4)}` : 'Inconnu'
 }
 
+/**
+ * Retourne avatar.
+ *
+ * @param user - Valeur utilisée par le traitement « get avatar ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const getAvatar = (user?: Partial<UserRecord> | null) => {
   return String(user?.anilist_avatar_url_large || user?.anilist_avatar_url_medium || '').trim() || undefined
 }
 
+/**
+ * Retourne initials.
+ *
+ * @param value - Valeur utilisée par le traitement « get initials ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const getInitials = (value: string) => {
   // Deux initiales lisibles pour les avatars générés, même si le pseudo contient des symboles.
   const parts = value
@@ -202,8 +303,22 @@ const getInitials = (value: string) => {
   return initials || value.replace(/[^a-z0-9]/gi, '').toUpperCase().slice(0, 2) || 'SL'
 }
 
+/**
+ * Calcule la valeur « short name ».
+ *
+ * @param value - Valeur utilisée par le traitement « short name ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const shortName = (value: string) => value.length <= 12 ? value : value.slice(0, 12)
 
+/**
+ * Calcule la valeur « hue from string ».
+ *
+ * @param value - Valeur utilisée par le traitement « hue from string ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const hueFromString = (value: string) => {
   let hash = 0
   for (let index = 0; index < value.length; index += 1) {
@@ -213,8 +328,22 @@ const hueFromString = (value: string) => {
   return hash
 }
 
+/**
+ * Calcule la valeur « member color ».
+ *
+ * @param value - Valeur utilisée par le traitement « member color ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const memberColor = (value: string) => `hsl(${hueFromString(value)} 72% 52%)`
 
+/**
+ * Formate relative date.
+ *
+ * @param value - Valeur utilisée par le traitement « format relative date ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const formatRelativeDate = (value?: string) => {
   if (!value) return 'Mis à jour récemment'
   const date = new Date(value)
@@ -228,6 +357,13 @@ const formatRelativeDate = (value?: string) => {
   return `Mis à jour le ${date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`
 }
 
+/**
+ * Formate date label.
+ *
+ * @param value - Valeur utilisée par le traitement « format date label ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const formatDateLabel = (value?: string) => {
   if (!value) return 'Date inconnue'
   const date = new Date(value)
@@ -235,6 +371,13 @@ const formatDateLabel = (value?: string) => {
   return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
+/**
+ * Calcule la valeur « pocketbase error details ».
+ *
+ * @param error - Valeur utilisée par le traitement « pocketbase error details ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const pocketbaseErrorDetails = (error: any) => {
   // Regroupe les messages utiles de PocketBase pour produire une erreur actionnable côté UI.
   const responseData = error?.response?.data && typeof error.response.data === 'object'
@@ -249,10 +392,24 @@ const noAutoCancel = {
   requestKey: null as null
 }
 
+/**
+ * Calcule la valeur « shared list media field error ».
+ *
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const sharedListMediaFieldError = () => new Error(
   'La collection PocketBase `shared_list` doit encore contenir les champs fichiers `image` et `banner`.'
 )
 
+/**
+ * Récupère users by ids.
+ *
+ * @param pb - Valeur utilisée par le traitement « fetch users by ids ».
+ * @param ids - Valeur utilisée par le traitement « fetch users by ids ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects effectue des appels réseau ou persistants.
+ */
 const fetchUsersByIds = async (pb: PocketBaseClient, ids: string[]) => {
   const uniqueIds = Array.from(new Set(ids.filter(Boolean)))
   if (!uniqueIds.length) return new Map<string, UserRecord>()
@@ -266,6 +423,13 @@ const fetchUsersByIds = async (pb: PocketBaseClient, ids: string[]) => {
   return new Map(users.map(user => [user.id, user]))
 }
 
+/**
+ * Normalise shared list permission.
+ *
+ * @param value - Valeur utilisée par le traitement « normalize shared list permission ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const normalizeSharedListPermission = (value: unknown): SharedListPermission | null => {
   const normalized = String(value || '').trim().toLowerCase()
   // "moderator" est conserve comme alias historique de l'ancien prototype.
@@ -275,6 +439,13 @@ const normalizeSharedListPermission = (value: unknown): SharedListPermission | n
   return null
 }
 
+/**
+ * Calcule la valeur « permission defaults ».
+ *
+ * @param permission - Valeur utilisée par le traitement « permission defaults ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const permissionDefaults = (permission: SharedListPermission) => ({
   // Matrice de base côté UI; les flags PocketBase explicites peuvent ensuite la surcharger.
   canRead: true,
@@ -284,6 +455,13 @@ const permissionDefaults = (permission: SharedListPermission) => ({
   canManageMembers: permission === 'admin'
 })
 
+/**
+ * Retourne permission record.
+ *
+ * @param membership - Valeur utilisée par le traitement « get permission record ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const getPermissionRecord = (membership?: UserSharedListRecord | null) => {
   const expanded = membership?.expand?.fk_permission_id
   // Selon la relation PocketBase, l'expand peut revenir comme objet ou tableau.
@@ -292,6 +470,13 @@ const getPermissionRecord = (membership?: UserSharedListRecord | null) => {
 }
 
 // Les anciennes données peuvent ne pas avoir de nom de permission; on reconstruit le rôle via les flags.
+/**
+ * Calcule la valeur « infer permission from record ».
+ *
+ * @param permissionRecord - Valeur utilisée par le traitement « infer permission from record ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const inferPermissionFromRecord = (permissionRecord?: PermissionRecord | null) => {
   const namedPermission = normalizeSharedListPermission(permissionRecord?.name)
   if (namedPermission) return namedPermission
@@ -311,6 +496,14 @@ const inferPermissionFromRecord = (permissionRecord?: PermissionRecord | null) =
   return null
 }
 
+/**
+ * Retourne permission name.
+ *
+ * @param membership - Valeur utilisée par le traitement « get permission name ».
+ * @param role - Valeur utilisée par le traitement « get permission name ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const getPermissionName = (
   membership?: UserSharedListRecord | null,
   role: SharedListRole = 'member'
@@ -323,6 +516,14 @@ const getPermissionName = (
   return 'viewer'
 }
 
+/**
+ * Retourne permission capabilities.
+ *
+ * @param membership - Valeur utilisée par le traitement « get permission capabilities ».
+ * @param role - Valeur utilisée par le traitement « get permission capabilities ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const getPermissionCapabilities = (
   membership?: UserSharedListRecord | null,
   role: SharedListRole = 'member'
@@ -345,6 +546,13 @@ const getPermissionCapabilities = (
   }
 }
 
+/**
+ * Calcule la valeur « permission flags ».
+ *
+ * @param permission - Valeur utilisée par le traitement « permission flags ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const permissionFlags = (permission: SharedListPermission) => {
   if (permission === 'admin') {
     // Admin: gestion complete des animes, membres et suggestions.
@@ -384,6 +592,18 @@ const permissionFlags = (permission: SharedListPermission) => {
   }
 }
 
+/**
+ * Construit member.
+ *
+ * @param memberId - Valeur utilisée par le traitement « build member ».
+ * @param currentUserId - Valeur utilisée par le traitement « build member ».
+ * @param currentUserProfile - Valeur utilisée par le traitement « build member ».
+ * @param userMap - Valeur utilisée par le traitement « build member ».
+ * @param membership - Valeur utilisée par le traitement « build member ».
+ * @param role - Valeur utilisée par le traitement « build member ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const buildMember = (
   memberId: string,
   currentUserId: string,
@@ -423,6 +643,12 @@ const buildMember = (
   }
 }
 
+/**
+ * Calcule la valeur « shared lists ».
+ *
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects modifie l'état réactif, effectue des appels réseau ou persistants, peut écrire dans les journaux.
+ */
 export const useSharedLists = () => {
   const pocketbaseStore = usePocketbaseStore()
   const anilistSync = useAnilistSync()
@@ -435,6 +661,17 @@ export const useSharedLists = () => {
     anilist_avatar_url_large: String(authRecord.value.anilist_avatar_url_large || '')
   }))
 
+  // [IMPORTANT] : ce composable centralise les contrôles d'accès; les pages ne doivent pas les reproduire localement.
+
+  /**
+   * Calcule la valeur « shared list file url ».
+   *
+   * @param record - Valeur utilisée par le traitement « shared list file url ».
+   * @param field - Valeur utilisée par le traitement « shared list file url ».
+   * @param options - Valeur utilisée par le traitement « shared list file url ».
+   * @returns Le résultat calculé par la fonction.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const sharedListFileUrl = (
     record?: SharedListRecord | null,
     field?: string,
@@ -446,6 +683,14 @@ export const useSharedLists = () => {
     return pocketbaseStore.pb.files.getURL(record as Record<string, any>, fileName, options)
   }
 
+  /**
+   * Construit shared list payload.
+   *
+   * @param input - Valeur utilisée par le traitement « build shared list payload ».
+   * @param options - Valeur utilisée par le traitement « build shared list payload ».
+   * @returns Le résultat calculé par la fonction.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const buildSharedListPayload = (
     input: {
       name?: string
@@ -478,6 +723,15 @@ export const useSharedLists = () => {
     return payload
   }
 
+  /**
+   * Construit membership payload.
+   *
+   * @param listId - Valeur utilisée par le traitement « build membership payload ».
+   * @param userId - Valeur utilisée par le traitement « build membership payload ».
+   * @param options - Valeur utilisée par le traitement « build membership payload ».
+   * @returns Le résultat calculé par la fonction.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const buildMembershipPayload = (
     listId: string,
     userId: string,
@@ -495,6 +749,15 @@ export const useSharedLists = () => {
     return payload
   }
 
+  /**
+   * Construit permission payload.
+   *
+   * @param userId - Valeur utilisée par le traitement « build permission payload ».
+   * @param grantedByUserId - Valeur utilisée par le traitement « build permission payload ».
+   * @param permission - Valeur utilisée par le traitement « build permission payload ».
+   * @returns Le résultat calculé par la fonction.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const buildPermissionPayload = (
     userId: string,
     grantedByUserId: string,
@@ -507,6 +770,15 @@ export const useSharedLists = () => {
     ...permissionFlags(permission)
   })
 
+  /**
+   * Crée membership record.
+   *
+   * @param listId - Valeur utilisée par le traitement « create membership record ».
+   * @param userId - Valeur utilisée par le traitement « create membership record ».
+   * @param permission - Valeur utilisée par le traitement « create membership record ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const createMembershipRecord = async (
     listId: string,
     userId: string,
@@ -532,6 +804,12 @@ export const useSharedLists = () => {
     }
   }
 
+  /**
+   * Calcule la valeur « require current user id ».
+   *
+   * @returns Le résultat calculé par la fonction.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const requireCurrentUserId = () => {
     const userId = String(currentUserId.value || '')
     if (!userId) {
@@ -540,24 +818,61 @@ export const useSharedLists = () => {
     return userId
   }
 
+  /**
+   * Retourne owner id.
+   *
+   * @param sharedList - Valeur utilisée par le traitement « get owner id ».
+   * @returns Le résultat calculé par la fonction.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const getOwnerId = (sharedList?: SharedListRecord | null) => normalizeRelationValue(sharedList?.fk_owner_user_id)
 
+  /**
+   * Calcule la valeur « membership has user ».
+   *
+   * @param membership - Valeur utilisée par le traitement « membership has user ».
+   * @param userId - Valeur utilisée par le traitement « membership has user ».
+   * @returns Le résultat calculé par la fonction.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const membershipHasUser = (membership?: Pick<UserSharedListRecord, 'fk_user_id'> | null, userId = '') => {
     if (!userId || !membership) return false
     return normalizeRelationValues(membership.fk_user_id).includes(userId)
   }
 
+  /**
+   * Construit user membership filter.
+   *
+   * @param userId - Valeur utilisée par le traitement « build user membership filter ».
+   * @returns Le résultat calculé par la fonction.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const buildUserMembershipFilter = (userId: string) => {
     const safeUserId = escapeFilterValue(userId)
     // Supporte à la fois relation simple (=) et ancienne relation multiple (?=).
     return `(fk_user_id ?= "${safeUserId}" || fk_user_id="${safeUserId}")`
   }
 
+  /**
+   * Construit membership filter.
+   *
+   * @param listId - Valeur utilisée par le traitement « build membership filter ».
+   * @param userId - Valeur utilisée par le traitement « build membership filter ».
+   * @returns Le résultat calculé par la fonction.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const buildMembershipFilter = (listId: string, userId: string) => {
     const safeListId = escapeFilterValue(listId)
     return `fk_shared_list_id="${safeListId}" && ${buildUserMembershipFilter(userId)}`
   }
 
+  /**
+   * Construit target participation filter.
+   *
+   * @param userId - Valeur utilisée par le traitement « build target participation filter ».
+   * @returns Le résultat calculé par la fonction.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const buildTargetParticipationFilter = (userId: string) => {
     const safeUserId = escapeFilterValue(userId)
     // Participation = propriétaire direct ou membre via la relation inverse PocketBase.
@@ -565,6 +880,14 @@ export const useSharedLists = () => {
   }
 
   // Transforme des records shared_list bruts en cartes riches pour les pages liste/profil.
+  /**
+   * Charge summary records.
+   *
+   * @param records - Valeur utilisée par le traitement « load summary records ».
+   * @param viewerUserId - Valeur utilisée par le traitement « load summary records ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects modifie l'état réactif, effectue des appels réseau ou persistants.
+   */
   const loadSummaryRecords = async (
     records: SharedListRecord[],
     viewerUserId = String(currentUserId.value || '')
@@ -682,12 +1005,26 @@ export const useSharedLists = () => {
     })
   }
 
+  /**
+   * Retourne shared list record.
+   *
+   * @param listId - Valeur utilisée par le traitement « get shared list record ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const getSharedListRecord = async (listId: string) => {
     return await pocketbaseStore.pb.collection('shared_list').getOne<SharedListRecord>(listId, {
       ...noAutoCancel
     })
   }
 
+  /**
+   * Retourne membership record.
+   *
+   * @param membershipId - Valeur utilisée par le traitement « get membership record ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const getMembershipRecord = async (membershipId: string) => {
     return await pocketbaseStore.pb.collection('user_shared_list').getOne<UserSharedListRecord>(membershipId, {
       expand: 'fk_permission_id',
@@ -695,12 +1032,27 @@ export const useSharedLists = () => {
     })
   }
 
+  /**
+   * Retourne anime shared list record.
+   *
+   * @param relationId - Valeur utilisée par le traitement « get anime shared list record ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const getAnimeSharedListRecord = async (relationId: string) => {
     return await pocketbaseStore.pb.collection('anime_shared_list').getOne<AnimeSharedListRecord>(relationId, {
       ...noAutoCancel
     })
   }
 
+  /**
+   * Calcule la valeur « find membership ».
+   *
+   * @param listId - Valeur utilisée par le traitement « find membership ».
+   * @param userId - Valeur utilisée par le traitement « find membership ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const findMembership = async (listId: string, userId: string) => {
     if (!listId || !userId) return null
 
@@ -713,6 +1065,13 @@ export const useSharedLists = () => {
     return existing.items[0] || null
   }
 
+  /**
+   * Retourne list access context.
+   *
+   * @param listId - Valeur utilisée par le traitement « get list access context ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const getListAccessContext = async (listId: string) => {
     const userId = requireCurrentUserId()
     const sharedList = await getSharedListRecord(listId)
@@ -731,6 +1090,17 @@ export const useSharedLists = () => {
     }
   }
 
+  // ─────────────────────────────────────────
+  // SECTION : Contrôle des accès
+  // ─────────────────────────────────────────
+
+  /**
+   * Vérifie shared list access.
+   *
+   * @param listId - Valeur utilisée par le traitement « assert shared list access ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const assertSharedListAccess = async (listId: string) => {
     const access = await getListAccessContext(listId)
     if (!access.isMember) {
@@ -739,6 +1109,13 @@ export const useSharedLists = () => {
     return access
   }
 
+  /**
+   * Vérifie shared list owner.
+   *
+   * @param listId - Valeur utilisée par le traitement « assert shared list owner ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const assertSharedListOwner = async (listId: string) => {
     const access = await assertSharedListAccess(listId)
     // Certaines actions restent réservées au propriétaire, même si un admin peut gérer les membres.
@@ -748,6 +1125,13 @@ export const useSharedLists = () => {
     return access
   }
 
+  /**
+   * Vérifie can manage members in list.
+   *
+   * @param listId - Valeur utilisée par le traitement « assert can manage members in list ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const assertCanManageMembersInList = async (listId: string) => {
     const access = await assertSharedListAccess(listId)
     if (access.isOwner) return access
@@ -759,6 +1143,13 @@ export const useSharedLists = () => {
     return access
   }
 
+  /**
+   * Vérifie can add anime to list.
+   *
+   * @param listId - Valeur utilisée par le traitement « assert can add anime to list ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const assertCanAddAnimeToList = async (listId: string) => {
     const access = await assertSharedListAccess(listId)
     if (access.isOwner) return access
@@ -770,6 +1161,13 @@ export const useSharedLists = () => {
     return access
   }
 
+  /**
+   * Vérifie can edit anime in list.
+   *
+   * @param listId - Valeur utilisée par le traitement « assert can edit anime in list ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const assertCanEditAnimeInList = async (listId: string) => {
     const access = await assertSharedListAccess(listId)
     if (access.isOwner) return access
@@ -781,6 +1179,13 @@ export const useSharedLists = () => {
     return access
   }
 
+  /**
+   * Vérifie can delete anime from list.
+   *
+   * @param listId - Valeur utilisée par le traitement « assert can delete anime from list ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const assertCanDeleteAnimeFromList = async (listId: string) => {
     const access = await assertSharedListAccess(listId)
     if (access.isOwner) return access
@@ -792,6 +1197,15 @@ export const useSharedLists = () => {
     return access
   }
 
+  /**
+   * Calcule la valeur « repair membership record ».
+   *
+   * @param membership - Valeur utilisée par le traitement « repair membership record ».
+   * @param listId - Valeur utilisée par le traitement « repair membership record ».
+   * @param userId - Valeur utilisée par le traitement « repair membership record ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const repairMembershipRecord = async (membership: UserSharedListRecord, listId: string, userId: string) => {
     const memberIds = normalizeRelationValues(membership.fk_user_id)
     if (memberIds.length === 1 && memberIds[0] === userId) {
@@ -809,6 +1223,19 @@ export const useSharedLists = () => {
     }
   }
 
+  // ─────────────────────────────────────────
+  // SECTION : Compatibilité des appartenances
+  // ─────────────────────────────────────────
+
+  /**
+   * Garantit membership.
+   *
+   * @param listId - Valeur utilisée par le traitement « ensure membership ».
+   * @param userId - Valeur utilisée par le traitement « ensure membership ».
+   * @param permission - Valeur utilisée par le traitement « ensure membership ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const ensureMembership = async (
     listId: string,
     userId: string,
@@ -827,6 +1254,16 @@ export const useSharedLists = () => {
     }
   }
 
+  /**
+   * Calcule la valeur « recreate membership with permission ».
+   *
+   * @param membership - Valeur utilisée par le traitement « recreate membership with permission ».
+   * @param listId - Valeur utilisée par le traitement « recreate membership with permission ».
+   * @param userId - Valeur utilisée par le traitement « recreate membership with permission ».
+   * @param permission - Valeur utilisée par le traitement « recreate membership with permission ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const recreateMembershipWithPermission = async (
     membership: UserSharedListRecord,
     listId: string,
@@ -867,6 +1304,14 @@ export const useSharedLists = () => {
     }
   }
 
+  /**
+   * Met à jour membership permission.
+   *
+   * @param membershipId - Valeur utilisée par le traitement « update membership permission ».
+   * @param permission - Valeur utilisée par le traitement « update membership permission ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const updateMembershipPermission = async (membershipId: string, permission: SharedListPermission) => {
     const membership = await getMembershipRecord(membershipId)
     const listId = normalizeRelationValue(membership.fk_shared_list_id)
@@ -898,6 +1343,13 @@ export const useSharedLists = () => {
     }
   }
 
+  /**
+   * Garantit owner membership.
+   *
+   * @param listId - Valeur utilisée par le traitement « ensure owner membership ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const ensureOwnerMembership = async (listId: string) => {
     if (!currentUserId.value) return null
 
@@ -908,6 +1360,13 @@ export const useSharedLists = () => {
     return await ensureMembership(listId, currentUserId.value, 'admin')
   }
 
+  /**
+   * Calcule la valeur « migrate legacy memberships ».
+   *
+   * @param listId - Valeur utilisée par le traitement « migrate legacy memberships ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects modifie l'état réactif, effectue des appels réseau ou persistants, peut écrire dans les journaux.
+   */
   const migrateLegacyMemberships = async (listId: string) => {
     const access = await assertSharedListOwner(listId)
     let changed = false
@@ -958,6 +1417,14 @@ export const useSharedLists = () => {
     }
   }
 
+  /**
+   * Construit anime create validation error.
+   *
+   * @param listId - Valeur utilisée par le traitement « build anime create validation error ».
+   * @param error - Valeur utilisée par le traitement « build anime create validation error ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const buildAnimeCreateValidationError = async (listId: string, error: any) => {
     let ownerId = ''
     let membership: UserSharedListRecord | null = null
@@ -997,6 +1464,14 @@ export const useSharedLists = () => {
     return new Error(`PocketBase a refusé la création d'un anime sur cette liste partagée. ${details || 'Création de fiche impossible.'}`.trim())
   }
 
+  // [ATTENTION] : plusieurs branches maintiennent la compatibilité avec d'anciens schémas PocketBase.
+
+  /**
+   * Charge summaries.
+   *
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const loadSummaries = async () => {
     if (!currentUserId.value) return []
 
@@ -1039,6 +1514,17 @@ export const useSharedLists = () => {
     )
   }
 
+  // ─────────────────────────────────────────
+  // SECTION : Chargement des listes
+  // ─────────────────────────────────────────
+
+  /**
+   * Charge profile summaries.
+   *
+   * @param input - Valeur utilisée par le traitement « load profile summaries ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const loadProfileSummaries = async (input: {
     targetUserId: string
     viewerIsFriend?: boolean
@@ -1090,6 +1576,13 @@ export const useSharedLists = () => {
       .sort((a, b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime())
   }
 
+  /**
+   * Charge detail.
+   *
+   * @param listId - Valeur utilisée par le traitement « load detail ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const loadDetail = async (listId: string) => {
     const userId = requireCurrentUserId()
     const record = await pocketbaseStore.pb.collection('shared_list').getOne<SharedListRecord>(listId, {
@@ -1201,6 +1694,13 @@ export const useSharedLists = () => {
     } satisfies SharedListDetail
   }
 
+  /**
+   * Crée shared list.
+   *
+   * @param input - Valeur utilisée par le traitement « create shared list ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const createSharedList = async (input: {
     name: string
     privacy: SharedListPrivacy
@@ -1241,6 +1741,18 @@ export const useSharedLists = () => {
     return created
   }
 
+  // ─────────────────────────────────────────
+  // SECTION : Mutations des listes et membres
+  // ─────────────────────────────────────────
+
+  /**
+   * Met à jour shared list.
+   *
+   * @param listId - Valeur utilisée par le traitement « update shared list ».
+   * @param patch - Valeur utilisée par le traitement « update shared list ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const updateSharedList = async (listId: string, patch: {
     name?: string
     privacy?: SharedListPrivacy
@@ -1269,12 +1781,27 @@ export const useSharedLists = () => {
     }
   }
 
+  /**
+   * Ajoute member to list.
+   *
+   * @param listId - Valeur utilisée par le traitement « add member to list ».
+   * @param userId - Valeur utilisée par le traitement « add member to list ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const addMemberToList = async (listId: string, userId: string) => {
     // ensureMembership gère le cas où le membre existe déjà et les anciennes relations à réparer.
     await assertCanManageMembersInList(listId)
     return await ensureMembership(listId, userId)
   }
 
+  /**
+   * Retire membership.
+   *
+   * @param membershipId - Valeur utilisée par le traitement « remove membership ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const removeMembership = async (membershipId: string) => {
     const membership = await getMembershipRecord(membershipId)
     const listId = normalizeRelationValue(membership.fk_shared_list_id)
@@ -1296,6 +1823,13 @@ export const useSharedLists = () => {
     return await pocketbaseStore.pb.collection('user_shared_list').delete(membershipId)
   }
 
+  /**
+   * Supprime shared list.
+   *
+   * @param listId - Valeur utilisée par le traitement « delete shared list ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const deleteSharedList = async (listId: string) => {
     await assertSharedListOwner(listId)
 
@@ -1334,6 +1868,13 @@ export const useSharedLists = () => {
     return await pocketbaseStore.pb.collection('shared_list').delete(listId)
   }
 
+  /**
+   * Garantit anime record.
+   *
+   * @param input - Valeur utilisée par le traitement « ensure anime record ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const ensureAnimeRecord = async (input: { mediaId: number; title: string; fetchLink?: string }) => {
     const mediaId = Number(input.mediaId || 0)
     if (!Number.isFinite(mediaId) || mediaId <= 0) {
@@ -1370,6 +1911,17 @@ export const useSharedLists = () => {
     }
   }
 
+  // ─────────────────────────────────────────
+  // SECTION : Synchronisation des animes
+  // ─────────────────────────────────────────
+
+  /**
+   * Retourne anime record.
+   *
+   * @param animeRecordId - Valeur utilisée par le traitement « get anime record ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const getAnimeRecord = async (animeRecordId: string) => {
     if (!animeRecordId) {
       throw new Error('Cette entrée anime n\'a pas de fiche anime associée.')
@@ -1380,6 +1932,14 @@ export const useSharedLists = () => {
     })
   }
 
+  /**
+   * Synchronise shared anime to ani list.
+   *
+   * @param animeRecord - Valeur utilisée par le traitement « sync shared anime to ani list ».
+   * @param input - Valeur utilisée par le traitement « sync shared anime to ani list ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const syncSharedAnimeToAniList = async (
     animeRecord: Pick<AnimeRecord, 'anilist_media_id'>,
     input: {
@@ -1403,6 +1963,14 @@ export const useSharedLists = () => {
     })
   }
 
+  /**
+   * Ajoute anime to list.
+   *
+   * @param listId - Valeur utilisée par le traitement « add anime to list ».
+   * @param input - Valeur utilisée par le traitement « add anime to list ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const addAnimeToList = async (
     listId: string,
     input: {
@@ -1434,7 +2002,15 @@ export const useSharedLists = () => {
       mode: 'create'
     })
 
+    // [TODO] : supprimer ce fallback après migration complète des champs status/progress/score dans PocketBase.
     // withStateFields permet de rester compatible avec un schema anime_shared_list pas encore migre.
+    /**
+     * Crée relation.
+     *
+     * @param withStateFields - Valeur utilisée par le traitement « create relation ».
+     * @returns Une promesse résolue avec le résultat du traitement.
+     * @sideEffects effectue des appels réseau ou persistants.
+     */
     const createRelation = async (withStateFields: boolean) => {
       return await pocketbaseStore.pb.collection('anime_shared_list').create<AnimeSharedListRecord>({
         fk_user_id: access.userId,
@@ -1485,6 +2061,14 @@ export const useSharedLists = () => {
     }
   }
 
+  /**
+   * Met à jour anime list entry.
+   *
+   * @param relationId - Valeur utilisée par le traitement « update anime list entry ».
+   * @param patch - Valeur utilisée par le traitement « update anime list entry ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const updateAnimeListEntry = async (
     relationId: string,
     patch: {
@@ -1525,6 +2109,13 @@ export const useSharedLists = () => {
     }
   }
 
+  /**
+   * Retire anime from list.
+   *
+   * @param relationId - Valeur utilisée par le traitement « remove anime from list ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const removeAnimeFromList = async (relationId: string) => {
     const relation = await getAnimeSharedListRecord(relationId)
     const listId = normalizeRelationValue(relation.fk_shared_list_id)
@@ -1536,6 +2127,14 @@ export const useSharedLists = () => {
     return await pocketbaseStore.pb.collection('anime_shared_list').delete(relationId)
   }
 
+  /**
+   * Recherche users.
+   *
+   * @param query - Valeur utilisée par le traitement « search users ».
+   * @param excludeIds - Valeur utilisée par le traitement « search users ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const searchUsers = async (query: string, excludeIds: string[] = []) => {
     const needle = query.trim()
     if (needle.length < 2) return []

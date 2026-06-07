@@ -1,6 +1,10 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import type { AlertType, AlertTypeValue } from '#shared/types/AlertType';
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 export const useAlertStore = defineStore('useAlertStore', () => {
   const alert = ref<AlertType | null>(null);
@@ -9,6 +13,13 @@ export const useAlertStore = defineStore('useAlertStore', () => {
   const onDenyRef = ref<() => void>();
   const showDenyButton = ref(true);
 
+  /**
+   * Ouvre alert.
+   *
+   * @param options - Valeur utilisée par le traitement « open alert ».
+   * @returns Le résultat calculé par la fonction.
+   * @sideEffects modifie l'état réactif.
+   */
   const openAlert = ({ type, message, showDeny = true }: { type: AlertTypeValue; message: string; showDeny?: boolean }): Promise<boolean> => {
     return new Promise(resolve => {
       alert.value = { type, message };
@@ -25,6 +36,12 @@ export const useAlertStore = defineStore('useAlertStore', () => {
     });
   };
 
+  /**
+   * Efface alert.
+   *
+   * @returns Aucune valeur.
+   * @sideEffects modifie l'état réactif.
+   */
   const clearAlert = () => {
     alert.value = null;
     onAcceptRef.value = undefined;

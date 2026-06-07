@@ -20,13 +20,29 @@
 </template>
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 const showButton = ref(false);
 
+/**
+ * Traite scroll.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif, interagit avec le navigateur ou le DOM.
+ */
 const handleScroll = () => {
   showButton.value = window.scrollY > 300;
 };
 
+/**
+ * Fait défiler to top.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects interagit avec le navigateur ou le DOM.
+ */
 const scrollToTop = () => {
   const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
 

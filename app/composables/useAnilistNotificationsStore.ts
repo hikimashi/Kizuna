@@ -1,6 +1,10 @@
 import { defineStore } from 'pinia'
 import { computed, ref, unref } from 'vue'
 import { usePocketbaseStore } from './usePocketbaseStore'
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 type NotificationUserPreview = {
   id: number
@@ -338,15 +342,43 @@ query {
 }
 `
 
+/**
+ * Retourne avatar.
+ *
+ * @param user - Valeur utilisée par le traitement « get avatar ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const getAvatar = (user?: NotificationUserPreview) =>
   user?.avatar?.large || user?.avatar?.medium || undefined
 
+/**
+ * Retourne cover.
+ *
+ * @param media - Valeur utilisée par le traitement « get cover ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const getCover = (media?: NotificationMediaPreview) =>
   media?.coverImage?.large || media?.coverImage?.medium || undefined
 
+/**
+ * Retourne media title.
+ *
+ * @param media - Valeur utilisée par le traitement « get media title ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const getMediaTitle = (media?: NotificationMediaPreview) =>
   String(media?.title?.userPreferred || 'Media sans titre')
 
+/**
+ * Normalise notification.
+ *
+ * @param node - Valeur utilisée par le traitement « normalize notification ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const normalizeNotification = (node: RawNotificationNode): AniListNotificationItem | null => {
   const id = Number(node?.id || 0)
   if (!Number.isFinite(id) || id <= 0) return null
@@ -413,11 +445,25 @@ export const useAnilistNotificationsStore = defineStore('anilistNotifications', 
 
   const isLinked = computed(() => Boolean(userId.value && token.value))
 
+  /**
+   * Analyse error message.
+   *
+   * @param response - Valeur utilisée par le traitement « parse error message ».
+   * @returns Le résultat calculé par la fonction.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const parseErrorMessage = (response: any) => {
     if (!Array.isArray(response?.errors) || !response.errors.length) return ''
     return response.errors.map((error: any) => String(error?.message || '')).filter(Boolean).join(' | ')
   }
 
+  /**
+   * Réinitialise reset.
+   *
+   * @param keepUnread - Valeur utilisée par le traitement « reset ».
+   * @returns Aucune valeur.
+   * @sideEffects modifie l'état réactif.
+   */
   const reset = (keepUnread = false) => {
     items.value = []
     isLoading.value = false
@@ -428,6 +474,15 @@ export const useAnilistNotificationsStore = defineStore('anilistNotifications', 
     if (!keepUnread) unreadCount.value = 0
   }
 
+  /**
+   * Exécute graphql.
+   *
+   * @param query - Valeur utilisée par le traitement « request graphql ».
+   * @param variables - Valeur utilisée par le traitement « request graphql ».
+   * @param options - Valeur utilisée par le traitement « request graphql ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const requestGraphql = async (
     query: string,
     variables: Record<string, any>,
@@ -447,6 +502,13 @@ export const useAnilistNotificationsStore = defineStore('anilistNotifications', 
     )
   }
 
+  /**
+   * Charge unread count.
+   *
+   * @param force - Valeur utilisée par le traitement « load unread count ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects modifie l'état réactif, peut écrire dans les journaux.
+   */
   const loadUnreadCount = async (force = false) => {
     if (!isLinked.value) {
       unreadCount.value = 0
@@ -470,6 +532,13 @@ export const useAnilistNotificationsStore = defineStore('anilistNotifications', 
     }
   }
 
+  /**
+   * Charge notifications.
+   *
+   * @param options - Valeur utilisée par le traitement « load notifications ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects modifie l'état réactif, peut écrire dans les journaux.
+   */
   const loadNotifications = async (options: {
     page?: number
     perPage?: number
@@ -547,6 +616,12 @@ export const useAnilistNotificationsStore = defineStore('anilistNotifications', 
     }
   }
 
+  /**
+   * Charge more.
+   *
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const loadMore = async () => {
     if (!hasNextPage.value || isLoading.value) return
     await loadNotifications({ page: currentPage.value + 1 })

@@ -1,3 +1,7 @@
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 export type AnilistCoverImage = {
   medium?: string | null
   large?: string | null
@@ -6,6 +10,13 @@ export type AnilistCoverImage = {
 
 export type AnilistCoverVariant = 'thumb' | 'card' | 'hero'
 
+/**
+ * Construit density src set.
+ *
+ * @param candidates - Valeur utilisée par le traitement « build density src set ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const buildDensitySrcSet = (candidates: Array<[string | null | undefined, string]>) => {
   const resolved = candidates.filter(([url]) => Boolean(url))
   if (resolved.length === 0) return undefined
@@ -19,6 +30,14 @@ const buildDensitySrcSet = (candidates: Array<[string | null | undefined, string
   return Array.from(unique.entries()).map(([density, url]) => `${url} ${density}`).join(', ')
 }
 
+/**
+ * Retourne anilist cover src.
+ *
+ * @param coverImage - Valeur utilisée par le traitement « get anilist cover src ».
+ * @param variant - Valeur utilisée par le traitement « get anilist cover src ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 export const getAnilistCoverSrc = (
   coverImage?: AnilistCoverImage | null,
   variant: AnilistCoverVariant = 'card'
@@ -36,6 +55,14 @@ export const getAnilistCoverSrc = (
   return coverImage.large || coverImage.medium || coverImage.extraLarge || ''
 }
 
+/**
+ * Retourne anilist cover src set.
+ *
+ * @param coverImage - Valeur utilisée par le traitement « get anilist cover src set ».
+ * @param variant - Valeur utilisée par le traitement « get anilist cover src set ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 export const getAnilistCoverSrcSet = (
   coverImage?: AnilistCoverImage | null,
   variant: AnilistCoverVariant = 'card'

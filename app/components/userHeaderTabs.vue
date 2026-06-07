@@ -54,6 +54,10 @@
 import { computed, onMounted, unref } from 'vue'
 import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 type SubTabItem = {
   key: string
@@ -90,6 +94,13 @@ const resolvedBannerUrl = computed(() =>
   String(props.bannerUrl || authRecord.value.anilist_banner || '')
 )
 
+/**
+ * Formate joined.
+ *
+ * @param timestamp - Valeur utilisée par le traitement « format joined ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const formatJoined = (timestamp?: number | null) => {
   if (!timestamp) return '-'
   const date = new Date(timestamp * 1000)
@@ -103,6 +114,13 @@ if (import.meta.client && !joinedCache.value) {
 
 const resolvedJoinedDisplay = computed(() => joinedCache.value || '-')
 
+/**
+ * Calcule la valeur « tab class ».
+ *
+ * @param tab - Valeur utilisée par le traitement « tab class ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const tabClass = (tab: SubTabItem) => ({
   'tab-active border-b-[var(--kz-accent)] text-[var(--kz-accent)]': Boolean(tab.active),
   'cursor-default opacity-45 hover:text-[var(--kz-text-secondary)]': Boolean(tab.disabled),

@@ -1,3 +1,7 @@
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 /**
  *  ENDPOINT GRAPHQL ANILIST
  * 
@@ -45,6 +49,10 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody<GraphqlBody>(event)
 
+  // ─────────────────────────────────────────
+  // SECTION : Validation et identité de requête
+  // ─────────────────────────────────────────
+
   //  Validation: la requête est obligatoire
   if (!body?.query) {
     setResponseStatus(event, 400)
@@ -88,12 +96,25 @@ export default defineEventHandler(async (event) => {
     }
   }
 
+  /**
+   * Retourne client ip.
+   *
+   * @returns Le résultat calculé par la fonction.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const getClientIp = () => {
     const forwarded = getRequestHeader(event, 'x-forwarded-for')
     if (forwarded) return forwarded.split(',')[0]?.trim() || 'unknown'
     return event.node.req.socket.remoteAddress || 'unknown'
   }
 
+  /**
+   * Indique si rate limited ip exempt.
+   *
+   * @param ip - Valeur utilisée par le traitement « is rate limited ip exempt ».
+   * @returns Le résultat calculé par la fonction.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const isRateLimitedIpExempt = (ip: string) => (
     ip === 'unknown'
     || ip === '::1'
@@ -101,6 +122,12 @@ export default defineEventHandler(async (event) => {
     || ip === '::ffff:127.0.0.1'
   )
 
+  /**
+   * Calcule la valeur « consume rate limit slot ».
+   *
+   * @returns Le résultat calculé par la fonction.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const consumeRateLimitSlot = () => {
     const rateKey = getClientIp()
     if (isRateLimitedIpExempt(rateKey)) return 0
@@ -146,6 +173,13 @@ export default defineEventHandler(async (event) => {
 
   const config = useRuntimeConfig(event)
   const valkeyUrl = String((config as any).valkeyUrl ?? '').trim()
+  /**
+   * Calcule la valeur « disable valkey ».
+   *
+   * @param reason - Valeur utilisée par le traitement « disable valkey ».
+   * @returns Aucune valeur.
+   * @sideEffects peut écrire dans les journaux.
+   */
   const disableValkey = (reason: unknown) => {
     if (!globalState.__anilistValkeyErrorLogged) {
       console.error('Valkey cache unavailable, fallback to memory cache:', reason)
@@ -154,6 +188,12 @@ export default defineEventHandler(async (event) => {
     globalState.__anilistValkeyDisabled = true
   }
 
+  /**
+   * Retourne valkey client.
+   *
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const getValkeyClient = async (): Promise<ValkeyClientLike | null> => {
     if (!valkeyUrl || globalState.__anilistValkeyDisabled) return null
 
@@ -193,6 +233,10 @@ export default defineEventHandler(async (event) => {
     return await globalState.__anilistValkeyClientPromise
   }
 
+  // ─────────────────────────────────────────
+  // SECTION : Lecture des caches
+  // ─────────────────────────────────────────
+
   if (!skipCache && ttlMs > 0) {
     const valkeyClient = await getValkeyClient()
     if (valkeyClient) {
@@ -220,6 +264,13 @@ export default defineEventHandler(async (event) => {
     }
   }
 
+  /**
+   * Attend wait.
+   *
+   * @param ms - Valeur utilisée par le traitement « wait ».
+   * @returns Le résultat calculé par la fonction.
+   * @sideEffects gère une temporisation.
+   */
   const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
   const requestKey = cacheKey
@@ -241,7 +292,14 @@ export default defineEventHandler(async (event) => {
     }
   }
 
+  /**
+   * Calcule la valeur « perform request ».
+   *
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const performRequest = async () => {
+    // [IMPORTANT] : toutes les requêtes AniList sortantes passent par cette fonction et son retry borné.
     //  HEADERS POUR ANILIST
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -339,6 +397,9 @@ export default defineEventHandler(async (event) => {
   inFlight.set(requestKey, requestPromise)
 
   try {
+    // ─────────────────────────────────────────
+    // SECTION : Écriture des caches et réponse
+    // ─────────────────────────────────────────
     const result = await requestPromise
 
     //  STOCKAGE EN CACHE - Si c'est une requête réussie (200-299)

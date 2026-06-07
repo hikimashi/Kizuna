@@ -2,6 +2,10 @@ import { defineStore } from 'pinia';
 import { usePocketbaseStore } from './usePocketbaseStore';
 import { useToastStore } from './useToastStore';
 import { useAlertStore } from './useAlertStore';
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 export const useAnilistAuthStore = defineStore('anilistAuth', () => {
   const pocketbaseStore = usePocketbaseStore();
@@ -10,6 +14,12 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
   const anilistGraphql = useAnilistGraphql();
 
   // Lance l'OAuth AniList et stocke un state anti-CSRF.
+  /**
+   * Authentifie with ani list.
+   *
+   * @returns Aucune valeur.
+   * @sideEffects lit ou écrit dans le stockage du navigateur, interagit avec le navigateur ou le DOM, peut écrire dans les journaux.
+   */
   const loginWithAniList = () => {
     localStorage.removeItem('anilist_oauth_state');
 
@@ -34,6 +44,12 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
   };
 
   // Affiche un avertissement avant la redirection OAuth.
+  /**
+   * Authentifie with ani list with warning.
+   *
+   * @returns Une promesse résolue une fois le traitement terminé.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const loginWithAniListWithWarning = async () => {
     await alertStore.openAlert({
       type: 'warning',
@@ -45,6 +61,14 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
   };
 
   // Gère le callback OAuth : échange de token, contrôle de doublon et synchronisation utilisateur.
+  /**
+   * Traite callback.
+   *
+   * @param code - Valeur utilisée par le traitement « handle callback ».
+   * @param state - Valeur utilisée par le traitement « handle callback ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects lit ou écrit dans le stockage du navigateur, effectue des appels réseau ou persistants.
+   */
   const handleCallback = async (code: string, state?: string) => {
     try {
       const storedState = localStorage.getItem('anilist_oauth_state');
@@ -143,6 +167,12 @@ export const useAnilistAuthStore = defineStore('anilistAuth', () => {
   };
 
   // Resynchronise les champs liés à AniList (pseudo/avatar/bannière) dans PocketBase.
+  /**
+   * Calcule la valeur « refresh linked ani list profile ».
+   *
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const refreshLinkedAniListProfile = async () => {
     try {
       const token = pocketbaseStore.authRecord?.anilist_token;

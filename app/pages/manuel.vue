@@ -124,6 +124,10 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 type ManuelStep = {
   number: string
@@ -541,16 +545,52 @@ const currentContent = computed(() =>
   currentLanguage.value === 'fr' ? frenchContent : portugueseContent
 )
 
+/**
+ * Retourne section image file name.
+ *
+ * @param sectionId - Valeur utilisée par le traitement « get section image file name ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const getSectionImageFileName = (sectionId: string) => `${sectionId}.webp`
 
+/**
+ * Retourne section image src.
+ *
+ * @param sectionId - Valeur utilisée par le traitement « get section image src ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const getSectionImageSrc = (sectionId: string) => `/img/manuel/${getSectionImageFileName(sectionId)}`
 
+/**
+ * Calcule la valeur « mark image missing ».
+ *
+ * @param sectionId - Valeur utilisée par le traitement « mark image missing ».
+ * @returns Aucune valeur.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const markImageMissing = (sectionId: string) => {
   imageAvailability[sectionId] = false
 }
 
+/**
+ * Indique si image missing.
+ *
+ * @param sectionId - Valeur utilisée par le traitement « is image missing ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const isImageMissing = (sectionId: string) => imageAvailability[sectionId] === false
 
+/**
+ * Ouvre image preview.
+ *
+ * @param sectionId - Valeur utilisée par le traitement « open image preview ».
+ * @param title - Valeur utilisée par le traitement « open image preview ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects modifie l'état réactif.
+ */
 const openImagePreview = (sectionId: string, title: string) => {
   if (isImageMissing(sectionId)) return
   activeImagePreview.value = {
@@ -559,10 +599,23 @@ const openImagePreview = (sectionId: string, title: string) => {
   }
 }
 
+/**
+ * Ferme image preview.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const closeImagePreview = () => {
   activeImagePreview.value = null
 }
 
+/**
+ * Traite keydown.
+ *
+ * @param event - Valeur utilisée par le traitement « handle keydown ».
+ * @returns Aucune valeur.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const handleKeydown = (event: KeyboardEvent) => {
   if (event.key === 'Escape') {
     closeImagePreview()
@@ -577,6 +630,12 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeydown)
 })
 
+/**
+ * Bascule language.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const toggleLanguage = () => {
   currentLanguage.value = currentLanguage.value === 'fr' ? 'pt' : 'fr'
 }

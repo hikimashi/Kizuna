@@ -1,4 +1,8 @@
 import tailwindcss from '@tailwindcss/vite';
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',

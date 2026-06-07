@@ -238,6 +238,10 @@ import { computed, onMounted, ref, unref } from 'vue'
 import { getAnilistCoverSrc, getAnilistCoverSrcSet, type AnilistCoverImage } from '~/composables/useAnilistCoverImage'
 import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 definePageMeta({
   path: '/social/compare/:id',
@@ -282,16 +286,37 @@ type CompareEntry = {
 const selfEntries = ref<CompareEntry[]>([])
 const friendEntries = ref<CompareEntry[]>([])
 
+/**
+ * Calcule la valeur « profile tab route ».
+ *
+ * @param tab - Valeur utilisée par le traitement « profile tab route ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const profileTabRoute = (tab: 'anime-list' | 'favorites' | 'friends' | 'shared-lists') => ({
   path: `/social/user/${friendUserId.value}`,
   query: tab === 'anime-list' ? {} : { tab }
 })
 
+/**
+ * Formate score.
+ *
+ * @param score - Valeur utilisée par le traitement « format score ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const formatScore = (score: number) => {
   if (!score) return '-'
   return score % 1 === 0 ? String(score) : score.toFixed(1)
 }
 
+/**
+ * Calcule la valeur « status label ».
+ *
+ * @param status - Valeur utilisée par le traitement « status label ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const statusLabel = (status: 'CURRENT' | 'COMPLETED') => (status === 'CURRENT' ? 'En cours' : 'Terminé')
 
 const selfMap = computed(() => {
@@ -327,6 +352,13 @@ const compareCounts = computed(() => {
   }
 })
 
+/**
+ * Calcule la valeur « count label ».
+ *
+ * @param count - Valeur utilisée par le traitement « count label ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const countLabel = (count: number) => {
   if (isEntriesLoading.value || !hasEntriesLoaded.value) return '--'
   return String(count)
@@ -471,6 +503,12 @@ const compatibilityLabel = computed(() => {
   return 'Peu de points communs'
 })
 
+/**
+ * Récupère self profile.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif, effectue des appels réseau ou persistants.
+ */
 const fetchSelfProfile = async () => {
   const selfUserId = Number(authRecord.value.anilist_user_id ?? 0)
   const selfUserName = String(authRecord.value.anilist_username ?? '')
@@ -527,6 +565,12 @@ const fetchSelfProfile = async () => {
   }
 }
 
+/**
+ * Récupère friend profile.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif, effectue des appels réseau ou persistants.
+ */
 const fetchFriendProfile = async () => {
   if (!friendUserId.value) return
 
@@ -565,6 +609,12 @@ const fetchFriendProfile = async () => {
   }
 }
 
+/**
+ * Récupère compare entries.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif, effectue des appels réseau ou persistants, peut écrire dans les journaux.
+ */
 const fetchCompareEntries = async () => {
   const selfUserId = Number(authRecord.value.anilist_user_id ?? 0)
   if (!selfUserId || !friendUserId.value) return
@@ -590,6 +640,13 @@ const fetchCompareEntries = async () => {
     }
   `
 
+  /**
+   * Convertit entries.
+   *
+   * @param response - Valeur utilisée par le traitement « map entries ».
+   * @returns Le résultat calculé par la fonction.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const mapEntries = (response: any): CompareEntry[] => {
     const lists = Array.isArray(response?.data?.MediaListCollection?.lists) ? response.data.MediaListCollection.lists : []
     const result = new Map<number, CompareEntry>()

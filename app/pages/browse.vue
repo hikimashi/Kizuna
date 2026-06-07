@@ -233,6 +233,10 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import AnimeList from '~/components/animeList.vue'
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 type DropdownKey = 'genre' | 'year' | 'season' | 'format' | 'status' | null
 type ViewMode = 'grid' | 'list'
@@ -422,34 +426,82 @@ const activeFilters = computed<ActiveFilter[]>(() => {
   return nextFilters
 })
 
+/**
+ * Ferme dropdown.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const closeDropdown = () => {
   openDropdown.value = null
 }
 
+/**
+ * Bascule dropdown.
+ *
+ * @param dropdownKey - Valeur utilisée par le traitement « toggle dropdown ».
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const toggleDropdown = (dropdownKey: Exclude<DropdownKey, null>) => {
   openDropdown.value = openDropdown.value === dropdownKey ? null : dropdownKey
 }
 
+/**
+ * Définit year.
+ *
+ * @param value - Valeur utilisée par le traitement « set year ».
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const setYear = (value: string) => {
   year.value = value
   closeDropdown()
 }
 
+/**
+ * Définit season.
+ *
+ * @param value - Valeur utilisée par le traitement « set season ».
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const setSeason = (value: string) => {
   season.value = value
   closeDropdown()
 }
 
+/**
+ * Définit format.
+ *
+ * @param value - Valeur utilisée par le traitement « set format ».
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const setFormat = (value: string) => {
   format.value = value
   closeDropdown()
 }
 
+/**
+ * Définit status.
+ *
+ * @param value - Valeur utilisée par le traitement « set status ».
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const setStatus = (value: string) => {
   status.value = value
   closeDropdown()
 }
 
+/**
+ * Bascule genre.
+ *
+ * @param genreValue - Valeur utilisée par le traitement « toggle genre ».
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const toggleGenre = (genreValue: string) => {
   // Les genres sont multi-selection; les autres filtres sont mono-selection.
   selectedGenres.value = selectedGenres.value.includes(genreValue)
@@ -457,6 +509,13 @@ const toggleGenre = (genreValue: string) => {
     : [...selectedGenres.value, genreValue]
 }
 
+/**
+ * Retire filter.
+ *
+ * @param filterItem - Valeur utilisée par le traitement « remove filter ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects modifie l'état réactif.
+ */
 const removeFilter = (filterItem: ActiveFilter) => {
   // Chaque chip sait quel état source elle doit nettoyer.
   if (filterItem.type === 'search') {
@@ -488,6 +547,12 @@ const removeFilter = (filterItem: ActiveFilter) => {
   status.value = ''
 }
 
+/**
+ * Efface all filters.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const clearAllFilters = () => {
   // Remet les filtres aux valeurs attendues par le composant animeList.
   searchInput.value = ''
@@ -500,6 +565,13 @@ const clearAllFilters = () => {
   closeDropdown()
 }
 
+/**
+ * Calcule la valeur « genre chip style ».
+ *
+ * @param genreValue - Valeur utilisée par le traitement « genre chip style ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const genreChipStyle = (genreValue: string) => {
   const genreStyle = genreStyleMap[genreValue]
   if (!selectedGenres.value.includes(genreValue) || !genreStyle) return {}
@@ -511,6 +583,12 @@ const genreChipStyle = (genreValue: string) => {
   }
 }
 
+/**
+ * Traite document click.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const handleDocumentClick = () => {
   closeDropdown()
 }

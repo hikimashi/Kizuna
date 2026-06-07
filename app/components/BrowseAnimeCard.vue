@@ -1,4 +1,8 @@
 <script setup lang="ts">
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 type CardAnime = {
   id?: number | null
   title?: { romaji?: string | null; english?: string | null } | null
@@ -17,28 +21,70 @@ const props = withDefaults(defineProps<{
   to: ''
 })
 
+/**
+ * Calcule la valeur « anime title ».
+ *
+ * @param anime - Valeur utilisée par le traitement « anime title ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const animeTitle = (anime: CardAnime) =>
   anime.title?.romaji || anime.title?.english || 'Titre inconnu'
 
+/**
+ * Formate label.
+ *
+ * @param format - Valeur utilisée par le traitement « format label ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const formatLabel = (format?: string | null) => {
   if (!format) return 'Anime'
   if (format === 'TV_SHORT') return 'TV court'
   return format.replaceAll('_', ' ')
 }
 
+/**
+ * Formate score.
+ *
+ * @param score - Valeur utilisée par le traitement « format score ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const formatScore = (score?: number | null) => {
   if (!score) return 'N/D'
   return score % 1 === 0 ? String(score) : score.toFixed(1)
 }
 
+/**
+ * Calcule la valeur « episodes label ».
+ *
+ * @param episodes - Valeur utilisée par le traitement « episodes label ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const episodesLabel = (episodes?: number | null) => {
   if (!episodes) return 'Épisodes inconnus'
   return `${episodes} eps`
 }
 
+/**
+ * Calcule la valeur « cover src ».
+ *
+ * @param anime - Valeur utilisée par le traitement « cover src ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const coverSrc = (anime: CardAnime) =>
   anime.coverImage?.large || anime.coverImage?.medium || ''
 
+/**
+ * Calcule la valeur « card submeta ».
+ *
+ * @param anime - Valeur utilisée par le traitement « card submeta ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const cardSubmeta = (anime: CardAnime) => {
   const parts = [
     anime.genres?.[0],

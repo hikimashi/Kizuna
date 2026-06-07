@@ -24,4 +24,8 @@ import DrawersContainer from './components/drawers/drawersContainer.vue';
 import Toast from './components/toast/toast.vue';
 import Alert from './components/alerts/alert.vue';
 import ScrollToTop from './components/scrollToTop.vue';
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 </script>

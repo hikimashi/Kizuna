@@ -1,3 +1,7 @@
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 export interface NewUserType {
   // name: string;
   email: string;

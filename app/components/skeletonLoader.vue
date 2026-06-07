@@ -81,6 +81,10 @@
 </template>
 
 <script setup lang="ts">
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 withDefaults(defineProps<{
   count?: number
   variant?: 'grid' | 'anime-detail'

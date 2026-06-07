@@ -1,4 +1,8 @@
 import { createHash } from 'node:crypto'
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 type TranslateBody = {
   mediaId?: number
@@ -35,6 +39,13 @@ const GOOGLE_TRANSLATE_ENDPOINTS = [
 ]
 
 // AniList descriptions contiennent souvent du HTML simple; on normalise avant cache et traduction.
+/**
+ * Normalise description.
+ *
+ * @param value - Valeur utilisée par le traitement « normalize description ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const normalizeDescription = (value: string) => value
   .replace(/<br\s*\/?>/gi, '\n')
   .replace(/<\/?[^>]+>/g, '')
@@ -42,6 +53,14 @@ const normalizeDescription = (value: string) => value
   .replace(/\n{3,}/g, '\n\n')
   .trim()
 
+/**
+ * Calcule la valeur « split into chunks ».
+ *
+ * @param text - Valeur utilisée par le traitement « split into chunks ».
+ * @param maxLength - Valeur utilisée par le traitement « split into chunks ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects modifie l'état réactif.
+ */
 const splitIntoChunks = (text: string, maxLength = MAX_CHUNK_LENGTH) => {
   if (text.length <= maxLength) return [text]
 
@@ -77,6 +96,13 @@ const splitIntoChunks = (text: string, maxLength = MAX_CHUNK_LENGTH) => {
   return chunks.filter(Boolean)
 }
 
+/**
+ * Calcule la valeur « extract google translated text ».
+ *
+ * @param payload - Valeur utilisée par le traitement « extract google translated text ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const extractGoogleTranslatedText = (payload: any) => {
   if (Array.isArray(payload?.[0])) {
     return payload[0]
@@ -97,6 +123,14 @@ const extractGoogleTranslatedText = (payload: any) => {
   return ''
 }
 
+/**
+ * Exécute google translation.
+ *
+ * @param chunk - Valeur utilisée par le traitement « request google translation ».
+ * @param targetLang - Valeur utilisée par le traitement « request google translation ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects effectue des appels réseau ou persistants.
+ */
 const requestGoogleTranslation = async (chunk: string, targetLang: string) => {
   let lastError: unknown = null
 
@@ -148,6 +182,14 @@ const requestGoogleTranslation = async (chunk: string, targetLang: string) => {
   })
 }
 
+/**
+ * Calcule la valeur « translate with google gtx ».
+ *
+ * @param text - Valeur utilisée par le traitement « translate with google gtx ».
+ * @param targetLang - Valeur utilisée par le traitement « translate with google gtx ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const translateWithGoogleGtx = async (text: string, targetLang: string) => {
   const chunks = splitIntoChunks(text)
   const translatedChunks: string[] = []
@@ -216,6 +258,13 @@ export default defineEventHandler(async (event) => {
   }
 
   const valkeyUrl = String((config as any).valkeyUrl ?? '').trim()
+  /**
+   * Calcule la valeur « disable valkey ».
+   *
+   * @param reason - Valeur utilisée par le traitement « disable valkey ».
+   * @returns Aucune valeur.
+   * @sideEffects peut écrire dans les journaux.
+   */
   const disableValkey = (reason: unknown) => {
     if (!globalState.__translationValkeyErrorLogged) {
       console.error('Translation Valkey cache unavailable, fallback to memory cache:', reason)
@@ -224,6 +273,12 @@ export default defineEventHandler(async (event) => {
     globalState.__translationValkeyDisabled = true
   }
 
+  /**
+   * Retourne valkey client.
+   *
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const getValkeyClient = async (): Promise<ValkeyClientLike | null> => {
     if (!valkeyUrl || globalState.__translationValkeyDisabled) return null
 

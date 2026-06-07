@@ -88,6 +88,10 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, unref, watch } fro
 import { getAnilistCoverSrc, getAnilistCoverSrcSet, type AnilistCoverImage } from '~/composables/useAnilistCoverImage'
 import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 type FavoriteTab = 'anime' | 'characters'
 
@@ -212,14 +216,35 @@ const profileTabs = [
 const activeItems = computed(() => activeTab.value === 'anime' ? animeItems.value : characterItems.value)
 const activeHasNext = computed(() => activeTab.value === 'anime' ? animeHasNext.value : characterHasNext.value)
 
+/**
+ * Calcule la valeur « anime route ».
+ *
+ * @param animeId - Valeur utilisée par le traitement « anime route ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const animeRoute = (animeId: number) => `/anime/${animeId}`
 
+/**
+ * Calcule la valeur « favorite href ».
+ *
+ * @param item - Valeur utilisée par le traitement « favorite href ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects modifie l'état réactif.
+ */
 const favoriteHref = (item: FavoriteCard) => (
   activeTab.value === 'anime'
     ? animeRoute(item.id)
     : (item.siteUrl || '#')
 )
 
+/**
+ * Normalise anime.
+ *
+ * @param node - Valeur utilisée par le traitement « normalize anime ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const normalizeAnime = (node: any): FavoriteCard => {
   const title = node?.title?.romaji || node?.title?.english || node?.title?.native || 'Titre inconnu'
   const format = node?.format ? String(node.format).replaceAll('_', ' ') : 'ANIME'
@@ -237,6 +262,13 @@ const normalizeAnime = (node: any): FavoriteCard => {
   }
 }
 
+/**
+ * Normalise character.
+ *
+ * @param node - Valeur utilisée par le traitement « normalize character ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const normalizeCharacter = (node: any): FavoriteCard => {
   const title = node?.name?.userPreferred || node?.name?.full || node?.name?.native || 'Personnage inconnu'
   const favCount = Number(node?.favourites ?? 0)
@@ -250,6 +282,12 @@ const normalizeCharacter = (node: any): FavoriteCard => {
   }
 }
 
+/**
+ * Charge next page.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif, effectue des appels réseau ou persistants.
+ */
 const loadNextPage = async () => {
   if (loadingMore.value || initialLoading.value || !activeHasNext.value) return
   const hasToken = Boolean(token.value)
@@ -314,6 +352,12 @@ const loadNextPage = async () => {
   }
 }
 
+/**
+ * Garantit active tab loaded.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const ensureActiveTabLoaded = async () => {
   // Chargement paresseux: l'onglet non visité ne consomme aucune requête AniList.
   if (activeTab.value === 'anime' && !animeLoaded.value) {
@@ -326,6 +370,12 @@ const ensureActiveTabLoaded = async () => {
 }
 
 let observer: IntersectionObserver | null = null
+/**
+ * Associe observer.
+ *
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects interagit avec le navigateur ou le DOM.
+ */
 const bindObserver = () => {
   if (!import.meta.client) return
   observer?.disconnect()
@@ -341,6 +391,14 @@ const bindObserver = () => {
   observer.observe(sentinelRef.value)
 }
 
+/**
+ * Traite favorite link click.
+ *
+ * @param event - Valeur utilisée par le traitement « handle favorite link click ».
+ * @param item - Valeur utilisée par le traitement « handle favorite link click ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects modifie l'état réactif.
+ */
 const handleFavoriteLinkClick = (event: MouseEvent, item: FavoriteCard) => {
   if (activeTab.value === 'anime') {
     if (!item.id) {
@@ -358,6 +416,13 @@ const handleFavoriteLinkClick = (event: MouseEvent, item: FavoriteCard) => {
   }
 }
 
+/**
+ * Ouvre anime favorite.
+ *
+ * @param animeId - Valeur utilisée par le traitement « open anime favorite ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const openAnimeFavorite = async (animeId: number) => {
   if (navigatingAnimeId.value === animeId) return
   navigatingAnimeId.value = animeId
@@ -371,9 +436,22 @@ const openAnimeFavorite = async (animeId: number) => {
   }
 }
 
+/**
+ * Calcule la valeur « should handle client navigation ».
+ *
+ * @param event - Valeur utilisée par le traitement « should handle client navigation ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const shouldHandleClientNavigation = (event: MouseEvent) =>
   event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey
 
+/**
+ * Attend for paint.
+ *
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const waitForPaint = () => {
   if (!import.meta.client) return Promise.resolve()
   // Laisse le navigateur peindre l'état "navigation en cours" avant le changement de route.

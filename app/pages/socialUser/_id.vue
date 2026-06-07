@@ -399,6 +399,10 @@ import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
 import { useAnilistSocialStore, type SocialUser } from '~/composables/useAnilistSocialStore'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 import { useSharedLists, type SharedListMember, type SharedListSummary } from '~/composables/useSharedLists'
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 definePageMeta({
   path: '/social/user/:id'
@@ -648,6 +652,13 @@ const showFollowButton = computed(() => Boolean(token.value) && friendUserId.val
 const isFollowingFriend = computed(() => followingUsers.value.some(user => user.id === friendUserId.value))
 const isFollowBusy = computed(() => followPendingIds.value.includes(friendUserId.value))
 
+/**
+ * Calcule la valeur « display title ».
+ *
+ * @param entry - Valeur utilisée par le traitement « display title ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const displayTitle = (entry: MediaListEntry) =>
   entry.media.title.romaji || entry.media.title.english || entry.media.title.native || 'Titre inconnu'
 
@@ -655,6 +666,13 @@ const currentCoverVariant = computed<AnilistCoverVariant>(() =>
   viewMode.value === 'grid' ? 'card' : 'thumb'
 )
 
+/**
+ * Normalise friend tab.
+ *
+ * @param value - Valeur utilisée par le traitement « normalize friend tab ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const normalizeFriendTab = (value: unknown): FriendPageTab => {
   // La query peut arriver en string ou tableau selon le routeur; on garde un onglet par défaut stable.
   const normalized = String(Array.isArray(value) ? value[0] : (value || '')).trim().toLowerCase()
@@ -672,17 +690,54 @@ const activeFavoriteItems = computed(() =>
 
 const joinedDisplay = computed(() => formatJoined(friendJoinedAt.value))
 
+/**
+ * Calcule la valeur « cover image src ».
+ *
+ * @param entry - Valeur utilisée par le traitement « cover image src ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const coverImageSrc = (entry: MediaListEntry) =>
   getAnilistCoverSrc(entry.media.coverImage, currentCoverVariant.value) || undefined
 
+/**
+ * Calcule la valeur « cover image src set ».
+ *
+ * @param entry - Valeur utilisée par le traitement « cover image src set ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const coverImageSrcSet = (entry: MediaListEntry) =>
   getAnilistCoverSrcSet(entry.media.coverImage, currentCoverVariant.value)
 
+/**
+ * Calcule la valeur « extract ani list error ».
+ *
+ * @param response - Valeur utilisée par le traitement « extract ani list error ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const extractAniListError = (response: any) => Array.isArray(response?.errors)
   ? response.errors.map((error: any) => String(error?.message || '')).filter(Boolean).join(' | ')
   : ''
 
+/**
+ * Exécute ani list.
+ *
+ * @param query - Valeur utilisée par le traitement « request ani list ».
+ * @param variables - Valeur utilisée par le traitement « request ani list ».
+ * @param cacheTtlMs - Valeur utilisée par le traitement « request ani list ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects effectue des appels réseau ou persistants.
+ */
 const requestAniList = async (query: string, variables: Record<string, any>, cacheTtlMs = 60_000) => {
+  /**
+   * Calcule la valeur « run ».
+   *
+   * @param requestToken - Valeur utilisée par le traitement « run ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const run = async (requestToken: string) => {
     return await anilistGraphql.request<any>(query, variables, { token: requestToken, cacheTtlMs })
   }
@@ -710,6 +765,13 @@ const requestAniList = async (query: string, variables: Record<string, any>, cac
   throw new Error(errorMessage || 'La requête AniList a échoué.')
 }
 
+/**
+ * Normalise date.
+ *
+ * @param entry - Valeur utilisée par le traitement « normalize date ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const normalizeDate = (entry: MediaListEntry): number => {
   const y = entry.startedAt?.year ?? 0
   const m = entry.startedAt?.month ?? 0
@@ -717,11 +779,25 @@ const normalizeDate = (entry: MediaListEntry): number => {
   return y * 10000 + m * 100 + d
 }
 
+/**
+ * Formate score.
+ *
+ * @param score - Valeur utilisée par le traitement « format score ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const formatScore = (score: number) => {
   if (!score) return '-'
   return score % 1 === 0 ? String(score) : score.toFixed(1)
 }
 
+/**
+ * Formate joined.
+ *
+ * @param timestamp - Valeur utilisée par le traitement « format joined ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const formatJoined = (timestamp?: number | null) => {
   if (!timestamp) return '-'
   const date = new Date(timestamp * 1000)
@@ -729,12 +805,26 @@ const formatJoined = (timestamp?: number | null) => {
   return new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(date)
 }
 
+/**
+ * Formate social joined.
+ *
+ * @param timestamp - Valeur utilisée par le traitement « format social joined ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const formatSocialJoined = (timestamp?: number) => {
   if (!timestamp) return 'Inconnu'
   const date = new Date(timestamp * 1000)
   return new Intl.DateTimeFormat('fr-FR', { month: 'short', year: 'numeric' }).format(date)
 }
 
+/**
+ * Calcule la valeur « status dot class ».
+ *
+ * @param status - Valeur utilisée par le traitement « status dot class ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const statusDotClass = (status: ListStatusKey) => {
   if (status === 'CURRENT') return 'dot-watching'
   if (status === 'COMPLETED') return 'dot-completed'
@@ -757,6 +847,14 @@ const listFilterItems = computed(() => {
 
 const sortedAndFilteredSections = computed(() => {
   const needle = searchTerm.value.toLowerCase()
+  /**
+   * Calcule la valeur « sorter ».
+   *
+   * @param a - Valeur utilisée par le traitement « sorter ».
+   * @param b - Valeur utilisée par le traitement « sorter ».
+   * @returns Le résultat calculé par la fonction.
+   * @sideEffects modifie l'état réactif.
+   */
   const sorter = (a: MediaListEntry, b: MediaListEntry) => {
     // Un seul comparateur pilote tous les modes de tri de la liste anime.
     if (sortBy.value === 'title') return displayTitle(a).localeCompare(displayTitle(b))
@@ -791,6 +889,13 @@ const visibleAnimeSections = computed(() => {
   return [selected]
 })
 
+/**
+ * Convertit lists to sections.
+ *
+ * @param lists - Valeur utilisée par le traitement « map lists to sections ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects modifie l'état réactif.
+ */
 const mapListsToSections = (lists: any[]) => {
   const nextSections: Record<ListStatusKey, MediaListEntry[]> = {
     CURRENT: [],
@@ -811,6 +916,13 @@ const mapListsToSections = (lists: any[]) => {
   return nextSections
 }
 
+/**
+ * Normalise anime favorite.
+ *
+ * @param node - Valeur utilisée par le traitement « normalize anime favorite ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const normalizeAnimeFavorite = (node: any): FavoriteCard => {
   const title = node?.title?.romaji || node?.title?.english || node?.title?.native || 'Titre inconnu'
   const format = node?.format ? String(node.format).replaceAll('_', ' ') : 'ANIME'
@@ -829,6 +941,13 @@ const normalizeAnimeFavorite = (node: any): FavoriteCard => {
   }
 }
 
+/**
+ * Normalise character favorite.
+ *
+ * @param node - Valeur utilisée par le traitement « normalize character favorite ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const normalizeCharacterFavorite = (node: any): FavoriteCard => {
   const title = node?.name?.userPreferred || node?.name?.full || node?.name?.native || 'Personnage inconnu'
   const favCount = Number(node?.favourites ?? 0)
@@ -843,14 +962,35 @@ const normalizeCharacterFavorite = (node: any): FavoriteCard => {
   }
 }
 
+/**
+ * Calcule la valeur « favorite href ».
+ *
+ * @param item - Valeur utilisée par le traitement « favorite href ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const favoriteHref = (item: FavoriteCard) => item.kind === 'anime' ? `/anime/${item.id}` : (item.siteUrl || '#')
 
+/**
+ * Calcule la valeur « should handle client navigation ».
+ *
+ * @param event - Valeur utilisée par le traitement « should handle client navigation ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const shouldHandleClientNavigation = (event: MouseEvent) =>
   // Respecte les clics navigateur standards: nouvel onglet, nouvelle fenêtre, etc.
   event.button === 0
   && !event.defaultPrevented
   && !(event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
 
+/**
+ * Ouvre favorite anime.
+ *
+ * @param animeId - Valeur utilisée par le traitement « open favorite anime ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const openFavoriteAnime = async (animeId: number) => {
   if (!animeId || navigatingFavoriteAnimeId.value === animeId) return
   navigatingFavoriteAnimeId.value = animeId
@@ -861,6 +1001,14 @@ const openFavoriteAnime = async (animeId: number) => {
   }
 }
 
+/**
+ * Traite favorite item click.
+ *
+ * @param event - Valeur utilisée par le traitement « handle favorite item click ».
+ * @param item - Valeur utilisée par le traitement « handle favorite item click ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const handleFavoriteItemClick = (event: MouseEvent, item: FavoriteCard) => {
   if (item.kind === 'anime') {
     // Les favoris anime naviguent via Nuxt pour garder l'état SPA.
@@ -879,6 +1027,13 @@ const handleFavoriteItemClick = (event: MouseEvent, item: FavoriteCard) => {
   }
 }
 
+/**
+ * Convertit social user.
+ *
+ * @param user - Valeur utilisée par le traitement « map social user ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const mapSocialUser = (user: AniListUserNode): SocialUser => ({
   id: Number(user.id),
   username: user.name || 'Inconnu',
@@ -893,38 +1048,128 @@ const mapSocialUser = (user: AniListUserNode): SocialUser => ({
   avatarColor: SOCIAL_PALETTE[Math.abs(Number(user.id) || 0) % SOCIAL_PALETTE.length] || '#4F378A'
 })
 
+/**
+ * Indique si viewer following.
+ *
+ * @param userId - Valeur utilisée par le traitement « is viewer following ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const isViewerFollowing = (userId: number) => followingUsers.value.some(user => user.id === userId)
+/**
+ * Indique si viewer follow busy.
+ *
+ * @param userId - Valeur utilisée par le traitement « is viewer follow busy ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const isViewerFollowBusy = (userId: number) => followPendingIds.value.includes(userId)
+/**
+ * Calcule la valeur « can toggle follow user ».
+ *
+ * @param userId - Valeur utilisée par le traitement « can toggle follow user ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const canToggleFollowUser = (userId: number) => Boolean(token.value) && userId > 0 && userId !== currentAniListUserId.value
 
+/**
+ * Calcule la valeur « member avatar style ».
+ *
+ * @param member - Valeur utilisée par le traitement « member avatar style ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const memberAvatarStyle = (member: Pick<SharedListMember, 'avatar' | 'color'>) =>
   member.avatar ? undefined : { background: member.color }
 
+/**
+ * Calcule la valeur « privacy label ».
+ *
+ * @param privacy - Valeur utilisée par le traitement « privacy label ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const privacyLabel = (privacy: SharedListSummary['privacy']) =>
   privacy === 'private' ? 'Privee' : privacy === 'friends' ? 'Amis uniquement' : 'Publique'
 
+/**
+ * Calcule la valeur « privacy chip class ».
+ *
+ * @param privacy - Valeur utilisée par le traitement « privacy chip class ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const privacyChipClass = (privacy: SharedListSummary['privacy']) => ({
   'privacy-private': privacy === 'private',
   'privacy-friends': privacy === 'friends',
   'privacy-public': privacy === 'public'
 })
 
+/**
+ * Calcule la valeur « shared list banner src ».
+ *
+ * @param list - Valeur utilisée par le traitement « shared list banner src ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const sharedListBannerSrc = (list: SharedListSummary) => String(list.bannerUrl || '').trim() || DEFAULT_SHARED_LIST_BANNER
+/**
+ * Calcule la valeur « shared list image src ».
+ *
+ * @param list - Valeur utilisée par le traitement « shared list image src ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const sharedListImageSrc = (list: SharedListSummary) => String(list.imageUrl || '').trim() || DEFAULT_SHARED_LIST_IMAGE
+/**
+ * Calcule la valeur « target shared list role ».
+ *
+ * @param list - Valeur utilisée par le traitement « target shared list role ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const targetSharedListRole = (list: SharedListSummary) => list.ownerId === targetPocketbaseUserId.value ? 'Proprietaire' : 'Membre'
+/**
+ * Calcule la valeur « shared list description ».
+ *
+ * @param list - Valeur utilisée par le traitement « shared list description ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const sharedListDescription = (list: SharedListSummary) =>
   list.animeVisibilityLimited
     ? 'Les entrées anime sont masquées pour ce niveau de visibilité.'
     : `${list.animeCount} anime actuellement dans cette liste partagée.`
+/**
+ * Calcule la valeur « shared list members label ».
+ *
+ * @param list - Valeur utilisée par le traitement « shared list members label ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const sharedListMembersLabel = (list: SharedListSummary) =>
   list.membersVisibilityLimited
     ? 'Membres masqués'
     : `${list.memberCount} membre${list.memberCount > 1 ? 's' : ''}`
+/**
+ * Calcule la valeur « profile tab route ».
+ *
+ * @param tab - Valeur utilisée par le traitement « profile tab route ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const profileTabRoute = (tab: FriendPageTab) => ({
   path: `/social/user/${friendUserId.value}`,
   query: tab === 'anime-list' ? {} : { tab }
 })
 
+/**
+ * Réinitialise anime state.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const resetAnimeState = () => {
   // État principal de la liste anime, remis à zéro à chaque changement de profil.
   isLoading.value = true
@@ -942,6 +1187,12 @@ const resetAnimeState = () => {
   }
 }
 
+/**
+ * Réinitialise extra state.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const resetExtraState = () => {
   // Les onglets secondaires ont chacun leur cache/loader pour le chargement à la demande.
   favoriteTab.value = 'anime'
@@ -966,6 +1217,12 @@ const resetExtraState = () => {
   targetSharedLists.value = []
 }
 
+/**
+ * Réinitialise profile header.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const resetProfileHeader = () => {
   friendName.value = ''
   avatarUrl.value = ''
@@ -973,6 +1230,12 @@ const resetProfileHeader = () => {
   friendJoinedAt.value = null
 }
 
+/**
+ * Récupère friend profile and list.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const fetchFriendProfileAndList = async () => {
   const requestedUserId = friendUserId.value
 
@@ -1014,6 +1277,13 @@ const fetchFriendProfileAndList = async () => {
   }
 }
 
+/**
+ * Récupère all favorite nodes.
+ *
+ * @param field - Valeur utilisée par le traitement « fetch all favorite nodes ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const fetchAllFavoriteNodes = async (field: FavoriteTab) => {
   const requestedUserId = friendUserId.value
   const query = field === 'anime' ? favoriteAnimePageQuery : favoriteCharacterPageQuery
@@ -1039,6 +1309,13 @@ const fetchAllFavoriteNodes = async (field: FavoriteTab) => {
   return all
 }
 
+/**
+ * Charge target favorites.
+ *
+ * @param force - Valeur utilisée par le traitement « load target favorites ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const loadTargetFavorites = async (force = false) => {
   const requestedUserId = friendUserId.value
   if (!requestedUserId) return
@@ -1069,6 +1346,14 @@ const loadTargetFavorites = async (force = false) => {
   }
 }
 
+/**
+ * Récupère paged target users.
+ *
+ * @param query - Valeur utilisée par le traitement « fetch paged target users ».
+ * @param field - Valeur utilisée par le traitement « fetch paged target users ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const fetchPagedTargetUsers = async (query: string, field: 'following' | 'followers') => {
   const requestedUserId = friendUserId.value
   const all: AniListUserNode[] = []
@@ -1090,6 +1375,13 @@ const fetchPagedTargetUsers = async (query: string, field: 'following' | 'follow
   return all
 }
 
+/**
+ * Charge target friends.
+ *
+ * @param force - Valeur utilisée par le traitement « load target friends ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const loadTargetFriends = async (force = false) => {
   const requestedUserId = friendUserId.value
   if (!requestedUserId) return
@@ -1141,6 +1433,12 @@ const loadTargetFriends = async (force = false) => {
   }
 }
 
+/**
+ * Résout target pocketbase user id.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects effectue des appels réseau ou persistants.
+ */
 const resolveTargetPocketbaseUserId = async () => {
   const requestedUserId = friendUserId.value
   if (!requestedUserId) return ''
@@ -1155,6 +1453,13 @@ const resolveTargetPocketbaseUserId = async () => {
   return String(result.items[0]?.id || '')
 }
 
+/**
+ * Charge target shared lists.
+ *
+ * @param force - Valeur utilisée par le traitement « load target shared lists ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const loadTargetSharedLists = async (force = false) => {
   const requestedUserId = friendUserId.value
   if (!requestedUserId) return
@@ -1200,6 +1505,12 @@ const loadTargetSharedLists = async (force = false) => {
   }
 }
 
+/**
+ * Garantit active tab data.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const ensureActiveTabData = async () => {
   // Les onglets secondaires sont chargés à la demande pour ne pas saturer AniList au premier rendu.
   if (activeTab.value === 'favorites') {
@@ -1217,23 +1528,50 @@ const ensureActiveTabData = async () => {
   }
 }
 
+/**
+ * Ouvre friend profile.
+ *
+ * @param targetId - Valeur utilisée par le traitement « open friend profile ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const openFriendProfile = (targetId: number) => {
   const id = Number(targetId)
   if (!Number.isFinite(id) || id <= 0) return
   navigateTo(`/social/user/${id}`)
 }
 
+/**
+ * Ouvre anime details.
+ *
+ * @param animeId - Valeur utilisée par le traitement « open anime details ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const openAnimeDetails = (animeId?: number | null) => {
   const id = Number(animeId)
   if (!Number.isFinite(id) || id <= 0) return
   navigateTo(`/anime/${id}`)
 }
 
+/**
+ * Ouvre shared list.
+ *
+ * @param listId - Valeur utilisée par le traitement « open shared list ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const openSharedList = (listId: string) => {
   if (!listId) return
   navigateTo(`/sharedLists/${listId}`)
 }
 
+/**
+ * Bascule follow from banner.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const toggleFollowFromBanner = async () => {
   if (!showFollowButton.value || isFollowBusy.value) return
 
@@ -1245,6 +1583,13 @@ const toggleFollowFromBanner = async () => {
   }
 }
 
+/**
+ * Bascule viewer follow.
+ *
+ * @param targetId - Valeur utilisée par le traitement « toggle viewer follow ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const toggleViewerFollow = async (targetId: number) => {
   if (!canToggleFollowUser(targetId) || isViewerFollowBusy(targetId)) return
 

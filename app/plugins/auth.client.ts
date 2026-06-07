@@ -1,3 +1,7 @@
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 export default defineNuxtPlugin(async () => {
   // Ce plugin rafraîchit l'état d'authentification au démarrage de l'application.
   const authStore = useMyAuthStore();

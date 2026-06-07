@@ -163,6 +163,10 @@ import { useAnilistSync } from '~/composables/useAnilistSync'
 import { useInfiniteScroll } from '~/composables/useInfiniteScroll'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 import { useToastStore } from '~/composables/useToastStore'
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 const props = defineProps<{
   sortBy?: string
@@ -233,20 +237,48 @@ const loadError = ref('')
 const authRecord = computed(() => (unref(pocketbaseStore.authRecord) ?? {}) as Record<string, any>)
 const token = computed(() => String(authRecord.value.anilist_token ?? ''))
 
+/**
+ * Calcule la valeur « anime title ».
+ *
+ * @param anime - Valeur utilisée par le traitement « anime title ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const animeTitle = (anime: BrowseAnime) =>
   anime.title.romaji || anime.title.english || 'Titre inconnu'
 
+/**
+ * Formate label.
+ *
+ * @param format - Valeur utilisée par le traitement « format label ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const formatLabel = (format?: string | null) => {
   if (!format) return 'Anime'
   if (format === 'TV_SHORT') return 'TV court'
   return format.replaceAll('_', ' ')
 }
 
+/**
+ * Formate score.
+ *
+ * @param score - Valeur utilisée par le traitement « format score ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const formatScore = (score?: number | null) => {
   if (!score) return 'N/D'
   return score % 1 === 0 ? String(score) : score.toFixed(1)
 }
 
+/**
+ * Calcule la valeur « episodes label ».
+ *
+ * @param episodes - Valeur utilisée par le traitement « episodes label ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const episodesLabel = (episodes?: number | null) => {
   if (!episodes) return 'Épisodes inconnus'
   return `${episodes} eps`
@@ -254,17 +286,46 @@ const episodesLabel = (episodes?: number | null) => {
 
 type CoverVariant = 'list' | 'compact-grid' | 'grid'
 
+/**
+ * Calcule la valeur « cover src ».
+ *
+ * @param anime - Valeur utilisée par le traitement « cover src ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects modifie l'état réactif.
+ */
 const coverSrc = (anime: BrowseAnime) =>
   getAnilistCoverSrc(anime.coverImage, currentViewMode.value === 'list' ? 'thumb' : 'card')
 
+/**
+ * Calcule la valeur « cover src set ».
+ *
+ * @param anime - Valeur utilisée par le traitement « cover src set ».
+ * @param variant - Valeur utilisée par le traitement « cover src set ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const coverSrcSet = (anime: BrowseAnime, variant: CoverVariant) =>
   getAnilistCoverSrcSet(anime.coverImage, variant === 'grid' ? 'card' : 'thumb')
 
+/**
+ * Ouvre anime details.
+ *
+ * @param animeId - Valeur utilisée par le traitement « open anime details ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const openAnimeDetails = (animeId?: number | null) => {
   if (!animeId) return
   navigateTo(`/anime/${animeId}`)
 }
 
+/**
+ * Calcule la valeur « status label ».
+ *
+ * @param status - Valeur utilisée par le traitement « status label ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const statusLabel = (status?: string | null) => {
   if (status === 'CURRENT') return 'En cours'
   if (status === 'COMPLETED') return 'Terminé'
@@ -273,14 +334,35 @@ const statusLabel = (status?: string | null) => {
   return 'Prévu'
 }
 
+/**
+ * Indique si added.
+ *
+ * @param anime - Valeur utilisée par le traitement « is added ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const isAdded = (anime: BrowseAnime) => Boolean(anime.mediaListEntry?.id)
 
+/**
+ * Calcule la valeur « card action label ».
+ *
+ * @param anime - Valeur utilisée par le traitement « card action label ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects modifie l'état réactif.
+ */
 const cardActionLabel = (anime: BrowseAnime) => {
   if (addingMediaId.value === anime.id) return "Ajout de l'anime"
   if (isAdded(anime)) return `Déjà dans ${statusLabel(anime.mediaListEntry?.status)}`
   return 'Ajouter à Prévu'
 }
 
+/**
+ * Calcule la valeur « card submeta ».
+ *
+ * @param anime - Valeur utilisée par le traitement « card submeta ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const cardSubmeta = (anime: BrowseAnime) => {
   const parts = [
     anime.genres[0],
@@ -290,6 +372,13 @@ const cardSubmeta = (anime: BrowseAnime) => {
   return parts.join(' / ')
 }
 
+/**
+ * Calcule la valeur « genre tag style ».
+ *
+ * @param genre - Valeur utilisée par le traitement « genre tag style ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const genreTagStyle = (genre: string) => {
   const genreStyle = genreStyleMap[genre]
   if (!genreStyle) return {}
@@ -299,6 +388,13 @@ const genreTagStyle = (genre: string) => {
   }
 }
 
+/**
+ * Résout year range.
+ *
+ * @param yearFilter - Valeur utilisée par le traitement « resolve year range ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const resolveYearRange = (yearFilter: string) => {
   if (!yearFilter) return {} as { startDateGreater?: number; startDateLesser?: number }
 
@@ -332,6 +428,14 @@ const resolveYearRange = (yearFilter: string) => {
   return {}
 }
 
+/**
+ * Récupère anime list.
+ *
+ * @param page - Valeur utilisée par le traitement « fetch anime list ».
+ * @param perPage - Valeur utilisée par le traitement « fetch anime list ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif, effectue des appels réseau ou persistants.
+ */
 const fetchAnimeList = async (page: number, perPage: number): Promise<BrowseAnime[]> => {
   const { startDateGreater, startDateLesser } = resolveYearRange(currentYearFilter.value)
 
@@ -439,6 +543,13 @@ const {
   immediate: true
 })
 
+/**
+ * Ajoute to planning.
+ *
+ * @param anime - Valeur utilisée par le traitement « add to planning ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const addToPlanning = async (anime: BrowseAnime) => {
   if (!anime?.id || addingMediaId.value === anime.id || anime.mediaListEntry?.id) return
 

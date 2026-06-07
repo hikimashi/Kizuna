@@ -6,6 +6,10 @@ import { useAnilistSync, type EditableAniListStatus } from '~/composables/useAni
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 import { useSharedLists, type SharedListSummary } from '~/composables/useSharedLists'
 import BrowseAnimeCard from '~/components/BrowseAnimeCard.vue'
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 type FuzzyDate = { year?: number | null; month?: number | null; day?: number | null }
 type MediaTitle = { romaji?: string | null; english?: string | null; native?: string | null }
@@ -324,6 +328,13 @@ const toggleFavouriteMutation = `
   }
 `
 
+/**
+ * Normalise description.
+ *
+ * @param value - Valeur utilisée par le traitement « normalize description ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const normalizeDescription = (value: string) =>
   value
     .replace(/<br\s*\/?>/gi, '\n')
@@ -670,6 +681,13 @@ const STATUS_TRANSLATIONS: Record<string, string> = {
   rewatched: 'a revisionné'
 }
 
+/**
+ * Formate status.
+ *
+ * @param value - Valeur utilisée par le traitement « format status ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function formatStatus(value?: string | null) {
   if (!value) return 'Inconnu'
   const raw = String(value).trim()
@@ -686,6 +704,13 @@ function formatStatus(value?: string | null) {
       .join(' ')
 }
 
+/**
+ * Formate date.
+ *
+ * @param date - Valeur utilisée par le traitement « format date ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function formatDate(date?: FuzzyDate | null) {
   if (!date?.year) return 'A venir'
   return new Date(date.year, (date.month || 1) - 1, date.day || 1).toLocaleDateString('fr-FR', {
@@ -695,6 +720,14 @@ function formatDate(date?: FuzzyDate | null) {
   })
 }
 
+/**
+ * Formate season.
+ *
+ * @param season - Valeur utilisée par le traitement « format season ».
+ * @param year - Valeur utilisée par le traitement « format season ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function formatSeason(season?: string | null, year?: number | null) {
   const seasonMap: Record<string, string> = {
     WINTER: 'Hiver',
@@ -705,10 +738,24 @@ function formatSeason(season?: string | null, year?: number | null) {
   return season && year ? `${seasonMap[String(season).toUpperCase()] || formatStatus(season)} ${year}` : 'Inconnu'
 }
 
+/**
+ * Formate number.
+ *
+ * @param value - Valeur utilisée par le traitement « format number ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function formatNumber(value?: number | null) {
   return new Intl.NumberFormat('fr-FR').format(value || 0)
 }
 
+/**
+ * Formate compact number.
+ *
+ * @param value - Valeur utilisée par le traitement « format compact number ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function formatCompactNumber(value?: number | null) {
   return new Intl.NumberFormat('fr-FR', {
     notation: 'compact',
@@ -716,6 +763,13 @@ function formatCompactNumber(value?: number | null) {
   }).format(value || 0)
 }
 
+/**
+ * Calcule la valeur « relative time ».
+ *
+ * @param timestamp - Valeur utilisée par le traitement « relative time ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function relativeTime(timestamp?: number | null) {
   if (!timestamp) return ''
   const delta = Math.max(0, Math.floor(Date.now() / 1000) - timestamp)
@@ -725,14 +779,35 @@ function relativeTime(timestamp?: number | null) {
   return 'à l\'instant'
 }
 
+/**
+ * Formate progress.
+ *
+ * @param activity - Valeur utilisée par le traitement « format progress ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function formatProgress(activity: Activity) {
   return [formatStatus(activity.status), activity.progress].filter(Boolean).join(' ')
 }
 
+/**
+ * Calcule la valeur « activity media title ».
+ *
+ * @param activity - Valeur utilisée par le traitement « activity media title ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function activityMediaTitle(activity: Activity) {
   return activity.media?.title?.english || activity.media?.title?.romaji || activity.media?.title?.native || pageTitle.value
 }
 
+/**
+ * Calcule la valeur « activity summary ».
+ *
+ * @param activity - Valeur utilisée par le traitement « activity summary ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function activitySummary(activity: Activity) {
   const status = activity.status
     ? `${activity.status.charAt(0).toUpperCase()}${activity.status.slice(1)}`
@@ -741,19 +816,47 @@ function activitySummary(activity: Activity) {
   return activity.progress ? `${formatStatus(status)} ${activity.progress} de` : formatStatus(status)
 }
 
+/**
+ * Calcule la valeur « activity user url ».
+ *
+ * @param activity - Valeur utilisée par le traitement « activity user url ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function activityUserUrl(activity: Activity) {
   const name = activity.user?.name
   return name ? `https://anilist.co/user/${encodeURIComponent(name)}` : 'https://anilist.co'
 }
 
+/**
+ * Calcule la valeur « activity external url ».
+ *
+ * @param activity - Valeur utilisée par le traitement « activity external url ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function activityExternalUrl(activity: Activity) {
   return `https://anilist.co/activity/${activity.id}`
 }
 
+/**
+ * Calcule la valeur « thread external url ».
+ *
+ * @param thread - Valeur utilisée par le traitement « thread external url ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function threadExternalUrl(thread: SocialThread) {
   return `https://anilist.co/forum/thread/${thread.id}`
 }
 
+/**
+ * Formate timeline date.
+ *
+ * @param timestamp - Valeur utilisée par le traitement « format timeline date ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function formatTimelineDate(timestamp?: number | null) {
   if (!timestamp) return ''
   return new Date(timestamp * 1000).toLocaleDateString('en-GB', {
@@ -764,6 +867,13 @@ function formatTimelineDate(timestamp?: number | null) {
   })
 }
 
+/**
+ * Formate timeline gap.
+ *
+ * @param seconds - Valeur utilisée par le traitement « format timeline gap ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function formatTimelineGap(seconds: number) {
   const days = Math.max(1, Math.round(seconds / 86_400))
   if (days >= 60) return `- ${Math.round(days / 30)} mois -`
@@ -771,10 +881,23 @@ function formatTimelineGap(seconds: number) {
   return `- ${days} jours -`
 }
 
+/**
+ * Charge more social.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function loadMoreSocial() {
   socialPageSize.value += 8
 }
 
+/**
+ * Formate ranking label.
+ *
+ * @param type - Valeur utilisée par le traitement « format ranking label ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function formatRankingLabel(type?: string | null) {
   if (type === 'RATED') return 'Mieux note'
   if (type === 'POPULAR') return 'Plus populaire'
@@ -916,6 +1039,12 @@ const sharedListOptions = computed(() => {
   return sharedLists.value.filter(list => list.isOwner || list.isMember)
 })
 
+/**
+ * Bascule favorite.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif, effectue des appels réseau ou persistants.
+ */
 async function toggleFavorite() {
   if (!media.value?.id || !anilistToken.value || actionBusy.value) return
 
@@ -942,6 +1071,13 @@ async function toggleFavorite() {
   }
 }
 
+/**
+ * Enregistre list status.
+ *
+ * @param status - Valeur utilisée par le traitement « save list status ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 async function saveListStatus(status: EditableAniListStatus) {
   if (!media.value?.id || !anilistToken.value || actionBusy.value) return
 
@@ -969,6 +1105,12 @@ async function saveListStatus(status: EditableAniListStatus) {
   }
 }
 
+/**
+ * Garantit shared lists loaded.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const ensureSharedListsLoaded = async () => {
   if (isSharedListsLoading.value) return
   if (sharedLists.value.length > 0) return
@@ -986,6 +1128,12 @@ const ensureSharedListsLoaded = async () => {
   }
 }
 
+/**
+ * Bascule shared list picker.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const toggleSharedListPicker = async () => {
   if (showSharedListPicker.value) {
     showSharedListPicker.value = false
@@ -996,6 +1144,13 @@ const toggleSharedListPicker = async () => {
   showSharedListPicker.value = true
 }
 
+/**
+ * Ajoute selected anime to shared list.
+ *
+ * @param listId - Valeur utilisée par le traitement « add selected anime to shared list ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const addSelectedAnimeToSharedList = async (listId: string) => {
   if (!media.value?.id || !listId || isAddingToSharedList.value) return
 
@@ -1021,10 +1176,24 @@ const addSelectedAnimeToSharedList = async (listId: string) => {
   }
 }
 
+/**
+ * Calcule la valeur « provider name ».
+ *
+ * @param site - Valeur utilisée par le traitement « provider name ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function providerName(site?: string | null) {
   return site || 'Streaming'
 }
 
+/**
+ * Calcule la valeur « provider name from url ».
+ *
+ * @param url - Valeur utilisée par le traitement « provider name from url ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function providerNameFromUrl(url?: string | null) {
   if (!url) return 'Regarder'
   try {
@@ -1044,15 +1213,36 @@ function providerNameFromUrl(url?: string | null) {
   }
 }
 
+/**
+ * Calcule la valeur « to ani list small cover ».
+ *
+ * @param url - Valeur utilisée par le traitement « to ani list small cover ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function toAniListSmallCover(url?: string | null) {
   if (!url) return ''
   return url.replace('/medium/', '/small/')
 }
 
+/**
+ * Calcule la valeur « review text ».
+ *
+ * @param review - Valeur utilisée par le traitement « review text ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function reviewText(review: Review) {
   return (review.body || review.summary || '').trim()
 }
 
+/**
+ * Calcule la valeur « review preview ».
+ *
+ * @param review - Valeur utilisée par le traitement « review preview ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function reviewPreview(review: Review) {
   const text = reviewText(review)
   if (text.length <= 280) return text
@@ -1060,14 +1250,34 @@ function reviewPreview(review: Review) {
   return `${text.slice(0, 280).trim()}...`
 }
 
+/**
+ * Synchronise recommendation viewport width.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif, interagit avec le navigateur ou le DOM.
+ */
 function syncRecommendationViewportWidth() {
   recommendationViewportWidth.value = window.innerWidth
 }
 
+/**
+ * Indique si review expanded.
+ *
+ * @param reviewId - Valeur utilisée par le traitement « is review expanded ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function isReviewExpanded(reviewId: number) {
   return Boolean(expandedReviews.value[reviewId])
 }
 
+/**
+ * Bascule review expanded.
+ *
+ * @param reviewId - Valeur utilisée par le traitement « toggle review expanded ».
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 function toggleReviewExpanded(reviewId: number) {
   expandedReviews.value = {
     ...expandedReviews.value,
@@ -1075,10 +1285,24 @@ function toggleReviewExpanded(reviewId: number) {
   }
 }
 
+/**
+ * Indique si review overflow.
+ *
+ * @param review - Valeur utilisée par le traitement « has review overflow ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function hasReviewOverflow(review: Review) {
   return reviewText(review).length > 280
 }
 
+/**
+ * Traite document click.
+ *
+ * @param event - Valeur utilisée par le traitement « handle document click ».
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 function handleDocumentClick(event: MouseEvent) {
   const target = event.target as Node | null
   // Un seul listener document ferme les deux menus contextuels quand le clic sort de leur zone.
@@ -1090,6 +1314,12 @@ function handleDocumentClick(event: MouseEvent) {
   }
 }
 
+/**
+ * Charge more reviews.
+ *
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function loadMoreReviews() {
   if (!hasMoreReviews.value || reviewsState.pending.value) return
   reviewPage.value += 1

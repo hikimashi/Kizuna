@@ -1,5 +1,16 @@
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 const GMAIL_DOMAINS = new Set(['gmail.com', 'googlemail.com']);
 
+/**
+ * Normalise auth email.
+ *
+ * @param email - Valeur utilisée par le traitement « normalize auth email ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 export const normalizeAuthEmail = (email: string) => {
   const trimmed = email.trim().toLowerCase();
   const separatorIndex = trimmed.lastIndexOf('@');
@@ -22,6 +33,13 @@ export const normalizeAuthEmail = (email: string) => {
   return `${localPart}@${domain}`;
 };
 
+/**
+ * Calcule la valeur « auth email candidates ».
+ *
+ * @param email - Valeur utilisée par le traitement « auth email candidates ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 export const authEmailCandidates = (email: string) => {
   const rawEmail = email.trim().toLowerCase();
   const normalizedEmail = normalizeAuthEmail(email);

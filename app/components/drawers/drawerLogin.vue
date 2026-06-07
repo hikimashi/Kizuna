@@ -94,6 +94,10 @@ import { useDrawersStore } from '~/composables/useDrawersStore';
 import { useMyAuthStore } from '~/composables/useMyAuthStore';
 import { useToastStore } from '~/composables/useToastStore';
 import { useThemeStore } from '~/composables/useThemeStore';
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 const drawerStore = useDrawersStore();
 const authStore = useMyAuthStore();
@@ -104,17 +108,35 @@ defineProps({
   open: { type: Boolean, default: false },
 });
 const emits = defineEmits(['close']);
+/**
+ * Traite close.
+ *
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const handleClose = () => emits('close');
 
 const email = ref<string>('');
 const password = ref<string>('');
 const loginError = ref<string>('');
 
+/**
+ * Ferme close.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const close = () => {
   emits('close');
   drawerStore.closeDrawer();
 };
 
+/**
+ * Calcule la valeur « do login ».
+ *
+ * @returns Une promesse résolue une fois le traitement terminé.
+ * @sideEffects modifie l'état réactif.
+ */
 const doLogin = async () => {
   loginError.value = '';
 
@@ -132,6 +154,12 @@ const doLogin = async () => {
   close();
 };
 
+/**
+ * Calcule la valeur « do google login ».
+ *
+ * @returns Une promesse résolue une fois le traitement terminé.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const doGoogleLogin = async () => {
   try {
     await authStore.loginWithGoogle();
@@ -145,6 +173,12 @@ const doGoogleLogin = async () => {
   await navigateTo('/');
 };
 
+/**
+ * Calcule la valeur « do github login ».
+ *
+ * @returns Une promesse résolue une fois le traitement terminé.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const doGithubLogin = async () => {
   try {
     await authStore.loginWithGithub();
@@ -158,6 +192,12 @@ const doGithubLogin = async () => {
   await navigateTo('/');
 };
 
+/**
+ * Crée account.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const createAccount = () => {
   close();
   drawerStore.openDrawer('drawerCreateUser');

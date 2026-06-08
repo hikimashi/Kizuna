@@ -49,6 +49,10 @@
 import { computed, unref } from 'vue'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 import { useToastStore } from '~/composables/useToastStore'
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 type FooterLink = {
   label: string
@@ -76,6 +80,13 @@ const navigationLinks: FooterLink[] = [
   { label: 'Listes partagées', to: '/sharedLists', requiresAuth: true },
 ]
 
+/**
+ * Traite footer navigation.
+ *
+ * @param link - Valeur utilisée par le traitement « handle footer navigation ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const handleFooterNavigation = async (link: FooterLink) => {
   if (!link.requiresAuth) {
     await navigateTo(link.to)
@@ -85,6 +96,13 @@ const handleFooterNavigation = async (link: FooterLink) => {
   await handleProtectedNavigation(link.to)
 }
 
+/**
+ * Traite protected navigation.
+ *
+ * @param to - Valeur utilisée par le traitement « handle protected navigation ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const handleProtectedNavigation = async (to: string) => {
   if (authRecord.value?.id && isAniListLinked.value) {
     await navigateTo(to)

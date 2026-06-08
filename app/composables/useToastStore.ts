@@ -1,17 +1,28 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 import type { ToastType, ToastTypeValue } from '#shared/types/ToastType';
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 export const useToastStore = defineStore('useToastStore', () => {
   const toasts = ref<ToastType[]>([]);
   const lastToastKey = ref('');
   const lastToastAt = ref(0);
 
+  /**
+   * Ouvre toast.
+   *
+   * @param options - Valeur utilisée par le traitement « open toast ».
+   * @returns Aucune valeur.
+   * @sideEffects modifie l'état réactif, gère une temporisation.
+   */
   const openToast = ({ type, message }: { type: ToastTypeValue; message: string }) => {
     const key = `${type}:${message}`;
     const now = Date.now();
 
-    // Evite les toasts dupliques emis presque au meme moment (ex. clic + middleware).
+    // Évite les toasts dupliqués émis presque au même moment (ex. clic + middleware).
     if (lastToastKey.value === key && now - lastToastAt.value < 800) return;
     lastToastKey.value = key;
     lastToastAt.value = now;

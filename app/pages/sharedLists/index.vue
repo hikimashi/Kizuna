@@ -6,7 +6,7 @@
       <section class="top-bar">
         <div>
           <h1 class="page-title">Listes partagées</h1>
-          <p class="page-subtitle">Créez des listes d'animes, choisissez une banniere et une image, puis gerez les membres depuis la liste.</p>
+          <p class="page-subtitle">Créez des listes d'animes, choisissez une bannière et une image, puis gérez les membres depuis la liste.</p>
         </div>
 
         <div class="top-actions">
@@ -43,7 +43,7 @@
           </label>
 
           <label class="field">
-            <span>Confidentialite</span>
+            <span>Confidentialité</span>
             <select v-model="draftPrivacy">
               <option value="friends">Amis uniquement</option>
               <option value="private">Privee</option>
@@ -56,21 +56,21 @@
           <label class="media-field">
             <span>Image de la liste</span>
             <div class="media-preview media-preview-square">
-              <img v-if="draftGroupImagePreview" :src="draftGroupImagePreview" alt="Apercu de l'image de liste" />
-              <img v-else :src="DEFAULT_SHARED_LIST_IMAGE" alt="Image de liste par defaut" />
+              <img v-if="draftGroupImagePreview" :src="draftGroupImagePreview" alt="Aperçu de l'image de liste" />
+              <img v-else :src="DEFAULT_SHARED_LIST_IMAGE" alt="Image de liste par défaut" />
             </div>
             <input class="media-input" type="file" accept="image/*" @change="handleDraftGroupImageChange" />
             <small>{{ draftGroupImageFile?.name || 'Image unique stockee dans PocketBase.' }}</small>
           </label>
 
           <label class="media-field">
-            <span>Banniere</span>
+            <span>Bannière</span>
             <div class="media-preview media-preview-banner" :style="{ background: stripForPrivacy(draftPrivacy, true) }">
-              <img v-if="draftBannerPreview" :src="draftBannerPreview" alt="Apercu de la banniere" />
-              <span v-else>Apercu de la banniere</span>
+              <img v-if="draftBannerPreview" :src="draftBannerPreview" alt="Aperçu de la bannière" />
+              <span v-else>Aperçu de la bannière</span>
             </div>
             <input class="media-input" type="file" accept="image/*" @change="handleDraftBannerChange" />
-            <small>{{ draftBannerImageFile?.name || 'Image de banniere large stockee dans PocketBase.' }}</small>
+            <small>{{ draftBannerImageFile?.name || 'Image de bannière large stockée dans PocketBase.' }}</small>
           </label>
         </div>
 
@@ -172,7 +172,7 @@
             class="list-card"
           >
             <div class="card-banner" :style="{ background: stripForPrivacy(list.privacy, list.isOwner) }">
-              <img :src="bannerSrcFor(list)" :alt="`Banniere ${list.title}`" />
+              <img :src="bannerSrcFor(list)" :alt="`Bannière ${list.title}`" />
               <div class="card-banner-overlay"></div>
               <div class="card-banner-top">
                 <div class="privacy-chip" :class="privacyChipClass(list.privacy)">
@@ -254,7 +254,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32" aria-hidden="true">
           <path stroke-linecap="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0 1 18 0z" />
         </svg>
-        <div class="empty-title">Aucune liste partagée ne correspond a vos filtres.</div>
+        <div class="empty-title">Aucune liste partagée ne correspond à vos filtres.</div>
         <div class="empty-sub">Créez une nouvelle liste ou affinez votre recherche.</div>
       </button>
     </main>
@@ -264,6 +264,10 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useSharedLists, type SharedListMember, type SharedListPrivacy, type SharedListSummary } from '~/composables/useSharedLists'
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 type FilterKey = 'all' | 'owned' | 'joined'
 type SortKey = 'recent' | 'title' | 'animeCount' | 'members'
@@ -305,17 +309,39 @@ const draftGroupImagePreview = ref('')
 const draftBannerPreview = ref('')
 const lists = ref<SharedListSummary[]>([])
 
+/**
+ * Libère preview url.
+ *
+ * @param value - Valeur utilisée par le traitement « revoke preview url ».
+ * @returns Aucune valeur.
+ * @sideEffects interagit avec le navigateur ou le DOM.
+ */
 const revokePreviewUrl = (value: string) => {
-  // Les previews locales creent des object URLs; il faut les liberer a chaque remplacement.
+  // Les previews locales créent des object URLs; il faut les libérer à chaque remplacement.
   if (value.startsWith('blob:')) URL.revokeObjectURL(value)
 }
 
+/**
+ * Définit preview.
+ *
+ * @param target - Valeur utilisée par le traitement « set preview ».
+ * @param file - Valeur utilisée par le traitement « set preview ».
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const setPreview = (target: typeof draftGroupImagePreview, file: File | null) => {
   // Centralise l'ancien nettoyage avant de poser une nouvelle image de preview.
   revokePreviewUrl(target.value)
   target.value = file ? URL.createObjectURL(file) : ''
 }
 
+/**
+ * Calcule la valeur « member avatar style ».
+ *
+ * @param member - Valeur utilisée par le traitement « member avatar style ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const memberAvatarStyle = (member: Pick<SharedListMember, 'avatar' | 'color'> | SearchableUser) =>
   member.avatar ? undefined : { background: member.color }
 
@@ -339,7 +365,7 @@ const visibleLists = computed(() => {
 })
 
 const sections = computed(() => [
-  // Deux sections fixes gardent la lecture claire meme apres recherche ou tri.
+  // Deux sections fixes gardent la lecture claire même après recherche ou tri.
   { key: 'owned', label: 'Mes listes', items: visibleLists.value.filter(list => list.isOwner) },
   { key: 'joined', label: 'Listes rejointes', items: visibleLists.value.filter(list => !list.isOwner) }
 ])
@@ -351,26 +377,82 @@ const filters = computed(() => [
   { key: 'joined' as FilterKey, label: 'Listes rejointes', count: lists.value.filter(list => !list.isOwner).length }
 ])
 
+/**
+ * Nettoie for privacy.
+ *
+ * @param privacy - Valeur utilisée par le traitement « strip for privacy ».
+ * @param owned - Valeur utilisée par le traitement « strip for privacy ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const stripForPrivacy = (privacy: SharedListPrivacy, owned: boolean) => {
-  // Fallback visuel quand aucune banniere n'est encore stockee sur PocketBase.
+  // Fallback visuel quand aucune bannière n'est encore stockée sur PocketBase.
   if (privacy === 'private') return 'linear-gradient(135deg,#7f1d1d,#be185d)'
   if (privacy === 'public') return 'linear-gradient(135deg,#2563eb,#22d3ee)'
   return owned ? 'linear-gradient(135deg,#3db4f2,#1dd3b0)' : 'linear-gradient(135deg,#f77f00,#ffbe0b)'
 }
 
+/**
+ * Calcule la valeur « privacy label ».
+ *
+ * @param privacy - Valeur utilisée par le traitement « privacy label ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const privacyLabel = (privacy: SharedListPrivacy) => privacy === 'private' ? 'Privee' : privacy === 'friends' ? 'Amis uniquement' : 'Publique'
+/**
+ * Calcule la valeur « privacy chip class ».
+ *
+ * @param privacy - Valeur utilisée par le traitement « privacy chip class ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const privacyChipClass = (privacy: SharedListPrivacy) => ({ 'pc-private': privacy === 'private', 'pc-friends': privacy === 'friends', 'pc-public': privacy === 'public' })
+/**
+ * Calcule la valeur « emoji from title ».
+ *
+ * @param title - Valeur utilisée par le traitement « emoji from title ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const emojiFromTitle = (title: string) => title.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 3) || 'SL'
+/**
+ * Ouvre list.
+ *
+ * @param id - Valeur utilisée par le traitement « open list ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const openList = (id: string) => navigateTo(`/sharedLists/${id}`)
 const DEFAULT_SHARED_LIST_BANNER = '/img/banner.webp'
 const DEFAULT_SHARED_LIST_IMAGE = '/img/user.webp'
 
+/**
+ * Calcule la valeur « banner src for ».
+ *
+ * @param list - Valeur utilisée par le traitement « banner src for ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const bannerSrcFor = (list: SharedListSummary) => String(list.bannerUrl || '').trim() || DEFAULT_SHARED_LIST_BANNER
+/**
+ * Calcule la valeur « image src for ».
+ *
+ * @param list - Valeur utilisée par le traitement « image src for ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const imageSrcFor = (list: SharedListSummary) => String(list.imageUrl || '').trim() || DEFAULT_SHARED_LIST_IMAGE
 
+/**
+ * Charge page.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const loadPage = async () => {
   if (!currentUserId.value) {
-    // Sans session PocketBase, on vide la page pour eviter d'afficher des donnees obsoletes.
+    // Sans session PocketBase, on vide la page pour éviter d'afficher des données obsolètes.
     lists.value = []
     loadError.value = ''
     isLoading.value = false
@@ -390,6 +472,12 @@ const loadPage = async () => {
   }
 }
 
+/**
+ * Réinitialise create form.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const resetCreateForm = () => {
   // Remet tous les champs de creation, y compris les previews de fichiers.
   draftName.value = ''
@@ -405,20 +493,40 @@ const resetCreateForm = () => {
   actionError.value = ''
 }
 
+/**
+ * Bascule create panel.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const toggleCreatePanel = () => {
   createPanelOpen.value = !createPanelOpen.value
   // Fermer le panneau annule un brouillon incomplet.
   if (!createPanelOpen.value) resetCreateForm()
 }
 
+/**
+ * Traite draft group image change.
+ *
+ * @param event - Valeur utilisée par le traitement « handle draft group image change ».
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const handleDraftGroupImageChange = (event: Event) => {
   const input = event.target as HTMLInputElement | null
   const file = input?.files?.[0] || null
-  // Le fichier reste en memoire jusqu'a la soumission FormData.
+  // Le fichier reste en mémoire jusqu'à la soumission FormData.
   draftGroupImageFile.value = file
   setPreview(draftGroupImagePreview, file)
 }
 
+/**
+ * Traite draft banner change.
+ *
+ * @param event - Valeur utilisée par le traitement « handle draft banner change ».
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const handleDraftBannerChange = (event: Event) => {
   const input = event.target as HTMLInputElement | null
   const file = input?.files?.[0] || null
@@ -428,10 +536,16 @@ const handleDraftBannerChange = (event: Event) => {
 
 let createSearchTimer: ReturnType<typeof setTimeout> | null = null
 
+/**
+ * Traite create member search.
+ *
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects modifie l'état réactif, gère une temporisation.
+ */
 const handleCreateMemberSearch = () => {
   if (createSearchTimer) clearTimeout(createSearchTimer)
 
-  // Debounce + seuil minimal pour eviter des requetes PocketBase a chaque frappe.
+  // Debounce + seuil minimal pour éviter des requêtes PocketBase à chaque frappe.
   if (draftMemberQuery.value.trim().length < 2) {
     draftMemberResults.value = []
     isSearchingMembers.value = false
@@ -454,18 +568,38 @@ const handleCreateMemberSearch = () => {
   }, 200)
 }
 
+/**
+ * Calcule la valeur « select member ».
+ *
+ * @param user - Valeur utilisée par le traitement « select member ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects modifie l'état réactif.
+ */
 const selectMember = (user: SearchableUser) => {
-  // Evite les doublons si l'utilisateur clique deux fois sur le meme resultat.
+  // Évite les doublons si l'utilisateur clique deux fois sur le même résultat.
   if (selectedMembers.value.some(member => member.id === user.id)) return
   selectedMembers.value.push(user)
   draftMemberQuery.value = ''
   draftMemberResults.value = []
 }
 
+/**
+ * Retire selected member.
+ *
+ * @param userId - Valeur utilisée par le traitement « remove selected member ».
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const removeSelectedMember = (userId: string) => {
   selectedMembers.value = selectedMembers.value.filter(member => member.id !== userId)
 }
 
+/**
+ * Traite create.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const handleCreate = async () => {
   if (!draftName.value) return
 
@@ -482,7 +616,7 @@ const handleCreate = async () => {
     })
 
     if (selectedMembers.value.length) {
-      // Les ajouts de membres sont independants une fois la liste creee.
+      // Les ajouts de membres sont indépendants une fois la liste créée.
       await Promise.all(selectedMembers.value.map(member => addMemberToList(created.id, member.id)))
     }
 
@@ -498,7 +632,7 @@ const handleCreate = async () => {
 }
 
 watch(currentUserId, () => {
-  // Recharge la page quand la session change, y compris a l'initialisation.
+  // Recharge la page quand la session change, y compris à l'initialisation.
   loadPage()
 }, { immediate: true })
 

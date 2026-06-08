@@ -86,6 +86,10 @@
 import { computed, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAnilistSocialStore } from '~/composables/useAnilistSocialStore'
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 type SocialTab = 'followed' | 'followers' | 'friends'
 
@@ -112,8 +116,22 @@ const filteredUsers = computed(() => {
   return source.filter(user => user.username.toLowerCase().includes(query))
 })
 
+/**
+ * Indique si follow busy.
+ *
+ * @param id - Valeur utilisée par le traitement « is follow busy ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const isFollowBusy = (id: number) => followPendingIds.value.includes(id)
 
+/**
+ * Bascule follow.
+ *
+ * @param id - Valeur utilisée par le traitement « toggle follow ».
+ * @returns Une promesse résolue une fois le traitement terminé.
+ * @sideEffects peut écrire dans les journaux.
+ */
 const toggleFollow = async (id: number) => {
   try {
     await socialStore.toggleFollowUser(id)
@@ -128,12 +146,25 @@ const noResultText = computed(() => {
   return 'Essayez une autre recherche ou changez de catégorie sociale.'
 })
 
+/**
+ * Ouvre friend profile.
+ *
+ * @param friendId - Valeur utilisée par le traitement « open friend profile ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const openFriendProfile = (friendId: number) => {
   const id = Number(friendId)
   if (!Number.isFinite(id) || id <= 0) return
   navigateTo(`/social/user/${id}`)
 }
 
+/**
+ * Ouvre user search.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects interagit avec le navigateur ou le DOM.
+ */
 const openUserSearch = () => {
   window.dispatchEvent(new CustomEvent('kizuna:open-search-users'))
 }

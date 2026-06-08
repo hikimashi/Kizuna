@@ -22,6 +22,10 @@
 <script setup lang="ts">
 import { useAnilistAuthStore } from '~/composables/useAnilistAuthStore';
 import { useRouter } from '#app';
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 const route = useRoute();
 const router = useRouter();
@@ -41,12 +45,12 @@ const statusMessage = computed(() => {
 
 onMounted(async () => {
   if (code.value) {
-    // Traite le retour OAuth AniList puis met a jour l'etat de l'interface.
+    // Traite le retour OAuth AniList puis met à jour l'état de l'interface.
     const result = await anilistAuthStore.handleCallback(code.value, state.value);
     processed.value = true;
     success.value = result;
 
-    // Redirige vers l'accueil apres un court delai pour laisser le message visible.
+    // Redirige vers l'accueil après un court délai pour laisser le message visible.
     setTimeout(() => {
       router.push('/');
     }, 2000);

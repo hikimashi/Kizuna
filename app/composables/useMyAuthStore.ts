@@ -2,11 +2,15 @@ import { defineStore } from 'pinia';
 import { usePocketbaseStore } from './usePocketbaseStore';
 import { useUserStore } from './useUserStore';
 import { authEmailCandidates, normalizeAuthEmail } from '~/utils/authEmail';
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 export const useMyAuthStore = defineStore('auth', () => {
   const pocketbaseStore = usePocketbaseStore();
   const userStore = useUserStore();
-  const unverifiedEmailMessage = 'Veuillez verifier votre adresse e-mail avant de vous connecter.';
+  const unverifiedEmailMessage = 'Veuillez vérifier votre adresse e-mail avant de vous connecter.';
   const invalidLoginMessage = 'Identifiants invalides. Verifiez votre email et votre mot de passe.';
   const accountCreationMessage = 'La création du compte a échoué. Veuillez réessayer.';
   const googleLoginMessage = 'La connexion Google a échoué. Veuillez réessayer.';
@@ -15,6 +19,14 @@ export const useMyAuthStore = defineStore('auth', () => {
   const passwordResetMessage = 'La demande de réinitialisation du mot de passe a échoué. Veuillez réessayer.';
   const accountDeletionMessage = 'La suppression du compte a échoué. Veuillez réessayer.';
 
+  /**
+   * Retourne auth error message.
+   *
+   * @param error - Valeur utilisée par le traitement « get auth error message ».
+   * @param fallback - Valeur utilisée par le traitement « get auth error message ».
+   * @returns Le résultat calculé par la fonction.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const getAuthErrorMessage = (error: any, fallback: string) => {
     const candidateMessages = [
       error?.response?.data?.message,
@@ -51,78 +63,14 @@ export const useMyAuthStore = defineStore('auth', () => {
     return rawMessage || fallback;
   };
 
-  const getUserFacingErrorMessage = (error: any, fallback: string) => {
-    const message = String(error?.response?.data?.message || error?.response?.message || error?.data?.message || error?.message || '').trim();
-    const normalized = message.toLowerCase();
-
-    if (
-      normalized.includes('verify') ||
-      normalized.includes('verif') ||
-      normalized.includes('unverified')
-    ) {
-      return unverifiedEmailMessage;
-    }
-
-    if (
-      normalized.includes('auth') ||
-      normalized.includes('credential') ||
-      normalized.includes('invalid') ||
-      normalized.includes('password') ||
-      normalized.includes('not found') ||
-      normalized.includes('wrong')
-    ) {
-      return invalidLoginMessage;
-    }
-
-    if (
-      normalized.includes('google login failed') ||
-      normalized.includes('google auth failed') ||
-      normalized.includes('oauth2') && normalized.includes('google')
-    ) {
-      return googleLoginMessage;
-    }
-
-    if (
-      normalized.includes('github login failed') ||
-      normalized.includes('github auth failed') ||
-      normalized.includes('oauth2') && normalized.includes('github')
-    ) {
-      return githubLoginMessage;
-    }
-
-    if (
-      normalized.includes('account creation failed') ||
-      normalized.includes('failed to create') ||
-      normalized.includes('create failed')
-    ) {
-      return accountCreationMessage;
-    }
-
-    if (
-      normalized.includes('email change failed') ||
-      normalized.includes('failed to change email')
-    ) {
-      return emailChangeMessage;
-    }
-
-    if (
-      normalized.includes('password reset request failed') ||
-      normalized.includes('failed to request password reset')
-    ) {
-      return passwordResetMessage;
-    }
-
-    if (
-      normalized.includes('account deletion failed') ||
-      normalized.includes('failed to delete account')
-    ) {
-      return accountDeletionMessage;
-    }
-
-    return message || fallback;
-  };
-
-  // Convertit les données PocketBase vers le format UserType utilise par l'app.
+  // Convertit les données PocketBase vers le format UserType utilisé par l'app.
+  /**
+   * Convertit auth data to user.
+   *
+   * @param authData - Valeur utilisée par le traitement « map auth data to user ».
+   * @returns Le résultat calculé par la fonction.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const mapAuthDataToUser = (authData: { token: string; record: any }): UserType => {
     const { record } = authData;
 
@@ -150,6 +98,13 @@ export const useMyAuthStore = defineStore('auth', () => {
   };
 
   // Crée un compte local puis envoie l'email de verification.
+  /**
+   * Crée account.
+   *
+   * @param newUser - Valeur utilisée par le traitement « create account ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const createAccount = async (newUser: NewUserType) => {
     const email = normalizeAuthEmail(newUser.email);
     const data = {
@@ -178,6 +133,14 @@ export const useMyAuthStore = defineStore('auth', () => {
   };
 
   // Connexion email/mot de passe.
+  /**
+   * Authentifie login.
+   *
+   * @param email - Valeur utilisée par le traitement « login ».
+   * @param password - Valeur utilisée par le traitement « login ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects lit ou écrit dans le stockage du navigateur, effectue des appels réseau ou persistants.
+   */
   const login = async (email: string, password: string) => {
     let lastError: any = null;
 
@@ -216,6 +179,12 @@ export const useMyAuthStore = defineStore('auth', () => {
   };
 
   // Connexion OAuth Google.
+  /**
+   * Authentifie with google.
+   *
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const loginWithGoogle = async () => {
     try {
       const authData = await pocketbaseStore.pb.collection('user').authWithOAuth2({ provider: 'google' });
@@ -227,6 +196,12 @@ export const useMyAuthStore = defineStore('auth', () => {
   };
 
   // Connexion OAuth GitHub.
+  /**
+   * Authentifie with github.
+   *
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const loginWithGithub = async () => {
     try {
       const authData = await pocketbaseStore.pb.collection('user').authWithOAuth2({ provider: 'github' });
@@ -237,6 +212,12 @@ export const useMyAuthStore = defineStore('auth', () => {
     }
   };
 
+  /**
+   * Déconnecte logout.
+   *
+   * @returns Aucune valeur.
+   * @sideEffects lit ou écrit dans le stockage du navigateur.
+   */
   const logout = () => {
     pocketbaseStore.pb.authStore.clear();
     localStorage.removeItem('pocketbase_auth');
@@ -244,6 +225,12 @@ export const useMyAuthStore = defineStore('auth', () => {
   };
 
   // Rafraichit la session au demarrage et nettoie si invalide.
+  /**
+   * Calcule la valeur « auth refresh ».
+   *
+   * @returns Une promesse résolue une fois le traitement terminé.
+   * @sideEffects lit ou écrit dans le stockage du navigateur, effectue des appels réseau ou persistants.
+   */
   const authRefresh = async () => {
     try {
       if (!pocketbaseStore.pb.authStore.isValid) {
@@ -263,7 +250,7 @@ export const useMyAuthStore = defineStore('auth', () => {
         message.includes('NetworkError') ||
         message.includes('fetch');
 
-      // Conserve la session locale courante si le refresh echoue a cause d'un souci reseau temporaire.
+      // Conserve la session locale courante si le refresh échoue à cause d'un souci réseau temporaire.
       if (hasLocalSession && isTransientNetworkError) {
         userStore.saveUserData(
           mapAuthDataToUser({
@@ -280,6 +267,13 @@ export const useMyAuthStore = defineStore('auth', () => {
     }
   };
 
+  /**
+   * Calcule la valeur « email change ».
+   *
+   * @param newEmail - Valeur utilisée par le traitement « email change ».
+   * @returns Une promesse résolue une fois le traitement terminé.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const emailChange = async (newEmail: string) => {
     try {
       await pocketbaseStore.pb.collection('user').requestEmailChange(normalizeAuthEmail(newEmail));
@@ -288,6 +282,13 @@ export const useMyAuthStore = defineStore('auth', () => {
     }
   };
 
+  /**
+   * Exécute password reset.
+   *
+   * @param email - Valeur utilisée par le traitement « request password reset ».
+   * @returns Une promesse résolue une fois le traitement terminé.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const requestPasswordReset = async (email: string) => {
     try {
       await pocketbaseStore.pb.collection('user').requestPasswordReset(email);
@@ -296,6 +297,12 @@ export const useMyAuthStore = defineStore('auth', () => {
     }
   };
 
+  /**
+   * Supprime account.
+   *
+   * @returns Une promesse résolue une fois le traitement terminé.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const deleteAccount = async () => {
     try {
       const userId = userStore.userData?.id;

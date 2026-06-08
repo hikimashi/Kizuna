@@ -24,6 +24,10 @@ import SuccessIcon from '~/components/icons/successIcon.vue';
 import ErrorIcon from '~/components/icons/errorIcon.vue';
 import InfoIcon from '~/components/icons/infoIcon.vue';
 import WarningIcon from '~/components/icons/warningIcon.vue';
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 const toastStore = useToastStore();
 const { toasts } = storeToRefs(toastStore);
@@ -48,6 +52,20 @@ const toastColorMap: Record<ToastTypeValue, string> = {
   warning: 'text-warning',
 };
 
+/**
+ * Calcule la valeur « toast class ».
+ *
+ * @param type - Valeur utilisée par le traitement « toast class ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const toastClass = (type: ToastTypeValue) => toastClassMap[type];
+/**
+ * Calcule la valeur « toast color ».
+ *
+ * @param type - Valeur utilisée par le traitement « toast color ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const toastColor = (type: ToastTypeValue) => toastColorMap[type];
 </script>

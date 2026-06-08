@@ -35,8 +35,8 @@
             <option value="title">Titre</option>
             <option value="score">Note</option>
             <option value="progress">Progression</option>
-            <option value="updatedAt">Derniere mise a jour</option>
-            <option value="startDate">Date de debut</option>
+            <option value="updatedAt">Dernière mise à jour</option>
+            <option value="startDate">Date de début</option>
           </select>
         </div>
       </aside>
@@ -250,6 +250,10 @@ import { useAnilistSync } from '~/composables/useAnilistSync'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 import { useSharedLists, type SharedListSummary } from '~/composables/useSharedLists'
 import { useToastStore } from '~/composables/useToastStore'
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 type ListStatusKey = 'CURRENT' | 'COMPLETED' | 'PAUSED' | 'DROPPED' | 'PLANNING'
 type FilterKey = 'ALL' | ListStatusKey
@@ -336,6 +340,13 @@ const profileTabs = [
   { key: 'shared-lists', label: 'Listes partagées', to: '/sharedLists' }
 ]
 
+/**
+ * Calcule la valeur « display title ».
+ *
+ * @param entry - Valeur utilisée par le traitement « display title ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const displayTitle = (entry: MediaListEntry) =>
   entry.media.title.romaji || entry.media.title.english || entry.media.title.native || 'Titre inconnu'
 
@@ -343,12 +354,33 @@ const currentCoverVariant = computed<AnilistCoverVariant>(() =>
   viewMode.value === 'grid' ? 'card' : 'thumb'
 )
 
+/**
+ * Calcule la valeur « cover image src ».
+ *
+ * @param entry - Valeur utilisée par le traitement « cover image src ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const coverImageSrc = (entry: MediaListEntry) =>
   getAnilistCoverSrc(entry.media.coverImage, currentCoverVariant.value) || undefined
 
+/**
+ * Calcule la valeur « cover image src set ».
+ *
+ * @param entry - Valeur utilisée par le traitement « cover image src set ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const coverImageSrcSet = (entry: MediaListEntry) =>
   getAnilistCoverSrcSet(entry.media.coverImage, currentCoverVariant.value)
 
+/**
+ * Normalise date.
+ *
+ * @param entry - Valeur utilisée par le traitement « normalize date ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const normalizeDate = (entry: MediaListEntry): number => {
   // AniList renvoie des dates floues; on fabrique une cle numerique triable YYYYMMDD.
   const y = entry.startedAt?.year ?? 0
@@ -357,11 +389,25 @@ const normalizeDate = (entry: MediaListEntry): number => {
   return y * 10000 + m * 100 + d
 }
 
+/**
+ * Formate score.
+ *
+ * @param score - Valeur utilisée par le traitement « format score ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const formatScore = (score: number) => {
   if (!score) return '-'
   return score % 1 === 0 ? String(score) : score.toFixed(1)
 }
 
+/**
+ * Calcule la valeur « status dot class ».
+ *
+ * @param status - Valeur utilisée par le traitement « status dot class ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const statusDotClass = (status: ListStatusKey) => {
   if (status === 'CURRENT') return 'dot-watching'
   if (status === 'COMPLETED') return 'dot-completed'
@@ -385,7 +431,15 @@ const listFilterItems = computed(() => {
 
 const sortedAndFilteredSections = computed(() => {
   const needle = searchTerm.value.toLowerCase()
-  // Un seul sorter couvre tous les modes de tri pour conserver la meme logique par section.
+  // Un seul sorter couvre tous les modes de tri pour conserver la même logique par section.
+  /**
+   * Calcule la valeur « sorter ».
+   *
+   * @param a - Valeur utilisée par le traitement « sorter ».
+   * @param b - Valeur utilisée par le traitement « sorter ».
+   * @returns Le résultat calculé par la fonction.
+   * @sideEffects modifie l'état réactif.
+   */
   const sorter = (a: MediaListEntry, b: MediaListEntry) => {
     if (sortBy.value === 'title') return displayTitle(a).localeCompare(displayTitle(b))
     if (sortBy.value === 'score') return (b.score || 0) - (a.score || 0)
@@ -429,16 +483,22 @@ const selectedEntryCoverSrcSet = computed(() =>
 )
 
 const sharedListOptions = computed(() => {
-  // Le picker n'affiche que les listes ou l'utilisateur participe deja.
+  // Le picker n'affiche que les listes où l'utilisateur participe déjà.
   return sharedLists.value.filter(list => list.isOwner || list.isMember)
 })
 
+/**
+ * Garantit shared lists loaded.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const ensureSharedListsLoaded = async () => {
   if (isSharedListsLoading.value) return
   if (sharedLists.value.length > 0) return
 
   try {
-    // Chargement paresseux: les listes partagees ne sont demandees que si l'utilisateur ouvre le picker.
+    // Chargement paresseux: les listes partagées ne sont demandées que si l'utilisateur ouvre le picker.
     isSharedListsLoading.value = true
     sharedListError.value = ''
     sharedLists.value = await sharedListsStore.loadSummaries()
@@ -450,8 +510,16 @@ const ensureSharedListsLoaded = async () => {
   }
 }
 
+/**
+ * Ouvre entry editor.
+ *
+ * @param entry - Valeur utilisée par le traitement « open entry editor ».
+ * @param status - Valeur utilisée par le traitement « open entry editor ».
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const openEntryEditor = (entry: MediaListEntry, status: ListStatusKey) => {
-  // On copie les champs editables dans des refs pour pouvoir annuler sans muter la liste affichee.
+  // On copie les champs éditables dans des refs pour pouvoir annuler sans muter la liste affichée.
   selectedEntryId.value = entry.id
   selectedEntryMediaId.value = Number(entry.media.id || 0)
   selectedEntryTitle.value = displayTitle(entry)
@@ -464,6 +532,12 @@ const openEntryEditor = (entry: MediaListEntry, status: ListStatusKey) => {
   showSharedListPicker.value = false
 }
 
+/**
+ * Ferme entry editor.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const closeEntryEditor = () => {
   selectedEntryId.value = null
   selectedEntryMediaId.value = 0
@@ -477,15 +551,33 @@ const closeEntryEditor = () => {
   sharedListError.value = ''
 }
 
+/**
+ * Ouvre selected anime info.
+ *
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const openSelectedAnimeInfo = () => {
   if (!selectedEntryMediaId.value) return
   navigateTo(`/anime/${selectedEntryMediaId.value}`)
 }
 
+/**
+ * Ouvre browse page.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const openBrowsePage = () => {
   navigateTo('/browse')
 }
 
+/**
+ * Bascule shared list picker.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const toggleSharedListPicker = async () => {
   if (showSharedListPicker.value) {
     showSharedListPicker.value = false
@@ -495,10 +587,17 @@ const toggleSharedListPicker = async () => {
   showSharedListPicker.value = true
 }
 
+/**
+ * Ajoute selected anime to shared list.
+ *
+ * @param listId - Valeur utilisée par le traitement « add selected anime to shared list ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const addSelectedAnimeToSharedList = async (listId: string) => {
   if (!selectedEntryMediaId.value || !listId || isAddingToSharedList.value) return
 
-  // Les champs vides restent acceptes cote UI mais deviennent des valeurs neutres pour PocketBase.
+  // Les champs vides restent acceptés côté UI mais deviennent des valeurs neutres pour PocketBase.
   const progress = editProgress.value === '' ? 0 : Number(editProgress.value)
   const score = editScore.value === '' ? 0 : Number(editScore.value)
 
@@ -513,28 +612,35 @@ const addSelectedAnimeToSharedList = async (listId: string) => {
       progress: Number.isFinite(progress) ? progress : 0,
       score: Number.isFinite(score) ? score : 0
     })
-    toastStore.openToast({ type: 'success', message: "L'anime a ete ajoute a la liste partagée." })
+    toastStore.openToast({ type: 'success', message: "L'anime a été ajouté à la liste partagée." })
     showSharedListPicker.value = false
   } catch (error: any) {
-    sharedListError.value = error?.message || "Impossible d'ajouter cet anime a la liste partagée."
+    sharedListError.value = error?.message || "Impossible d'ajouter cet anime à la liste partagée."
   } finally {
     isAddingToSharedList.value = false
   }
 }
 
+/**
+ * Enregistre selected entry.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const saveSelectedEntry = async () => {
   if (!selectedEntryId.value || isSavingEntry.value) return
 
   try {
-    // Apres mutation AniList, on recharge la collection pour recuperer l'etat serveur exact.
     isSavingEntry.value = true
+    // Envoyer au serveur, qui appliquera la logique intelligente de changement de statut
     await anilistSync.saveEntry({
       entryId: selectedEntryId.value,
       status: editStatus.value,
       progress: editProgress.value === '' ? 0 : Number(editProgress.value),
       score: editScore.value === '' ? null : Number(editScore.value)
     })
-    await fetchAnimeList()
+    // Recharger en bypass du cache pour avoir l'état exact du serveur AniList
+    await fetchAnimeList(true)
     toastStore.openToast({ type: 'success', message: "L'entrée AniList a été mise à jour." })
     closeEntryEditor()
   } catch (error: any) {
@@ -544,6 +650,12 @@ const saveSelectedEntry = async () => {
   }
 }
 
+/**
+ * Supprime selected entry.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const deleteSelectedEntry = async () => {
   if (!selectedEntryId.value || isDeletingEntry.value) return
 
@@ -557,7 +669,8 @@ const deleteSelectedEntry = async () => {
   try {
     isDeletingEntry.value = true
     await anilistSync.deleteEntry(selectedEntryId.value)
-    await fetchAnimeList()
+    // Recharger en bypass du cache pour avoir l'état exact du serveur AniList
+    await fetchAnimeList(true)
     toastStore.openToast({ type: 'success', message: "L'entrée AniList a été supprimée." })
     closeEntryEditor()
   } catch (error: any) {
@@ -571,18 +684,32 @@ watch([editStatus, selectedEntryEpisodes], () => {
   if (editStatus.value !== 'COMPLETED') return
   const episodes = Number(selectedEntryEpisodes.value || 0) || 0
   if (!episodes) return
-  // Quand on marque termine, la progression se cale automatiquement sur le nombre total d'episodes.
+  // Quand on marque terminé, la progression se cale automatiquement sur le nombre total d'épisodes.
   editProgress.value = String(episodes)
 })
 
+/**
+ * Traite editor keydown.
+ *
+ * @param event - Valeur utilisée par le traitement « handle editor keydown ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const handleEditorKeydown = (event: KeyboardEvent) => {
   if (event.key !== 'Escape' || !isEditorModalOpen.value) return
   closeEntryEditor()
 }
 
-const fetchAnimeList = async () => {
+/**
+ * Récupère anime list.
+ *
+ * @param skipCache - Valeur utilisée par le traitement « fetch anime list ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif, effectue des appels réseau ou persistants.
+ */
+const fetchAnimeList = async (skipCache = false) => {
   if (!token.value || !username.value) {
-    errorMessage.value = 'Compte AniList non lie. Reconnectez-le dans les parametres.'
+    errorMessage.value = 'Compte AniList non lié. Reconnectez-le dans les paramètres.'
     isLoading.value = false
     return
   }
@@ -626,11 +753,11 @@ const fetchAnimeList = async () => {
     isLoading.value = true
     errorMessage.value = ''
 
-    // MediaListCollection regroupe deja les entrees par statut; on les remappe dans STATUS_ORDER.
+    // MediaListCollection regroupe déjà les entrées par statut; on les remappe dans STATUS_ORDER.
     const response = await anilistGraphql.request<any>(
       query,
       { userName: username.value },
-      { token: token.value, cacheTtlMs: 30_000 }
+      { token: token.value, cacheTtlMs: skipCache ? 0 : 30_000, skipCache }
     )
 
     if (response?.errors?.length) {

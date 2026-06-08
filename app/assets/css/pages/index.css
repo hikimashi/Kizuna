@@ -438,7 +438,7 @@
 .fade-up:nth-child(5) { animation-delay: 400ms; }
 .fade-up:nth-child(6) { animation-delay: 500ms; }
 
-/* Tableau de bord (connecte) */
+/* Tableau de bord (connecté) */
 .dashboard-container {
   padding: 24px 20px;
   min-height: calc(100vh - 64px);

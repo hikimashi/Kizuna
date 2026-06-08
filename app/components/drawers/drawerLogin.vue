@@ -14,7 +14,7 @@
       <div class="mb-4 flex justify-center sm:mb-6">
         <img src="/img/user.webp" alt="Logo" class="h-24 rounded-full border border-primary bg-base-100/70 p-1 shadow-lg sm:h-32 md:h-36" />
       </div>
-      <h2 class="mb-4 text-center text-xl font-bold text-primary sm:mb-6 sm:text-2xl">Connexion a votre compte</h2>
+      <h2 class="mb-4 text-center text-xl font-bold text-primary sm:mb-6 sm:text-2xl">Connexion à votre compte</h2>
 
       <div class="my-4 rounded-2xl border border-base-300/60 bg-base-100/50 px-4 py-3 text-center shadow-sm sm:my-6">
         <span class="flex flex-wrap justify-center text-center text-sm sm:text-base">
@@ -110,6 +110,10 @@ import { useDrawersStore } from '~/composables/useDrawersStore';
 import { useMyAuthStore } from '~/composables/useMyAuthStore';
 import { useToastStore } from '~/composables/useToastStore';
 import { useThemeStore } from '~/composables/useThemeStore';
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 const drawerStore = useDrawersStore();
 const authStore = useMyAuthStore();
@@ -120,6 +124,12 @@ defineProps({
   open: { type: Boolean, default: false },
 });
 const emits = defineEmits(['close']);
+/**
+ * Traite close.
+ *
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const handleClose = () => emits('close');
 
 const email = ref<string>('');
@@ -127,12 +137,24 @@ const password = ref<string>('');
 const loginError = ref<string>('');
 const showPassword = ref(false);
 
+/**
+ * Ferme close.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const close = () => {
   showPassword.value = false;
   emits('close');
   drawerStore.closeDrawer();
 };
 
+/**
+ * Calcule la valeur « do login ».
+ *
+ * @returns Une promesse résolue une fois le traitement terminé.
+ * @sideEffects modifie l'état réactif.
+ */
 const doLogin = async () => {
   loginError.value = '';
 
@@ -150,12 +172,18 @@ const doLogin = async () => {
   close();
 };
 
+/**
+ * Calcule la valeur « do google login ».
+ *
+ * @returns Une promesse résolue une fois le traitement terminé.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const doGoogleLogin = async () => {
   try {
     await authStore.loginWithGoogle();
     toast.openToast({ type: 'success', message: 'Bienvenue.' });
   } catch (e: any) {
-    toast.openToast({ type: 'error', message: e?.message || 'La connexion Google a echoue.' });
+    toast.openToast({ type: 'error', message: e?.message || 'La connexion Google a échoué.' });
     return;
   }
 
@@ -163,12 +191,18 @@ const doGoogleLogin = async () => {
   await navigateTo('/');
 };
 
+/**
+ * Calcule la valeur « do github login ».
+ *
+ * @returns Une promesse résolue une fois le traitement terminé.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const doGithubLogin = async () => {
   try {
     await authStore.loginWithGithub();
     toast.openToast({ type: 'success', message: 'Bienvenue.' });
   } catch (e: any) {
-    toast.openToast({ type: 'error', message: e?.message || 'La connexion GitHub a echoue.' });
+    toast.openToast({ type: 'error', message: e?.message || 'La connexion GitHub a échoué.' });
     return;
   }
 
@@ -176,6 +210,12 @@ const doGithubLogin = async () => {
   await navigateTo('/');
 };
 
+/**
+ * Crée account.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const createAccount = () => {
   close();
   drawerStore.openDrawer('drawerCreateUser');

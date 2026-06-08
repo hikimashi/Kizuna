@@ -31,6 +31,10 @@ import SuccessIcon from '~/components/icons/successIcon.vue';
 import ErrorIcon from '~/components/icons/errorIcon.vue';
 import InfoIcon from '~/components/icons/infoIcon.vue';
 import WarningIcon from '~/components/icons/warningIcon.vue';
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 const alertStore = useAlertStore();
 const { alert } = storeToRefs(alertStore);
@@ -56,5 +60,12 @@ const alertColorMap: Record<AlertTypeValue, string> = {
   warning: 'text-warning',
 };
 
+/**
+ * Calcule la valeur « alert color ».
+ *
+ * @param type - Valeur utilisée par le traitement « alert color ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const alertColor = (type: AlertTypeValue) => alertColorMap[type];
 </script>

@@ -37,7 +37,7 @@
           </button>
         </template>
 
-        <!-- Connecte mais AniList non lie -->
+        <!-- Connecté mais AniList non lié -->
         <template v-else-if="showPendingLinkState">
           <div class="nav-actions">
             <div class="dropdown dropdown-bottom dropdown-end">
@@ -74,7 +74,7 @@
           </div>
         </template>
 
-        <!-- Authentifie avec AniList lie -->
+        <!-- Authentifié avec AniList lié -->
         <template v-else>
           <div class="nav-actions">
             <!-- Icône de recherche -->
@@ -300,6 +300,10 @@ import { useMyAuthStore } from '~/composables/useMyAuthStore'
 import { useAnilistGraphql } from '~/composables/useAnilistGraphql'
 import { useAnilistNotificationsStore } from '~/composables/useAnilistNotificationsStore'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 const themeStore = useThemeStore()
 const drawerStore = useDrawersStore()
@@ -362,10 +366,22 @@ const avatarUrl = computed(() => {
   return authRecord.value?.anilist_avatar_url_large || authRecord.value?.anilist_avatar_url_medium || '/img/user.webp'
 })
 
+/**
+ * Ouvre login drawer.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const openLoginDrawer = () => {
   drawerStore.openDrawer('drawerLogin')
 }
 
+/**
+ * Ouvre search modal.
+ *
+ * @returns Une promesse résolue une fois le traitement terminé.
+ * @sideEffects modifie l'état réactif.
+ */
 const openSearchModal = async () => {
   isSearchModalOpen.value = true
   closeMobileMenu()
@@ -374,11 +390,23 @@ const openSearchModal = async () => {
   searchInputRef.value?.focus()
 }
 
+/**
+ * Ouvre user search modal.
+ *
+ * @returns Une promesse résolue une fois le traitement terminé.
+ * @sideEffects modifie l'état réactif.
+ */
 const openUserSearchModal = async () => {
   searchModalTab.value = 'users'
   await openSearchModal()
 }
 
+/**
+ * Ferme search modal.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif, gère une temporisation.
+ */
 const closeSearchModal = () => {
   isSearchModalOpen.value = false
   searchModalQuery.value = ''
@@ -387,16 +415,29 @@ const closeSearchModal = () => {
   animeSearchResults.value = []
   userSearchResults.value = []
   if (searchModalTimer) {
-    // Evite qu'une ancienne recherche arrive apres la fermeture et repeuple la modale.
+    // Évite qu'une ancienne recherche arrive après la fermeture et repeuple la modale.
     clearTimeout(searchModalTimer)
     searchModalTimer = null
   }
 }
 
+/**
+ * Ferme mobile menu.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const closeMobileMenu = () => {
   isMobileMenuOpen.value = false
 }
 
+/**
+ * Traite logo click.
+ *
+ * @param event - Valeur utilisée par le traitement « handle logo click ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects interagit avec le navigateur ou le DOM.
+ */
 const handleLogoClick = (event: MouseEvent) => {
   closeMobileMenu()
 
@@ -406,31 +447,63 @@ const handleLogoClick = (event: MouseEvent) => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
+/**
+ * Traite sign up.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const handleSignUp = () => {
   drawerStore.openDrawer('drawerCreateUser')
 }
 
+/**
+ * Traite logout.
+ *
+ * @returns Une promesse résolue une fois le traitement terminé.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const handleLogout = async () => {
   await authStore.logout()
 }
 
+/**
+ * Bascule mobile menu.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value
 }
 
+/**
+ * Traite outside click.
+ *
+ * @param event - Valeur utilisée par le traitement « handle outside click ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const handleOutsideClick = (event: MouseEvent) => {
   if (!isMobileMenuOpen.value) return
 
   const target = event.target as Node | null
 
-  // Les clics a l'interieur du header gardent le menu ouvert; le reste le ferme.
+  // Les clics à l'intérieur du header gardent le menu ouvert; le reste le ferme.
   if (!target || headerRef.value?.contains(target)) return
 
   closeMobileMenu()
 }
 
+/**
+ * Traite escape key.
+ *
+ * @param event - Valeur utilisée par le traitement « handle escape key ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const handleEscapeKey = (event: KeyboardEvent) => {
-  // Entree ouvre le premier resultat si le focus est dans l'input de recherche.
+  // Entrée ouvre le premier résultat si le focus est dans l'input de recherche.
   if (event.key === 'Enter' && isSearchModalOpen.value && !isSearchLoading.value && activeSearchResults.value.length) {
     const firstResult = activeSearchResults.value[0]
     const target = event.target as HTMLElement | null
@@ -452,10 +525,24 @@ const handleEscapeKey = (event: KeyboardEvent) => {
   }
 }
 
+/**
+ * Traite open user search event.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const handleOpenUserSearchEvent = () => {
   openUserSearchModal()
 }
 
+/**
+ * Produit fallback.
+ *
+ * @param value - Valeur utilisée par le traitement « make fallback ».
+ * @param type - Valeur utilisée par le traitement « make fallback ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const makeFallback = (value: string, type: 'anime' | 'user') => {
   const clean = value.trim()
   if (!clean) return type === 'anime' ? 'AN' : 'US'
@@ -503,6 +590,12 @@ query ($search: String) {
 }
 `
 
+/**
+ * Traite global search.
+ *
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects modifie l'état réactif, effectue des appels réseau ou persistants, gère une temporisation.
+ */
 const handleGlobalSearch = () => {
   if (searchModalTimer) clearTimeout(searchModalTimer)
 
@@ -548,7 +641,7 @@ const handleGlobalSearch = () => {
         }
       }).filter((item: { id: number }) => item.id > 0)
 
-      // Les utilisateurs utilisent le meme rendu que les animes, avec avatar et statistiques AniList.
+      // Les utilisateurs utilisent le même rendu que les animes, avec avatar et statistiques AniList.
       userSearchResults.value = userItems.map((item: any) => {
         const title = String(item?.name || 'Utilisateur inconnu')
         const animeCount = Number(item?.statistics?.anime?.count || 0)
@@ -574,6 +667,13 @@ const handleGlobalSearch = () => {
   }, 220)
 }
 
+/**
+ * Ouvre search result.
+ *
+ * @param item - Valeur utilisée par le traitement « open search result ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const openSearchResult = (item: { type: 'anime' | 'user'; id: number }) => {
   closeSearchModal()
   if (item.type === 'anime') {
@@ -583,7 +683,7 @@ const openSearchResult = (item: { type: 'anime' | 'user'; id: number }) => {
   navigateTo(`/social/user/${item.id}`)
 }
 
-// Toute navigation ferme les panneaux flottants pour eviter un etat UI accroche a l'ancienne page.
+// Toute navigation ferme les panneaux flottants pour éviter un état UI accroché à l'ancienne page.
 watch(() => route.fullPath, closeMobileMenu)
 watch(() => route.fullPath, () => {
   if (isSearchModalOpen.value) {
@@ -592,13 +692,13 @@ watch(() => route.fullPath, () => {
 })
 watch(showFullNav, (value) => {
   if (value) {
-    // Les notifications ne sont pertinentes qu'une fois le compte AniList lie.
+    // Les notifications ne sont pertinentes qu'une fois le compte AniList lié.
     notificationStore.loadUnreadCount(true)
     return
   }
 
   if (!value) {
-    // Nettoie les donnees privees quand on quitte l'etat "navigation complete".
+    // Nettoie les données privées quand on quitte l'état "navigation complète".
     notificationStore.reset()
     closeMobileMenu()
     closeSearchModal()

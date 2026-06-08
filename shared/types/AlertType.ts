@@ -1,3 +1,7 @@
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 export type AlertTypeValue = 'success' | 'error' | 'info' | 'warning';
 
 export interface AlertType {

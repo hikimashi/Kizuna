@@ -1,6 +1,10 @@
 import { defineStore } from 'pinia'
 import { computed, ref, unref } from 'vue'
 import { usePocketbaseStore } from './usePocketbaseStore'
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 type NotificationUserPreview = {
   id: number
@@ -338,20 +342,48 @@ query {
 }
 `
 
+/**
+ * Retourne avatar.
+ *
+ * @param user - Valeur utilisée par le traitement « get avatar ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const getAvatar = (user?: NotificationUserPreview) =>
   user?.avatar?.large || user?.avatar?.medium || undefined
 
+/**
+ * Retourne cover.
+ *
+ * @param media - Valeur utilisée par le traitement « get cover ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const getCover = (media?: NotificationMediaPreview) =>
   media?.coverImage?.large || media?.coverImage?.medium || undefined
 
+/**
+ * Retourne media title.
+ *
+ * @param media - Valeur utilisée par le traitement « get media title ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const getMediaTitle = (media?: NotificationMediaPreview) =>
   String(media?.title?.userPreferred || 'Media sans titre')
 
+/**
+ * Normalise notification.
+ *
+ * @param node - Valeur utilisée par le traitement « normalize notification ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const normalizeNotification = (node: RawNotificationNode): AniListNotificationItem | null => {
   const id = Number(node?.id || 0)
   if (!Number.isFinite(id) || id <= 0) return null
 
-  // Toutes les notifications AniList ne possedent pas un acteur, un media ou un thread.
+  // Toutes les notifications AniList ne possèdent pas un acteur, un média ou un thread.
   const actor = node?.user?.id
     ? {
         id: Number(node.user.id),
@@ -376,7 +408,7 @@ const normalizeNotification = (node: RawNotificationNode): AniListNotificationIt
     : undefined
 
   return {
-    // La cle combine type et id pour eviter les collisions entre fragments de notification.
+    // La clé combine type et id pour éviter les collisions entre fragments de notification.
     key: `${String(node?.type || node?.__typename || 'notification').toLowerCase()}:${id}`,
     id,
     type: String(node?.type || node?.__typename || 'UNKNOWN'),
@@ -413,11 +445,25 @@ export const useAnilistNotificationsStore = defineStore('anilistNotifications', 
 
   const isLinked = computed(() => Boolean(userId.value && token.value))
 
+  /**
+   * Analyse error message.
+   *
+   * @param response - Valeur utilisée par le traitement « parse error message ».
+   * @returns Le résultat calculé par la fonction.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const parseErrorMessage = (response: any) => {
     if (!Array.isArray(response?.errors) || !response.errors.length) return ''
     return response.errors.map((error: any) => String(error?.message || '')).filter(Boolean).join(' | ')
   }
 
+  /**
+   * Réinitialise reset.
+   *
+   * @param keepUnread - Valeur utilisée par le traitement « reset ».
+   * @returns Aucune valeur.
+   * @sideEffects modifie l'état réactif.
+   */
   const reset = (keepUnread = false) => {
     items.value = []
     isLoading.value = false
@@ -428,6 +474,15 @@ export const useAnilistNotificationsStore = defineStore('anilistNotifications', 
     if (!keepUnread) unreadCount.value = 0
   }
 
+  /**
+   * Exécute graphql.
+   *
+   * @param query - Valeur utilisée par le traitement « request graphql ».
+   * @param variables - Valeur utilisée par le traitement « request graphql ».
+   * @param options - Valeur utilisée par le traitement « request graphql ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const requestGraphql = async (
     query: string,
     variables: Record<string, any>,
@@ -447,13 +502,20 @@ export const useAnilistNotificationsStore = defineStore('anilistNotifications', 
     )
   }
 
+  /**
+   * Charge unread count.
+   *
+   * @param force - Valeur utilisée par le traitement « load unread count ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects modifie l'état réactif, peut écrire dans les journaux.
+   */
   const loadUnreadCount = async (force = false) => {
     if (!isLinked.value) {
       unreadCount.value = 0
       return
     }
 
-    // Si la liste complete est deja chargee pour ce compte, le compteur courant suffit.
+    // Si la liste complète est déjà chargée pour ce compte, le compteur courant suffit.
     if (!force && loadedForKey.value === userKey.value && items.value.length) return
     if (isLoadingUnread.value) return
 
@@ -470,6 +532,13 @@ export const useAnilistNotificationsStore = defineStore('anilistNotifications', 
     }
   }
 
+  /**
+   * Charge notifications.
+   *
+   * @param options - Valeur utilisée par le traitement « load notifications ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects modifie l'état réactif, peut écrire dans les journaux.
+   */
   const loadNotifications = async (options: {
     page?: number
     perPage?: number
@@ -486,7 +555,7 @@ export const useAnilistNotificationsStore = defineStore('anilistNotifications', 
     const resetNotificationCount = Boolean(options.resetNotificationCount)
     const isFirstPage = page === 1
 
-    // Evite de recharger la premiere page si elle correspond deja au compte courant.
+    // Évite de recharger la première page si elle correspond déjà au compte courant.
     if (isLoading.value) return
     if (!options.force && isFirstPage && loadedForKey.value === userKey.value && items.value.length && !resetNotificationCount) {
       return
@@ -517,7 +586,7 @@ export const useAnilistNotificationsStore = defineStore('anilistNotifications', 
       if (isFirstPage) {
         items.value = normalizedItems
       } else {
-        // Les pages peuvent se recouvrir si AniList change entre deux appels; la Map deduplique.
+        // Les pages peuvent se recouvrir si AniList change entre deux appels; la Map déduplique.
         const merged = new Map<string, AniListNotificationItem>()
         for (const item of [...items.value, ...normalizedItems]) {
           merged.set(item.key, item)
@@ -547,6 +616,12 @@ export const useAnilistNotificationsStore = defineStore('anilistNotifications', 
     }
   }
 
+  /**
+   * Charge more.
+   *
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects Aucun effet de bord direct identifié.
+   */
   const loadMore = async () => {
     if (!hasNextPage.value || isLoading.value) return
     await loadNotifications({ page: currentPage.value + 1 })

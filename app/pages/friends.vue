@@ -67,6 +67,10 @@
 import { computed, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAnilistSocialStore } from '~/composables/useAnilistSocialStore'
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 const socialStore = useAnilistSocialStore()
 const { isLoading, loadError, friendUsers, followPendingIds } = storeToRefs(socialStore)
@@ -86,8 +90,22 @@ const filteredFriends = computed(() => {
   return mutuals.filter(user => user.username.toLowerCase().includes(query))
 })
 
+/**
+ * Indique si follow busy.
+ *
+ * @param id - Valeur utilisée par le traitement « is follow busy ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const isFollowBusy = (id: number) => followPendingIds.value.includes(id)
 
+/**
+ * Bascule follow.
+ *
+ * @param id - Valeur utilisée par le traitement « toggle follow ».
+ * @returns Une promesse résolue une fois le traitement terminé.
+ * @sideEffects peut écrire dans les journaux.
+ */
 const toggleFollow = async (id: number) => {
   try {
     await socialStore.toggleFollowUser(id)
@@ -102,6 +120,13 @@ const noResultText = computed(() => {
   return 'Les suivis mutuels de votre compte AniList apparaissent ici.'
 })
 
+/**
+ * Ouvre friend profile.
+ *
+ * @param friendId - Valeur utilisée par le traitement « open friend profile ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const openFriendProfile = (friendId: number) => {
   const id = Number(friendId)
   if (!Number.isFinite(id) || id <= 0) return

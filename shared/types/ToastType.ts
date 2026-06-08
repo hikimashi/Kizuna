@@ -1,3 +1,7 @@
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 export type ToastTypeValue = 'success' | 'error' | 'info' | 'warning';
 
 export interface ToastType {

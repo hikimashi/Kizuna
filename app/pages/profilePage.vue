@@ -259,6 +259,10 @@ import { storeToRefs } from 'pinia'
 import { getAnilistCoverSrc, getAnilistCoverSrcSet, type AnilistCoverImage } from '~/composables/useAnilistCoverImage'
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore'
 import { useAnilistProfileStore } from '~/composables/useAnilistProfileStore'
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 const pocketbaseStore = usePocketbaseStore()
 const profileStore = useAnilistProfileStore()
@@ -281,6 +285,12 @@ const navigatingFavoriteAnimeId = ref<number | null>(null)
 const navigatingActivityAnimeId = ref<number | null>(null)
 const profileSyncPending = ref(false)
 
+/**
+ * Charge more activity.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif, peut écrire dans les journaux.
+ */
 const loadMoreActivity = async () => {
   if (activityLoading.value || !activityHasMore.value) return
 
@@ -296,13 +306,19 @@ const loadMoreActivity = async () => {
 
     activityPage.value += 1
   } catch (error) {
-    console.error("Echec du chargement de la page d'activite :", error)
+    console.error("Échec du chargement de la page d'activité :", error)
     activityHasMore.value = false
   } finally {
     activityLoading.value = false
   }
 }
 
+/**
+ * Réinitialise activity list.
+ *
+ * @returns Une promesse résolue une fois le traitement terminé.
+ * @sideEffects modifie l'état réactif.
+ */
 const resetActivityList = async () => {
   activityItems.value = []
   activityHasMore.value = true
@@ -330,10 +346,24 @@ const GENRE_COLORS: Record<string, string> = {
   Supernatural: '#6A0572',
   Thriller: '#E85D75'
 }
+/**
+ * Retourne genre color.
+ *
+ * @param genre - Valeur utilisée par le traitement « get genre color ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function getGenreColor(genre: string): string {
   return GENRE_COLORS[genre] ?? '#3db4f2'
 }
 
+/**
+ * Calcule la valeur « time ago ».
+ *
+ * @param timestamp - Valeur utilisée par le traitement « time ago ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function timeAgo(timestamp: number): string {
   const seconds = Math.floor((Date.now() - timestamp * 1000) / 1000)
   if (seconds < 60) return "À l'instant"
@@ -348,6 +378,13 @@ function timeAgo(timestamp: number): string {
   return `Il y a ${Math.floor(months / 12)} an${Math.floor(months / 12) > 1 ? 's' : ''}`
 }
 
+/**
+ * Retourne activity title.
+ *
+ * @param activity - Valeur utilisée par le traitement « get activity title ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function getActivityTitle(activity: any): string {
   return activity?.media?.title?.english ?? activity?.media?.title?.romaji ?? 'Titre inconnu'
 }
@@ -361,6 +398,13 @@ const ACTIVITY_STATUS_PREFIXES: Record<string, string> = {
   dropped: 'A abandonné'
 }
 
+/**
+ * Retourne activity prefix.
+ *
+ * @param activity - Valeur utilisée par le traitement « get activity prefix ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function getActivityPrefix(activity: any): string {
   const status = String(activity?.status ?? '').replace(/_/g, ' ').toLowerCase().trim()
   const progress = activity?.progress
@@ -376,15 +420,36 @@ function getActivityPrefix(activity: any): string {
   return `${normalized} `
 }
 
+/**
+ * Retourne favorite anime title.
+ *
+ * @param anime - Valeur utilisée par le traitement « get favorite anime title ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function getFavoriteAnimeTitle(anime: any): string {
   return anime?.title?.english ?? anime?.title?.romaji ?? 'Anime inconnu'
 }
 
+/**
+ * Ouvre anime page.
+ *
+ * @param animeId - Valeur utilisée par le traitement « open anime page ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 async function openAnimePage(animeId?: number | null) {
   if (!animeId) return
   await navigateTo(`/anime/${animeId}`)
 }
 
+/**
+ * Ouvre favorite anime page.
+ *
+ * @param animeId - Valeur utilisée par le traitement « open favorite anime page ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 async function openFavoriteAnimePage(animeId?: number | null) {
   if (!animeId || navigatingFavoriteAnimeId.value === animeId) return
   navigatingFavoriteAnimeId.value = animeId
@@ -398,6 +463,13 @@ async function openFavoriteAnimePage(animeId?: number | null) {
   }
 }
 
+/**
+ * Ouvre activity anime page.
+ *
+ * @param animeId - Valeur utilisée par le traitement « open activity anime page ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 async function openActivityAnimePage(animeId?: number | null) {
   if (!animeId || navigatingActivityAnimeId.value === animeId) return
   navigatingActivityAnimeId.value = animeId
@@ -411,10 +483,25 @@ async function openActivityAnimePage(animeId?: number | null) {
   }
 }
 
+/**
+ * Calcule la valeur « anime href ».
+ *
+ * @param animeId - Valeur utilisée par le traitement « anime href ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function animeHref(animeId?: number | null): string {
   return animeId ? `/anime/${animeId}` : '#'
 }
 
+/**
+ * Traite anime link click.
+ *
+ * @param event - Valeur utilisée par le traitement « handle anime link click ».
+ * @param animeId - Valeur utilisée par le traitement « handle anime link click ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function handleAnimeLinkClick(event: MouseEvent, animeId?: number | null) {
   if (!animeId) {
     event.preventDefault()
@@ -425,6 +512,14 @@ function handleAnimeLinkClick(event: MouseEvent, animeId?: number | null) {
   void openFavoriteAnimePage(animeId)
 }
 
+/**
+ * Traite activity anime link click.
+ *
+ * @param event - Valeur utilisée par le traitement « handle activity anime link click ».
+ * @param animeId - Valeur utilisée par le traitement « handle activity anime link click ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function handleActivityAnimeLinkClick(event: MouseEvent, animeId?: number | null) {
   if (!animeId) {
     event.preventDefault()
@@ -435,11 +530,24 @@ function handleActivityAnimeLinkClick(event: MouseEvent, animeId?: number | null
   void openActivityAnimePage(animeId)
 }
 
+/**
+ * Calcule la valeur « should handle client navigation ».
+ *
+ * @param event - Valeur utilisée par le traitement « should handle client navigation ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function shouldHandleClientNavigation(event: MouseEvent): boolean {
-  // Laisse le navigateur gerer ctrl/cmd/shift-click, clic milieu, etc.
+  // Laisse le navigateur gérer ctrl/cmd/shift-click, clic milieu, etc.
   return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey
 }
 
+/**
+ * Attend for paint.
+ *
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function waitForPaint(): Promise<void> {
   if (!import.meta.client) return Promise.resolve()
   // Attend un frame pour mesurer les tags une fois les styles appliques.
@@ -448,22 +556,57 @@ function waitForPaint(): Promise<void> {
   })
 }
 
+/**
+ * Calcule la valeur « favorite anime cover src ».
+ *
+ * @param anime - Valeur utilisée par le traitement « favorite anime cover src ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function favoriteAnimeCoverSrc(anime: any): string {
   return getAnilistCoverSrc(anime?.coverImage as AnilistCoverImage | null, 'card')
 }
 
+/**
+ * Calcule la valeur « favorite anime cover src set ».
+ *
+ * @param anime - Valeur utilisée par le traitement « favorite anime cover src set ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function favoriteAnimeCoverSrcSet(anime: any): string | undefined {
   return getAnilistCoverSrcSet(anime?.coverImage as AnilistCoverImage | null, 'card')
 }
 
+/**
+ * Retourne favorite character name.
+ *
+ * @param character - Valeur utilisée par le traitement « get favorite character name ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function getFavoriteCharacterName(character: any): string {
   return character?.name?.full ?? character?.name?.userPreferred ?? 'Personnage inconnu'
 }
 
+/**
+ * Calcule la valeur « activity cover src ».
+ *
+ * @param activity - Valeur utilisée par le traitement « activity cover src ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function activityCoverSrc(activity: any): string {
   return getAnilistCoverSrc(activity?.media?.coverImage as AnilistCoverImage | null, 'thumb')
 }
 
+/**
+ * Calcule la valeur « activity cover src set ».
+ *
+ * @param activity - Valeur utilisée par le traitement « activity cover src set ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function activityCoverSrcSet(activity: any): string | undefined {
   return getAnilistCoverSrcSet(activity?.media?.coverImage as AnilistCoverImage | null, 'thumb')
 }
@@ -471,7 +614,7 @@ function activityCoverSrcSet(activity: any): string | undefined {
 const authRecord = computed<Record<string, any>>(() => unref(pocketbaseStore.authRecord) ?? {})
 const authUserId = computed(() => Number(authRecord.value.anilist_user_id ?? 0))
 const authUsername = computed(() => String(authRecord.value.anilist_username ?? ''))
-// Cle de cache locale: change si l'utilisateur lie un autre compte AniList.
+// Clé de cache locale: change si l'utilisateur lie un autre compte AniList.
 const authUserKey = computed(() => `${authUserId.value}:${authUsername.value}`)
 const username = computed(() => authRecord.value.anilist_username ?? "Nom d'utilisateur")
 const anilistIdDisplay = computed(() => authRecord.value.anilist_user_id ?? '-')
@@ -504,7 +647,7 @@ const barGenreTotal = computed(() => {
 })
 
 const progressStep = computed(() => {
-  // Les marqueurs s'adaptent au volume de la liste pour eviter une barre bloquee a 100.
+  // Les marqueurs s'adaptent au volume de la liste pour éviter une barre bloquée à 100.
   const perSegment = Math.max(10, Math.ceil((totalAnimes.value || 0) / 3))
   if (perSegment <= 25) return 25
   if (perSegment <= 50) return 50
@@ -523,6 +666,13 @@ const progressMarkers = computed(() => [
 const progressMax = computed(() => progressMarkers.value[2] || 1)
 const progressFillPercent = computed(() => Math.min((totalAnimes.value / progressMax.value) * 100, 100).toFixed(2))
 
+/**
+ * Définit genre measure ref.
+ *
+ * @param genreName - Valeur utilisée par le traitement « set genre measure ref ».
+ * @returns Le résultat calculé par la fonction.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 function setGenreMeasureRef(genreName: string): VNodeRef {
   return (el: Element | ComponentPublicInstance | null) => {
     // Vue peut fournir un HTMLElement direct ou l'instance du composant; on normalise les deux.
@@ -539,6 +689,12 @@ function setGenreMeasureRef(genreName: string): VNodeRef {
     genreMeasureRefs.value[genreName] = null
   }
 }
+/**
+ * Calcule visible genres.
+ *
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 async function computeVisibleGenres() {
   if (isLoading.value) return
   await nextTick()
@@ -566,15 +722,34 @@ async function computeVisibleGenres() {
   visibleTopGenres.value = nextVisible
 }
 
+/**
+ * Traite genre resize.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const handleGenreResize = () => {
   computeVisibleGenres()
 }
 
+/**
+ * Réinitialise navigation states.
+ *
+ * @returns Aucune valeur.
+ * @sideEffects modifie l'état réactif.
+ */
 const resetNavigationStates = () => {
   navigatingFavoriteAnimeId.value = null
   navigatingActivityAnimeId.value = null
 }
 
+/**
+ * Synchronise profile page data.
+ *
+ * @param options - Valeur utilisée par le traitement « sync profile page data ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 const syncProfilePageData = async (
   options: {
     forceProfile?: boolean
@@ -586,7 +761,7 @@ const syncProfilePageData = async (
 
   profileSyncPending.value = true
   try {
-    // Les stats/favoris passent par le store; l'activite est paginee separement par la page.
+    // Les stats/favoris passent par le store; l'activité est paginée séparément par la page.
     await profileStore.loadProfile(Boolean(options.forceProfile))
 
     if (options.forceActivity || !activityItems.value.length) {
@@ -599,10 +774,17 @@ const syncProfilePageData = async (
   }
 }
 
+/**
+ * Traite page show.
+ *
+ * @param event - Valeur utilisée par le traitement « handle page show ».
+ * @returns Une promesse résolue une fois le traitement terminé.
+ * @sideEffects Aucun effet de bord direct identifié.
+ */
 const handlePageShow = async (event: PageTransitionEvent) => {
   resetNavigationStates()
 
-  // Quand la page revient du bfcache, les donnees visuelles peuvent avoir besoin d'une resynchro.
+  // Quand la page revient du bfcache, les données visuelles peuvent avoir besoin d'une resynchro.
   if (event.persisted || !activityItems.value.length) {
     await syncProfilePageData({ forceActivity: true })
   }
@@ -617,7 +799,7 @@ watch(authUserKey, async (next, previous) => {
   if (!authUserId.value && !authUsername.value) return
 
   const userChanged = next !== previous
-  // Changement de compte AniList: on force stats et activite pour ne pas melanger deux profils.
+  // Changement de compte AniList: on force stats et activité pour ne pas mélanger deux profils.
   await syncProfilePageData({
     forceProfile: userChanged,
     forceActivity: userChanged || !activityItems.value.length

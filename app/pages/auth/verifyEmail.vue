@@ -18,7 +18,7 @@
         </div>
 
         <div class="card-actions mt-4">
-          <button class="btn btn-primary" @click="goHome">Retour a l'accueil</button>
+          <button class="btn btn-primary" @click="goHome">Retour à l'accueil</button>
         </div>
       </div>
     </div>
@@ -27,17 +27,21 @@
 
 <script setup lang="ts">
 import { usePocketbaseStore } from '~/composables/usePocketbaseStore';
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 const route = useRoute();
 const router = useRouter();
 const pocketbaseStore = usePocketbaseStore();
 
 const status = ref<'pending' | 'success' | 'error'>('pending');
-const errorMessage = ref("Lien de verification invalide ou expire.");
+const errorMessage = ref("Lien de vérification invalide ou expiré.");
 
 const statusMessage = computed(() => {
   if (status.value === 'pending') return "Verification de votre adresse e-mail...";
-  if (status.value === 'success') return 'Votre adresse e-mail a ete verifiee. Vous pouvez maintenant vous connecter.';
+  if (status.value === 'success') return 'Votre adresse e-mail a été vérifiée. Vous pouvez maintenant vous connecter.';
   return errorMessage.value;
 });
 
@@ -46,6 +50,12 @@ const token = computed(() => {
   return typeof value === 'string' ? value : '';
 });
 
+/**
+ * Calcule la valeur « go home ».
+ *
+ * @returns Une promesse résolue une fois le traitement terminé.
+ * @sideEffects modifie l'état réactif.
+ */
 const goHome = async () => {
   await router.push('/');
 };
@@ -60,7 +70,7 @@ onMounted(async () => {
     await pocketbaseStore.pb.collection('user').confirmVerification(token.value);
     status.value = 'success';
   } catch (error: any) {
-    errorMessage.value = error?.message || "Impossible de verifier votre adresse e-mail.";
+    errorMessage.value = error?.message || "Impossible de vérifier votre adresse e-mail.";
     status.value = 'error';
   }
 });

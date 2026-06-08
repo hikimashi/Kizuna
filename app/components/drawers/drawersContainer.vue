@@ -12,6 +12,10 @@ import { computed } from 'vue';
 import { useDrawersStore } from '~/composables/useDrawersStore';
 import drawerLogin from '@/components/drawers/drawerLogin.vue';
 import drawerCreateUser from '@/components/drawers/drawerCreateUser.vue';
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 const drawerStore = useDrawersStore();
 

@@ -1,6 +1,10 @@
 import { defineStore } from 'pinia'
 import { computed, ref, unref } from 'vue'
 import { usePocketbaseStore } from './usePocketbaseStore'
+// ─────────────────────────────────────────
+// SECTION : Logique applicative
+// ─────────────────────────────────────────
+
 
 const statsQuery = `
 query ($userId: Int, $userName: String) {
@@ -74,6 +78,16 @@ query ($userId: Int, $userName: String, $page: Int, $perPage: Int) {
 }
 `
 
+/**
+ * Récupère all favorite anime.
+ *
+ * @param graphqlRequest - Valeur utilisée par le traitement « fetch all favorite anime ».
+ * @param anilistUserId - Valeur utilisée par le traitement « fetch all favorite anime ».
+ * @param anilistUsername - Valeur utilisée par le traitement « fetch all favorite anime ».
+ * @param token - Valeur utilisée par le traitement « fetch all favorite anime ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 async function fetchAllFavoriteAnime(
   graphqlRequest: <T = any>(query: string, variables?: Record<string, any>, options?: { token?: string; cacheTtlMs?: number; skipCache?: boolean }) => Promise<T>,
   anilistUserId: number,
@@ -85,7 +99,7 @@ async function fetchAllFavoriteAnime(
   const perPage = 50
   let hasNextPage = true
 
-  // AniList pagine les favoris; le garde-fou a 100 pages evite une boucle si pageInfo est incoherent.
+  // AniList pagine les favoris; le garde-fou à 100 pages évite une boucle si pageInfo est incohérent.
   while (hasNextPage && page <= 100) {
     const response = await graphqlRequest<any>(
       favoriteAnimePageQuery,
@@ -103,6 +117,16 @@ async function fetchAllFavoriteAnime(
   return all
 }
 
+/**
+ * Récupère all favorite characters.
+ *
+ * @param graphqlRequest - Valeur utilisée par le traitement « fetch all favorite characters ».
+ * @param anilistUserId - Valeur utilisée par le traitement « fetch all favorite characters ».
+ * @param anilistUsername - Valeur utilisée par le traitement « fetch all favorite characters ».
+ * @param token - Valeur utilisée par le traitement « fetch all favorite characters ».
+ * @returns Une promesse résolue avec le résultat du traitement.
+ * @sideEffects modifie l'état réactif.
+ */
 async function fetchAllFavoriteCharacters(
   graphqlRequest: <T = any>(query: string, variables?: Record<string, any>, options?: { token?: string; cacheTtlMs?: number; skipCache?: boolean }) => Promise<T>,
   anilistUserId: number,
@@ -114,7 +138,7 @@ async function fetchAllFavoriteCharacters(
   const perPage = 50
   let hasNextPage = true
 
-  // Meme strategie que les animes favoris pour garder les deux listes synchrones dans le store.
+  // Même stratégie que les animes favoris pour garder les deux listes synchrones dans le store.
   while (hasNextPage && page <= 100) {
     const response = await graphqlRequest<any>(
       favoriteCharacterPageQuery,
@@ -152,6 +176,12 @@ export const useAnilistProfileStore = defineStore('anilistProfile', () => {
   const favoriteCharacters = ref<any[]>([])
   const loadedForKey = ref('')
 
+  /**
+   * Réinitialise reset.
+   *
+   * @returns Aucune valeur.
+   * @sideEffects modifie l'état réactif.
+   */
   const reset = () => {
     totalAnimes.value = 0
     daysWatched.value = '0.0'
@@ -163,6 +193,13 @@ export const useAnilistProfileStore = defineStore('anilistProfile', () => {
     loadedForKey.value = ''
   }
 
+  /**
+   * Charge profile.
+   *
+   * @param force - Valeur utilisée par le traitement « load profile ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects modifie l'état réactif, effectue des appels réseau ou persistants, peut écrire dans les journaux.
+   */
   const loadProfile = async (force = false) => {
     if (!force && loadedForKey.value === userKey.value) return
     if (isLoading.value) return
@@ -216,10 +253,18 @@ export const useAnilistProfileStore = defineStore('anilistProfile', () => {
     }
   }
 
+  /**
+   * Récupère activity page.
+   *
+   * @param page - Valeur utilisée par le traitement « fetch activity page ».
+   * @param perPage - Valeur utilisée par le traitement « fetch activity page ».
+   * @returns Une promesse résolue avec le résultat du traitement.
+   * @sideEffects effectue des appels réseau ou persistants.
+   */
   const fetchActivityPage = async (page: number, perPage: number) => {
     if (!userId.value) return []
 
-    // Activites chargees a part pour permettre l'infinite scroll de la page profil.
+    // Activités chargées à part pour permettre l'infinite scroll de la page profil.
     const response = await anilistGraphql.request<any>(
       activityQuery,
       { userId: userId.value, page, perPage },

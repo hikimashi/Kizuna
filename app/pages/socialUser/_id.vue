@@ -319,7 +319,7 @@
             <div>
               <div class="friend-section-kicker">Listes partagées PocketBase</div>
               <h2 class="friend-section-title">{{ friendName || 'Ami' }} Listes partagées</h2>
-              <p class="friend-section-copy">Les listes publiques sont visibles par tous, celles reservees aux amis par les amis, et les privees uniquement par les membres.</p>
+              <p class="friend-section-copy">Les listes publiques sont visibles par tous, celles reservees aux amis par les amis, et les privées uniquement par les membres.</p>
             </div>
             <div class="friend-stat-row">
               <div class="friend-stat-chip">
@@ -1091,7 +1091,7 @@ const memberAvatarStyle = (member: Pick<SharedListMember, 'avatar' | 'color'>) =
  * @sideEffects Aucun effet de bord direct identifié.
  */
 const privacyLabel = (privacy: SharedListSummary['privacy']) =>
-  privacy === 'private' ? 'Privee' : privacy === 'friends' ? 'Amis uniquement' : 'Publique'
+  privacy === 'private' ? 'Privée' : privacy === 'friends' ? 'Amis uniquement' : 'Publique'
 
 /**
  * Calcule la valeur « privacy chip class ».

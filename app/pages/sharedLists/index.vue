@@ -46,7 +46,7 @@
             <span>Confidentialité</span>
             <select v-model="draftPrivacy">
               <option value="friends">Amis uniquement</option>
-              <option value="private">Privee</option>
+              <option value="private">Privée</option>
               <option value="public">Publique</option>
             </select>
           </label>
@@ -399,7 +399,7 @@ const stripForPrivacy = (privacy: SharedListPrivacy, owned: boolean) => {
  * @returns Le résultat calculé par la fonction.
  * @sideEffects Aucun effet de bord direct identifié.
  */
-const privacyLabel = (privacy: SharedListPrivacy) => privacy === 'private' ? 'Privee' : privacy === 'friends' ? 'Amis uniquement' : 'Publique'
+const privacyLabel = (privacy: SharedListPrivacy) => privacy === 'private' ? 'Privée' : privacy === 'friends' ? 'Amis uniquement' : 'Publique'
 /**
  * Calcule la valeur « privacy chip class ».
  *

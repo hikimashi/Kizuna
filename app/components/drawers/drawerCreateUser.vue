@@ -51,13 +51,29 @@
           </svg>
           <input
             v-model="newUser.password"
-            type="password"
+            :type="showPassword ? 'text' : 'password'"
             required
             placeholder="Mot de passe"
             minlength="8"
             pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
             title="Doit contenir au moins 8 caracteres, avec un chiffre, une minuscule et une majuscule"
           />
+          <button
+            type="button"
+            class="btn btn-ghost btn-xs ml-2 px-1"
+            :aria-label="showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
+            @click="showPassword = !showPassword">
+            <svg v-if="showPassword" class="h-[1.1em] w-[1.1em] opacity-70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.58 10.58A2 2 0 0 0 13.42 13.42" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.88 5.09A9.77 9.77 0 0 1 12 4.86c5 0 9.27 3.11 11 7.5a11.83 11.83 0 0 1-4.17 5.94" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.61 6.61A11.84 11.84 0 0 0 1 12.36a11.82 11.82 0 0 0 7.39 6.96" />
+            </svg>
+            <svg v-else class="h-[1.1em] w-[1.1em] opacity-70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" />
+              <circle cx="12" cy="12" r="3" stroke-width="2" />
+            </svg>
+          </button>
         </label>
         <p class="validator-hint hidden">
           Doit contenir au moins 8 caracteres, avec
@@ -148,6 +164,7 @@ const newUser = ref<NewUserType>({
   password: '',
   passwordConfirm: '',
 });
+const showPassword = ref(false);
 
 /**
  * Ferme close.
@@ -172,6 +189,7 @@ const clearForm = () => {
     password: '',
     passwordConfirm: '',
   };
+  showPassword.value = false;
 };
 
 /**

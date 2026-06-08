@@ -52,7 +52,23 @@
               <circle cx="16.5" cy="7.5" r=".5" fill="currentColor" />
             </g>
           </svg>
-          <input v-model="password" type="password" autocomplete="current-password" required placeholder="Mot de passe" />
+          <input v-model="password" :type="showPassword ? 'text' : 'password'" autocomplete="current-password" required placeholder="Mot de passe" />
+          <button
+            type="button"
+            class="btn btn-ghost btn-xs ml-2 px-1"
+            :aria-label="showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
+            @click="showPassword = !showPassword">
+            <svg v-if="showPassword" class="h-[1.1em] w-[1.1em] opacity-70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.58 10.58A2 2 0 0 0 13.42 13.42" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.88 5.09A9.77 9.77 0 0 1 12 4.86c5 0 9.27 3.11 11 7.5a11.83 11.83 0 0 1-4.17 5.94" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.61 6.61A11.84 11.84 0 0 0 1 12.36a11.82 11.82 0 0 0 7.39 6.96" />
+            </svg>
+            <svg v-else class="h-[1.1em] w-[1.1em] opacity-70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" />
+              <circle cx="12" cy="12" r="3" stroke-width="2" />
+            </svg>
+          </button>
         </label>
 
         <p v-if="loginError" class="rounded-xl border border-error/40 bg-error/10 px-3 py-2 text-sm text-error">
@@ -119,6 +135,7 @@ const handleClose = () => emits('close');
 const email = ref<string>('');
 const password = ref<string>('');
 const loginError = ref<string>('');
+const showPassword = ref(false);
 
 /**
  * Ferme close.
@@ -127,6 +144,7 @@ const loginError = ref<string>('');
  * @sideEffects Aucun effet de bord direct identifié.
  */
 const close = () => {
+  showPassword.value = false;
   emits('close');
   drawerStore.closeDrawer();
 };

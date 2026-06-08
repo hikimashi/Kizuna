@@ -1,6 +1,6 @@
 <template>
-  <div v-if="alert !== null" class="fixed p-4 top-0 w-screen h-screen backdrop-blur-xs z-60">
-    <div :class="alertClassMap[alert.type]" class="flex flex-col lg:flex-row justify-between alert alert-outline bg-base-100 mt-20 z-50"
+  <div v-if="alert !== null" class="fixed inset-0 z-[230] p-4 backdrop-blur-xs">
+    <div :class="alertClassMap[alert.type]" class="relative z-[240] mt-20 flex flex-col justify-between alert alert-outline bg-base-100 lg:flex-row"
       role="alert">
       <div class="flex items-center gap-2">
         <component :is="alertIconMap[alert.type]" :class="alertColor(alert.type)"

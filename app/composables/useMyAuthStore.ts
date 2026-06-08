@@ -12,6 +12,12 @@ export const useMyAuthStore = defineStore('auth', () => {
   const userStore = useUserStore();
   const unverifiedEmailMessage = 'Veuillez vérifier votre adresse e-mail avant de vous connecter.';
   const invalidLoginMessage = 'Identifiants invalides. Verifiez votre email et votre mot de passe.';
+  const accountCreationMessage = 'La création du compte a échoué. Veuillez réessayer.';
+  const googleLoginMessage = 'La connexion Google a échoué. Veuillez réessayer.';
+  const githubLoginMessage = 'La connexion GitHub a échoué. Veuillez réessayer.';
+  const emailChangeMessage = "La demande de changement d'adresse e-mail a échoué. Veuillez réessayer.";
+  const passwordResetMessage = 'La demande de réinitialisation du mot de passe a échoué. Veuillez réessayer.';
+  const accountDeletionMessage = 'La suppression du compte a échoué. Veuillez réessayer.';
 
   /**
    * Retourne auth error message.
@@ -122,8 +128,7 @@ export const useMyAuthStore = defineStore('auth', () => {
         verificationSent: true
       };
     } catch (error: any) {
-      const errorMsg = error.response?.data?.message || error.message || 'Account creation failed. Please try again.';
-      throw new Error(errorMsg);
+      throw new Error(getUserFacingErrorMessage(error, accountCreationMessage));
     }
   };
 
@@ -186,7 +191,7 @@ export const useMyAuthStore = defineStore('auth', () => {
       userStore.saveUserData(mapAuthDataToUser(authData));
       return authData;
     } catch (error: any) {
-      throw new Error(error?.message || 'Google login failed. Please try again.');
+      throw new Error(getUserFacingErrorMessage(error, googleLoginMessage));
     }
   };
 
@@ -203,7 +208,7 @@ export const useMyAuthStore = defineStore('auth', () => {
       userStore.saveUserData(mapAuthDataToUser(authData));
       return authData;
     } catch (error: any) {
-      throw new Error(error?.message || 'GitHub login failed. Please try again.');
+      throw new Error(getUserFacingErrorMessage(error, githubLoginMessage));
     }
   };
 
@@ -273,7 +278,7 @@ export const useMyAuthStore = defineStore('auth', () => {
     try {
       await pocketbaseStore.pb.collection('user').requestEmailChange(normalizeAuthEmail(newEmail));
     } catch (error: any) {
-      throw new Error(error?.message || 'Email change failed. Please try again.');
+      throw new Error(getUserFacingErrorMessage(error, emailChangeMessage));
     }
   };
 
@@ -288,7 +293,7 @@ export const useMyAuthStore = defineStore('auth', () => {
     try {
       await pocketbaseStore.pb.collection('user').requestPasswordReset(email);
     } catch (error: any) {
-      throw new Error(error?.message || 'Password reset request failed. Please try again.');
+      throw new Error(getUserFacingErrorMessage(error, passwordResetMessage));
     }
   };
 
@@ -302,12 +307,12 @@ export const useMyAuthStore = defineStore('auth', () => {
     try {
       const userId = userStore.userData?.id;
       if (!userId) {
-        throw new Error('No authenticated user found.');
+        throw new Error('Aucun utilisateur connecte n\'a été trouvé.');
       }
 
       await pocketbaseStore.pb.collection('user').delete(userId);
     } catch (error: any) {
-      throw new Error(error?.message || 'Account deletion failed. Please try again.');
+      throw new Error(getUserFacingErrorMessage(error, accountDeletionMessage));
     }
   };
 

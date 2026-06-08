@@ -1,5 +1,5 @@
 <template>
-  <div class="toast toast-top toast-end z-50 mt-15 w-72 max-w-[calc(100vw-2rem)]">
+  <div class="toast toast-top toast-end z-[220] mt-15 w-72 max-w-[calc(100vw-2rem)]">
     <div
       v-for="toast in toasts"
       :key="toast.id"

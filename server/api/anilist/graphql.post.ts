@@ -403,7 +403,7 @@ export default defineEventHandler(async (event) => {
     const result = await requestPromise
 
     //  STOCKAGE EN CACHE - Si c'est une requête réussie (200-299)
-    if (!skipCache && ttlMs > 0 && result.statusCode >= 200 && result.statusCode < 300) {
+    if (ttlMs > 0 && result.statusCode >= 200 && result.statusCode < 300) {
       const valkeyClient = await getValkeyClient()
       if (valkeyClient) {
         try {
@@ -413,7 +413,7 @@ export default defineEventHandler(async (event) => {
             statusCode: result.statusCode,
             payload: result.payload
           }), 'EX', ttlSeconds)
-          setHeader(event, 'X-Cache', 'MISS-VALKEY') // Header pour debug
+          setHeader(event, 'X-Cache', skipCache ? 'REFRESH-VALKEY' : 'MISS-VALKEY') // Header pour debug
         } catch (error) {
           disableValkey(error)
           // Fallback: cache en mémoire si Redis échoue
@@ -422,7 +422,7 @@ export default defineEventHandler(async (event) => {
             payload: result.payload,
             statusCode: result.statusCode
           })
-          setHeader(event, 'X-Cache', 'MISS-MEMORY')
+          setHeader(event, 'X-Cache', skipCache ? 'REFRESH-MEMORY' : 'MISS-MEMORY')
         }
       } else {
         // Aucun Redis disponible: utilise la cache en mémoire
@@ -431,7 +431,7 @@ export default defineEventHandler(async (event) => {
           payload: result.payload,
           statusCode: result.statusCode
         })
-        setHeader(event, 'X-Cache', 'MISS-MEMORY')
+        setHeader(event, 'X-Cache', skipCache ? 'REFRESH-MEMORY' : 'MISS-MEMORY')
       }
     }
 

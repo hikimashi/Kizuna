@@ -296,10 +296,18 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
    *
    * @param query - Valeur utilisée par le traitement « graphql fetch ».
    * @param variables - Valeur utilisée par le traitement « graphql fetch ».
+   * @param options - Valeur utilisée par le traitement « graphql fetch ».
    * @returns Une promesse résolue avec le résultat du traitement.
    * @sideEffects Aucun effet de bord direct identifié.
    */
-  const graphqlFetch = async (query: string, variables: Record<string, any>) => {
+  const graphqlFetch = async (
+    query: string,
+    variables: Record<string, any>,
+    options: {
+      cacheTtlMs?: number
+      skipCache?: boolean
+    } = {}
+  ) => {
     // AniList peut refuser certaines données privées avec le token; on retente en public si possible.
     /**
      * Analyse errors.
@@ -313,7 +321,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
       return response.errors.map((error: any) => error?.message).filter(Boolean).join(' | ')
     }
 
-    let response = await requestGraphql(query, variables, true)
+    let response = await requestGraphql(query, variables, true, options)
     let errorMessage = parseErrors(response)
 
     if (!errorMessage) return response
@@ -326,7 +334,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
       || lowered.includes('private')
 
     if (shouldRetryWithoutToken) {
-      response = await requestGraphql(query, variables, false)
+      response = await requestGraphql(query, variables, false, options)
       errorMessage = parseErrors(response)
       if (!errorMessage) return response
     }
@@ -348,10 +356,18 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
    *
    * @param query - Valeur utilisée par le traitement « fetch paged users ».
    * @param field - Valeur utilisée par le traitement « fetch paged users ».
+   * @param options - Valeur utilisée par le traitement « fetch paged users ».
    * @returns Une promesse résolue avec le résultat du traitement.
    * @sideEffects modifie l'état réactif.
    */
-  const fetchPagedUsers = async (query: string, field: 'following' | 'followers') => {
+  const fetchPagedUsers = async (
+    query: string,
+    field: 'following' | 'followers',
+    options: {
+      cacheTtlMs?: number
+      skipCache?: boolean
+    } = {}
+  ) => {
     const all: AniListUserNode[] = []
     let page = 1
     const perPage = 50
@@ -359,7 +375,7 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
 
     // Garde-fou à 100 pages pour éviter une boucle infinie si AniList renvoie une pagination incohérente.
     while (hasNextPage && page <= 100) {
-      const response = await graphqlFetch(query, { userId: anilistUserId.value, page, perPage })
+      const response = await graphqlFetch(query, { userId: anilistUserId.value, page, perPage }, options)
 
       const pageNode = response?.data?.Page
       const chunk = (pageNode?.[field] ?? []) as AniListUserNode[]
@@ -390,12 +406,16 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
     isLoading.value = true
     loadError.value = ''
 
+    // Si on force le rechargement (ex: après ToggleFollow), on ignore le cache proxy pour voir l'état réel.
+    const fetchOptions = force ? { skipCache: true, cacheTtlMs: 0 } : {}
+
     try {
       // Les deux listes sont indépendantes; Promise.allSettled permet d'afficher les données partielles.
       const [followingResult, followersResult] = await Promise.allSettled([
-        fetchPagedUsers(followingQuery, 'following'),
-        fetchPagedUsers(followersQuery, 'followers')
+        fetchPagedUsers(followingQuery, 'following', fetchOptions),
+        fetchPagedUsers(followersQuery, 'followers', fetchOptions)
       ])
+
 
       const followingRaw = followingResult.status === 'fulfilled' ? followingResult.value : []
       const followersRaw = followersResult.status === 'fulfilled' ? followersResult.value : []
@@ -474,6 +494,41 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
     // Évite les doubles clics qui enverraient plusieurs ToggleFollow pour le même utilisateur.
     followPendingIds.value = [...followPendingIds.value, userId]
 
+    // --- MISE À JOUR OPTIMISTE ---
+    // On bascule l'état local immédiatement pour que l'UI réagisse sans attendre le proxy.
+    const wasFollowing = followingUsers.value.some(u => u.id === userId)
+    
+    // Met à jour Following list
+    if (wasFollowing) {
+      followingUsers.value = followingUsers.value.filter(u => u.id !== userId)
+    } else {
+      // Si on suit, on ne peut pas l'ajouter facilement à followingUsers sans toutes ses infos,
+      // mais au moins on peut mettre à jour les drapeaux dans followerUsers s'il s'y trouve.
+    }
+
+    // Met à jour Followers list (si présent)
+    followerUsers.value = followerUsers.value.map((u) => {
+      if (u.id === userId) {
+        const nextFollowing = !wasFollowing
+        return {
+          ...u,
+          following: nextFollowing,
+          isFriend: u.isFollower && nextFollowing
+        }
+      }
+      return u
+    })
+
+    // Met à jour Friends list
+    if (wasFollowing) {
+      friendUsers.value = friendUsers.value.filter(u => u.id !== userId)
+    } else {
+      const followerMatch = followerUsers.value.find(u => u.id === userId)
+      if (followerMatch && followerMatch.isFriend && !friendUsers.value.some(u => u.id === userId)) {
+        friendUsers.value = [...friendUsers.value, followerMatch]
+      }
+    }
+
     try {
       const response = await requestGraphql(
         toggleFollowMutation,
@@ -491,13 +546,22 @@ export const useAnilistSocialStore = defineStore('anilistSocial', () => {
         throw new Error(errorMessage)
       }
 
-      // Recharge l'état complet après ToggleFollow, car AniList décide si l'action a suivi ou unfollow.
+      // On libère le bouton immédiatement pour montrer l'état optimiste.
+      followPendingIds.value = followPendingIds.value.filter(id => id !== userId)
+
+      // Petit délai pour laisser à AniList le temps de propager le changement avant le refresh.
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+      // Recharge l'état complet après ToggleFollow pour resynchroniser avec AniList.
       await loadSocial(true)
     } catch (error: any) {
+      // En cas d'erreur, on annule l'optimisme (simple refresh fera l'affaire).
+      await loadSocial(true)
       const message = error?.data?.errors?.[0]?.message || error?.message || 'Impossible de mettre à jour le suivi AniList.'
       loadError.value = message
       throw new Error(message)
     } finally {
+      // Sécurité au cas où le try n'aurait pas filtré l'ID (ex: erreur GraphQL).
       followPendingIds.value = followPendingIds.value.filter(id => id !== userId)
     }
   }
